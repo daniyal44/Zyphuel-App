@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -4126,17 +4127,32 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                             }
                         }
                     } else {
-                        items(activeOrders) { order ->
+                        // Only the newest active order renders the full live-map card. Each of those
+                        // cards hosts a WebView map, and stacking one per order made this list stutter
+                        // badly on a real phone. The remaining orders render as light summary cards
+                        // that open the full-screen tracker on tap.
+                        itemsIndexed(activeOrders, key = { _, order -> order.id }) { index, order ->
                             Column(
                                 verticalArrangement = Arrangement.spacedBy(10.dp),
                                 modifier = Modifier.padding(bottom = 12.dp)
                             ) {
-                                RealTimeOrderTrackingCard(
-                                    order = order,
-                                    viewModel = viewModel
-                                ) {
-                                    viewModel.setTrackingOrder(order)
-                                    viewModel.navigateTo("tracker")
+                                if (index == 0) {
+                                    RealTimeOrderTrackingCard(
+                                        order = order,
+                                        viewModel = viewModel
+                                    ) {
+                                        viewModel.setTrackingOrder(order)
+                                        viewModel.navigateTo("tracker")
+                                    }
+                                } else {
+                                    CustomerOrderCard(
+                                        order = order,
+                                        viewModel = viewModel,
+                                        highlighted = false
+                                    ) {
+                                        viewModel.setTrackingOrder(order)
+                                        viewModel.navigateTo("tracker")
+                                    }
                                 }
                             }
                         }

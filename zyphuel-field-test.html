@@ -1,0 +1,576 @@
+<title>Zyphuel Field Test</title>
+<style>
+  /* ---------- Tokens: complete light palette on bare :root ---------- */
+  :root {
+    --ground: #F6F8FB;
+    --surface: #FFFFFF;
+    --surface-sunken: #EDF2F7;
+    --ink: #0B1220;
+    --ink-soft: #34465A;
+    --ink-faint: #6B7C90;
+    --line: #D3DEE8;
+    --line-soft: #E4EBF2;
+
+    --sky: #0369A1;
+    --sky-bright: #0284C7;
+    --sky-wash: #E8F3FA;
+
+    --fixed: #15803D;
+    --fixed-wash: #E7F4EC;
+    --blocked: #B45309;
+    --blocked-wash: #FBF0E2;
+    --yours: #6D28D9;
+    --yours-wash: #F0EAFB;
+
+    --display: "Franklin Gothic Medium", "Segoe UI Semibold", "Helvetica Neue", system-ui, sans-serif;
+    --body: "Segoe UI", system-ui, -apple-system, sans-serif;
+    --mono: "Cascadia Mono", Consolas, "SF Mono", ui-monospace, monospace;
+
+    --shell: 62rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #080D15;
+      --surface: #111C29;
+      --surface-sunken: #0C1520;
+      --ink: #EDF3F9;
+      --ink-soft: #A9BACC;
+      --ink-faint: #74879B;
+      --line: #24384C;
+      --line-soft: #1A2938;
+
+      --sky: #56C4F5;
+      --sky-bright: #38BDF8;
+      --sky-wash: #10293A;
+
+      --fixed: #5BD38B;
+      --fixed-wash: #10281B;
+      --blocked: #F0B45C;
+      --blocked-wash: #2A1F0E;
+      --yours: #BA9BF5;
+      --yours-wash: #1E1733;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #080D15;
+    --surface: #111C29;
+    --surface-sunken: #0C1520;
+    --ink: #EDF3F9;
+    --ink-soft: #A9BACC;
+    --ink-faint: #74879B;
+    --line: #24384C;
+    --line-soft: #1A2938;
+
+    --sky: #56C4F5;
+    --sky-bright: #38BDF8;
+    --sky-wash: #10293A;
+
+    --fixed: #5BD38B;
+    --fixed-wash: #10281B;
+    --blocked: #F0B45C;
+    --blocked-wash: #2A1F0E;
+    --yours: #BA9BF5;
+    --yours-wash: #1E1733;
+  }
+
+  /* ---------- Base ---------- */
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .shell {
+    max-width: var(--shell);
+    margin: 0 auto;
+    padding: 3rem 1.5rem 5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+  }
+
+  h1, h2, h3 { font-family: var(--display); font-weight: 500; text-wrap: balance; margin: 0; letter-spacing: -0.01em; }
+  h1 { font-size: clamp(2rem, 5vw, 2.9rem); line-height: 1.08; }
+  h2 { font-size: 1.32rem; line-height: 1.2; }
+  h3 { font-size: 1rem; }
+  p { margin: 0; max-width: 65ch; }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  code, .mono { font-family: var(--mono); font-size: 0.86em; }
+
+  code {
+    background: var(--surface-sunken);
+    border: 1px solid var(--line-soft);
+    border-radius: 4px;
+    padding: 0.08em 0.34em;
+    word-break: break-word;
+  }
+
+  /* ---------- Masthead ---------- */
+  .masthead { display: flex; flex-direction: column; gap: 1rem; }
+
+  .masthead p { color: var(--ink-soft); font-size: 1.04rem; }
+
+  .rule {
+    height: 3px;
+    background: linear-gradient(90deg, var(--sky-bright) 0%, var(--sky-bright) 22%, var(--line) 22%, var(--line) 100%);
+    border-radius: 2px;
+  }
+
+  /* ---------- Section scaffold ---------- */
+  section { display: flex; flex-direction: column; gap: 1.15rem; }
+
+  .section-head { display: flex; flex-direction: column; gap: 0.3rem; }
+
+  /* ---------- Status strip ---------- */
+  .status-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: 0.85rem;
+  }
+
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 1rem 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .stat .count {
+    font-family: var(--display);
+    font-size: 2.1rem;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat.is-fixed .count { color: var(--fixed); }
+  .stat.is-blocked .count { color: var(--blocked); }
+  .stat.is-yours .count { color: var(--yours); }
+
+  .stat .what { font-weight: 600; font-size: 0.94rem; }
+  .stat .why { color: var(--ink-faint); font-size: 0.84rem; line-height: 1.45; }
+
+  /* ---------- Pills ---------- */
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    white-space: nowrap;
+    border: 1px solid transparent;
+  }
+  .pill.fixed { color: var(--fixed); background: var(--fixed-wash); border-color: color-mix(in srgb, var(--fixed) 30%, transparent); }
+  .pill.blocked { color: var(--blocked); background: var(--blocked-wash); border-color: color-mix(in srgb, var(--blocked) 30%, transparent); }
+  .pill.yours { color: var(--yours); background: var(--yours-wash); border-color: color-mix(in srgb, var(--yours) 30%, transparent); }
+  .pill.new { color: var(--sky); background: var(--sky-wash); border-color: color-mix(in srgb, var(--sky) 30%, transparent); }
+
+  /* ---------- Run order (a real sequence) ---------- */
+  .runlist { display: flex; flex-direction: column; gap: 0.7rem; counter-reset: run; }
+
+  .run {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 1rem 1.1rem 1rem 3.4rem;
+    position: relative;
+  }
+  .run::before {
+    counter-increment: run;
+    content: counter(run);
+    position: absolute;
+    left: 1rem;
+    top: 0.95rem;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 50%;
+    background: var(--ink);
+    color: var(--ground);
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    display: grid;
+    place-items: center;
+  }
+  .run h3 { margin-bottom: 0.3rem; }
+  .run .path {
+    display: block;
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    background: var(--surface-sunken);
+    border: 1px solid var(--line-soft);
+    border-radius: 6px;
+    padding: 0.5rem 0.6rem;
+    margin: 0.55rem 0 0.5rem;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  .run .note { color: var(--ink-faint); font-size: 0.86rem; }
+
+  /* ---------- Fix table ---------- */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+
+  table { border-collapse: collapse; width: 100%; min-width: 38rem; }
+
+  th, td { text-align: left; padding: 0.7rem 0.9rem; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+  th {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    background: var(--surface-sunken);
+    white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td.sym { font-family: var(--mono); font-size: 0.82rem; color: var(--ink-soft); white-space: nowrap; }
+  td .cause { color: var(--ink-faint); font-size: 0.85rem; display: block; margin-top: 0.18rem; }
+
+  /* ---------- Checklist ---------- */
+  .check-group { display: flex; flex-direction: column; gap: 0.55rem; }
+
+  .check-group > .eyebrow { margin-top: 0.5rem; }
+
+  label.check {
+    display: flex;
+    gap: 0.7rem;
+    align-items: flex-start;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 0.65rem 0.85rem;
+    cursor: pointer;
+    transition: border-color 120ms ease, background 120ms ease;
+  }
+  label.check:hover { border-color: var(--sky-bright); }
+  label.check:focus-within { outline: 2px solid var(--sky-bright); outline-offset: 2px; }
+
+  label.check input {
+    appearance: none;
+    flex: none;
+    width: 1.05rem;
+    height: 1.05rem;
+    margin: 0.2rem 0 0;
+    border: 1.5px solid var(--line);
+    border-radius: 4px;
+    background: var(--ground);
+    cursor: pointer;
+    position: relative;
+  }
+  label.check input:checked { background: var(--fixed); border-color: var(--fixed); }
+  label.check input:checked::after {
+    content: "";
+    position: absolute;
+    left: 0.28rem;
+    top: 0.08rem;
+    width: 0.28rem;
+    height: 0.55rem;
+    border: solid var(--surface);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+  label.check .body { display: flex; flex-direction: column; gap: 0.15rem; }
+  label.check .act { font-weight: 600; font-size: 0.93rem; }
+  label.check .expect { color: var(--ink-faint); font-size: 0.85rem; }
+  label.check:has(input:checked) { background: var(--surface-sunken); }
+  label.check:has(input:checked) .act { color: var(--ink-faint); text-decoration: line-through; }
+
+  /* ---------- Callout ---------- */
+  .callout {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 1.05rem 1.15rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .callout.tinted { background: var(--sky-wash); border-color: color-mix(in srgb, var(--sky) 26%, transparent); }
+  .callout h3 { display: flex; align-items: center; gap: 0.55rem; flex-wrap: wrap; }
+  .callout p { font-size: 0.9rem; color: var(--ink-soft); }
+
+  footer { color: var(--ink-faint); font-size: 0.82rem; border-top: 1px solid var(--line-soft); padding-top: 1.2rem; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+
+<div class="shell">
+
+  <header class="masthead">
+    <span class="eyebrow">Zyphuel · Lahore · build 1.0 debug</span>
+    <h1>Field test after the smoothness pass</h1>
+    <div class="rule"></div>
+    <p>Nine defects fixed across the live-tracking, payment and map layers, plus a new Windows
+      operations console. Nothing here has been run yet — the shell tool that builds and installs
+      was unavailable, so the two scripts below are the first real execution.</p>
+  </header>
+
+  <section>
+    <div class="status-grid">
+      <div class="stat is-fixed">
+        <span class="count">9</span>
+        <span class="what">Defects fixed in code</span>
+        <span class="why">Each traced to a specific line and cause, not guessed at. Listed below.</span>
+      </div>
+      <div class="stat is-blocked">
+        <span class="count">2</span>
+        <span class="what">Scripts for you to run</span>
+        <span class="why">Build + install the phone app, then build the desktop console.</span>
+      </div>
+      <div class="stat is-yours">
+        <span class="count">1</span>
+        <span class="what">Decision only you can make</span>
+        <span class="why">Firestore rules must allow the desktop console to read.</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="eyebrow">Run these in order</span>
+      <h2>Do this first</h2>
+    </div>
+    <div class="runlist">
+      <div class="run">
+        <h3>Build and install the phone app</h3>
+        <span class="path">D:\Games\New folder-web\Claude\INSTALL-TO-PHONE.bat</span>
+        <span class="note">Double-click it. Builds the APK, finds the phone, installs and launches.
+          Phone needs USB debugging on; tap <strong>Allow</strong> on the popup. If it fails, the
+          script prints the errors and saves <code>build-log.txt</code> — paste that back.</span>
+      </div>
+      <div class="run">
+        <h3>Build and run the desktop console</h3>
+        <span class="path">D:\Games\New folder-web\Claude\RUN-DESKTOP.bat</span>
+        <span class="note">First run downloads Compose Desktop (~150–250&nbsp;MB), so allow
+          5–15&nbsp;minutes. Produces a real
+          <code>ZyphuelOpsConsole.exe</code> and starts it. This build is fully separate from the
+          Android one — a failure here cannot break your phone app.</span>
+      </div>
+    </div>
+    <div class="callout">
+      <h3>Pushing to GitHub <span class="pill new">optional</span></h3>
+      <p><code>PUSH-TO-GITHUB.bat</code> pushes to <code>daniyal44/Zyphuel-App</code>. It asks Y/N
+        first, because <code>app\google-services.json</code> would be uploaded.
+        <code>.env</code>, <code>local.properties</code>, <code>debug.keystore</code> and both build
+        logs stay out. It never force-pushes.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="eyebrow">What changed and why</span>
+      <h2>The nine fixes</h2>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Symptom you saw</th><th>Root cause</th><th>Where</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>App froze while tracking</td>
+            <td>Camera-follow was keyed on the marker's interpolated position, so it cancelled and
+              restarted its animation about 60&nbsp;times a second.
+              <span class="cause">Now keyed on the GPS fix — roughly once every 4&nbsp;seconds.</span></td>
+            <td class="sym">GoogleMapsLiveDeliveryTrackingOverlay.kt:150</td>
+          </tr>
+          <tr>
+            <td>Map yanked itself back every few seconds</td>
+            <td>Every live position update called <code>panTo</code>, fighting your finger.
+              <span class="cause">Panning now happens only when you pick a landmark.</span></td>
+            <td class="sym">Screens.kt · WebView update block</td>
+          </tr>
+          <tr>
+            <td>Home screen stuttered badly</td>
+            <td>Every active order rendered its own full live-map card, and each of those hosts a
+              WebView.
+              <span class="cause">Only the newest order keeps the map; the rest are light summary
+                cards that open the full tracker on tap. List keys added too.</span></td>
+            <td class="sym">Screens.kt:4129</td>
+          </tr>
+          <tr>
+            <td>General sluggishness on the tracker</td>
+            <td>ETA, distance and progress were recomputed from the per-frame animation value, so the
+              whole card recomposed at 60&nbsp;fps.
+              <span class="cause">Derived from the GPS fix instead.</span></td>
+            <td class="sym">GoogleMapsLiveDeliveryTrackingOverlay.kt:136</td>
+          </tr>
+          <tr>
+            <td>Battery and data drain</td>
+            <td>A live Gemini price call fired every 5&nbsp;minutes for the whole session, on top of
+              the existing 4-hour background worker.
+              <span class="cause">Now every 30&nbsp;minutes.</span></td>
+            <td class="sym">MainViewModel.kt:880</td>
+          </tr>
+          <tr>
+            <td>Rider marker never moved on the map</td>
+            <td>The WebView update refreshed only the destination pin. The driver marker and route
+              were baked in at first load and never touched again.
+              <span class="cause">Added <code>updateDriverPosition()</code>; marker and dashed route
+                now follow the real GPS.</span></td>
+            <td class="sym">Screens.kt:6626</td>
+          </tr>
+          <tr>
+            <td>COD did nothing</td>
+            <td><code>placeOrder()</code> had no payment-method parameter, so your COD / Card choice
+              was dropped on the floor.
+              <span class="cause">Threaded through dialog → placeOrder → createOrder → Firestore and
+                the audit log. The confirm button now names the chosen method.</span></td>
+            <td class="sym">MainViewModel.kt · Repository.kt · Screens.kt</td>
+          </tr>
+          <tr>
+            <td>Grey, permanently-loading map</td>
+            <td>The key check only rejected keys containing <code>YOUR_</code>, so a placeholder
+              counted as real and the app tried to draw Google tiles with it.
+              <span class="cause">A key now has to start with <code>AIza</code> and be 35+ chars,
+                otherwise the vector fallback map is used. You do not need a Maps key.</span></td>
+            <td class="sym">GoogleMapsLiveDeliveryTrackingOverlay.kt:930</td>
+          </tr>
+          <tr>
+            <td>Build failed twice</td>
+            <td>Two call sites still passed <code>riderName</code> after the parameter became
+              <code>driverName</code>; and a blank <code>MAPS_API_KEY</code> generated
+              <code>String MAPS_API_KEY = ;</code>.
+              <span class="cause">Both fixed; the blank-key trap is now documented in
+                <code>.env</code>.</span></td>
+            <td class="sym">Screens.kt:7183 · 12423 · .env</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="eyebrow">Two devices, in this order</span>
+      <h2>End-to-end tracking test</h2>
+    </div>
+    <p>This is the test that proves the whole chain: rider GPS → Firestore → customer map. Use the
+      emulator as the customer and the TECNO KI7 as the rider, so both roles are live at once.</p>
+    <div class="check-group">
+      <label class="check"><input type="checkbox"><span class="body"><span class="act">Install on both devices</span><span class="expect">The script installs to every connected device. Run it once with both attached.</span></span></label>
+      <label class="check"><input type="checkbox"><span class="body"><span class="act">Emulator: sign in as a customer, place a Petrol order with COD</span><span class="expect">Confirm button reads “Confirm Order (COD)”. Order appears with status Pending.</span></span></label>
+      <label class="check"><input type="checkbox"><span class="body"><span class="act">Phone: sign in as a rider, accept that order</span><span class="expect">The order shows up on the rider screen — this also proves cross-device Firestore sync.</span></span></label>
+      <label class="check"><input type="checkbox"><span class="body"><span class="act">Phone: tap Start Delivering, allow location</span><span class="expect">A persistent notification appears: sharing live location for the order.</span></span></label>
+      <label class="check"><input type="checkbox"><span class="body"><span class="act">Emulator: open the order's tracker</span><span class="expect">Rider marker sits at the real phone position, not the depot. ETA and distance are real numbers.</span></span></label>
+      <label class="check"><input type="checkbox"><span class="body"><span class="act">Walk with the phone (or move the emulator's GPS)</span><span class="expect">Marker glides to each new position with the arrow pointing along the direction of travel. Distance and ETA fall. No freeze.</span></span></label>
+      <label class="check"><input type="checkbox"><span class="body"><span class="act">Desktop console: watch the same order</span><span class="expect">Rider appears on the OpenStreetMap view, moving, with a green GPS dot in the order list.</span></span></label>
+      <label class="check"><input type="checkbox"><span class="body"><span class="act">Phone: mark the order Completed</span><span class="expect">Notification disappears, live-tracking record is cleared, and the order leaves the Active filter on the desktop.</span></span></label>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="eyebrow">Tap through each one</span>
+      <h2>Feature sweep</h2>
+    </div>
+
+    <div class="check-group">
+      <span class="eyebrow">Customer</span>
+      <label class="check"><input type="checkbox"><span class="body"><span class="act">Continue with Google</span><span class="expect">Real account picker, real sign-in. The certificate hash for your debug key is already registered in project ai-420, so this should work.</span></span></label>
+      <label class="check"><input type="checkbox"><span class="body"><span class="act">Switch payment to Card, then place an order</span><span class="expect">Button becomes “Confirm Order (Card)” and the saved order reads Online / Card — previously always COD.</span></span></label>
+      <label class="check"><input type="checkbox"><span class="body"><span class="act">Order several services at once (petrol + LPG + water)</span><span class="expect">Totals add up; a single combined order is created.</span></span></label>
+      <label class="check"><input type="checkbox"><span class="body"><span class="act">Scroll the home screen fast with an active order</span><span class="expect">No stutter. This is the fix that mattered most.</span></span></label>
+      <label class="check"><input type="checkbox"><span class="body"><span class="act">Mark a delivery location pin, then order</span><span class="expect">The saved pin becomes the destination on the tracking map.</span></span></label>
+      <label class="check"><input type="checkbox"><span class="body"><span class="act">Call the rider from the tracker</span><span class="expect">The real dialer opens with the number filled in.</span></span></label>
+      <label class="check"><input type="checkbox"><span class="body"><span class="act">Rate a completed order</span><span class="expect">Stars save and survive an app restart.</span></span></label>
+      <label class="check"><input type="checkbox"><span class="body"><span class="act">Order history</span><span class="expect">Past orders listed with the correct payment method shown.</span></span></label>
+    </div>
+
+    <div class="check-group">
+      <span class="eyebrow">Rider</span>
+      <label class="check"><input type="checkbox"><span class="body"><span class="act">Accept, then move an order through every status</span><span class="expect">Assigned → Delivering → Completed, each reflected on the customer device.</span></span></label>
+      <label class="check"><input type="checkbox"><span class="body"><span class="act">Deny the location permission on purpose</span><span class="expect">A clear message, no crash. The tracking service stops itself instead of hanging.</span></span></label>
+      <label class="check"><input type="checkbox"><span class="body"><span class="act">Background the rider app mid-delivery</span><span class="expect">Location keeps publishing — that is what the foreground service is for. Customer marker keeps moving.</span></span></label>
+      <label class="check"><input type="checkbox"><span class="body"><span class="act">Delivery history and earnings</span><span class="expect">Completed orders listed for that rider only.</span></span></label>
+    </div>
+
+    <div class="check-group">
+      <span class="eyebrow">Admin and system</span>
+      <label class="check"><input type="checkbox"><span class="body"><span class="act">Admin dashboard order and rider lists</span><span class="expect">All orders visible, counts match reality.</span></span></label>
+      <label class="check"><input type="checkbox"><span class="body"><span class="act">Fuel prices</span><span class="expect">Live prices shown. They now refresh every 30 minutes in-app plus the 4-hour background worker.</span></span></label>
+      <label class="check"><input type="checkbox"><span class="body"><span class="act">Leave an order unaccepted for 5 minutes</span><span class="expect">Auto-cancelled with a customer notification.</span></span></label>
+      <label class="check"><input type="checkbox"><span class="body"><span class="act">Kill and reopen the app</span><span class="expect">Session restored, orders still there, no permission prompt loop.</span></span></label>
+      <label class="check"><input type="checkbox"><span class="body"><span class="act">Turn off Wi-Fi and mobile data</span><span class="expect">Room-cached orders still render; no crash, no blank screen.</span></span></label>
+    </div>
+
+    <div class="check-group">
+      <span class="eyebrow">Desktop console</span>
+      <label class="check"><input type="checkbox"><span class="body"><span class="act">Order list, filters, and selection</span><span class="expect">Active / All / Finished filter correctly; clicking an order loads its map and details.</span></span></label>
+      <label class="check"><input type="checkbox"><span class="body"><span class="act">Change a status from the desktop</span><span class="expect">The phone picks up the change within a few seconds.</span></span></label>
+      <label class="check"><input type="checkbox"><span class="body"><span class="act">Map auto-fit</span><span class="expect">Depot, rider and destination all stay visible without manual zooming.</span></span></label>
+      <label class="check"><input type="checkbox"><span class="body"><span class="act">Stale GPS handling</span><span class="expect">Stop the rider app; within two minutes the marker turns amber and the list says GPS stale.</span></span></label>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="eyebrow">Needs a decision from you</span>
+      <h2>Two open items</h2>
+    </div>
+
+    <div class="callout tinted">
+      <h3>Firestore rules for the desktop console <span class="pill yours">yours</span></h3>
+      <p>The console reads Firestore over its REST API, because the Firebase SDK is Android-only. If
+        your project's rules require an authenticated user, the console will show a clear
+        <strong>HTTP 403</strong> message instead of data. Allowing read — and write, for status
+        changes — on the <code>orders</code> and <code>live_tracking</code> collections is what makes
+        it work. Tell me which way you want it and I will wire the matching auth or rules.</p>
+    </div>
+
+    <div class="callout">
+      <h3>Google Maps key <span class="pill new">optional now</span></h3>
+      <p>You said you do not have one, and you no longer need one: the app falls back to its vector
+        map, and both the live tracking map and the desktop console use tile sources that need no
+        key. If you ever want native Google tiles, the key already sitting in
+        <code>app\google-services.json</code> can serve — it needs “Maps SDK for Android” enabled on
+        project <code>ai-420</code>, which requires a billing account.</p>
+    </div>
+  </section>
+
+  <footer>
+    Every fix above was verified by reading the code, not by running it — the build and install tool
+    was unavailable for this whole session. The scripts are how we find out. Paste any error and it
+    gets fixed.
+  </footer>
+</div>
+
+<script>
+  // Remember ticked items so a multi-day test pass survives closing the tab.
+  (function () {
+    var KEY = "zyphuel-field-test-v1";
+    var boxes = Array.prototype.slice.call(document.querySelectorAll("label.check input"));
+    var saved = {};
+    try { saved = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { saved = {}; }
+
+    boxes.forEach(function (box, index) {
+      if (saved[index]) box.checked = true;
+      box.addEventListener("change", function () {
+        saved[index] = box.checked;
+        try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) { /* private mode */ }
+      });
+    });
+  })();
+</script>

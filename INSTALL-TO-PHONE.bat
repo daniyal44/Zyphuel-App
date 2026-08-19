@@ -149,9 +149,14 @@ rem ---------- Build failure ----------
 :BUILD_FAILED
 echo  [X] BUILD FAIL HO GAYA.
 echo.
-echo  Neeche errors hain ^(poora log: build-log.txt^):
+echo  Kotlin/Java errors:
 echo  ------------------------------------------------------------
-findstr /R /C:"^e: " /C:"error:" /C:"FAILURE:" /C:"Caused by" "%LOG%"
+findstr /R /C:"^e: " /C:"error:" "%LOG%"
+echo  ------------------------------------------------------------
+echo.
+echo  Log ka aakhri hissa ^(poora log: build-log.txt^):
+echo  ------------------------------------------------------------
+"%PS%" -NoProfile -Command "Get-Content '%LOG%' -Tail 40"
 echo  ------------------------------------------------------------
 echo.
 echo  Ye errors ^(ya build-log.txt^) Claude ko paste kar dein -

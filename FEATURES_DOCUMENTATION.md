@@ -329,6 +329,20 @@ The app strictly segments access control across three user roles:
 * **Unobtrusive Discovery Banners**:
   * Clean Material 3 alert card embedded in `CustomerHomeScreen` and `TrackerScreen` header for quick permission management.
 
+## 11.8 Customer Home Multi-Order View Optimization & Polling Throttling
+* **Hybrid Order Card Rendering (`CustomerHomeScreen` in `Screens.kt`)**:
+  * Prioritizes rendering resources by displaying the primary active order with the rich interactive live-map tracking card (`RealTimeOrderTrackingCard`) while subsequent active orders are rendered using lightweight, performant summary cards (`CustomerOrderCard`).
+  * Prevents UI stutter and WebView stacking lag on physical mobile devices when multiple active orders exist concurrently.
+* **Network & Battery Conscious Fuel Price Polling (`MainViewModel.syncFuelPricesViaGemini`)**:
+  * Throttles periodic background Gemini price sync loop to 30-minute intervals (`30 * 60 * 1000L`) to complement the existing 4-hour `FuelPriceWorker` background schedule without wasting mobile data or battery.
+
+## 11.9 Zyphuel Desktop Operations Console (`desktop/`)
+* **Compose Multiplatform Desktop Application (`desktop/src/main/kotlin/com/example/desktop/`)**:
+  * **Operations Console UI (`OpsConsoleScreen.kt`)**: Dark-themed command-and-control operations dashboard for fleet dispatchers with real-time active order monitoring, rider telemetry, status filtering, and search.
+  * **Custom Tile Map View (`TileMapView.kt`)**: Hardware-accelerated offline/online OpenStreetMap tile renderer built on Compose Desktop Canvas with smooth panning, zoom controls, dispatch hub indicators, and vehicle markers.
+  * **Firestore REST Client (`FirestoreRest.kt`, `DesktopConfig.kt`)**: Zero-dependency REST-based Cloud Firestore streaming client connecting with Firebase project credentials without requiring full Android SDK dependencies.
+  * **One-Click Launch Scripts**: `RUN-DESKTOP.bat` and `RUN-DESKTOP-DEBUG.bat` for seamless local execution on Windows/macOS/Linux.
+
 ---
 
 ## 12. Database Architecture & Data Models

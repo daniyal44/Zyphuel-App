@@ -878,7 +878,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             kotlinx.coroutines.delay(1000)
             syncFuelPricesViaGemini()
             while (true) {
-                kotlinx.coroutines.delay(300000)
+                // 30 minutes, not 5: this is a live Gemini network call, and FuelPriceWorker
+                // already refreshes prices on a 4-hour schedule. Every 5 minutes burned data
+                // and CPU for prices that barely move.
+                kotlinx.coroutines.delay(30 * 60 * 1000L)
                 syncFuelPricesViaGemini()
             }
         }
