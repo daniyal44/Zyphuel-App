@@ -17,6 +17,9 @@ local.properties
 .env
 debug.keystore
 build-log.txt
+desktop/build/
+desktop/.gradle/
+desktop-build-log.txt
 *.log
 *service_account*.json
 *service-account*.json
