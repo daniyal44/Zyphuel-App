@@ -1,0 +1,64 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+
+    <!-- Left Main Curving Flame Wing -->
+    <path
+        android:pathData="M 51.5,5.0 C 35.0,22.0 16.0,42.0 16.0,68.0 C 16.0,82.0 28.0,91.0 42.0,91.0 C 49.0,91.0 54.0,86.0 51.0,76.0 C 47.0,62.0 32.0,52.0 22.0,45.0 C 32.0,38.0 45.0,25.0 51.5,5.0 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="16"
+                android:startY="91"
+                android:endX="51.5"
+                android:endY="5"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#00F5FF" />
+                <item android:offset="0.4" android:color="#0088FF" />
+                <item android:offset="1.0" android:color="#0033FF" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Right Secondary Curving Flame Wing -->
+    <path
+        android:pathData="M 51.5,5.0 C 58.0,18.0 68.0,30.0 68.0,42.0 C 68.0,48.0 62.0,51.0 56.0,46.0 C 51.0,42.0 48.0,25.0 51.5,5.0 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="48"
+                android:startY="46"
+                android:endX="68"
+                android:endY="5"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#00E5FF" />
+                <item android:offset="1.0" android:color="#0022FF" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Bottom Right Swooping Wing -->
+    <path
+        android:pathData="M 48.5,91.0 C 55.0,78.0 83.0,58.0 83.0,42.0 C 83.0,32.0 73.0,26.0 68.0,32.0 C 63.0,38.0 60.0,55.0 48.5,91.0 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="48.5"
+                android:startY="91"
+                android:endX="83"
+                android:endY="26"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#0088FF" />
+                <item android:offset="1.0" android:color="#0011AA" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Stylized White "Z" Cutout / Overlay -->
+    <path
+        android:pathData="M 24,40 L 76,40 L 28,76 L 76,76"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="10"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>

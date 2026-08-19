@@ -1,0 +1,63 @@
+{
+  "project_info": {
+    "project_number": "488422345846",
+    "project_id": "ai-420",
+    "storage_bucket": "ai-420.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:488422345846:android:ce543ad4c2e05b292a2357",
+        "android_client_info": {
+          "package_name": "com.aistudio.zyphuel.appv2"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "488422345846-41p7566evsr5nshe9albf9eak42m6n4e.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.aistudio.zyphuel.appv2",
+            "certificate_hash": "8bf687dd6925366e9e5b5704d1228d6fb5fc94e2"
+          }
+        },
+        {
+          "client_id": "488422345846-a8e8ernjc953kmb76tdtr9raj1nputa3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.aistudio.zyphuel.appv2",
+            "certificate_hash": "c7f710f22d43d1f331d222ab351bc44701eec7e5"
+          }
+        },
+        {
+          "client_id": "488422345846-c979b8dsfe8obcpv6kmdgr10s6ecik1h.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.aistudio.zyphuel.appv2",
+            "certificate_hash": "0c7a23997a444c5ee2c5f4ebae7f9d915ea29a11"
+          }
+        },
+        {
+          "client_id": "488422345846-m972okhh2ms29s911apa4t8ih04d3jo1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD2dJ-wXziYWgnucCS7ez7V6vb0PTLoLno"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "100998564332945881181",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
