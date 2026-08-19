@@ -1,0 +1,29 @@
+# ===================================================================================================
+#                                  ZYPHUEL APP: ROBOTS.TXT META RULES
+# ===================================================================================================
+# Optimization: Full landing page discoverability, mobile app download prioritizing, system security.
+# Targeting: Googlebot, Bingbot, Slurp, DuckDuckBot, Baiduspider, YandexBot, Gemini, ChatGPT-User.
+# ===================================================================================================
+
+User-agent: *
+Allow: /
+Allow: /zyphuel.apk
+Allow: /services
+Allow: /about
+Allow: /support
+Allow: /WEBSITE_SEO_AEO_GEO_META_TAGS.html
+
+# Prevent indexation of sensitive system files, configs, and temporary folders
+Disallow: /admin/
+Disallow: /config/
+Disallow: /private/
+Disallow: /api/
+Disallow: /auth/
+Disallow: /app/
+Disallow: /gradle/
+Disallow: /build.gradle.kts
+Disallow: /settings.gradle.kts
+Disallow: /metadata.json
+
+# Site Map Location
+Sitemap: https://zyphuel.netlify.app/sitemap.xml

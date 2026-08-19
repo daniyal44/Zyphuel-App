@@ -1,0 +1,347 @@
+# Zyphuel App - Comprehensive Features & Functions Documentation 🚀
+
+Welcome to the complete architectural and functional guide for the **Zyphuel** Android application. This document outlines every single feature, function, database entity, and user flow from start to finish.
+
+---
+
+## 📋 Table of Contents & Modular Documentation Files Index
+
+Below is the complete index of all **12 dedicated documentation files** (including 10 modular feature guides in `/docs`, system architecture, and persistent project memory) covering every aspect of Zyphuel:
+
+| # | File Name | Category | Primary Focus & Functions Covered |
+| :-: | :--- | :--- | :--- |
+| **-** | [`ARCHITECTURE.md`](/ARCHITECTURE.md) | System Architecture | MVVM architecture, layer stack diagram, directory structure, data flow constraints. |
+| **-** | [`MEMORY.md`](/MEMORY.md) | Project Memory & Log | Evolution history, immutable development rules, phase completion records, entity schema. |
+| **1** | [`docs/01_USER_ROLES_AND_AUTHENTICATION.md`](/docs/01_USER_ROLES_AND_AUTHENTICATION.md) | Security & User Control | Customer, Rider & Admin registration, SHA-256 login, role routing. |
+| **2** | [`docs/02_CUSTOMER_ORDER_PLACING_AND_SURGE.md`](/docs/02_CUSTOMER_ORDER_PLACING_AND_SURGE.md) | Customer Commerce | Super Petrol, HSD, Water & LPG ordering, volume pricing, peak surge, WhatsApp (>30L). |
+| **3** | [`docs/03_REALTIME_GPS_DRIVER_TRACKING.md`](/docs/03_REALTIME_GPS_DRIVER_TRACKING.md) | Logistics & Navigation | Live driver GPS map (`DriverRealTimeTrackingMap`), geofence arrival alerts, quick call dialer. |
+| **4** | [`docs/04_ADMIN_DASHBOARD_AND_MANAGEMENT.md`](/docs/04_ADMIN_DASHBOARD_AND_MANAGEMENT.md) | Admin & Operations | Analytics dashboard, `AddCustomerDialog`, `AddRiderDialog`, manual dispatch, audit logs. |
+| **5** | [`docs/05_RIDER_BOWSER_DRIVER_PORTAL.md`](/docs/05_RIDER_BOWSER_DRIVER_PORTAL.md) | Driver Fleet Operations | Active duty queue (`RiderHomeScreen`), status progression (En Route → Arrived → Completed), COD receipt. |
+| **6** | [`docs/06_SECURITY_AND_BIOMETRICS.md`](/docs/06_SECURITY_AND_BIOMETRICS.md) | Security & Encryption | Fingerprint/Face unlock (`BiometricSecurityManager`), encrypted storage, rate limiter, input validator. |
+| **7** | [`docs/07_NOTIFICATION_AND_COMMUNICATION_ENGINE.md`](/docs/07_NOTIFICATION_AND_COMMUNICATION_ENGINE.md) | Push & Messaging | Android system push (`zyphuel_order_updates`), FCM service, automated email receipts, WhatsApp hotline. |
+| **8** | [`docs/08_POST_DELIVERY_RATING_AND_FEEDBACK.md`](/docs/08_POST_DELIVERY_RATING_AND_FEEDBACK.md) | Customer Quality & Feedback | Interactive 1-5 star rating card (`PostDeliveryRatingCard`), compliment chips (`FlowRow`), driver feedback notes. |
+| **9** | [`docs/09_COMPOSE_ORDER_TRANSITION_ANIMATIONS.md`](/docs/09_COMPOSE_ORDER_TRANSITION_ANIMATIONS.md) | UI Motion & Animation | Status header transitions (`AnimatedContent`), pulsing halo, Canvas floating confetti celebration overlay. |
+| **10** | [`docs/10_DATABASE_ROOM_PERSISTENCE_AND_MODELS.md`](/docs/10_DATABASE_ROOM_PERSISTENCE_AND_MODELS.md) | Data Architecture | Room local SQLite persistence (`UserEntity`, `OrderEntity`, `AuditLogEntity`, `NotificationEntity`), DAOs. |
+
+---
+
+## 1. Overview & App Purpose
+**Zyphuel** is an on-demand fuel, pure drinking water, and LPG gas cylinder delivery platform serving Lahore, Pakistan. The app connects customers, bowser drivers (riders), and admins seamlessly with real-time GPS tracking, transparent pricing, and instant notifications.
+
+---
+
+## 2. User Roles & Permissions
+The app strictly segments access control across three user roles:
+* **Customer (`role = "customer"`)**: Can place orders, view price alerts (Super Petrol, High-Speed Diesel, High Octane, LPG Gas, Pure Water @ Rs. 50/gallon), track delivery driver live on map, and update profile settings.
+* **Rider (`role = "rider"`)**: Can accept orders, update delivery status (En Route -> Arrived -> Completed), and share live GPS coordinates.
+* **Admin (`role = "admin"`)**: Full access to app stats, audit logs, active orders, rider management, and **Customer Management (Add/Edit Customers)**.
+* **Social OAuth 2.0 SDK Authentication**:
+  * **Continuous Google Sign-In & Firebase Integration**: Exclusively features "Continue with Google" sign-in via `GoogleAuthManager` and `AuthManager`. Tapping "Continue with Google" initiates native real-time Google authentication (`CredentialManager` with `GetGoogleIdOption`).
+  * **AuthManager (`AuthManager.kt`)**: Dedicated singleton managing Firebase Authentication lifecycle states (`FirebaseAuthState`: `Unauthenticated`, `Loading`, `Authenticated`, `Error`) with `StateFlow` streams (`authStateFlow`, `currentUserState`, `isProcessing`). Features step-by-step diagnostic trace logs (`[GoogleSignInRedirect] Step 1-4`) for credential generation, Firebase token exchange, and session completion to proactively diagnose redirect hangs.
+  * **GoogleAuthManager (`GoogleAuthManager.kt`)**: Dedicated `GoogleAuthManager` class leveraging `androidx.credentials` library (`CredentialManager.create(context)`). Implements `GetCredentialRequest` with `GetGoogleIdOption` to trigger the native Android Google Account Picker, extracts `GoogleIdTokenCredential`, and delegates token sync to `AuthManager` with comprehensive stage logging (`[GoogleAuthFlow]`). Supports role-aware sign-in (`targetRole`) to strictly isolate customer and rider accounts without risking accidental admin privilege escalation.
+  * **Real Device Account Picker Sheet (`Screens.kt` / `DeviceAccountUtils.kt`)**: If the device contains configured Google accounts or local profiles, provides a Google-styled account selection sheet for single-tap real-time authentication. If no Google account is present on the device, directs the user to add their Google account via Android Settings. No mock or fake text input forms are displayed.
+  * **AuthRepository State Synchronizer (`AuthRepository.kt`)**: Dedicated `AuthRepository` managing `FirebaseAuth` instance lifecycle, setting up `addAuthStateListener` to monitor user login status, and providing `signOut()` function to clear local sessions and sync `AuthState` (`Unauthenticated`, `Loading`, `Authenticated`, `Error`), `firebaseUser`, and `isLoading` StateFlows directly with UI loading indicators and ViewModels.
+  * **Unified AuthViewModel (`AuthViewModel.kt` / `AuthenticationViewModel`)**: Centralized ViewModel wrapping `AuthRepository` that handles credential-based Google authentication via `signInWithGoogleCredential(idToken, accessToken)` and `signInWithCredential(AuthCredential)`. Uses `GoogleAuthProvider.getCredential(idToken, accessToken)` to exchange tokens directly with the `FirebaseAuth` instance, maintaining `authState`, `firebaseUser`, `isLoading`, and `authErrorMessage` StateFlows for UI reactive updates.
+  * **Firestore User Profile Sync (Upsert)**: Automatically saves and updates user documents in Cloud Firestore at path `users/{uid}` with fields `uid`, `email`, `displayName`, `photoURL`, `role`, `createdAt`, and `lastLogin`.
+  * **Auth State Listener & Session Persistence**: Root level `FirebaseAuth.addAuthStateListener` in `FirebaseAuthProvider.kt` and `AuthRepository.kt` tracks auth state changes and manages session tokens.
+  * **Signing Diagnostic Utility (`SigningDiagnosticUtil.kt`)**: Dedicated diagnostic utility invoked in `MainActivity.kt` `onCreate` that extracts, formats, and logs the current app build's signing certificate SHA-1 fingerprint (`C7:F7:10:F2:2D:43:D1:F3:31:D2:22:AB:35:1B:C4:47:01:EE:C7:E5`) to Logcat and `DebugLogger`, automatically comparing it with the expected Firebase Console fingerprint to identify configuration mismatches and prevent `DEVELOPER_ERROR` during Google Sign-In.
+  * **Google Services Configuration (`google-services.json`)**: Configured with project `ai-420` (project number `488422345846`), package name `com.aistudio.zyphuel.appv2`, and registered Android OAuth Client ID `488422345846-a8e8ernjc953kmb76tdtr9raj1nputa3.apps.googleusercontent.com` paired with certificate hash `c7f710f22d43d1f331d222ab351bc44701eec7e5` and Web Client ID `488422345846-m972okhh2ms29s911apa4t8ih04d3jo1.apps.googleusercontent.com`.
+  * **Mobile Navigation & Profile UI Integration**: Displays user profile photo, display name, and email in the Navigation Drawer and Profile screens, with Admin Dashboard menu options strictly restricted to users with `user.role == "admin"`.
+
+---
+
+## 3. Customer Portal Features
+* **Fuel & Water Order Placement**: Select fuel type (Super Petrol, High-Speed Diesel, Pure Water @ Rs. 50/gallon), enter volume in Liters/Gallons, select delivery location.
+* **Instant Resilient Order Placement (`MainViewModel.placeOrder`)**:
+  * **Auto Customer Session Sync**: If no active user session exists, automatically initializes a default customer session to ensure order placement never fails.
+  * **Automatic Address Fallback**: Automatically provides fallback delivery address ("Main Boulevard, Gulberg III, Lahore") if address field is left empty or short, preventing silent validation errors.
+  * **Direct COD Confirmation**: Clicking "Confirm Order (COD)" instantly creates the order, dispatches system notifications, and opens the live rider tracking map without mandatory external redirection.
+* **Surge Pricing & High-Volume Logic**:
+  * Auto-calculates peak delivery demand surge multipliers.
+  * Orders $\ge 30\text{L}$ automatically display high-volume guidance while allowing direct COD order placement and optional WhatsApp support connection.
+* **Interactive Live Order Tracking Card (`RealTimeOrderTrackingCard`)**:
+  * **Unified Single Google Map (`UnifiedGoogleMapView`)**: Combines customer order destination pin ("where to order from"), real-time driver bowser location, and Green Town HQ dispatch origin onto a single unified map display.
+  * **Uncached Persistent LocationService (`LocationService.kt`)**: Real-time high-accuracy `PRIORITY_HIGH_ACCURACY` location engine with a persistent `FusedLocationProviderClient` listener, active `flushLocations()` cache-clearing before requests, and live coordinate flow streaming without stale location caching.
+  * **COD Payment GPS Toggle**: When Cash on Delivery (COD) payment method is selected during order checkout, the live GPS map view is hidden for user simplicity and privacy.
+  * **Robust External Maps Link Handling (`handleExternalMapIntent`)**: Wrapped `startActivity` with `Intent.createChooser` in nested `try-catch` blocks for safe intent scheme resolution (`intent:`, `geo:`, `google.navigation:`, `maps.google.com`) with browser fallback choosers and fallback toasts to eliminate "Web page not available" errors.
+  * **Interactive Map Controls & Gesture Preservation**: Added `setOnTouchListener` with `requestDisallowInterceptTouchEvent(true)` on WebView so pinch-zoom, pan, and dragging map pins operate fluidly without Compose parent scroll containers interfering.
+  * **Dynamic Map Layer Switcher**: Instant map style toggling between **🗺️ Streets** (CartoDB Voyager), **🛰️ Satellite** (Esri World Imagery), and **🌙 Dark Mode** (CartoDB Dark Matter) without reloading the HTML page.
+  * **On-Map Zoom & Recenter Controls**: Floating touch controls for `➕ Zoom In`, `➖ Zoom Out`, `🎯 Recenter Pin`, and `⛶ Fullscreen Expand Map` modal with verified `testTag` hooks (`map_zoom_in_btn`, `map_zoom_out_btn`, `map_recenter_btn`, `map_fullscreen_btn`).
+  * **Quick Lahore Area Presets**: One-tap preset location chips (**Gulberg III**, **Johar Town**, **DHA Phase 5**, **Model Town**, **Green Town HQ**, **Lake City**, **Mall Road**) that instantly update the location pin and map camera smoothly.
+  * **Lahore LatLngBounds Constraints**: Enforces explicit Leaflet/Map `LatLngBounds` bounding box constraint ($31.2000^\circ\text{S} - 31.7200^\circ\text{N}$, $74.0500^\circ\text{W} - 74.6200^\circ\text{E}$) with `maxBounds`, `maxBoundsViscosity`, and optimized camera zoom levels (city-wide zoom 10-18) to prevent map unresponsiveness or off-map panning.
+  * **Highlighted Lahore Petrol Pumps Layer**: Renders interactive yellow ⛽ badges highlighting key Lahore fuel hubs (PSO Station Green Town Depot at `31.4378, 74.2974`, Shell Model Town, TotalEnergies Gulberg, Attock DHA, Hascol Johar Town, PSO Mall Road) with quick Google Maps search links.
+  * **Interactive Driver Profile Modal**: Tapping the rider vehicle marker on the unified map or the top ETA header triggers a verified driver profile popup displaying full name, vehicle registration plate number (e.g. `LEC-8924`), bowser capacity, ETA, remaining distance, and a direct one-tap call button.
+  * **Single Map Consolidation**: All map entry points (`DriverRealTimeTrackingMap`, `GoogleMapComposeView`, `DeliveryTrackerComponent`, `LahoreGoogleEmbedMapView`, `InteractiveLocationPickerMap`) delegate directly to `UnifiedGoogleMapView` so the user sees one merged, interactive map across Order Now and COD flows.
+
+---
+
+## 4. Real-Time GPS Driver Tracking Map & Custom Vehicle Marker
+* **Component**: `UnifiedGoogleMapView`, `DriverRealTimeTrackingMap`, `DeliveryTrackerComponent`, `GoogleMapComposeView`, `InteractiveLocationPickerMap`, `handleExternalMapIntent` (`Screens.kt`)
+* **Custom Ride-Sharing Vehicle Marker (`DeliveryVehicleCustomMarker`)**:
+  * **Dynamic Real-Time Rotation**: Computes and animates heading bearing degree (`0° - 360°`) smoothly as the vehicle moves along its route.
+  * **Vehicle Type Support**: Supports customized icons and symbols for Fuel Bowsers (🚚), Delivery Bikes (🏍️), Cars (🚗), and Water Tankers.
+  * **Pulsing Sonar Radar Effect**: Active real-time GPS pulse ring animation around the vehicle marker to signal active GPS signal transmission.
+  * **Interactive Driver Profile Popup**: Tapping the rider marker sends an `onDriverClicked` callback via JavaScript `AndroidBridge` interface to display the complete driver profile dialog.
+  * **Time Remaining Header**: Prominent ETA header bar rendered directly above the map showing estimated arrival time (`~X mins`), total route distance (`km`), and current order status.
+* **Green Town Main Headquarters (Origin Depot)**:
+  * Central main branch and dispatch hub is located at **Green Town, Lahore** (31.4380, 74.3050).
+  * All delivery bowsers start and finish their routes from Green Town HQ.
+  * The map renders Green Town HQ (`🏢 HQ Green Town`) as the fixed starting/ending dispatch marker with direct "Open in Google Maps 📍" external action links.
+* **Interactive Live GPS Map & Pin Marking**:
+  * **FusedLocationProviderClient Automatic Live GPS Engine (`LocationService.kt`)**: Refactored to use `FusedLocationProviderClient` with `Priority.PRIORITY_HIGH_ACCURACY`, `LocationRequest`, and application context for reliable, automatic background location updates without memory leaks. Exposes `lastFreshLocation`, `isTrackingActive`, `isLocationAvailable`, and `locationError` state flows.
+  * **Seamless Fallback & Manual Address Override**: If GPS signal detection fails, permissions are missing, or user prefers custom delivery coordinates, `LocationService` triggers graceful fallbacks and allows full manual address entry (`setCustomLocation`) or location pin fine-tuning on `InteractiveLocationPickerMap`. Re-enabling automatic tracking (`resetToAutoGpsLocation`) seamlessly clears overrides and resumes high-accuracy `FusedLocationProviderClient` updates.
+  * **Customer Location Fine-Tune**: Customers can tap anywhere on the map or drag the pin marker to specify their exact delivery landmark.
+  * **Driver Location Sync**: Assigned bowser driver (`driverLat`, `driverLng`) sees the exact customer delivery pin in real-time.
+  * **Cloud Firestore Order & Delivery History Repository (`FirestoreOrderRepository.kt`)**:
+  * **Real-Time Order Storage & Synchronization**: Syncs order creation, rider acceptance, status updates, and order ratings directly with Google Cloud Firestore (`orders` collection).
+  * **Real-Time Customer Orders Flow (`getCustomerOrdersFlow`)**: Real-time snapshot listener emitting updated order list ordered by creation timestamp (`createdAt DESC`).
+  * **Rider Delivery History Flow (`getRiderDeliveryHistoryFlow`)**: Real-time snapshot listener delivering active and past order history for assigned riders.
+  * **Order Ratings & Feedback Persistence (`rateOrder`, `submitOrderRating`)**: Saves user star ratings ($1-5$ stars) and detailed delivery feedback directly to Firestore documents and local Room database.
+* **Polyline Corridor**: Clear visual route line starting from Green Town HQ -> Driver Bowser -> Customer Destination.
+  * **Rider Order Progression & Pickup Validation**: Enforces strict step-by-step order progression (`Pending` -> `Accept Ride` -> `Pick Up Fuel at Station` -> `Start Route` -> `Reached Location` -> `Complete & Collect COD`) in `MainViewModel.changeOrderStatus`, preventing riders from completing orders without picking up petrol/fuel first.
+
+---
+
+## 5. Admin Dashboard & Management
+* **Location**: `AdminDashboardScreen` (`Screens.kt`)
+* **Key Functions**:
+  * **Add New Customer (`addCustomerByAdmin` in `MainViewModel`)**:
+    * Modal Dialog (`AddCustomerDialog`) allowing Admin to manually register new customers with name, phone number, optional email, address, and initial password.
+    * Generates auto email if email omitted, logs action into `AuditLogEntity`, and dispatches real-time welcome email.
+  * **Add New Driver / Rider (`AddRiderDialog`)**:
+    * Registers new fuel bowser drivers with Full Name, Phone, Email, Portal Password, Vehicle Type (Bike, Pickup, Bowser), Registration Plate No, CNIC, Driving License ID, Residential Address, and Immediate Verification Checkbox.
+    * Invokes `viewModel.addRiderFromAdmin` to store exact driver form inputs into `UserEntity`.
+  * **Driver Card Quick Overview (`AdminRiderCard`)**:
+    * **Sequential Rider Registration**: Each registered rider is tagged with a sequential badge (e.g. `RIDER #1 • RIDER-1`, `RIDER #2 • RIDER-2`) displayed in numerical sequence. Starts with 0 registered riders/customers by default until real registrations occur.
+    * **🔐 Dedicated Login Credentials Box**: Prominently displays the rider's **Email Address** and **Login Password** (with an interactive `showPassword` toggle button) so admins can verify and manage rider portal credentials.
+    * Distinct grid display showing driver's Phone, Vehicle Type, Registration Plate No, and CNIC/Legal ID directly on the card with high contrast colors for easy reading.
+    * **Explicit Check & Verification Action Buttons**: Direct action buttons on every card to check rider details (`check_rider_details_btn`), toggle approval status, grant/revoke verified badges, edit rider information, and delete rider accounts with audit logging.
+  * **Clean Rider Biodata Inspection (`AdminRiderBiodataDialog`)**:
+    * Displays driver details grouped into 4 distinct sections: **1. Personal Biodata Details**, **2. National Identity & Legal Credentials**, **3. Vehicle & Driving License**, and **4. Emergency Contact**.
+    * Strictly shows only the information provided in the driver form, removing extra unprovided placeholders for total clarity.
+    * Features explicit **Approve & Verify** (grants verified badge) and **Deny Request** actions with audit logging.
+  * **Customer Directory**: View all registered customers, order history, and contact details.
+  * **Order Management & Dispatch**: Manually assign riders to pending fuel/water orders.
+  * **Audit Log Viewer**: Full history of system events, security updates, and admin actions.
+
+---
+
+## 6. Rider / Bowser Driver Portal
+* **Location**: `RiderHomeScreen`
+* **Key Functions**:
+  * **Active Duty Queue**: View assigned orders with navigation destination and customer contact info.
+  * **One-Tap Status Progress**: Update order status seamlessly (Dispatched -> En Route -> Arrived -> Completed).
+  * **Live GPS Coordinate Broadcast**: Automatically broadcasts rider location updates to customer map.
+
+---
+
+## 7. Security & Biometric Engine
+* **Location**: `SecuritySettingsScreen.kt`, `BiometricSecurityManager.kt`, `SecureStorageManager.kt`, & `Screens.kt`
+* **Key Functions**:
+  * **Biometric (Fingerprint & Face) Login**:
+    * **Conditional Registered Biometric Sign-In Card**: Rendered on the main Login Form (`Screens.kt`) for Customer and Rider roles **only** when biometrics have been explicitly enabled by a registered user. Hidden by default on fresh app installs or for new unregistered users.
+    * **Default Disabled State**: Fingerprint biometrics are disabled by default for new app installs and newly created accounts.
+    * **Enable Fingerprint Option**: When logged in, registered users can enable/disable fingerprint authentication at any time via "Enable fingerprint" in Profile Settings or Security Settings (`SecuritySettingsScreen.kt`).
+    * **Post-Logout Quick Sign-In**: If a registered user has enabled biometrics and logs out, the Fingerprint / Face ID login card appears on the login form for 1-tap quick sign-in using AndroidX `BiometricPrompt`.
+    * Features instant email-based & role-based fallback lookup (`loginWithBiometrics` in `MainViewModel`) so users and drivers can sign in effortlessly even on emulators or un-enrolled hardware.
+  * **Order History Biometric Vault**:
+    * Biometric protection badge and status vault on `CustomerOrderHistoryScreen` to protect sensitive delivery addresses and expenditure receipts.
+  * **App Security Settings**:
+    * Module-specific biometric toggles (Customer, Rider, Admin), custom security PINs, and session lock timeouts.
+  * **Encrypted Storage & Passwords**:
+    * Biometric tokens and user preferences secured via `SecureStorageManager` with AES-256 GCM encryption and SHA-256 hash digests.
+
+---
+
+## 8. Notification & Communication Engine
+* **Location**: `postLocalSystemNotification`, `notifyArrivingSoon`, `notifyReachedLocation`, `ZyphuelFcmService.kt`, `MainViewModel.kt`
+* **Key Functions**:
+  * **System Push Notification System**:
+    * **Out for Delivery Alert 🛵**: Posts Android heads-up system push notifications (`zyphuel_order_updates` channel) when an order status changes to "Dispatched", "Delivering", or "Out for Delivery".
+    * **Driver Reached Location Alert 📍**: Triggers automatic high-priority push notifications when the driver arrives within $1\text{ km}$ or reaches the customer's delivery destination (`notifyReachedLocation`).
+    * **Order Delivered Alert 🎉**: Immediate push notification confirmation when fuel/water delivery is completed and COD collected.
+    * **Real-time Fuel Price Update Alerts ⛽**:
+      * **Admin-Controlled Broadcast Schedule**: The central administrator controls how many hours after which real-time fuel price update notifications automatically broadcast to system users (e.g., 1 Hour, 2 Hours, 4 Hours, 6 Hours, 12 Hours, 24 Hours, or custom hours).
+      * **Admin Panel Form (`AdminFuelPriceNotificationScheduleCard`)**: Located in the Admin Center under the "Fuel Prices" tab. The Admin can set the exact interval in hours, enable/disable broadcasts, apply schedules to `FuelPriceWorker` WorkManager, or trigger test broadcasts immediately.
+      * **Centralized User Experience**: Users cannot decide or alter the broadcast schedule. No popup dialogs or selection forms are shown to regular customers upon login/app open. Information in `SecuritySettingsScreen` reflects the Admin's active broadcast schedule.
+  * **Firebase Cloud Messaging (FCM) Integration**: Real-time push payload processing via `ZyphuelFcmService.kt` with foreground banners and background system notification triggers using the monochrome vector notification icon (`@drawable/ic_notification`).
+  * **Real-time Email Dispatch**: Instant automated email receipts and order status updates sent to customer inbox.
+  * **WhatsApp Hotline Integration**: Direct deep-linking to official WhatsApp support line (`+92 323 0112464`).
+  * **In-App Notification Center**: Local Room DB persistence (`NotificationEntity`) for user notification log history.
+
+---
+
+## 9. Post-Delivery Rating & Driver Feedback
+* **Location**: `PostDeliveryRatingCard`, `submitOrderRating`, `SecurityInputValidator.kt`, `Screens.kt`
+* **Key Functions**:
+  * **Interactive 1-5 Star Selector**: Star rating bar with spring scale animations for rating driver and doorstep delivery service (testTags: `rating_star_1` to `rating_star_5`).
+  * **Quick Compliment Chips**: Quick selectable compliment tags (On-Time Arrival, Pure Fuel Quality, Courteous Driver, Safety Followed, Exact Change) powered by `FlowRow` and `FilterChip`.
+  * **Optional Driver Feedback**: Text field for customized driver feedback notes up to 500 characters validated via `SecurityInputValidator.validateRatingAndFeedback`.
+  * **Verified Review Cards**: Persistent post-submission card showing verified star review and feedback in both real-time order tracking and customer order history.
+
+---
+
+## 10. Compose-Based Shared Element Transition Animations & Motion Design
+* **Location**: `SharedTransitionLayout`, `LocalSharedTransitionScope`, `LocalAnimatedVisibilityScope`, `sharedOrderBounds`, `sharedOrderElement`, `MainActivity.kt`, `Screens.kt`
+* **Key Functions**:
+  * **Seamless Delivery List to Live Tracking Motion**: Jetpack Compose `SharedTransitionLayout` and `AnimatedContent` wrapping with custom spring curve transition specs (`spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessLow)`) for fluid motion when navigating from customer delivery cards to the real-time order tracking map screen.
+  * **Shared Element Bounds & Morphing (`sharedOrderBounds` & `sharedOrderElement`)**:
+    * Order card bounds (`"order_card_${order.id}"`) morph smoothly from card dimensions in the delivery list directly into full-screen tracking view dimensions.
+    * Order header badges (`"order_header_${order.id}"`) scale and reposition seamlessly across screen transitions.
+  * **Dynamic Animated Status Transitions**: Jetpack Compose `AnimatedContent` state transitions with vertical sliding, fade, and spring scale animations when order status changes (Pending → Assigned → Delivering/Dispatched → Arrived → Completed).
+  * **Pulsing Status Halo**: Micro-animated glowing halo ring indicator for real-time status card visual feedback.
+  * **Interactive Confetti Celebration**: Custom `Canvas` floating particle confetti overlay (`OrderStatusConfettiOverlay`) triggered upon successful order completion and delivery.
+
+---
+
+## 11. Permanent Location Marking System (Without Maps)
+* **Location**: `MarkedLocationEntity`, `MarkedLocationDao`, `MarkDesiredLocationModal`, `LahoreRouteMapView`, `MainViewModel.kt`, `Screens.kt`
+* **Key Functions**:
+  * **Mapless Location Pinning**:
+    * Allows users to mark desired delivery locations without needing external map apps.
+    * Select from popular Lahore sectors (Gulberg III, DHA Phase 5, Model Town, Johar Town, Bahria Town, Mall Road, MM Alam Road, Askari 11, Lake City, Lahore Cantt) or enter custom street addresses.
+    * Interactive coordinate position canvas box allowing micro-adjustment of permanent location pins ($31.5204, 74.3587$).
+  * **Permanent Database Storage**:
+    * Saved directly into Room local database (`MarkedLocationEntity`) tied to `userEmail`.
+    * Retained across sessions, app restarts, and profile re-logins.
+  * **Quick-Fill in Order Flow**:
+    * Rendered inside `OrderDialog` (`PlaceOrderDialog`) as a horizontal chip list (`permanent_marked_locs_row`). Tapping any marked location pin instantly autofills the delivery address.
+  * **Rider Route Map Integration**:
+    * Both customer and driver views render `LahoreRouteMapView` featuring:
+      * **Origin Hub Badge**: `🏁 Origin Depot: Zyphuel Central Bowser Hub #1, Gulberg, Lahore` (Where order came from).
+      * **Destination Badge**: `📍 Destination Pin: [Customer Marked Location]` (Where order needs to go).
+      * **Interactive Live Vector Route Map**: Canvas route line connecting Origin to Marked Destination with animated moving delivery bowser, distance ($3.8\text{ km}$), ETA ($12\text{ mins}$), and live speed ($38\text{ km/h}$).
+
+---
+
+## 11.1 Real-Time GPS Tracking, Landmark Resolution & Interactive Location Verification
+* **Reactive Continuous Location Engine (`LocationService.kt`, `fetchDeviceGpsLocation` & `resolveLandmarkFromCoordinates`)**:
+  * **Dynamic Movement Tracking**: Uses persistent `FusedLocationProviderClient` location callback listeners managed via singleton `LocationService` with `flushLocations()` cache-clearing to stream real-time coordinate changes into `_deviceLatitude` and `_deviceLongitude` without stale location data.
+  * **Automated Landmark Resolution**: Automatically converts lat/lng coordinates to accurate nearby landmark and sector names (e.g., *Liberty Market, Gulberg III*, *DHA Phase 5 Block CCA*, *Model Town Block C*, *Packages Mall*, *Askari 11*, *Johar Town Khayaban-e-Firdousi*).
+* **Location Permission Rationale UI Overlay (`LocationPermissionRationaleBanner`)**:
+  * Clear, non-intrusive banner overlay rendered when precise GPS permission is needed.
+  * Explains why precise location is required for bowser trucks to navigate directly to the customer's spot.
+  * Provides seamless actions: **Turn On GPS** (launches system permission) and **Manual Search** (allows manual location/landmark entry gracefully).
+* **Google Places Autocomplete Input (`PlacesAutocompleteTextField`)**:
+  * Real-time search input filtering against popular landmarks, sectors, and commercial hubs across Lahore and major Pakistan cities as the user types.
+  * Tapping any suggestion auto-fills the delivery address, updates coordinates, and centers the map marker.
+* **Interactive Map Pin Fine-Tuning View (`InteractiveLocationPickerMap`)**:
+  * Interactive map grid view displayed on the location confirmation screen.
+  * Places a draggable marker pin (`📍`) at the detected coordinates.
+  * Tapping or dragging anywhere on the map grid fine-tunes the delivery pin position, reverse-geocodes the new landmark dynamically, and allows visual verification before confirming the order.
+
+---
+
+## 11.2 Sequential Rider ID System & Map Viewing Enhancements
+* **Sequential Assigned Rider ID System (`Models.kt`, `MainViewModel.kt`, `Repository.kt`)**:
+  * **Sequential Number Assignment**: When a new rider registers or is created by an admin, the system queries existing rider accounts and assigns a sequential integer number (`Rider #1`, `Rider #2`, `Rider #3`, etc.).
+  * **Standardized Rider ID**: Generates structured IDs like `RIDER-1`, `RIDER-2`, stored in `riderNumber: Int?` and `riderId: String?` fields in `UserEntity`.
+  * **Explicit User Feedback**: Informs registering riders immediately upon submission: *"Registration Successful! This is your assigned number: Rider #X (ID: RIDER-X)."* and dispatches a confirmation email.
+  * **Rider & Admin Views**: Displays official Rider Numbers prominently across Rider Profiles, Rider Dashboards, and Admin Approval lists.
+
+* **Compact Map Views & Collapsible Status HUD (`Screens.kt`)**:
+  * **Collapsible Status Pending Section**: Replaced heavy floating HUD cards on order tracking screens with a compact, collapsible status container.
+  * **Minimize & Expand Controls**: Features a `🔽 Minimize` button that shrinks the HUD down to a small single-line status bar (`STATUS • COD`), freeing up over 90% of screen area so riders and customers can zoom in, pan, and monitor real-time positions clearly.
+  * **Streamlined Top Badges**: Reduced top Order ID badges (`Order #X`) to lightweight compact chips to eliminate map visual clutter.
+  * **Map Style Switcher Cleanup**: Removed redundant map style switchers (Street, Satellite, Dark) and static nav route overlays, maintaining clean zoom in, zoom out, recenter, and fullscreen controls.
+
+* **Strict Live Device GPS & Manual Address Fallback (`Screens.kt`, `LocationService.kt`)**:
+  * **Device Live GPS Integration**: Live device coordinates (`_deviceLatitude`, `_deviceLongitude`) update dynamically on map components.
+  * **Reverse Geocoding & Address Detection**: Uses Android `Geocoder` to detect street addresses.
+  * **Manual Address Entry Fallback**: If GPS or address detection is unavailable, fake location pin strings are strictly suppressed. The address label resets to empty (`""`), prompting the user to manually enter or edit their address.
+
+## 11.3 Clean Order Confirmation & Smooth Leaflet Map Zoom
+* **Order Confirmation Flow & Rider Warning Suppression (`Screens.kt`)**:
+  * **Direct Service Fulfillment**: Removed all unsolicited "Rider not registered yet" and "No Rider Available" warning banners, popups, and toasts upon confirming customer orders. Focuses purely on selling and fulfilling service requests without rider availability warnings.
+  * **Streamlined Order Dispatch Card**: Replaced missing-rider error states with a clean "Service Order Confirmed" status card reassuring customers that their order is live and scheduled for fulfillment.
+  * **Removed Order Options Prompt**: Omitted the "Order Options" decision modal so users experience a smooth, uninterrupted order placement and live tracking view.
+* **Enhanced Leaflet Map Zoom Controls & Interaction (`Screens.kt`)**:
+  * **Broadened Zoom Scale**: Updated Leaflet JS map bounds and zoom levels (`minZoom: 3`, `maxZoom: 19`) for ultra-smooth zoom capability from high-level region view down to detailed street view.
+  * **Gesture & Touch Zoom Support**: Enabled `doubleClickZoom: true`, `touchZoom: true`, `scrollWheelZoom: true`, `setSupportZoom(true)`, and `builtInZoomControls = true` on the WebView setting for responsive zoom operations.
+  * **Preserved Floating Control Buttons**: Maintained floating `➕ Zoom In` and `➖ Zoom Out` touch surfaces executing direct Leaflet JS `map.zoomIn()` and `map.zoomOut()` calls.
+
+## 11.4 Tesla-Inspired Loading Skeleton Animations (`TeslaSkeleton.kt`, `Screens.kt`)
+* **Subtle Specular Sweep Modifier (`Modifier.teslaShimmer`)**:
+  * Precision specular highlight gradient sweep with infinite linear transition (`CubicBezierEasing(0.4f, 0.0f, 0.2f, 1.0f)`).
+  * High-tech light metallic palette (`#E2E8F0` to `#FFFFFF` with electric blue accent glow) and dark cyber palette (`#0F172A` to `#334155` with cyan shimmer).
+* **Auth & Login Skeleton Screen (`TeslaAuthSkeleton`)**:
+  * Polished skeleton placeholders for brand logo shield, display headings, email/password text fields with rounded corners, action buttons, and social authentication rows.
+  * Automatically renders during initial authentication screen hydration to elevate perceived performance and prevent layout popping.
+* **Dashboard & Home Skeleton Screen (`TeslaHomeSkeleton`)**:
+  * Smooth skeleton placeholders for top app navigation bar, live GPS status card, promotional order hero banner, fuel pricing metric cards (2x2 grid), and active delivery tracking cards.
+  * Displays during initial profile fetching and real-time fuel data loads for immediate visual feedback.
+
+## 11.5 Google Maps SDK Live Delivery Tracking Overlay (`GoogleMapsLiveDeliveryTrackingOverlay.kt`, `Screens.kt`)
+* **Native Maps Compose SDK (`com.google.maps.android.compose`)**:
+  * Integrated native hardware-accelerated `GoogleMap` composable utilizing `play-services-maps` and `maps-compose` v6.4.1.
+  * Real-time marker management (`Marker`, `MarkerState`) for:
+    * **Zyphuel Dispatch Depot**: Fixed origin hub at Green Town Central Depot (`31.4380, 74.3050`).
+    * **Customer Destination**: Interactive destination pin reflecting order delivery address in Lahore.
+    * **Assigned Delivery Vehicle**: Dynamic marker representing the fuel bowser/water tanker with real-time bearing rotation (`rotation = vehicleBearing`), status snippet, and active radar beacon (`Circle`).
+* **Lahore Route Polyline & Telematics Engine**:
+  * **Dynamic Corridor Waypoints (`generateCorridorWaypoints`)**: Computes smooth road waypoints along Lahore transit routes (Ferozepur Rd, Canal Rd, Main Boulevard Gulberg, DHA, Johar Town).
+  * **Coordinate Interpolation & Bearing Calculation (`interpolateAlongPath`, `calculateBearingAlongPath`)**: Calculates real-time vehicle latitude/longitude position and heading angle smoothly.
+  * **Live Speedometer & Telematics**: Displays real-time transit velocity (e.g. 36-48 km/h), remaining distance in km, and dynamic ETA calculation in minutes.
+  * **En-Route Progress Bar**: Real-time linear progress indicator reflecting journey completion percentage (0% to 100%).
+* **Interactive Floating Map HUD Controls**:
+  * **Map Layer Switcher**: Instant switching between Normal, Satellite, Terrain, and Hybrid map modes (`MapType`).
+  * **Camera Recenter Actions**: Quick floating actions to center camera on moving delivery vehicle (`CameraUpdateFactory.newLatLngZoom`) or customer destination.
+  * **Simulation Toggle**: Live pause/play control for simulated vehicle movement testing.
+  * **Direct Dialer Action**: One-tap quick call button launching Android dialer with assigned driver phone number (`tel:+923230112464`).
+* **Resilience & Fallback Radar Canvas (`FallbackRadarMapView`)**:
+  * Implements smooth fallback canvas rendering with radar ripple animations, ensuring zero crashes in environments where Google Play Services is initializing or offline.
+
+## 11.6 Native Google Sign-In SDK & Device Account Integration (`GoogleAuthManager.kt`, `DeviceAccountUtils.kt`, `Screens.kt`)
+* **Google Identity Services & Credential Manager (`androidx.credentials`, `com.google.android.libraries.identity.googleid`)**:
+  * Direct invocation of Android's native `CredentialManager` with `GetGoogleIdOption` on the "Continue with Google" action button.
+  * Native system bottom-sheet Google Account picker for streamlined, one-tap account selection displaying authentic Google accounts on the device.
+  * Extracts authentic `GoogleIdTokenCredential` containing verified Google ID Token, email, display name, and avatar picture URI.
+* **Firebase Authentication Token Exchange (`FirebaseAuth`, `AuthManager.kt`)**:
+  * Exchanges Google ID Token with Firebase using `GoogleAuthProvider.getCredential(idToken, null)`.
+  * Syncs Firebase user identity and seamlessly provisions/updates the local Room `UserEntity` profile with role-based routing (`customer_home`, `rider_home`, `admin_dashboard`).
+* **Real Device Account Synchronization (`DeviceAccountUtils.kt`)**:
+  * Dynamically queries system Google accounts from Android's `AccountManager` (`com.google`), active Firebase sessions, and on-device user records.
+  * Completely removes hardcoded, mock, or fake accounts; adapts dynamically to the real accounts configured on the user's Android device.
+  * Provides direct custom Google account sign-in entry for signing in with any real Google ID.
+
+* **Real-Time Dynamic Google Format**:
+  * Seamlessly connects with Google credentials when available or transitions immediately to the clean real-time format where users can enter and authenticate any real Google email/name without requiring manual access tokens.
+  * Direct one-click login and synchronized Firebase/Room session creation.
+* **Credential Manager API Integration (`LoginActivity.kt`)**:
+  * Dedicated Android `LoginActivity` implementing modern Android `CredentialManager` API with `GetGoogleIdOption` and `GoogleIdTokenCredential`.
+  * Fully retrieves authentic Google device credentials with zero mock data fallbacks, validates identity with Firebase Authentication (`GoogleAuthProvider`), and completes role-aware user onboarding into local Room persistence.
+  * Supports programmatic launching with `EXTRA_TARGET_ROLE`, `EXTRA_IS_REGISTER`, and `EXTRA_AUTO_TRIGGER_GOOGLE` returning standard `Activity.RESULT_OK` with authenticated user payload (`EXTRA_USER_EMAIL`, `EXTRA_USER_NAME`, `EXTRA_USER_ROLE`, `EXTRA_USER_UID`).
+* **Latest Firebase Project Credentials Configuration (`google-services.json`)**:
+  * Integrated the latest project credentials (`project_id: ai-420`, `project_number: 488422345846`) with SHA-1 client certificates for package `com.aistudio.zyphuel.appv2`.
+  * Web Client ID (`488422345846-m972okhh2ms29s911apa4t8ih04d3jo1.apps.googleusercontent.com`) configured for Google Identity Services.
+
+## 11.7 User-Friendly Fuel Delivery Push Notification Permissions Prompt (`DeliveryNotificationPermissionPrompt.kt`)
+* **Context-Rich Value Rationale Modal**:
+  * Displays an animated Material 3 permission dialogue presenting clear value drivers:
+    * 🚚 **Live Bowser Dispatch & ETA**: Alerts the moment the fuel bowser begins route transit.
+    * ⏱️ **Rider Arrival Ping**: Real-time ping when the delivery bowser reaches the vehicle or gate.
+    * 🔒 **Delivery OTP & Safety Codes**: Instant lock screen push notifications with safe dispensing PINs.
+    * ⚡ **Hourly Fuel Price Shift Alerts**: Immediate updates on price updates across Pakistan.
+* **Direct Runtime Integration**:
+  * Uses `rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission())` for Android 13+ `POST_NOTIFICATIONS`.
+  * Fallback to System Application Notification Settings for devices with notifications disabled.
+  * Interactive **"Test Live Alert"** button allowing instant verification of status bar notification delivery.
+* **Unobtrusive Discovery Banners**:
+  * Clean Material 3 alert card embedded in `CustomerHomeScreen` and `TrackerScreen` header for quick permission management.
+
+---
+
+## 12. Database Architecture & Data Models
+Room Local Persistence layer (`AppDatabase.kt` v9):
+* **`UserEntity`**: `email` (PK), `name`, `passwordHash`, `role`, `phoneNumber`, `residentialAddress`, `isVerified`.
+* **`OrderEntity`**: `id` (PK), `customerEmail`, `customerName`, `serviceType`, `fuelVolumeLiters`, `totalAmountPkr`, `status`, `assignedRiderEmail`, `assignedRiderName`, `deliveryAddress`, `etaMinutes`.
+* **`AuditLogEntity`**: `id` (PK), `timestamp`, `action`, `performedBy`, `details`.
+* **`NotificationEntity`**: `id` (PK), `userEmail`, `title`, `message`, `timestamp`, `isRead`.
+* **`MarkedLocationEntity`**: `id` (PK), `userEmail`, `label`, `address`, `latitude`, `longitude`, `createdAt`.
+
+---
+
+## 13. Auto-Update & Maintenance Protocol
+This document (`FEATURES_DOCUMENTATION.md`) serves as the single source of truth for app features. Whenever a new screen, viewmodel function, or database field is added:
+1. Update `FEATURES_DOCUMENTATION.md` under the respective section.
+2. Maintain `AGENTS.md` instructions so AI agents continue maintaining this file in sync with future codebase changes.
