@@ -77,14 +77,13 @@ The app strictly segments access control across three user roles:
   * **On-Map Zoom & Recenter Controls**: Floating touch controls with `testTag` hooks (`map_zoom_in_btn`, `map_zoom_out_btn`, `map_recenter_btn`, `map_fullscreen_btn`).
   * **Quick Lahore Area Presets**: One-tap preset location chips (Gulberg III, Johar Town, DHA Phase 5, Model Town, Green Town HQ, Lake City, Mall Road).
   * **Conditional Live Delivery Tracking Section (`activeOrders.isNotEmpty()`)**: The "Live Delivery Tracking" section and `GoogleMapsLiveDeliveryTrackingOverlay` are only rendered when the customer has at least one active order, with smooth `fadeIn + expandVertically` animation (400ms).
-  * **Clean Order Dialog (No Map Clutter)**: The `OrderDialog` now solely focuses on product quantities, destination address, and price breakdown. Removed the redundant destination preview map and preview triggers beneath Grand Total.
+  * **Clean Order Dialog (No Clutter & Instant Checkout)**: The `OrderDialog` is completely streamlined: removed the redundant destination preview map and the permanent location pins section. It now solely focuses on product selection, quick saved addresses, destination address input, and price breakdown with instant one-tap COD confirmation.
+  * **Instant 0ms Local Order Creation & Non-Blocking Remote Sync**: Room DB creates and confirms orders in 0ms with immediate Main thread navigation to `TrackerScreen`. Cloud Firestore sync is wrapped in background coroutines with strict `1500ms` timeouts, preventing any network hangs from delaying the customer experience.
   * **Unified Native Google Maps in TrackerScreen**: `TrackerScreen` directly embeds `GoogleMapsLiveDeliveryTrackingOverlay` for genuine real-time GPS tracking (dynamic origin, destination, rider coordinates, ETA, and telematics) eliminating static/fake WebView iframes and hardcoded mock driver placeholders (`Mohammad Ali (Bowser #402)`, `LEC-8924`, `2.4 km`).
   * **Daily 1-Time Order Safety & GPS Disclaimer (`DailyGpsSafetyDisclaimerDialog`)**: Displayed once per day per customer upon placing an order and accessing `TrackerScreen`: *"The driver/rider GPS is on during each ride. It helps us follow the order in real time and make your order safely delivered."* Persisted locally via `zyphuel_gps_safety_prefs` timestamp checking.
   * **Google Play Compliant Account Deletion (`DeleteAccountConfirmationDialog` & `deleteCurrentAccount`)**: In-app one-tap account deletion and complete data wiping available in both Customer Sidebar Drawer and Profile Settings Dialog. Permanently removes Room DB user data, marked location pins, session credentials, and logs an irreversible audit trail.
 
-
-
-
+---
 
 ## 4. Real-Time GPS Driver Tracking Map & Custom Vehicle Marker
 * **Component**: `UnifiedGoogleMapView`, `DriverRealTimeTrackingMap`, `DeliveryTrackerComponent`, `GoogleMapComposeView`, `InteractiveLocationPickerMap`, `handleExternalMapIntent` (`Screens.kt`)

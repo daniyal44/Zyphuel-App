@@ -1786,6 +1786,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 setTrackingOrder(finalTrackingOrder)
 
                 withContext(Dispatchers.Main) {
+                    _isPlacingOrder.value = false
                     navigateTo("tracker")
                     checkAndTriggerDailyGpsDisclaimer()
                     _isPromoApplied.value = false
@@ -1793,7 +1794,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     onSuccess()
                 }
 
-                // Background notification dispatching
+                // Background notification dispatching (Non-blocking IO)
                 try {
                     val titleStr = "Order Placed Successfully! 📝"
                     val bodyStr = "Your order #${order.id} for $safeServiceType ($safeQuantity units) has been submitted."
@@ -1816,6 +1817,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             } catch (e: Exception) {
                 DebugLogger.e("MainViewModel", "Order creation exception: ${e.message}", e)
                 withContext(Dispatchers.Main) {
+                    _isPlacingOrder.value = false
                     _uiMessage.value = "Failed to submit order: ${e.localizedMessage ?: "Unknown error"}"
                 }
             } finally {
@@ -1823,6 +1825,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
+
 
 
 
