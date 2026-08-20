@@ -717,9 +717,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val gbp = pkrAmount * pkrToGbpRate
             "£${String.format(java.util.Locale.US, "%.2f", gbp)}"
         } else {
-            "Rs. ${String.format(java.util.Locale.US, "%.0f", pkrAmount)}"
+            "Rs. ${String.format(java.util.Locale.US, "%.2f", pkrAmount)}"
         }
     }
+
 
     fun formatUnitPrice(pkrAmount: Float, unit: String = ""): String {
         val unitStr = if (unit.isNotBlank()) "/$unit" else ""
