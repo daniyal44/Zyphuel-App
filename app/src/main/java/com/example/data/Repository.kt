@@ -44,6 +44,12 @@ class AppRepository(context: Context) {
         markedLocationDao.deleteMarkedLocation(id)
     }
 
+    suspend fun deleteUserAccount(email: String) {
+        userDao.deleteUserByEmail(email)
+        markedLocationDao.deleteMarkedLocationsForUser(email)
+    }
+
+
     // Seed default admin account on startup if not present
     suspend fun seedAdminIfNeeded() {
         val adminEmail = "m.daniyalkhan490@gmail.com"
@@ -156,7 +162,14 @@ class AppRepository(context: Context) {
         )
         val insertedId = orderDao.insertOrder(order)
         val finalOrder = if (insertedId > 0) order.copy(id = insertedId.toInt()) else order
-        firestoreOrderRepository.saveOrder(finalOrder)
+        // Firestore sync — silent degrade: if Firestore is unavailable (404/network error),
+        // order stays safe in local Room DB and syncs later when connectivity is restored.
+        try {
+            firestoreOrderRepository.saveOrder(finalOrder)
+        } catch (e: Exception) {
+            android.util.Log.w("AppRepository", "Firestore save skipped for order #${finalOrder.id}: ${e.message}")
+        }
+
         auditLogDao.insertLog(
             AuditLogEntity(
                 action = "ORDER_CREATED",

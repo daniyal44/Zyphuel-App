@@ -84,20 +84,59 @@ fun OpsConsoleScreen(state: OpsConsoleState) {
                 EmptyDetail(hasLoaded = state.hasLoadedOnce)
             }
 
-            state.errorMessage?.let { message ->
+            if (state.firestoreSetupNeeded) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(10.dp))
-                        .background(Color(0xFFFEF2F2))
-                        .border(1.dp, Color(0xFFFCA5A5), RoundedCornerShape(10.dp))
-                        .padding(10.dp)
+                        .background(Color(0xFFFFFBEB))
+                        .border(1.dp, Color(0xFFFDE68A), RoundedCornerShape(10.dp))
+                        .padding(12.dp)
                 ) {
-                    Text(
-                        text = message,
-                        color = Color(0xFF991B1B),
-                        fontSize = 11.sp
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
+                            Text(
+                                text = "⚠️ Firestore database '(default)' is not created yet in Firebase project '${state.rest.config.projectId}'",
+                                color = Color(0xFF92400E),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp
+                            )
+                            Spacer(Modifier.height(3.dp))
+                            Text(
+                                text = "Running in interactive Demo Simulation Mode. To stream live orders, click to open Firebase Console and click 'Create database' (in test mode).",
+                                color = Color(0xFFB45309),
+                                fontSize = 11.sp
+                            )
+                        }
+                        Button(
+                            onClick = { state.openFirebaseConsoleInBrowser() },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD97706)),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text("🌐 Create Database", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            } else {
+                state.errorMessage?.let { message ->
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Color(0xFFFEF2F2))
+                            .border(1.dp, Color(0xFFFCA5A5), RoundedCornerShape(10.dp))
+                            .padding(10.dp)
+                    ) {
+                        Text(
+                            text = message,
+                            color = Color(0xFF991B1B),
+                            fontSize = 11.sp
+                        )
+                    }
                 }
             }
         }
@@ -119,21 +158,24 @@ private fun OrderListPane(state: OpsConsoleState, modifier: Modifier = Modifier)
             )
             Spacer(Modifier.height(10.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
+                val dotColor = when {
+                    state.firestoreSetupNeeded || state.isDemoMode -> Color(0xFFF59E0B)
+                    state.errorMessage != null -> Color(0xFFEF4444)
+                    else -> Color(0xFF22C55E)
+                }
+                val statusText = when {
+                    state.isDemoMode -> "Demo Mode · ${state.ridersOnline} simulated rider(s)"
+                    state.errorMessage != null -> "Connection problem"
+                    else -> "Live · ${state.ridersOnline} rider(s) reporting"
+                }
                 Box(
                     modifier = Modifier
                         .size(8.dp)
-                        .background(
-                            if (state.errorMessage == null) Color(0xFF22C55E) else Color(0xFFEF4444),
-                            RoundedCornerShape(4.dp)
-                        )
+                        .background(dotColor, RoundedCornerShape(4.dp))
                 )
                 Spacer(Modifier.width(6.dp))
                 Text(
-                    text = if (state.errorMessage == null) {
-                        "Live · ${state.ridersOnline} rider(s) reporting"
-                    } else {
-                        "Connection problem"
-                    },
+                    text = statusText,
                     color = Color(0xFFCBD5E1),
                     fontSize = 10.sp
                 )

@@ -55,25 +55,36 @@ The app strictly segments access control across three user roles:
 * **Instant Resilient Order Placement (`MainViewModel.placeOrder`)**:
   * **Auto Customer Session Sync**: If no active user session exists, automatically initializes a default customer session to ensure order placement never fails.
   * **Automatic Address Fallback**: Automatically provides fallback delivery address ("Main Boulevard, Gulberg III, Lahore") if address field is left empty or short, preventing silent validation errors.
-  * **Direct COD Confirmation**: Clicking "Confirm Order (COD)" instantly creates the order, dispatches system notifications, and opens the live rider tracking map without mandatory external redirection.
+  * **Direct COD Confirmation**: Clicking "Confirm Order (COD) 💵" instantly creates the order, dispatches system notifications, and opens the live rider tracking map. Payment method is always **Cash on Delivery (COD)** — the payment selector has been removed for simplicity.
+  * **Firestore Silent Degrade (`Repository.createOrder`)**: Firestore `saveOrder()` is wrapped in `try-catch`. If Firestore is unavailable (404, no DB created, network error), the order saves safely to local Room DB and the user is taken to the tracker screen normally — no crash, no error message.
+  * **Double-Tap Prevention & Loading State (`_isPlacingOrder: StateFlow<Boolean>`)**: `placeOrder()` sets `_isPlacingOrder = true` as the first coroutine action and resets it in a `finally` block. The Confirm Order button reads this state via `isPlacingOrder.collectAsState()`, disabling itself and showing `CircularProgressIndicator` + "Placing Order..." during submission.
+
+* **Customer Order History Screen (`CustomerOrderHistoryScreen`)**:
+  * **Title**: Renamed to "My Orders" with order count subtitle.
+  * **Current Order Section**: Active/in-progress orders (status: Pending, Assigned, Delivering, In Transit, Dispatched, Arriving) are shown at the top under a **"Current Order"** green section header — always visible first.
+  * **Recent Orders Section**: Completed/cancelled orders shown below with search bar + Delivered/Cancelled filter chips. Only appears when there are completed/cancelled orders.
+  * **Empty State**: If the customer has placed **no orders at all**, the screen shows a completely blank body — no empty state card, no placeholder text. Nothing is displayed until there's actual order data.
+  * **No Payment Selector**: The "Select Payment Method" section (COD chip / Online chip) has been completely removed from the `OrderDialog`. Payment is always hardcoded to Cash on Delivery.
+
 * **Surge Pricing & High-Volume Logic**:
   * Auto-calculates peak delivery demand surge multipliers.
   * Orders $\ge 30\text{L}$ automatically display high-volume guidance while allowing direct COD order placement and optional WhatsApp support connection.
 * **Interactive Live Order Tracking Card (`RealTimeOrderTrackingCard`)**:
-  * **Unified Single Google Map (`UnifiedGoogleMapView`)**: Combines customer order destination pin ("where to order from"), real-time driver bowser location, and Green Town HQ dispatch origin onto a single unified map display.
-  * **Uncached Persistent LocationService (`LocationService.kt`)**: Real-time high-accuracy `PRIORITY_HIGH_ACCURACY` location engine with a persistent `FusedLocationProviderClient` listener, active `flushLocations()` cache-clearing before requests, and live coordinate flow streaming without stale location caching.
-  * **COD Payment GPS Toggle**: When Cash on Delivery (COD) payment method is selected during order checkout, the live GPS map view is hidden for user simplicity and privacy.
-  * **Robust External Maps Link Handling (`handleExternalMapIntent`)**: Wrapped `startActivity` with `Intent.createChooser` in nested `try-catch` blocks for safe intent scheme resolution (`intent:`, `geo:`, `google.navigation:`, `maps.google.com`) with browser fallback choosers and fallback toasts to eliminate "Web page not available" errors.
-  * **Interactive Map Controls & Gesture Preservation**: Added `setOnTouchListener` with `requestDisallowInterceptTouchEvent(true)` on WebView so pinch-zoom, pan, and dragging map pins operate fluidly without Compose parent scroll containers interfering.
-  * **Dynamic Map Layer Switcher**: Instant map style toggling between **🗺️ Streets** (CartoDB Voyager), **🛰️ Satellite** (Esri World Imagery), and **🌙 Dark Mode** (CartoDB Dark Matter) without reloading the HTML page.
-  * **On-Map Zoom & Recenter Controls**: Floating touch controls for `➕ Zoom In`, `➖ Zoom Out`, `🎯 Recenter Pin`, and `⛶ Fullscreen Expand Map` modal with verified `testTag` hooks (`map_zoom_in_btn`, `map_zoom_out_btn`, `map_recenter_btn`, `map_fullscreen_btn`).
-  * **Quick Lahore Area Presets**: One-tap preset location chips (**Gulberg III**, **Johar Town**, **DHA Phase 5**, **Model Town**, **Green Town HQ**, **Lake City**, **Mall Road**) that instantly update the location pin and map camera smoothly.
-  * **Lahore LatLngBounds Constraints**: Enforces explicit Leaflet/Map `LatLngBounds` bounding box constraint ($31.2000^\circ\text{S} - 31.7200^\circ\text{N}$, $74.0500^\circ\text{W} - 74.6200^\circ\text{E}$) with `maxBounds`, `maxBoundsViscosity`, and optimized camera zoom levels (city-wide zoom 10-18) to prevent map unresponsiveness or off-map panning.
-  * **Highlighted Lahore Petrol Pumps Layer**: Renders interactive yellow ⛽ badges highlighting key Lahore fuel hubs (PSO Station Green Town Depot at `31.4378, 74.2974`, Shell Model Town, TotalEnergies Gulberg, Attock DHA, Hascol Johar Town, PSO Mall Road) with quick Google Maps search links.
-  * **Interactive Driver Profile Modal**: Tapping the rider vehicle marker on the unified map or the top ETA header triggers a verified driver profile popup displaying full name, vehicle registration plate number (e.g. `LEC-8924`), bowser capacity, ETA, remaining distance, and a direct one-tap call button.
-  * **Single Map Consolidation**: All map entry points (`DriverRealTimeTrackingMap`, `GoogleMapComposeView`, `DeliveryTrackerComponent`, `LahoreGoogleEmbedMapView`, `InteractiveLocationPickerMap`) delegate directly to `UnifiedGoogleMapView` so the user sees one merged, interactive map across Order Now and COD flows.
+  * **Unified Single Google Map (`UnifiedGoogleMapView`)**: Combines customer order destination pin, real-time driver bowser location, and Green Town HQ dispatch origin onto a single unified map display.
+  * **Uncached Persistent LocationService (`LocationService.kt`)**: Real-time high-accuracy `PRIORITY_HIGH_ACCURACY` location engine with a persistent `FusedLocationProviderClient` listener.
+  * **Robust External Maps Link Handling (`handleExternalMapIntent`)**: Wrapped `startActivity` with `Intent.createChooser` in nested `try-catch` blocks for safe intent scheme resolution.
+  * **Dynamic Map Layer Switcher**: Instant map style toggling between 🗺️ Streets, 🛰️ Satellite, and 🌙 Dark Mode.
+  * **On-Map Zoom & Recenter Controls**: Floating touch controls with `testTag` hooks (`map_zoom_in_btn`, `map_zoom_out_btn`, `map_recenter_btn`, `map_fullscreen_btn`).
+  * **Quick Lahore Area Presets**: One-tap preset location chips (Gulberg III, Johar Town, DHA Phase 5, Model Town, Green Town HQ, Lake City, Mall Road).
+  * **Conditional Live Delivery Tracking Section (`activeOrders.isNotEmpty()`)**: The "Live Delivery Tracking" section and `GoogleMapsLiveDeliveryTrackingOverlay` are only rendered when the customer has at least one active order, with smooth `fadeIn + expandVertically` animation (400ms).
+  * **Clean Order Dialog (No Map Clutter)**: The `OrderDialog` now solely focuses on product quantities, destination address, and price breakdown. Removed the redundant destination preview map and preview triggers beneath Grand Total.
+  * **Unified Native Google Maps in TrackerScreen**: `TrackerScreen` directly embeds `GoogleMapsLiveDeliveryTrackingOverlay` for genuine real-time GPS tracking (dynamic origin, destination, rider coordinates, ETA, and telematics) eliminating static/fake WebView iframes and hardcoded mock driver placeholders (`Mohammad Ali (Bowser #402)`, `LEC-8924`, `2.4 km`).
+  * **Daily 1-Time Order Safety & GPS Disclaimer (`DailyGpsSafetyDisclaimerDialog`)**: Displayed once per day per customer upon placing an order and accessing `TrackerScreen`: *"The driver/rider GPS is on during each ride. It helps us follow the order in real time and make your order safely delivered."* Persisted locally via `zyphuel_gps_safety_prefs` timestamp checking.
+  * **Google Play Compliant Account Deletion (`DeleteAccountConfirmationDialog` & `deleteCurrentAccount`)**: In-app one-tap account deletion and complete data wiping available in both Customer Sidebar Drawer and Profile Settings Dialog. Permanently removes Room DB user data, marked location pins, session credentials, and logs an irreversible audit trail.
 
----
+
+
+
 
 ## 4. Real-Time GPS Driver Tracking Map & Custom Vehicle Marker
 * **Component**: `UnifiedGoogleMapView`, `DriverRealTimeTrackingMap`, `DeliveryTrackerComponent`, `GoogleMapComposeView`, `InteractiveLocationPickerMap`, `handleExternalMapIntent` (`Screens.kt`)
@@ -339,6 +350,8 @@ The app strictly segments access control across three user roles:
 ## 11.9 Zyphuel Desktop Operations Console (`desktop/`)
 * **Compose Multiplatform Desktop Application (`desktop/src/main/kotlin/com/example/desktop/`)**:
   * **Operations Console UI (`OpsConsoleScreen.kt`)**: Dark-themed command-and-control operations dashboard for fleet dispatchers with real-time active order monitoring, rider telemetry, status filtering, and search.
+  * **Interactive Demo Simulation & 404 Resilience (`OpsConsoleState.kt`)**: Automatically loads interactive simulated orders and animated live bowser coordinates if Cloud Firestore database has not yet been provisioned (HTTP 404) or is offline, allowing full UI, route, and order status interaction immediately.
+  * **One-Click Firebase Setup Helper**: Displays a setup alert banner with a direct 1-click button to open Firebase Console (`https://console.firebase.google.com/project/ai-420/firestore`) in the browser to provision Firestore in test mode, which automatically transitions to live streaming once created.
   * **Custom Tile Map View (`TileMapView.kt`)**: Hardware-accelerated offline/online OpenStreetMap tile renderer built on Compose Desktop Canvas with smooth panning, zoom controls, dispatch hub indicators, and vehicle markers.
   * **Firestore REST Client (`FirestoreRest.kt`, `DesktopConfig.kt`)**: Zero-dependency REST-based Cloud Firestore streaming client connecting with Firebase project credentials without requiring full Android SDK dependencies.
   * **One-Click Launch Scripts**: `RUN-DESKTOP.bat` and `RUN-DESKTOP-DEBUG.bat` for seamless local execution on Windows/macOS/Linux.

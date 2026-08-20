@@ -21,7 +21,7 @@ import java.time.Duration
  * [OpsConsoleState]. Documents are keyed by the numeric order id exactly as the phone
  * writes them (`orders/{orderId}`, `live_tracking/{orderId}`).
  */
-class FirestoreRest(private val config: DesktopConfig.Firebase) {
+class FirestoreRest(val config: DesktopConfig.Firebase) {
 
     private val base =
         "https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/(default)/documents"

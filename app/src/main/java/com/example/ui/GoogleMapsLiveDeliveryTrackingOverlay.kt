@@ -161,10 +161,11 @@ fun GoogleMapsLiveDeliveryTrackingOverlay(
     }
 
     // Rider details
-    val driverName = assignedRider?.name ?: order?.riderName ?: "Mohammad Ali (Bowser #402)"
+    val driverName = assignedRider?.name ?: order?.riderName ?: if (order?.status == "Pending") "Assigning nearest driver..." else "Assigned Delivery Driver"
     val driverPhone = assignedRider?.phoneNumber ?: "+92 323 0112464"
-    val vehicleType = assignedRider?.vehicleType ?: if (order?.serviceType?.contains("Water", ignoreCase = true) == true) "Water Tanker Express" else "5,000L Euro-V Fuel Bowser"
-    val vehiclePlate = assignedRider?.vehicleNo ?: "LHR-402 (OGRA Certified)"
+    val vehicleType = assignedRider?.vehicleType ?: if (order?.serviceType?.contains("Water", ignoreCase = true) == true) "Water Tanker" else "${order?.serviceType ?: "Fuel"} Delivery"
+    val vehiclePlate = assignedRider?.vehicleNo ?: if (assignedRider != null) "Verified Vehicle" else "En Route"
+
 
     Card(
         modifier = modifier

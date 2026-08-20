@@ -51,6 +51,8 @@ compose.desktop {
             //   java.management - JMX hooks touched by the coroutines debug agent
             // `gradle -p desktop suggestRuntimeModules` re-derives this list if deps change.
             modules(
+                "java.desktop",
+                "java.instrument",
                 "java.net.http",
                 "jdk.crypto.ec",
                 "java.sql",
