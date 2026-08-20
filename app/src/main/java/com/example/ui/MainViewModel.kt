@@ -101,6 +101,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _trackingOrder = MutableStateFlow<OrderEntity?>(null)
     val trackingOrder: StateFlow<OrderEntity?> = _trackingOrder.asStateFlow()
 
+    // Order placing loading state — prevents double-tap and shows spinner on Confirm button
+    private val _isPlacingOrder = MutableStateFlow(false)
+    val isPlacingOrder: StateFlow<Boolean> = _isPlacingOrder.asStateFlow()
+
     // --- Dynamic Pricing States (SharedPreferences Backed) ---
     private val sharedPrefs = application.getSharedPreferences("zyphuel_prices", Context.MODE_PRIVATE)
     private val sessionPrefs = application.getSharedPreferences("zyphuel_session", Context.MODE_PRIVATE)
@@ -152,9 +156,29 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _showDeliveryNotificationPrompt = MutableStateFlow(false)
     val showDeliveryNotificationPrompt: StateFlow<Boolean> = _showDeliveryNotificationPrompt.asStateFlow()
 
+    // --- Daily 1-Time Order Safety Disclaimer State ---
+    private val _showDailyGpsSafetyDisclaimer = MutableStateFlow(false)
+    val showDailyGpsSafetyDisclaimer: StateFlow<Boolean> = _showDailyGpsSafetyDisclaimer.asStateFlow()
+
+
+    fun checkAndTriggerDailyGpsDisclaimer(context: Context = getApplication()) {
+        val prefs = context.getSharedPreferences("zyphuel_gps_safety_prefs", Context.MODE_PRIVATE)
+        val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date())
+        val lastShownDate = prefs.getString("last_gps_disclaimer_date", "")
+        if (lastShownDate != today) {
+            _showDailyGpsSafetyDisclaimer.value = true
+            prefs.edit().putString("last_gps_disclaimer_date", today).apply()
+        }
+    }
+
+    fun dismissDailyGpsSafetyDisclaimer() {
+        _showDailyGpsSafetyDisclaimer.value = false
+    }
+
     fun triggerDeliveryNotificationPrompt() {
         _showDeliveryNotificationPrompt.value = true
     }
+
 
     fun dismissDeliveryNotificationPrompt(context: Context? = null, permanentlyForSession: Boolean = false) {
         _showDeliveryNotificationPrompt.value = false
@@ -985,7 +1009,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             } else {
                 flowOf(null)
             }
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+        }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
 
     // Per-order live rider position, for cards that show a specific order (e.g. the
     // customer home "RealTimeOrderTrackingCard"). Each subscriber streams the live
@@ -1031,7 +1056,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
             _transitionTargetPlatformName.value = name
             _isTransitioningPlatform.value = true
-            delay(3000) // 3 seconds delayed logo animation transition
+            delay(1200) // 1.2s transition — smooth but not sluggish
+
             _currentScreen.value = targetScreen
             _isTransitioningPlatform.value = false
         }
@@ -1630,7 +1656,48 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun deleteCurrentAccount(onComplete: () -> Unit = {}) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val user = _currentUser.value ?: return@launch
+            try {
+                // Permanently delete user from Room DB & erase saved marked locations
+                repository.deleteUserAccount(user.email)
+
+                val module = when (user.role) {
+                    "rider" -> AppModule.RIDER
+                    "admin" -> AppModule.ADMIN
+                    else -> AppModule.CUSTOMER
+                }
+                SecureStorageManager.clearSessionTokenOnLogout(getApplication(), module)
+                sessionPrefs.edit().clear().apply()
+                authRepository.signOut()
+                com.example.auth.FirebaseAuthProvider.getInstance(getApplication()).signOut()
+
+                repository.auditLogDao.insertLog(
+                    AuditLogEntity(
+                        action = "ACCOUNT_DELETED",
+                        performedBy = user.email,
+                        details = "User permanently erased their account and associated profile data in compliance with Google Play Data Safety policies."
+                    )
+                )
+
+                withContext(Dispatchers.Main) {
+                    _currentUser.value = null
+                    _trackingOrder.value = null
+                    _uiMessage.value = "Your account and all associated data have been permanently erased."
+                    _currentScreen.value = "login_customer"
+                    onComplete()
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    _uiMessage.value = "Failed to delete account: ${e.localizedMessage}"
+                }
+            }
+        }
+    }
+
     // --- Order Operations ---
+
 
     fun placeOrder(
         serviceType: String,
@@ -1677,7 +1744,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
 
         viewModelScope.launch(Dispatchers.IO) {
+            // Guard: ignore tap if already submitting (prevents double order on fast taps)
+            if (_isPlacingOrder.value) return@launch
+            _isPlacingOrder.value = true
             try {
+
                 // Resolve customer delivery destination coordinates for live map tracking.
                 // Priority: primary saved pin -> any saved pin -> live device GPS -> device default (Lahore).
                 val marked = markedLocationsForCurrentUser.value
@@ -1717,8 +1788,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
 
                 navigateTo("tracker")
+                checkAndTriggerDailyGpsDisclaimer()
 
                 val titleStr = "Order Placed Successfully! 📝"
+
                 val bodyStr = "Your order #${order.id} for $serviceType ($safeQuantity units) has been submitted."
 
                 postLocalSystemNotification(titleStr, bodyStr, order.id)
@@ -1743,9 +1816,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
             } catch (e: Exception) {
                 _uiMessage.value = SecurityErrorFormatter.formatUserError(e, "Failed to submit order. Please try again.")
+            } finally {
+                // Always reset loading state — success or failure
+                _isPlacingOrder.value = false
             }
         }
     }
+
 
     fun acceptRiderOrder(orderId: Int) {
         val user = _currentUser.value ?: return

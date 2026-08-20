@@ -42,6 +42,25 @@ This document tracks all detected, reported, and resolved bugs within the **Zyph
    - **Fix Applied**: Updated `GoogleAuthManager` with `targetRole` handling (`google.customer@zyphuel.com` vs `google.rider@zyphuel.com`), fixed COD order confirmation logic, and updated Pure Water pricing to Rs. 50/gallon across UI, ViewModels, and documentation.
    - **Verification**: App compiled cleanly with `compile_applet`, verified role isolation and order confirmation flow.
 
+7. <font color="#059669"><b>[FIXED - GREEN] Duplicate Map Iframe & Hardcoded Driver Mock Data in Order Flow</b></font>
+   - **Issue**: `OrderDialog` previously rendered a duplicate preview map iframe beneath the Grand Total and `TrackerScreen` contained hardcoded placeholder strings (`Mohammad Ali (Bowser #402)`, `LEC-8924`, `2.4 km`).
+   - **Impact**: Caused visual clutter in the order placement dialog and presented inaccurate mock data during live order tracking.
+   - **Fix Applied**: Cleaned `OrderDialog` by removing redundant preview maps. Unified `TrackerScreen` with `GoogleMapsLiveDeliveryTrackingOverlay` connected to dynamic database rider assignments and real Haversine distance computations.
+   - **Verification**: Tested place order and live tracking views; confirmed dynamic telematics rendering.
+
+8. <font color="#059669"><b>[FIXED - GREEN] Missing In-App Account Deletion & Data Wipe (Google Play Data Safety Requirement)</b></font>
+   - **Issue**: Google Play Store policy mandates that all apps offering account creation must provide an in-app path for users to permanently erase their account and data.
+   - **Impact**: Potential policy violation rejection during Google Play Store review.
+   - **Fix Applied**: Added `deleteCurrentAccount` to `MainViewModel` and `AppRepository`, added `deleteMarkedLocationsForUser` to `MarkedLocationDao`, and integrated dedicated "Delete Account / Erase Data" options into both the Customer Sidebar Drawer and Profile Settings Dialog with confirmation dialog (`DeleteAccountConfirmationDialog`).
+   - **Verification**: Tested account deletion flow, confirmed local Room DB purging and session reset.
+
+9. <font color="#059669"><b>[FIXED - GREEN] Missing Release Keystore Fallback during bundleRelease</b></font>
+   - **Issue**: Running `bundleRelease` threw an input validation error when `my-upload-key.jks` was not present on disk.
+   - **Impact**: Blocked local generation of Android App Bundle (`.aab`) files for testing and staging.
+   - **Fix Applied**: Updated `app/build.gradle.kts` release signing config to check `keystoreFile.exists()` and safely fallback to `debug.keystore` when production keys are omitted.
+   - **Verification**: `bundleRelease` completed with `BUILD SUCCESSFUL in 2m 39s`, outputting `app-release.aab`.
+
+
 ---
 
 ## 🟡 Minor Bugs & Operational Notes (Highlighted in Yellow)

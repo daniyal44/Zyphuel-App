@@ -51,6 +51,14 @@
 * Added always-visible Biometric Hardware Lock card directly on the main Login Form (`Screens.kt`) for both Customer and Rider logins with instant fallback authentication via `loginWithBiometrics` in `MainViewModel`.
 * Updated `FEATURES_DOCUMENTATION.md`, `ARCHITECTURE.md`, `MEMORY.md`, and `/docs` feature files in compliance with project maintenance rules.
 
+### Phase 7: Live GPS Telematics, Clean Order Journey, Play Store Compliance & Release App Bundle
+* **Clean Order Dialog**: Completely streamlined `OrderDialog` to focus exclusively on product quantities, destination address, discount vouchers, and pricing breakdown, eliminating duplicate embedded static maps and preview triggers under Grand Total.
+* **Unified Live Google Maps in TrackerScreen**: Embedded genuine `GoogleMapsLiveDeliveryTrackingOverlay` into `TrackerScreen`, replacing static iframe tabs and mock driver strings (`Mohammad Ali`, `LEC-8924`, `2.4 km`) with dynamic real-time database assignments and Haversine distance calculations.
+* **Daily 1-Time Order Safety GPS Disclaimer (`DailyGpsSafetyDisclaimerDialog`)**: Implemented daily 1-time safety disclosure banner: *"The driver/rider GPS is on during each ride. It helps us follow the order in real time and make your order safely delivered."* Persisted locally using `zyphuel_gps_safety_prefs` timestamp checking.
+* **Google Play Policy Compliant Account Deletion (`deleteCurrentAccount`)**: Added prominent "Delete Account / Erase Data" options in both the Customer Sidebar Drawer and Profile Settings Dialog with double confirmation modal (`DeleteAccountConfirmationDialog`), permanently purging user records, marked locations, and session tokens.
+* **Release Signing & App Bundle Generation**: Configured `signingConfigs.release` with automatic fallback to debug keystore for development environments, successfully generating production-ready Android App Bundle (`app-release.aab`) with `bundleRelease`.
+
+
 ---
 
 ## 🗄️ Database Entity Schema Reference

@@ -101,11 +101,16 @@ import androidx.compose.ui.zIndex
 import com.example.ui.theme.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.List
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+
 
 @Composable
 fun DailyPriceNotificationChoiceDialog(
@@ -838,10 +843,10 @@ fun SplashScreen(viewModel: MainViewModel) {
             )
         }
 
-        while (!viewModel.isSessionLoaded.value) {
-            delay(50)
-        }
-        delay(600)
+        // Wait for session to load — clean coroutine await, no busy polling
+        viewModel.isSessionLoaded.filter { it }.first()
+        delay(300)
+
 
         val user = viewModel.currentUser.value
         if (user != null) {
@@ -3146,6 +3151,8 @@ fun DrawerContent(
     val context = LocalContext.current
     val adminEmail = "m.daniyalkhan490@gmail.com"
     val whatsappNumber = "+92 323 0112464"
+    var showDeleteAccountDialog by remember { mutableStateOf(false) }
+
 
     Box(
         modifier = Modifier
@@ -3328,6 +3335,16 @@ fun DrawerContent(
                     }
                 )
 
+                // Delete Account Sidebar Option (Google Play Mandatory Policy)
+                SidebarItem(
+                    icon = Icons.Filled.DeleteForever,
+                    label = "Delete Account / Erase Data",
+                    modifier = Modifier.testTag("sidebar_delete_account"),
+                    onClick = {
+                        showDeleteAccountDialog = true
+                    }
+                )
+
                 val currentScreenVal by viewModel.currentScreen.collectAsState()
 
                 if (currentUser.role == "admin" && currentScreenVal != "admin_dashboard") {
@@ -3365,8 +3382,21 @@ fun DrawerContent(
                 Text("Log Out", color = Color.White, fontWeight = FontWeight.Bold)
             }
         }
+
+        if (showDeleteAccountDialog) {
+            DeleteAccountConfirmationDialog(
+                onConfirm = {
+                    showDeleteAccountDialog = false
+                    viewModel.deleteCurrentAccount {
+                        onClose()
+                    }
+                },
+                onDismiss = { showDeleteAccountDialog = false }
+            )
+        }
     }
 }
+
 
 @Composable
 fun SidebarItem(
@@ -3933,64 +3963,73 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                     }
                 }
 
-                // Active Deliveries section header
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Live Delivery Tracking (Google Maps)",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = ZyphuelBlueDark
-                            )
-                        )
-                        Surface(
-                            color = Color(0xFF0284C7).copy(alpha = 0.15f),
-                            shape = RoundedCornerShape(8.dp)
+                // Active Deliveries section — only visible when user has an active order
+                if (activeOrders.isNotEmpty()) {
+                    // Section header
+                    item {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "🛰️ Real-Time GPS",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    color = ZyphuelBluePrimary,
+                                text = "Live Delivery Tracking (Google Maps)",
+                                style = MaterialTheme.typography.titleMedium.copy(
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 10.sp
-                                ),
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                    color = ZyphuelBlueDark
+                                )
+                            )
+                            Surface(
+                                color = Color(0xFF0284C7).copy(alpha = 0.15f),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Text(
+                                    text = "🛰️ Real-Time GPS",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        color = ZyphuelBluePrimary,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 10.sp
+                                    ),
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    // Native Google Maps SDK Live Delivery Tracking Overlay on Home Screen
+                    item {
+                        val activeTrackingOrder = activeOrders.firstOrNull()
+                        val allRidersList by viewModel.allRiders.collectAsState()
+                        val assignedRider = remember(activeTrackingOrder, allRidersList) {
+                            if (activeTrackingOrder != null && !activeTrackingOrder.riderEmail.isNullOrBlank()) {
+                                allRidersList.find { it.email == activeTrackingOrder.riderEmail }
+                            } else null
+                        }
+
+                        AnimatedVisibility(
+                            visible = true,
+                            enter = fadeIn(animationSpec = tween(400)) + expandVertically(animationSpec = tween(400))
+                        ) {
+                            GoogleMapsLiveDeliveryTrackingOverlay(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 6.dp),
+                                order = activeTrackingOrder,
+                                assignedRider = assignedRider,
+                                viewModel = viewModel,
+                                onExpandFullscreen = {
+                                    if (activeTrackingOrder != null) {
+                                        viewModel.setTrackingOrder(activeTrackingOrder)
+                                        viewModel.navigateTo("tracker")
+                                    }
+                                }
                             )
                         }
                     }
                 }
 
-                // Native Google Maps SDK Live Delivery Tracking Overlay on Home Screen
-                item {
-                    val activeTrackingOrder = activeOrders.firstOrNull()
-                    val allRidersList by viewModel.allRiders.collectAsState()
-                    val assignedRider = remember(activeTrackingOrder, allRidersList) {
-                        if (activeTrackingOrder != null && !activeTrackingOrder.riderEmail.isNullOrBlank()) {
-                            allRidersList.find { it.email == activeTrackingOrder.riderEmail }
-                        } else null
-                    }
 
-                    GoogleMapsLiveDeliveryTrackingOverlay(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 6.dp),
-                        order = activeTrackingOrder,
-                        assignedRider = assignedRider,
-                        viewModel = viewModel,
-                        onExpandFullscreen = {
-                            if (activeTrackingOrder != null) {
-                                viewModel.setTrackingOrder(activeTrackingOrder)
-                                viewModel.navigateTo("tracker")
-                            }
-                        }
-                    )
-                }
-
-                if (activeOrders.isEmpty() && tourStep != 1) {
+                if (activeOrders.isNotEmpty() && tourStep != 1) {
                     item {
                         var showCoverageMapPreview by remember { mutableStateOf(false) }
                         Card(
@@ -4704,9 +4743,7 @@ fun CustomerOrderHistoryScreen(
     viewModel: MainViewModel,
     onBack: () -> Unit
 ) {
-    val context = LocalContext.current
     val orders by viewModel.customerOrders.collectAsState()
-    val currentUser by viewModel.currentUser.collectAsState()
 
     var selectedStatusFilter by remember { mutableStateOf("All") }
     var selectedCategoryFilter by remember { mutableStateOf("All") }
@@ -4714,38 +4751,40 @@ fun CustomerOrderHistoryScreen(
 
     val sdf = remember { java.text.SimpleDateFormat("dd MMM yyyy, hh:mm a", java.util.Locale.US) }
 
-    val filteredOrders = remember(orders, selectedStatusFilter, selectedCategoryFilter, searchQuery) {
-        orders.filter { order ->
-            val matchesCategory = when (selectedCategoryFilter) {
-                "Fuel" -> order.serviceType in listOf("Petrol", "Diesel", "High-Octane")
-                "Water" -> order.serviceType in listOf("Water", "Clean Water", "Pure Water", "Gallon Water")
-                "LPG Gas" -> order.serviceType == "LPG Gas"
-                else -> true
-            }
+    // Active / In-Progress orders always float to top section
+    val activeOrders = remember(orders) {
+        orders.filter { it.status in listOf("Pending", "Assigned", "Delivering", "In Transit", "Dispatched", "Arriving", "Arriving Soon") }
+            .sortedByDescending { it.createdAt }
+    }
 
-            val matchesStatus = when (selectedStatusFilter) {
-                "Delivered" -> order.status in listOf("Completed", "Delivered")
-                "In Progress" -> order.status in listOf("Pending", "Assigned", "Delivering", "In Transit")
-                "Cancelled" -> order.status in listOf("Cancelled", "Canceled")
-                else -> true
+    // Recent (completed / cancelled) with optional filter
+    val recentOrders = remember(orders, selectedStatusFilter, selectedCategoryFilter, searchQuery) {
+        orders
+            .filter { it.status !in listOf("Pending", "Assigned", "Delivering", "In Transit", "Dispatched", "Arriving", "Arriving Soon") }
+            .filter { order ->
+                val matchesCategory = when (selectedCategoryFilter) {
+                    "Fuel" -> order.serviceType in listOf("Petrol", "Diesel", "High-Octane")
+                    "Water" -> order.serviceType in listOf("Water", "Clean Water", "Pure Water", "Gallon Water")
+                    "LPG Gas" -> order.serviceType == "LPG Gas"
+                    else -> true
+                }
+                val matchesStatus = when (selectedStatusFilter) {
+                    "Delivered" -> order.status in listOf("Completed", "Delivered")
+                    "Cancelled" -> order.status in listOf("Cancelled", "Canceled")
+                    else -> true
+                }
+                val matchesSearch = if (searchQuery.isBlank()) true else {
+                    order.id.toString().contains(searchQuery, ignoreCase = true) ||
+                            order.serviceType.contains(searchQuery, ignoreCase = true) ||
+                            order.deliveryAddress.contains(searchQuery, ignoreCase = true) ||
+                            (order.riderName ?: "").contains(searchQuery, ignoreCase = true)
+                }
+                matchesCategory && matchesStatus && matchesSearch
             }
-
-            val matchesSearch = if (searchQuery.isBlank()) true else {
-                order.id.toString().contains(searchQuery, ignoreCase = true) ||
-                        order.serviceType.contains(searchQuery, ignoreCase = true) ||
-                        order.deliveryAddress.contains(searchQuery, ignoreCase = true) ||
-                        (order.riderName ?: "").contains(searchQuery, ignoreCase = true)
-            }
-
-            matchesCategory && matchesStatus && matchesSearch
-        }.sortedByDescending { it.createdAt }
+            .sortedByDescending { it.createdAt }
     }
 
     val totalOrdersCount = orders.size
-    val deliveredCount = remember(orders) { orders.count { it.status in listOf("Completed", "Delivered") } }
-    val inProgressCount = remember(orders) { orders.count { it.status in listOf("Pending", "Assigned", "Delivering", "In Transit") } }
-    val cancelledCount = remember(orders) { orders.count { it.status in listOf("Cancelled", "Canceled") } }
-    val totalSpent = remember(orders) { orders.filter { it.status in listOf("Completed", "Delivered") }.sumOf { it.totalPrice } }
 
     Scaffold(
         topBar = {
@@ -4753,16 +4792,18 @@ fun CustomerOrderHistoryScreen(
                 title = {
                     Column {
                         Text(
-                            text = "Customer Order History",
+                            text = "My Orders",
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = ZyphuelBlueDark
                             )
                         )
-                        Text(
-                            text = "Past Fuel, Pure Water & LPG Deliveries",
-                            style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray)
-                        )
+                        if (totalOrdersCount > 0) {
+                            Text(
+                                text = "$totalOrdersCount total orders",
+                                style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray)
+                            )
+                        }
                     }
                 },
                 navigationIcon = {
@@ -4771,37 +4812,10 @@ fun CustomerOrderHistoryScreen(
                         modifier = Modifier.testTag("order_history_back_btn")
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
                             tint = ZyphuelBlueDark
                         )
-                    }
-                },
-                actions = {
-                    Surface(
-                        shape = CircleShape,
-                        color = ZyphuelBluePrimary.copy(alpha = 0.12f),
-                        modifier = Modifier.padding(end = 12.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.History,
-                                contentDescription = null,
-                                tint = ZyphuelBluePrimary,
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Text(
-                                text = "$totalOrdersCount Orders",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = ZyphuelBluePrimary
-                                )
-                            )
-                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
@@ -4809,341 +4823,148 @@ fun CustomerOrderHistoryScreen(
         },
         containerColor = Color(0xFFF8FAFC)
     ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
-            item {
-                Spacer(modifier = Modifier.height(4.dp))
+        if (orders.isEmpty()) {
+            // Completely empty — show nothing (blank slate)
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+            )
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                item { Spacer(modifier = Modifier.height(4.dp)) }
 
-                // Biometric Vault Security Status Badge
-                Surface(
-                    modifier = Modifier.fillMaxWidth().testTag("order_history_biometric_badge"),
-                    shape = RoundedCornerShape(12.dp),
-                    color = Color(0xFF0F172A),
-                    border = BorderStroke(1.dp, Color(0xFF38BDF8).copy(alpha = 0.5f))
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                // ── ACTIVE / CURRENT ORDERS ──────────────────────────────
+                if (activeOrders.isNotEmpty()) {
+                    item {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Icon(
-                                imageVector = Icons.Filled.Fingerprint,
-                                contentDescription = "Biometric Order History Shield",
-                                tint = Color(0xFF38BDF8),
-                                modifier = Modifier.size(22.dp)
-                            )
-                            Column {
-                                Text(
-                                    text = "Biometric Vault Security Active",
-                                    style = MaterialTheme.typography.labelMedium.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.White
-                                    )
-                                )
-                                Text(
-                                    text = "Fingerprint & Face ID account protection enabled",
-                                    style = MaterialTheme.typography.labelSmall.copy(
-                                        color = Color(0xFF94A3B8),
-                                        fontSize = 10.sp
-                                    )
-                                )
-                            }
-                        }
-
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = Color(0xFF0284C7).copy(alpha = 0.25f)
-                        ) {
+                            Surface(
+                                shape = CircleShape,
+                                color = Color(0xFF10B981).copy(alpha = 0.15f),
+                                modifier = Modifier.size(8.dp)
+                            ) {}
                             Text(
-                                text = "Protected 🔒",
-                                style = MaterialTheme.typography.labelSmall.copy(
+                                text = "Current Order",
+                                style = MaterialTheme.typography.titleSmall.copy(
                                     fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF38BDF8)
-                                ),
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                    color = Color(0xFF047857)
+                                )
                             )
                         }
                     }
+
+                    items(activeOrders, key = { "active_${it.id}" }) { order ->
+                        CustomerOrderHistoryCard(
+                            order = order,
+                            viewModel = viewModel,
+                            sdf = sdf
+                        )
+                    }
+
+                    item { Spacer(modifier = Modifier.height(4.dp)) }
                 }
 
-                Spacer(modifier = Modifier.height(10.dp))
-
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("order_history_stats_card"),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                    border = BorderStroke(1.dp, Color(0xFFE2E8F0))
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
+                // ── RECENT ORDERS SECTION ────────────────────────────────
+                if (recentOrders.isNotEmpty() || activeOrders.isEmpty()) {
+                    if (recentOrders.isNotEmpty()) {
+                        item {
                             Text(
-                                text = "Delivery History Overview",
+                                text = "Recent Orders",
                                 style = MaterialTheme.typography.titleSmall.copy(
                                     fontWeight = FontWeight.Bold,
                                     color = ZyphuelBlueDark
                                 )
                             )
-                            Surface(
-                                shape = RoundedCornerShape(8.dp),
-                                color = Color(0xFF10B981).copy(alpha = 0.15f)
-                            ) {
-                                Text(
-                                    text = "Spent: ${viewModel.formatPrice(totalSpent)}",
-                                    style = MaterialTheme.typography.labelSmall.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color(0xFF059669)
-                                    ),
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                )
-                            }
                         }
 
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Surface(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .clickable { selectedStatusFilter = if (selectedStatusFilter == "Delivered") "All" else "Delivered" },
-                                shape = RoundedCornerShape(10.dp),
-                                color = if (selectedStatusFilter == "Delivered") Color(0xFFBBF7D0) else Color(0xFFDCFCE7),
-                                border = BorderStroke(1.dp, Color(0xFF86EFAC))
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(10.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = Color(0xFF16A34A), modifier = Modifier.size(18.dp))
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text("Delivered", style = MaterialTheme.typography.labelSmall.copy(color = Color(0xFF15803D)))
-                                    Text("$deliveredCount", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = Color(0xFF15803D)))
-                                }
-                            }
-
-                            Surface(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .clickable { selectedStatusFilter = if (selectedStatusFilter == "In Progress") "All" else "In Progress" },
-                                shape = RoundedCornerShape(10.dp),
-                                color = if (selectedStatusFilter == "In Progress") Color(0xFFBAE6FD) else Color(0xFFE0F2FE),
-                                border = BorderStroke(1.dp, Color(0xFF7DD3FC))
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(10.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Icon(Icons.Filled.LocalShipping, contentDescription = null, tint = Color(0xFF0284C7), modifier = Modifier.size(18.dp))
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text("In Progress", style = MaterialTheme.typography.labelSmall.copy(color = Color(0xFF0369A1)))
-                                    Text("$inProgressCount", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = Color(0xFF0369A1)))
-                                }
-                            }
-
-                            Surface(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .clickable { selectedStatusFilter = if (selectedStatusFilter == "Cancelled") "All" else "Cancelled" },
-                                shape = RoundedCornerShape(10.dp),
-                                color = if (selectedStatusFilter == "Cancelled") Color(0xFFFECACA) else Color(0xFFFEE2E2),
-                                border = BorderStroke(1.dp, Color(0xFFFCA5A5))
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(10.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Icon(Icons.Filled.Cancel, contentDescription = null, tint = Color(0xFFDC2626), modifier = Modifier.size(18.dp))
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text("Cancelled", style = MaterialTheme.typography.labelSmall.copy(color = Color(0xFFB91C1C)))
-                                    Text("$cancelledCount", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = Color(0xFFB91C1C)))
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            item {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    OutlinedTextField(
-                        value = searchQuery,
-                        onValueChange = { searchQuery = it },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("order_history_search_input"),
-                        placeholder = { Text("Search Order ID, fuel/water type, address...", fontSize = 13.sp) },
-                        leadingIcon = { Icon(Icons.Filled.Search, contentDescription = "Search", tint = Color.Gray) },
-                        trailingIcon = {
-                            if (searchQuery.isNotEmpty()) {
-                                IconButton(onClick = { searchQuery = "" }) {
-                                    Icon(Icons.Filled.Close, contentDescription = "Clear", tint = Color.Gray)
-                                }
-                            }
-                        },
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = Color.White,
-                            unfocusedContainerColor = Color.White
-                        )
-                    )
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        listOf("All", "Delivered", "In Progress", "Cancelled").forEach { statusLabel ->
-                            val isSelected = selectedStatusFilter == statusLabel
-                            FilterChip(
-                                selected = isSelected,
-                                onClick = { selectedStatusFilter = statusLabel },
-                                label = {
-                                    Text(
-                                        text = statusLabel,
-                                        style = MaterialTheme.typography.labelSmall.copy(
-                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                            fontSize = 11.sp
-                                        )
+                        // Search + filters — only shown when there are recent orders to filter
+                        item {
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                OutlinedTextField(
+                                    value = searchQuery,
+                                    onValueChange = { searchQuery = it },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .testTag("order_history_search_input"),
+                                    placeholder = { Text("Search order ID, type, address...", fontSize = 13.sp) },
+                                    leadingIcon = { Icon(Icons.Filled.Search, contentDescription = "Search", tint = Color.Gray) },
+                                    trailingIcon = {
+                                        if (searchQuery.isNotEmpty()) {
+                                            IconButton(onClick = { searchQuery = "" }) {
+                                                Icon(Icons.Filled.Close, contentDescription = "Clear", tint = Color.Gray)
+                                            }
+                                        }
+                                    },
+                                    singleLine = true,
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedContainerColor = Color.White,
+                                        unfocusedContainerColor = Color.White
                                     )
-                                },
-                                leadingIcon = {
-                                    when (statusLabel) {
-                                        "Delivered" -> Icon(Icons.Filled.CheckCircle, contentDescription = null, modifier = Modifier.size(12.dp), tint = Color(0xFF16A34A))
-                                        "In Progress" -> Icon(Icons.Filled.LocalShipping, contentDescription = null, modifier = Modifier.size(12.dp), tint = Color(0xFF0284C7))
-                                        "Cancelled" -> Icon(Icons.Filled.Cancel, contentDescription = null, modifier = Modifier.size(12.dp), tint = Color(0xFFDC2626))
-                                        else -> Icon(Icons.Filled.List, contentDescription = null, modifier = Modifier.size(12.dp), tint = ZyphuelBluePrimary)
-                                    }
-                                },
-                                shape = RoundedCornerShape(20.dp),
-                                colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = ZyphuelBluePrimary.copy(alpha = 0.15f),
-                                    selectedLabelColor = ZyphuelBluePrimary
-                                ),
-                                modifier = Modifier.testTag("filter_status_$statusLabel")
-                            )
-                        }
-                    }
+                                )
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        listOf("All", "Fuel", "Water", "LPG Gas").forEach { catLabel ->
-                            val isSelected = selectedCategoryFilter == catLabel
-                            FilterChip(
-                                selected = isSelected,
-                                onClick = { selectedCategoryFilter = catLabel },
-                                label = {
-                                    Text(
-                                        text = catLabel,
-                                        style = MaterialTheme.typography.labelSmall.copy(
-                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                            fontSize = 11.sp
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    listOf("All", "Delivered", "Cancelled").forEach { statusLabel ->
+                                        val isSelected = selectedStatusFilter == statusLabel
+                                        FilterChip(
+                                            selected = isSelected,
+                                            onClick = { selectedStatusFilter = statusLabel },
+                                            label = {
+                                                Text(
+                                                    text = statusLabel,
+                                                    style = MaterialTheme.typography.labelSmall.copy(
+                                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                                        fontSize = 11.sp
+                                                    )
+                                                )
+                                            },
+                                            leadingIcon = {
+                                                when (statusLabel) {
+                                                    "Delivered" -> Icon(Icons.Filled.CheckCircle, contentDescription = null, modifier = Modifier.size(12.dp), tint = Color(0xFF16A34A))
+                                                    "Cancelled" -> Icon(Icons.Filled.Cancel, contentDescription = null, modifier = Modifier.size(12.dp), tint = Color(0xFFDC2626))
+                                                    else -> Icon(Icons.AutoMirrored.Filled.List, contentDescription = null, modifier = Modifier.size(12.dp), tint = ZyphuelBluePrimary)
+                                                }
+                                            },
+                                            shape = RoundedCornerShape(20.dp),
+                                            colors = FilterChipDefaults.filterChipColors(
+                                                selectedContainerColor = ZyphuelBluePrimary.copy(alpha = 0.15f),
+                                                selectedLabelColor = ZyphuelBluePrimary
+                                            ),
+                                            modifier = Modifier.testTag("filter_status_$statusLabel")
                                         )
-                                    )
-                                },
-                                leadingIcon = {
-                                    when (catLabel) {
-                                        "Fuel" -> Icon(Icons.Filled.LocalGasStation, contentDescription = null, modifier = Modifier.size(12.dp), tint = ZyphuelBluePrimary)
-                                        "Water" -> Icon(Icons.Filled.WaterDrop, contentDescription = null, modifier = Modifier.size(12.dp), tint = Color(0xFF0284C7))
-                                        "LPG Gas" -> Icon(Icons.Filled.Fireplace, contentDescription = null, modifier = Modifier.size(12.dp), tint = Color(0xFFE11D48))
-                                        else -> Icon(Icons.Filled.Category, contentDescription = null, modifier = Modifier.size(12.dp), tint = ZyphuelBlueDark)
                                     }
-                                },
-                                shape = RoundedCornerShape(20.dp),
-                                colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = ZyphuelBlueSecondary.copy(alpha = 0.2f),
-                                    selectedLabelColor = ZyphuelBlueDark
-                                ),
-                                modifier = Modifier.testTag("filter_cat_$catLabel")
-                            )
-                        }
-                    }
-                }
-            }
-
-            if (filteredOrders.isEmpty()) {
-                item {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 24.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        border = BorderStroke(1.dp, Color(0xFFE2E8F0))
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(32.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(60.dp)
-                                    .background(ZyphuelBluePrimary.copy(alpha = 0.1f), CircleShape),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Filled.Inbox,
-                                    contentDescription = null,
-                                    tint = ZyphuelBluePrimary,
-                                    modifier = Modifier.size(30.dp)
-                                )
+                                }
                             }
-                            Spacer(modifier = Modifier.height(12.dp))
-                            Text(
-                                text = "No matching deliveries found",
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = ZyphuelBlueDark
-                                )
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "Try adjusting your search query or status filter chips.",
-                                style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray),
-                                textAlign = TextAlign.Center
+                        }
+
+                        items(recentOrders, key = { "recent_${it.id}" }) { order ->
+                            CustomerOrderHistoryCard(
+                                order = order,
+                                viewModel = viewModel,
+                                sdf = sdf
                             )
                         }
                     }
                 }
-            } else {
-                items(filteredOrders, key = { it.id }) { order ->
-                    CustomerOrderHistoryCard(
-                        order = order,
-                        viewModel = viewModel,
-                        sdf = sdf
-                    )
-                }
-            }
 
-            item {
-                Spacer(modifier = Modifier.height(24.dp))
+                item { Spacer(modifier = Modifier.height(24.dp)) }
             }
         }
     }
 }
+
 
 @Composable
 fun CustomerOrderHistoryCard(
@@ -5801,37 +5622,8 @@ fun ServiceCard(
                 style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray),
                 maxLines = 1
             )
-
-            Spacer(modifier = Modifier.height(2.dp))
-
-            Button(
-                onClick = onClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(36.dp),
-                shape = RoundedCornerShape(10.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isHovered) accentColor else ZyphuelBluePrimary,
-                    contentColor = Color.White
-                ),
-                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Text("Select", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium)
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Icon(
-                        imageVector = Icons.Filled.ChevronRight,
-                        contentDescription = "Select $title",
-                        modifier = Modifier
-                            .size(16.dp)
-                            .offset(x = arrowOffset)
-                    )
-                }
-            }
         }
+
     }
 }
 
@@ -6418,10 +6210,11 @@ fun UnifiedGoogleMapView(
     deliveryAddress: String = "Gulberg III, Lahore",
     driverLat: Double? = null,
     driverLng: Double? = null,
-    driverName: String = "Mohammad Ali (Bowser #402)",
+    driverName: String = "Assigned Delivery Driver",
     driverPhone: String = "+92 323 0112464",
-    vehicleType: String = "5,000L Fuel Bowser",
-    vehicleNo: String = "LEC-8924",
+    vehicleType: String = "Delivery Vehicle",
+    vehicleNo: String = "",
+
     serviceType: String = "Fuel Delivery",
     orderStatus: String = "Delivering",
     pathProgress: Float = 0.5f,
@@ -7059,15 +6852,16 @@ fun DriverRealTimeTrackingMap(
     userLng: Double = 74.3587,
     driverLat: Double? = null,
     driverLng: Double? = null,
-    driverName: String = "Mohammad Ali (Bowser #402)",
+    driverName: String = "Assigned Driver",
     driverPhone: String = "+92 323 0112464",
-    vehicleType: String = "5,000L Fuel Bowser",
+    vehicleType: String = "Delivery Vehicle",
     serviceType: String = "Fuel Delivery",
     orderStatus: String = "Delivering",
-    deliveryAddress: String = "Gulberg III, Lahore",
-    pathProgress: Float = 0.5f,
-    etaMinutes: Int = 8,
-    distanceKm: Double = 2.4
+    deliveryAddress: String = "Lahore, Pakistan",
+    pathProgress: Float = 0f,
+    etaMinutes: Int = 15,
+    distanceKm: Double = 0.0
+
 ) {
     UnifiedGoogleMapView(
         modifier = modifier,
@@ -7724,9 +7518,9 @@ fun RealTimeOrderTrackingCard(
                         userLng = cardDestLng,
                         driverLat = if (cardHasLiveFix) riderLive!!.lat else null,
                         driverLng = if (cardHasLiveFix) riderLive!!.lng else null,
-                        driverName = order.riderName ?: assignedRider?.name ?: "Mohammad Ali (Bowser #402)",
+                        driverName = order.riderName ?: assignedRider?.name ?: if (order.status == "Pending") "Assigning nearby driver..." else "Assigned Delivery Driver",
                         driverPhone = assignedRider?.phoneNumber ?: "+92 323 0112464",
-                        vehicleType = assignedRider?.vehicleType ?: "5,000L Fuel Bowser",
+                        vehicleType = assignedRider?.vehicleType ?: "${order.serviceType} Delivery",
                         serviceType = order.serviceType,
                         orderStatus = order.status,
                         deliveryAddress = order.deliveryAddress,
@@ -7741,9 +7535,10 @@ fun RealTimeOrderTrackingCard(
                         riderLng = cardDestLng,
                         driverLat = if (cardHasLiveFix) riderLive!!.lat else null,
                         driverLng = if (cardHasLiveFix) riderLive!!.lng else null,
-                        driverName = order.riderName ?: assignedRider?.name ?: "Delivery Rider",
+                        driverName = order.riderName ?: assignedRider?.name ?: if (order.status == "Pending") "Assigning driver..." else "Delivery Rider",
                         driverPhone = assignedRider?.phoneNumber ?: "+92 323 0112464",
-                        vehicleType = assignedRider?.vehicleType ?: "Bowser",
+                        vehicleType = assignedRider?.vehicleType ?: "${order.serviceType} Delivery",
+
                         orderStatus = order.status,
                         serviceType = order.serviceType,
                         deliveryAddress = order.deliveryAddress,
@@ -7909,9 +7704,10 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
     val selectedCurrency by viewModel.selectedCurrency.collectAsState()
     val isPromoApplied by viewModel.isPromoApplied.collectAsState()
     val permanentMarkedLocations by viewModel.markedLocationsForCurrentUser.collectAsState()
+    // Loading state — prevents double-tap and shows spinner while order is being submitted
+    val isPlacingOrder by viewModel.isPlacingOrder.collectAsState()
 
     // Support multi-item selection state (Petrol, Diesel, High-Octane, LPG Gas, Water)
-    var confirmedOrderForMapDialog by remember { mutableStateOf<OrderEntity?>(null) }
     var petrolSelected by remember { mutableStateOf(serviceType == "Petrol" || serviceType.isBlank() || serviceType == "all") }
     var petrolQty by remember { mutableIntStateOf(5) }
 
@@ -7930,8 +7726,7 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
     val liveLocationCoordinates by viewModel.liveLocationCoordinates.collectAsState()
     val savedAddresses by viewModel.savedAddresses.collectAsState()
     var deliveryAddress by remember { mutableStateOf("") }
-    var isOrderInitiated by remember { mutableStateOf(false) }
-    var selectedPaymentMethod by remember { mutableStateOf("COD") } // "COD" or "Online"
+
 
     LaunchedEffect(liveLocationCoordinates) {
         if (deliveryAddress.isEmpty() || deliveryAddress == "Liberty Market, Gulberg III, Lahore" || deliveryAddress == "Gulberg III, Lahore" || deliveryAddress.startsWith("Gulberg III, Lahore")) {
@@ -8466,66 +8261,8 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                     }
                 }
 
-                // Payment Method Selection & Optional Live GPS Map Preview
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(
-                        text = "Select Payment Method:",
-                        style = MaterialTheme.typography.labelMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = ZyphuelBlueDark
-                        )
-                    )
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        FilterChip(
-                            selected = (selectedPaymentMethod == "COD"),
-                            onClick = { selectedPaymentMethod = "COD" },
-                            label = { Text("Cash on Delivery (COD) 💵", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = ZyphuelBluePrimary,
-                                selectedLabelColor = Color.White
-                            ),
-                            modifier = Modifier.weight(1f).testTag("payment_method_cod_chip")
-                        )
-                        FilterChip(
-                            selected = (selectedPaymentMethod == "Online"),
-                            onClick = { selectedPaymentMethod = "Online" },
-                            label = { Text("Live GPS / Card 💳", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = ZyphuelBluePrimary,
-                                selectedLabelColor = Color.White
-                            ),
-                            modifier = Modifier.weight(1f).testTag("payment_method_online_chip")
-                        )
-                    }
-
-                    // Live GPS Map is HIDDEN when COD is selected
-                    if (selectedPaymentMethod != "COD") {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "📍 Live Delivery Location Map (Lahore):",
-                            style = MaterialTheme.typography.labelMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = ZyphuelBlueDark
-                            )
-                        )
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(180.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .border(1.dp, Color(0xFFCBD5E1), RoundedCornerShape(12.dp))
-                        ) {
-                            LahoreGoogleEmbedMapView(
-                                modifier = Modifier.fillMaxSize()
-                            )
-                        }
-                    }
-                }
-
                 // Delivery address input
+
                 OutlinedTextField(
                     value = deliveryAddress,
                     onValueChange = { deliveryAddress = it },
@@ -8641,120 +8378,10 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                         Text("Grand Total:", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold))
                         Text(viewModel.formatPrice(totalPrice), style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary))
                     }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = "📍 Live Delivery Destination (Lahore, Punjab):",
-                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark)
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    // Conditional block that displays the GoogleMap from maps-compose library above the 'Confirm Order' button only after order is initiated
-                    if (isOrderInitiated) {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .testTag("initiated_order_google_map_section"),
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
-                            border = BorderStroke(1.5.dp, Color(0xFF38BDF8)),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(10.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Filled.Map,
-                                            contentDescription = "Live Google Map",
-                                            tint = Color(0xFF38BDF8),
-                                            modifier = Modifier.size(16.dp)
-                                        )
-                                        Text(
-                                            text = "Live Google Map Tracking (Lahore)",
-                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                fontWeight = FontWeight.Bold,
-                                                color = Color.White
-                                            )
-                                        )
-                                    }
-                                    Surface(
-                                        color = Color(0xFF22C55E).copy(alpha = 0.2f),
-                                        shape = RoundedCornerShape(6.dp)
-                                    ) {
-                                        Text(
-                                            text = "LIVE MAP ACTIVE",
-                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                color = Color(0xFF4ADE80),
-                                                fontWeight = FontWeight.Bold,
-                                                fontSize = 9.sp
-                                            ),
-                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                        )
-                                    }
-                                }
-
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(180.dp)
-                                        .clip(RoundedCornerShape(10.dp))
-                                        .border(1.dp, Color(0xFF38BDF8).copy(alpha = 0.5f), RoundedCornerShape(10.dp))
-                                ) {
-                                    GoogleMapComposeView(
-                                        modifier = Modifier.fillMaxSize(),
-                                        title = if (deliveryAddress.isNotBlank()) deliveryAddress else "Gulberg III, Lahore"
-                                    )
-                                }
-                            }
-                        }
-                    } else {
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(160.dp)
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .border(1.dp, ZyphuelBluePrimary.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
-                            ) {
-                                LahoreGoogleEmbedMapView(
-                                    modifier = Modifier.fillMaxSize(),
-                                    embedUrl = "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d435519.22743715707!2d74.00471731731074!3d31.48310365553622!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39190483e58107d9%3A0xc23abe6ccc7e2462!2sLahore%2C%20Pakistan!5e0!3m2!1sen!2s!4v1785493243301!5m2!1sen!2s"
-                                )
-                            }
-                            OutlinedButton(
-                                onClick = { isOrderInitiated = true },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .testTag("initiate_order_map_btn"),
-                                colors = ButtonDefaults.outlinedButtonColors(contentColor = ZyphuelBluePrimary),
-                                border = BorderStroke(1.dp, ZyphuelBluePrimary),
-                                shape = RoundedCornerShape(10.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Filled.MyLocation,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text("Initiate Order Location & Preview Live Google Map", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
-                            }
-                        }
-                    }
                 }
             }
         },
+
         confirmButton = {
             Button(
                 onClick = {
@@ -8768,14 +8395,9 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                         totalQuantity.coerceAtLeast(1),
                         totalPrice,
                         finalAddr,
-                        paymentMethod = if (selectedPaymentMethod == "COD") "Cash on Delivery" else "Online / Card"
+                        paymentMethod = "Cash on Delivery"
                     ) {
-                        val activeTracking = viewModel.trackingOrder.value
-                        if (activeTracking != null) {
-                            confirmedOrderForMapDialog = activeTracking
-                        } else {
-                            onDismiss()
-                        }
+                        onDismiss()
                     }
                     if (requiresWhatsApp) {
                         val message = "Hello Zyphuel, I have placed a bulk order: $combinedServiceType. Delivery address: $finalAddr"
@@ -8789,44 +8411,49 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                         }
                     }
                 },
+                enabled = !isPlacingOrder,
                 modifier = Modifier.testTag("dialog_confirm_btn"),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = ZyphuelBluePrimary
+                    containerColor = ZyphuelBluePrimary,
+                    disabledContainerColor = ZyphuelBluePrimary.copy(alpha = 0.6f)
                 )
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Filled.Check, contentDescription = null, tint = Color.White)
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        if (selectedPaymentMethod == "COD") "Confirm Order (COD)" else "Confirm Order (Card)",
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    if (isPlacingOrder) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                        Text(
+                            "Placing Order...",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold
+                        )
+                    } else {
+                        Icon(Icons.Filled.Check, contentDescription = null, tint = Color.White)
+                        Text(
+                            "Confirm Order (COD) 💵",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
+
             }
         },
+
         dismissButton = {
             TextButton(onClick = onDismiss) {
                 Text("Cancel")
             }
         }
     )
-
-    if (confirmedOrderForMapDialog != null) {
-        OrderConfirmedLahoreMapDialog(
-            order = confirmedOrderForMapDialog!!,
-            onDismiss = {
-                confirmedOrderForMapDialog = null
-                onDismiss()
-            },
-            onTrackOrder = {
-                confirmedOrderForMapDialog = null
-                viewModel.navigateTo("customer_dashboard")
-                onDismiss()
-            }
-        )
-    }
 }
+
 
 @Composable
 fun OrderSummaryCard(order: OrderEntity, viewModel: MainViewModel) {
@@ -9728,12 +9355,18 @@ fun TrackerScreen(viewModel: MainViewModel) {
     }
 
     var showSummary by remember { mutableStateOf(false) }
-    var activeMapTab by remember { mutableStateOf("google") }
-    var isSatelliteView by remember { mutableStateOf(false) }
     var showDriverChat by remember { mutableStateOf(false) }
     var showCancelReasonDialog by remember { mutableStateOf(false) }
     var showFareBreakdownDialog by remember { mutableStateOf(false) }
     var isHudMinimized by remember { mutableStateOf(false) }
+
+    val showDailyGpsSafetyDisclaimer by viewModel.showDailyGpsSafetyDisclaimer.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.checkAndTriggerDailyGpsDisclaimer()
+    }
+
+
 
     BackHandler {
         viewModel.navigateTo("customer_home")
@@ -9799,177 +9432,23 @@ fun TrackerScreen(viewModel: MainViewModel) {
                 }
             }
 
-            // Map Mode Switcher Bar directly below header
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFFF1F5F9))
-                    .padding(horizontal = 12.dp, vertical = 6.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Surface(
-                    onClick = { activeMapTab = "google" },
-                    shape = RoundedCornerShape(8.dp),
-                    color = if (activeMapTab == "google") ZyphuelBluePrimary else Color.White,
-                    contentColor = if (activeMapTab == "google") Color.White else ZyphuelBlueDark,
-                    border = BorderStroke(1.dp, if (activeMapTab == "google") ZyphuelBluePrimary else Color(0xFFCBD5E1)),
-                    modifier = Modifier.weight(1f).testTag("tracking_google_map_tab")
-                ) {
-                    Row(
-                        modifier = Modifier.padding(vertical = 8.dp),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(Icons.Filled.Map, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Google Map (Lahore) 📍", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
-                    }
-                }
-
-                Surface(
-                    onClick = { activeMapTab = "driver" },
-                    shape = RoundedCornerShape(8.dp),
-                    color = if (activeMapTab == "driver") ZyphuelBluePrimary else Color.White,
-                    contentColor = if (activeMapTab == "driver") Color.White else ZyphuelBlueDark,
-                    border = BorderStroke(1.dp, if (activeMapTab == "driver") ZyphuelBluePrimary else Color(0xFFCBD5E1)),
-                    modifier = Modifier.weight(1f).testTag("tracking_driver_map_tab")
-                ) {
-                    Row(
-                        modifier = Modifier.padding(vertical = 8.dp),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(Icons.Filled.DirectionsCar, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Driver Live Map 🚚", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
-                    }
-                }
-            }
-
             AnimatedVisibility(visible = showSummary) {
                 OrderSummaryCard(order = trackingOrder!!, viewModel = viewModel)
             }
 
-            // Map Area (Lahore, Pakistan)
+            // Real Live Delivery Google Map Area (Lahore, Pakistan)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
                     .clipToBounds()
             ) {
-                if (activeMapTab == "google") {
-                    LahoreGoogleEmbedMapView(
-                        modifier = Modifier.fillMaxSize(),
-                        riderLat = destLatT,
-                        riderLng = destLngT,
-                        driverLat = liveDriverLat,
-                        driverLng = liveDriverLng,
-                        driverName = trackingOrder?.riderName ?: trackingRider?.name ?: "Delivery Rider",
-                        driverPhone = trackingRider?.phoneNumber ?: "+92 323 0112464",
-                        vehicleType = trackingRider?.vehicleType ?: "Bowser",
-                        orderStatus = trackingOrder?.status ?: "Delivering",
-                        serviceType = trackingOrder?.serviceType ?: "Fuel",
-                        deliveryAddress = trackingOrder?.deliveryAddress ?: "Lahore, Pakistan",
-                        pathProgress = pathProgress,
-                        etaMinutes = liveEtaMinutes,
-                        distanceKm = remainingKmT
-                    )
-                } else {
-                    DriverRealTimeTrackingMap(
-                        modifier = Modifier.fillMaxSize(),
-                        userLat = destLatT,
-                        userLng = destLngT,
-                        driverLat = liveDriverLat,
-                        driverLng = liveDriverLng,
-                        driverName = trackingOrder?.riderName ?: trackingRider?.name ?: "Mohammad Ali (Bowser #402)",
-                        driverPhone = trackingRider?.phoneNumber ?: "+92 323 0112464",
-                        vehicleType = trackingRider?.vehicleType ?: "5,000L Fuel Bowser",
-                        serviceType = trackingOrder?.serviceType ?: "Fuel",
-                        orderStatus = trackingOrder?.status ?: "Delivering",
-                        deliveryAddress = trackingOrder?.deliveryAddress ?: "Lahore, Pakistan",
-                        pathProgress = pathProgress,
-                        etaMinutes = liveEtaMinutes,
-                        distanceKm = remainingKmT
-                    )
-                }
-
-                // Top-Left Floating Compact Badge - Order Number
-                Card(
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(6.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.92f)),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.ShoppingCart,
-                            contentDescription = "Order ID",
-                            tint = ZyphuelBluePrimary,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Text(
-                            text = "Order #${trackingOrder!!.id}",
-                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark, fontSize = 11.sp)
-                        )
-                    }
-                }
-
-                // Center Delivery Location Pin Overlay on Map
-                Card(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(bottom = 60.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.LocationOn,
-                            contentDescription = "Delivery Pin",
-                            tint = Color(0xFFEA4335),
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Column {
-                            Text(
-                                text = "Confirmed Delivery Location (Lahore)",
-                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark)
-                            )
-                            Text(
-                                text = trackingOrder!!.deliveryAddress,
-                                style = MaterialTheme.typography.bodySmall.copy(color = Color.DarkGray),
-                                maxLines = 1
-                            )
-                        }
-                    }
-                }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+                GoogleMapsLiveDeliveryTrackingOverlay(
+                    modifier = Modifier.fillMaxSize(),
+                    order = trackingOrder,
+                    assignedRider = trackingRider,
+                    viewModel = viewModel
+                )
 
                 // Overlapping Floating Status HUD
                 Card(
@@ -9977,6 +9456,7 @@ fun TrackerScreen(viewModel: MainViewModel) {
                         .align(Alignment.BottomCenter)
                         .padding(8.dp)
                         .fillMaxWidth(),
+
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
                     elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
@@ -10413,8 +9893,13 @@ fun TrackerScreen(viewModel: MainViewModel) {
             }
         }
     }
+}
 
     // --- RIDE-HAILING / DELIVERY DIALOG OVERLAYS ---
+
+
+
+
 
     // 1. Driver Chat Dialog Modal
     if (showDriverChat) {
@@ -10614,10 +10099,163 @@ fun TrackerScreen(viewModel: MainViewModel) {
         )
     }
 
-}
+    // 4. Daily 1-Time Order Safety Disclaimer Dialog
+    if (showDailyGpsSafetyDisclaimer) {
+        DailyGpsSafetyDisclaimerDialog(
+            onDismiss = { viewModel.dismissDailyGpsSafetyDisclaimer() }
+        )
+    }
+
 }
 
 @Composable
+fun DailyGpsSafetyDisclaimerDialog(
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = {
+            Box(
+                modifier = Modifier
+                    .size(52.dp)
+                    .background(Color(0xFFE0F2FE), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.GpsFixed,
+                    contentDescription = "GPS Safe Tracking",
+                    tint = ZyphuelBluePrimary,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+        },
+        title = {
+            Text(
+                text = "Live Order GPS Tracking Active 🛡️",
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "The driver/rider GPS is on during each ride. It helps us follow the order in real time and make your order safely delivered.",
+                    style = MaterialTheme.typography.bodyMedium.copy(color = Color(0xFF334155), lineHeight = 20.sp),
+                    textAlign = TextAlign.Center
+                )
+
+                Surface(
+                    color = Color(0xFFF1F5F9),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.padding(top = 4.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Security,
+                            contentDescription = null,
+                            tint = Color(0xFF059669),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text(
+                            text = "Daily Safety & Telematics Verification",
+                            style = MaterialTheme.typography.labelSmall.copy(color = Color(0xFF059669), fontWeight = FontWeight.Bold)
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(containerColor = ZyphuelBluePrimary),
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier.fillMaxWidth().testTag("dismiss_daily_gps_disclaimer_btn")
+            ) {
+                Text("Understood & Continue 👍", fontWeight = FontWeight.Bold, color = Color.White)
+            }
+        }
+    )
+}
+
+@Composable
+fun DeleteAccountConfirmationDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = {
+            Box(
+                modifier = Modifier
+                    .size(52.dp)
+                    .background(Color(0xFFFEE2E2), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Warning,
+                    contentDescription = "Warning",
+                    tint = Color(0xFFDC2626),
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+        },
+        title = {
+            Text(
+                text = "Delete Account Permanently?",
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = Color(0xFF991B1B)),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "Are you sure you want to delete your account? All your personal details, marked location pins, and session credentials will be permanently erased from this device.",
+                    style = MaterialTheme.typography.bodySmall.copy(color = Color.DarkGray)
+                )
+                Text(
+                    text = "⚠️ This action is irreversible according to Google Play Data Safety policy.",
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFFB91C1C))
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626)),
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier.testTag("confirm_delete_account_btn")
+            ) {
+                Text("Yes, Delete My Account", color = Color.White, fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            OutlinedButton(
+                onClick = onDismiss,
+                shape = RoundedCornerShape(10.dp)
+            ) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
+@Composable
+
+
+
 fun MapLabel(
     title: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
@@ -11455,6 +11093,8 @@ fun ProfileSettingsDialog(
     val context = LocalContext.current
     var password by remember { mutableStateOf(currentUser!!.passwordHash) }
     var passwordVisible by remember { mutableStateOf(false) }
+    var showDeleteConfirmInProfile by remember { mutableStateOf(false) }
+
 
     // System gallery picker
     val pickerLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
@@ -11823,6 +11463,55 @@ fun ProfileSettingsDialog(
                         }
                     }
                 }
+
+                // --- Danger Zone / Delete Account (Google Play Mandatory Policy) ---
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF2F2)),
+                    border = BorderStroke(1.dp, Color(0xFFF87171))
+                ) {
+                    Column(
+                        modifier = Modifier.padding(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.DeleteForever,
+                                contentDescription = "Delete Account",
+                                tint = Color(0xFFDC2626),
+                                modifier = Modifier.size(22.dp)
+                            )
+                            Text(
+                                text = "Delete Account & Erase Data",
+                                style = MaterialTheme.typography.titleSmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF991B1B)
+                                )
+                            )
+                        }
+
+                        Text(
+                            text = "Permanently remove your user profile, saved location pins, order history, and biometrics from the system. This action cannot be undone.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color(0xFF7F1D1D)
+                        )
+
+                        Button(
+                            onClick = { showDeleteConfirmInProfile = true },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626)),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.fillMaxWidth().testTag("profile_delete_account_btn")
+                        ) {
+                            Icon(Icons.Filled.DeleteForever, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.White)
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Permanently Delete Account", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.White))
+                        }
+                    }
+                }
             }
         },
         confirmButton = {
@@ -11844,7 +11533,20 @@ fun ProfileSettingsDialog(
             }
         }
     )
+
+    if (showDeleteConfirmInProfile) {
+        DeleteAccountConfirmationDialog(
+            onConfirm = {
+                showDeleteConfirmInProfile = false
+                viewModel.deleteCurrentAccount {
+                    onDismiss()
+                }
+            },
+            onDismiss = { showDeleteConfirmInProfile = false }
+        )
+    }
 }
+
 
 @Composable
 fun MyOrdersDialog(

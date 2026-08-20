@@ -239,7 +239,11 @@ interface MarkedLocationDao {
 
     @Query("UPDATE marked_locations SET isPrimary = 1 WHERE id = :id")
     suspend fun setPrimaryLocation(id: Int)
+
+    @Query("DELETE FROM marked_locations WHERE userEmail = :email")
+    suspend fun deleteMarkedLocationsForUser(email: String)
 }
+
 
 // --- App Database definition ---
 

@@ -55,10 +55,11 @@ Zyphuel is engineered as a modern, high-performance, offline-first Android appli
 ```
 app/src/main/java/com/example/
 ├── data/
-│   ├── AppDatabase.kt          # Room Database Instance & Migrations
-│   ├── Daos.kt                 # Data Access Objects (UserDao, OrderDao, AuditLogDao, NotificationDao)
-│   ├── Models.kt               # Room Data Entities (UserEntity, OrderEntity, AuditLogEntity, NotificationEntity)
-│   └── ZyphuelRepository.kt    # Unified Data Repository Abstraction
+│   ├── AppDatabase.kt          # Room Database Instance & Version Migrations
+│   ├── Models.kt               # Room Data Entities & DAOs (UserDao, OrderDao, AuditLogDao, NotificationDao, MarkedLocationDao)
+│   ├── Repository.kt           # Unified Data Repository Abstraction
+│   ├── FirestoreOrderRepository.kt # Firestore Cloud Order Sync & Live Listeners
+│   └── FirestoreUserRepository.kt  # Firestore Cloud User Sync
 ├── notifications/
 │   └── ZyphuelFcmService.kt    # Firebase Cloud Messaging & System Push Handler
 ├── security/
@@ -66,16 +67,25 @@ app/src/main/java/com/example/
 │   ├── SecureStorageManager.kt     # AES-256 Encrypted Session & Preference Storage
 │   ├── SecurityInputValidator.kt   # Input Sanitization Regex Rules
 │   └── SecurityRateLimiter.kt      # Brute-Force Action Rate Limiter
+├── service/
+│   ├── LocationService.kt      # FusedLocationProviderClient Background & Live GPS Provider
+│   └── RiderLocationForegroundService.kt # Foreground Service for Live Delivery Navigation
 └── ui/
-    ├── MainViewModel.kt        # Central ViewModel & Business Logic Hub
-    ├── Screens.kt              # Jetpack Compose Views, Cards, Tracking Map & Rating UI
-    └── Theme.kt                # Material 3 Custom Theme Colors, Shapes & Typography
+    ├── MainViewModel.kt        # Central ViewModel, Telematics Calculations & Business Logic Hub
+    ├── Screens.kt              # Jetpack Compose Screens, Order Dialog, Profile & Drawer UI
+    ├── GoogleMapsLiveDeliveryTrackingOverlay.kt # Native Real-Time Radar & Google Maps Tracking
+    ├── Theme.kt                # Material 3 Custom Theme Colors, Shapes & Typography
+    └── components/
+        └── DeliveryNotificationPermissionPrompt.kt # Notification Permission Onboarding Modal
 ```
 
 ---
 
-## 🔒 Security & Data Flow Constraints
-1. **Repository Single Source of Truth**: All database operations route through `ZyphuelRepository` on background IO threads.
+## 🔒 Security, Privacy & Google Play Compliance Constraints
+1. **Repository Single Source of Truth**: All database operations route through `AppRepository` on background IO threads.
 2. **Security Input Validation**: All user inputs (email, phone, volume, feedback, rating) are pre-validated by `SecurityInputValidator` before database insertion.
-3. **Audit Trail Persistence**: Security-sensitive actions (logins, order placements, rating submissions, biometric toggles) automatically log an `AuditLogEntity` entry.
-4. **Test Tag Mandate**: Interactive UI elements must maintain unique Compose `testTag` modifiers for accessibility and automated testing.
+3. **Audit Trail Persistence**: Security-sensitive actions (logins, order placements, rating submissions, biometric toggles, account deletions) automatically log an `AuditLogEntity` entry.
+4. **Google Play Account Deletion Policy**: Complete user record purge (`deleteCurrentAccount`) wipes `UserEntity`, `MarkedLocationEntity`, and session tokens in compliance with Google Play Data Safety rules.
+5. **Daily Safety Notice Policy**: Daily 1-time GPS disclaimer (`DailyGpsSafetyDisclaimerDialog`) informs users regarding live GPS rider telemetry for transparent order fulfillment.
+6. **Test Tag Mandate**: Interactive UI elements must maintain unique Compose `testTag` modifiers for accessibility and automated testing.
+
