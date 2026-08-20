@@ -88,23 +88,26 @@ class FirestoreOrderRepository(private val context: Context) {
     /**
      * Saves or updates an order in Firestore.
      */
-    suspend fun saveOrder(order: OrderEntity): Boolean {
-        val firestore = db ?: return false
-        return try {
-            val docRef = if (order.id > 0) {
-                firestore.collection("orders").document(order.id.toString())
-            } else {
-                firestore.collection("orders").document()
+    suspend fun saveOrder(order: OrderEntity): Boolean = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        val firestore = db ?: return@withContext false
+        try {
+            kotlinx.coroutines.withTimeoutOrNull(1500L) {
+                val docRef = if (order.id > 0) {
+                    firestore.collection("orders").document(order.id.toString())
+                } else {
+                    firestore.collection("orders").document()
+                }
+                val map = orderEntityToMap(order)
+                docRef.set(map, SetOptions.merge()).await()
             }
-            val map = orderEntityToMap(order)
-            docRef.set(map, SetOptions.merge()).await()
-            Log.d(TAG, "Order #${order.id} saved to Firestore successfully.")
+            Log.d(TAG, "Order #${order.id} save triggered in Firestore.")
             true
         } catch (e: Exception) {
-            Log.e(TAG, "Error saving order to Firestore: ${e.message}", e)
+            Log.w(TAG, "Non-blocking Firestore order save skipped: ${e.message}")
             false
         }
     }
+
 
     /**
      * Real-time Flow of orders for a specific customer.
@@ -201,23 +204,25 @@ class FirestoreOrderRepository(private val context: Context) {
         riderEmail: String? = null,
         riderName: String? = null,
         etaMinutes: Int? = null
-    ): Boolean {
-        val firestore = db ?: return false
-        return try {
-            val docRef = firestore.collection("orders").document(orderId.toString())
-            val updates = mutableMapOf<String, Any>(
-                "status" to newStatus,
-                "updatedAt" to System.currentTimeMillis()
-            )
-            riderEmail?.let { updates["riderEmail"] = it }
-            riderName?.let { updates["riderName"] = it }
-            etaMinutes?.let { updates["etaMinutes"] = it }
+    ): Boolean = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        val firestore = db ?: return@withContext false
+        try {
+            kotlinx.coroutines.withTimeoutOrNull(1500L) {
+                val docRef = firestore.collection("orders").document(orderId.toString())
+                val updates = mutableMapOf<String, Any>(
+                    "status" to newStatus,
+                    "updatedAt" to System.currentTimeMillis()
+                )
+                riderEmail?.let { updates["riderEmail"] = it }
+                riderName?.let { updates["riderName"] = it }
+                etaMinutes?.let { updates["etaMinutes"] = it }
 
-            docRef.update(updates).await()
+                docRef.update(updates).await()
+            }
             Log.d(TAG, "Order #$orderId status updated to $newStatus in Firestore.")
             true
         } catch (e: Exception) {
-            Log.e(TAG, "Error updating order status in Firestore: ${e.message}", e)
+            Log.w(TAG, "Error updating order status in Firestore: ${e.message}")
             false
         }
     }
@@ -225,24 +230,27 @@ class FirestoreOrderRepository(private val context: Context) {
     /**
      * Rating and feedback update for completed orders in Firestore.
      */
-    suspend fun rateOrder(orderId: Int, rating: Int, feedback: String?): Boolean {
-        val firestore = db ?: return false
-        return try {
-            val docRef = firestore.collection("orders").document(orderId.toString())
-            val updates = mutableMapOf<String, Any>(
-                "rating" to rating,
-                "updatedAt" to System.currentTimeMillis()
-            )
-            feedback?.takeIf { it.isNotBlank() }?.let { validFeedback ->
-                updates["feedback"] = validFeedback
+    suspend fun rateOrder(orderId: Int, rating: Int, feedback: String?): Boolean = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        val firestore = db ?: return@withContext false
+        try {
+            kotlinx.coroutines.withTimeoutOrNull(1500L) {
+                val docRef = firestore.collection("orders").document(orderId.toString())
+                val updates = mutableMapOf<String, Any>(
+                    "rating" to rating,
+                    "updatedAt" to System.currentTimeMillis()
+                )
+                feedback?.takeIf { it.isNotBlank() }?.let { validFeedback ->
+                    updates["feedback"] = validFeedback
+                }
+                docRef.update(updates).await()
             }
-            docRef.update(updates).await()
             true
         } catch (e: Exception) {
-            Log.e(TAG, "Error rating order in Firestore: ${e.message}", e)
+            Log.w(TAG, "Error rating order in Firestore: ${e.message}")
             false
         }
     }
+
 
     private fun String?.isNull_or_blank(): Boolean = this == null || this.trim().isEmpty()
 }

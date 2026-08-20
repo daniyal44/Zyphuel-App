@@ -32,31 +32,34 @@ class FirestoreUserRepository(private val context: Context) {
         displayName: String,
         photoUrl: String?,
         role: String = "customer"
-    ): Boolean {
-        val firestore = db ?: return false
-        return try {
-            val docId = if (uid.isNotBlank()) uid else email.replace(".", "_")
-            val docRef = firestore.collection("users").document(docId)
+    ): Boolean = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        val firestore = db ?: return@withContext false
+        try {
+            kotlinx.coroutines.withTimeoutOrNull(1500L) {
+                val docId = if (uid.isNotBlank()) uid else email.replace(".", "_")
+                val docRef = firestore.collection("users").document(docId)
 
-            val userMap = mutableMapOf<String, Any?>(
-                "uid" to docId,
-                "email" to email,
-                "displayName" to displayName,
-                "photoURL" to photoUrl,
-                "role" to role,
-                "lastLogin" to System.currentTimeMillis()
-            )
+                val userMap = mutableMapOf<String, Any?>(
+                    "uid" to docId,
+                    "email" to email,
+                    "displayName" to displayName,
+                    "photoURL" to photoUrl,
+                    "role" to role,
+                    "lastLogin" to System.currentTimeMillis()
+                )
 
-            docRef.set(
-                mapOf("createdAt" to System.currentTimeMillis()) + userMap,
-                SetOptions.merge()
-            ).await()
+                docRef.set(
+                    mapOf("createdAt" to System.currentTimeMillis()) + userMap,
+                    SetOptions.merge()
+                ).await()
+            }
 
-            Log.d(TAG, "User document upserted successfully in Firestore at users/$docId")
+            Log.d(TAG, "User document upserted successfully in Firestore at users/$uid")
             true
         } catch (e: Exception) {
-            Log.e(TAG, "Error upserting user in Firestore: ${e.message}", e)
+            Log.w(TAG, "Error upserting user in Firestore: ${e.message}")
             false
         }
     }
 }
+

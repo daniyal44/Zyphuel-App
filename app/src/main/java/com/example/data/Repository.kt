@@ -2,9 +2,13 @@ package com.example.data
 
 import android.content.Context
 import androidx.room.Room
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.launch
 import kotlin.random.Random
+
 
 class AppRepository(context: Context) {
 
@@ -162,23 +166,30 @@ class AppRepository(context: Context) {
         )
         val insertedId = orderDao.insertOrder(order)
         val finalOrder = if (insertedId > 0) order.copy(id = insertedId.toInt()) else order
-        // Firestore sync — silent degrade: if Firestore is unavailable (404/network error),
-        // order stays safe in local Room DB and syncs later when connectivity is restored.
-        try {
-            firestoreOrderRepository.saveOrder(finalOrder)
-        } catch (e: Exception) {
-            android.util.Log.w("AppRepository", "Firestore save skipped for order #${finalOrder.id}: ${e.message}")
+
+        // Asynchronous non-blocking Firestore sync (Room DB order is created instantly)
+        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+            try {
+                firestoreOrderRepository.saveOrder(finalOrder)
+            } catch (e: Exception) {
+                android.util.Log.w("AppRepository", "Firestore save skipped: ${e.message}")
+            }
         }
 
-        auditLogDao.insertLog(
-            AuditLogEntity(
-                action = "ORDER_CREATED",
-                performedBy = customerEmail,
-                details = "Created $serviceType order of $quantity units for Rs. $totalPrice ($paymentMethod)"
+        try {
+            auditLogDao.insertLog(
+                AuditLogEntity(
+                    action = "ORDER_CREATED",
+                    performedBy = customerEmail,
+                    details = "Created $serviceType order of $quantity units for Rs. $totalPrice ($paymentMethod)"
+                )
             )
-        )
+        } catch (e: Exception) {
+            android.util.Log.w("AppRepository", "Audit log insert warning: ${e.message}")
+        }
         return finalOrder
     }
+
 
     // --- Cross-device sync: Firestore -> Room upsert ---
     // The rest of the app reads from Room DAOs. By mirroring the Firestore
