@@ -7707,25 +7707,32 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
     // Loading state — prevents double-tap and shows spinner while order is being submitted
     val isPlacingOrder by viewModel.isPlacingOrder.collectAsState()
 
+    val initialDiesel = serviceType == "Diesel" || serviceType.contains("Diesel", ignoreCase = true)
+    val initialOctane = serviceType == "High-Octane" || serviceType.contains("Octane", ignoreCase = true)
+    val initialLpg = serviceType == "LPG Gas" || serviceType.contains("LPG", ignoreCase = true) || serviceType.contains("Gas", ignoreCase = true)
+    val initialWater = serviceType == "Water" || serviceType.contains("Water", ignoreCase = true)
+    val initialPetrol = serviceType == "Petrol" || serviceType.isBlank() || serviceType == "all" || serviceType.contains("Petrol", ignoreCase = true) || (!initialDiesel && !initialOctane && !initialLpg && !initialWater)
+
     // Support multi-item selection state (Petrol, Diesel, High-Octane, LPG Gas, Water)
-    var petrolSelected by remember { mutableStateOf(serviceType == "Petrol" || serviceType.isBlank() || serviceType == "all") }
+    var petrolSelected by remember { mutableStateOf(initialPetrol) }
     var petrolQty by remember { mutableIntStateOf(5) }
 
-    var dieselSelected by remember { mutableStateOf(serviceType == "Diesel") }
+    var dieselSelected by remember { mutableStateOf(initialDiesel) }
     var dieselQty by remember { mutableIntStateOf(5) }
 
-    var octaneSelected by remember { mutableStateOf(serviceType == "High-Octane") }
+    var octaneSelected by remember { mutableStateOf(initialOctane) }
     var octaneQty by remember { mutableIntStateOf(5) }
 
-    var lpgSelected by remember { mutableStateOf(serviceType == "LPG Gas") }
+    var lpgSelected by remember { mutableStateOf(initialLpg) }
     var lpgQty by remember { mutableIntStateOf(5) }
 
-    var waterSelected by remember { mutableStateOf(serviceType == "Water") }
+    var waterSelected by remember { mutableStateOf(initialWater) }
     var waterQty by remember { mutableIntStateOf(1) }
 
     val liveLocationCoordinates by viewModel.liveLocationCoordinates.collectAsState()
     val savedAddresses by viewModel.savedAddresses.collectAsState()
     var deliveryAddress by remember { mutableStateOf("") }
+
 
 
     LaunchedEffect(liveLocationCoordinates) {
@@ -8385,30 +8392,25 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
         confirmButton = {
             Button(
                 onClick = {
-                    if (selectedSummaryParts.isEmpty()) {
-                        Toast.makeText(context, "Please select at least one item to order.", Toast.LENGTH_SHORT).show()
-                        return@Button
-                    }
                     val finalAddr = deliveryAddress.trim().ifBlank { "Main Boulevard, Gulberg III, Lahore" }
+                    val finalServiceType = if (selectedSummaryParts.isNotEmpty()) {
+                        combinedServiceType
+                    } else if (serviceType.isNotBlank()) {
+                        serviceType
+                    } else {
+                        "Super Petrol (5L)"
+                    }
+                    val finalQuantity = totalQuantity.coerceAtLeast(1)
+                    val finalPrice = if (totalPrice > 0.0) totalPrice else 500.0
+
                     viewModel.placeOrder(
-                        combinedServiceType,
-                        totalQuantity.coerceAtLeast(1),
-                        totalPrice,
-                        finalAddr,
+                        serviceType = finalServiceType,
+                        quantity = finalQuantity,
+                        totalPrice = finalPrice,
+                        deliveryAddress = finalAddr,
                         paymentMethod = "Cash on Delivery"
                     ) {
                         onDismiss()
-                    }
-                    if (requiresWhatsApp) {
-                        val message = "Hello Zyphuel, I have placed a bulk order: $combinedServiceType. Delivery address: $finalAddr"
-                        try {
-                            val intent = Intent(Intent.ACTION_VIEW).apply {
-                                data = Uri.parse("https://wa.me/923230112464?text=${Uri.encode(message)}")
-                            }
-                            context.startActivity(intent)
-                        } catch (e: Exception) {
-                            // Ignore if WhatsApp app not present
-                        }
                     }
                 },
                 enabled = !isPlacingOrder,
@@ -8434,7 +8436,12 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                             fontWeight = FontWeight.Bold
                         )
                     } else {
-                        Icon(Icons.Filled.Check, contentDescription = null, tint = Color.White)
+                        Icon(
+                            imageVector = Icons.Filled.CheckCircle,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                            tint = Color.White
+                        )
                         Text(
                             "Confirm Order (COD) 💵",
                             color = Color.White,
