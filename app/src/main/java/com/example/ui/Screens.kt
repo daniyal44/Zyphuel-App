@@ -5356,7 +5356,7 @@ fun CustomerPastOrderCard(order: OrderEntity, viewModel: MainViewModel) {
                 // Total and Status
                 Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
-                        text = "Total: Rs. ${order.totalPrice}",
+                        text = "Total: ${viewModel.formatPrice(order.totalPrice)}",
                         style = MaterialTheme.typography.bodyMedium.copy(
                             fontWeight = FontWeight.Bold,
                             color = ZyphuelBlueDark
@@ -9398,7 +9398,7 @@ fun TrackerScreen(viewModel: MainViewModel) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                 Box(modifier = Modifier.size(8.dp).background(ZyphuelBlueSecondary, CircleShape))
                                 Text(
-                                    "STATUS: ${trackingOrder!!.status.uppercase()} • COD: Rs. ${trackingOrder!!.totalPrice}",
+                                    "STATUS: ${trackingOrder!!.status.uppercase()} • COD: ${viewModel.formatPrice(trackingOrder!!.totalPrice)}",
                                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark)
                                 )
                             }
@@ -9443,12 +9443,13 @@ fun TrackerScreen(viewModel: MainViewModel) {
                                             .testTag("fare_breakdown_trigger")
                                     ) {
                                         Text(
-                                            "COD: Rs. ${trackingOrder!!.totalPrice}",
+                                            "COD: ${viewModel.formatPrice(trackingOrder!!.totalPrice)}",
                                             style = MaterialTheme.typography.titleSmall.copy(
                                                 fontWeight = FontWeight.Bold,
                                                 color = ZyphuelBluePrimary
                                             )
                                         )
+
                                         Spacer(modifier = Modifier.width(4.dp))
                                         Icon(
                                             imageVector = Icons.Filled.Info,
@@ -11605,7 +11606,7 @@ fun MyOrdersDialog(
                                         color = Color.DarkGray
                                     )
                                     Text(
-                                        text = "Total Price: Rs.${order.totalPrice}",
+                                        text = "Total Price: ${viewModel.formatPrice(order.totalPrice)}",
                                         fontWeight = FontWeight.SemiBold,
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = ZyphuelBluePrimary
@@ -11989,12 +11990,12 @@ fun ReceivedOrdersDialog(
                                         }
                                     }
                                     Text(
-                                        text = "Quantity: ${order.quantity} ${if (order.serviceType == "LPG Gas") "kg" else if (order.serviceType == "Water") "Gallons" else "Liters"}",
+                                text = "Quantity: ${order.quantity} ${if (order.serviceType == "LPG Gas") "kg" else if (order.serviceType == "Water") "Gallons" else "Liters"}",
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = Color.DarkGray
                                     )
                                     Text(
-                                        text = "Total Price: Rs.${order.totalPrice}",
+                                        text = "Total Price: ${viewModel.formatPrice(order.totalPrice)}",
                                         fontWeight = FontWeight.SemiBold,
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = ZyphuelBluePrimary
@@ -15298,7 +15299,7 @@ fun AdminOrderCard(order: OrderEntity) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text("Order #${order.id} - ${order.serviceType}", fontWeight = FontWeight.Bold, color = ZyphuelBlueDark)
-                Text("Rs. ${order.totalPrice}", fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary)
+                Text("Rs. ${String.format(java.util.Locale.US, "%.2f", order.totalPrice)}", fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary)
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text("Qty: ${order.quantity} | Cust: ${order.customerName}", style = MaterialTheme.typography.bodySmall.copy(color = Color.DarkGray))

@@ -71,6 +71,22 @@ This document tracks all detected, reported, and resolved bugs within the **Zyph
       - **Streamlined OrderDialog**: Removed the permanent location pins section from `OrderDialog` in `Screens.kt` for a clean, fast checkout experience.
     - **Verification**: Verified with both `assembleDebug` (`BUILD SUCCESSFUL in 2m 59s`) and `bundleRelease` (`BUILD SUCCESSFUL in 4m 13s`). Tapping Confirm Order now places the order instantly in 0ms and smoothly opens the real-time Tracker.
 
+11. <font color="#059669"><b>[FIXED - GREEN] Google Maps Live Tracking SDK v6.4 Map Blinking & Always-Visible Rider Marker</b></font>
+    - **Issue**: In `TrackerScreen`, the Google Maps overlay was flickering/blinking, and the rider/bowser vehicle marker was not appearing on the map when an order was in "Pending" status or awaiting live hardware GPS lock.
+    - **Root Cause**:
+      1. `GoogleMapsLiveDeliveryTrackingOverlay` had a 60 FPS continuous animation loop modifying parent composable state every frame, causing continuous view recomposition and TextureView blinking.
+      2. Vehicle marker was gated behind `if (hasLiveFix)`, hiding the driver bowser completely if real-time GPS hardware streaming hadn't started yet.
+    - **Fix Applied**:
+      - Made the vehicle marker (`🚚 / 🏍️`) always visible on both Google Maps SDK and vector maps: stationed at Green Town Depot during Pending status, and smoothly tracking along the delivery corridor with live speed and ETA when active.
+      - Upgraded `FallbackRadarMapView` into a comprehensive Lahore street network map with major arteries (Ring Road, Ferozepur Rd, Canal Rd), landmark tags (Green Town HQ, Destination), glowing polyline, and driver name tag.
+      - Isolated marker interpolation to eliminate 60 FPS full-screen recomposition and flickering.
+    - **Verification**: Verified with `assembleDebug` (`BUILD SUCCESSFUL in 2m 40s`) and `bundleRelease` (`BUILD SUCCESSFUL in 3m 52s`).
+
+12. <font color="#059669"><b>[FIXED - GREEN] 2 Decimal Places Formatting for Total Price in Pending Status & Order Summaries</b></font>
+    - **Issue**: Total price amounts after the decimal point were displaying with 0 or 1 decimal places (e.g. `Rs. 2970` or `2970.0`) instead of standard financial 2 decimal numbers (`Rs. 2970.00`).
+    - **Fix Applied**: Updated `MainViewModel.formatPrice` and all order cards, tracker HUDs, recent order cards, and admin report screens to format with `String.format(Locale.US, "%.2f", price)`.
+    - **Verification**: Verified across all screens: prices in Pending status, TrackerScreen, Customer Order History, and Admin screens now consistently display exactly 2 decimal digits (`Rs. 2,970.00`).
+
 ---
 
 ## 🟡 Minor Bugs & Operational Notes (Highlighted in Yellow)
