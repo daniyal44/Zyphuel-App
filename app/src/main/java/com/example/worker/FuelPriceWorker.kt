@@ -176,8 +176,15 @@ class FuelPriceWorker(
             android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
         )
 
+        val largeIcon = try {
+            android.graphics.BitmapFactory.decodeResource(appContext.resources, com.example.R.drawable.icon)
+        } catch (e: Exception) {
+            null
+        }
+
         val builder = NotificationCompat.Builder(appContext, channelId)
             .setSmallIcon(com.example.util.UnifiedAssetManager.NOTIFICATION_SMALL_ICON)
+            .setColor(androidx.core.content.ContextCompat.getColor(appContext, com.example.R.color.primary))
             .setContentTitle(title)
             .setContentText(message)
             .setStyle(NotificationCompat.BigTextStyle().bigText(message))
@@ -186,6 +193,10 @@ class FuelPriceWorker(
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .setOngoing(false)
+
+        if (largeIcon != null) {
+            builder.setLargeIcon(largeIcon)
+        }
 
         try {
             notificationManager.notify((System.currentTimeMillis() % 100000).toInt(), builder.build())

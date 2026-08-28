@@ -44,6 +44,10 @@ class MainActivity : FragmentActivity() {
         val viewModel = ViewModelProvider(this)[MainViewModel::class.java]
         viewModel.refreshSecurityAndBiometricStates(this)
 
+        // Track unique app install in Firestore & pre-fetch download count for Admin Dashboard
+        viewModel.trackAppInstall(this)
+        viewModel.fetchAppDownloadCount()
+
         // Request runtime permissions early so live delivery tracking works without a hitch:
         //  - Location (FINE/COARSE): customer destination fix + rider GPS foreground service.
         //  - POST_NOTIFICATIONS (Android 13+): delivery + tracking notifications.
@@ -136,6 +140,7 @@ class MainActivity : FragmentActivity() {
                                             "customer_home" -> CustomerHomeScreen(viewModel)
                                             "customer_order_history" -> CustomerOrderHistoryScreen(viewModel, onBack = { viewModel.navigateTo("customer_home") })
                                             "rider_home" -> RiderHomeScreen(viewModel)
+                                            "rider_complete_profile" -> RiderCompleteProfileScreen(viewModel)
                                             "tracker" -> TrackerScreen(viewModel)
                                             "admin_dashboard" -> AdminDashboardScreen(viewModel)
                                             "customer_security" -> SecuritySettingsScreen(viewModel, com.example.security.AppModule.CUSTOMER, onBack = { viewModel.navigateTo("customer_home") })

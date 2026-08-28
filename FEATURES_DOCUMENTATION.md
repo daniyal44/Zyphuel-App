@@ -84,6 +84,10 @@ The app strictly segments access control across three user roles:
   * **Flicker-Free Smooth Map Viewport**: Isolated position interpolation from full composable recomposition, completely resolving 60 FPS viewport blinking.
   * **Daily 1-Time Order Safety & GPS Disclaimer (`DailyGpsSafetyDisclaimerDialog`)**: Displayed once per day per customer upon placing an order and accessing `TrackerScreen`: *"The driver/rider GPS is on during each ride. It helps us follow the order in real time and make your order safely delivered."* Persisted locally via `zyphuel_gps_safety_prefs` timestamp checking.
   * **Google Play Compliant Account Deletion (`DeleteAccountConfirmationDialog` & `deleteCurrentAccount`)**: In-app one-tap account deletion and complete data wiping available in both Customer Sidebar Drawer and Profile Settings Dialog. Permanently removes Room DB user data, marked location pins, session credentials, and logs an irreversible audit trail.
+  * **Adaptive Scrollable Navigation Drawer (`DrawerContent` & `SidebarItem`)**:
+    * **Full Vertical Scrolling & Screen Safety (`verticalScroll`)**: Complete sidebar navigation drawer content is wrapped in a vertical scroll state with safe-area padding (`statusBarsPadding()` & `navigationBarsPadding()`), guaranteeing that all action buttons, settings, order histories, admin tools, delete account option, and log out button are 100% visible and accessible on all screen resolutions, phone aspect ratios, and accessibility font scale factors without clipping.
+    * **Categorized Navigation Architecture**: Items organized into clean, labeled visual sections (*Account & Settings*, *Orders & Deliveries*, *Help & Support*, *Admin Controls*, *Account Actions*) separated with subtle dividers (`HorizontalDivider`).
+    * **Touch Feedback & Visual Polish**: `SidebarItem` with rounded background icon badges, distinct category labels, high-contrast dark text, custom destructive tinting for account deletion, and Material 3 ripple feedback.
 
 
 ---
@@ -134,14 +138,38 @@ The app strictly segments access control across three user roles:
     * Strictly shows only the information provided in the driver form, removing extra unprovided placeholders for total clarity.
     * Features explicit **Approve & Verify** (grants verified badge) and **Deny Request** actions with audit logging.
   * **Customer Directory**: View all registered customers, order history, and contact details.
+  * **Google Sign-In User Data Display in Dashboard (`AdminCustomerCard`)**:
+    * **Google Profile Photo**: If a customer signed in via "Continue with Google", their authentic Google profile photo is displayed (via Coil async image loading) with a circular blue border instead of the generic person icon.
+    * **Auth Provider Badge**: Each customer card shows a colored badge — green "Google" badge for OAuth2 Google users, or gray "Email" badge for traditional email/password registrations.
+    * **Join Date**: Displays the exact registration date (`createdAt` timestamp formatted as `dd MMM yyyy`) for each customer on their admin card.
+  * **Google vs Email User Breakdown (`AdminAnalyticsDashboard`)**:
+    * Real-time analytics row showing count of Google OAuth users vs Email/password users across all registered customers and riders.
+    * Includes color-coded dot indicators (green for Google, gray for Email) for instant visual differentiation.
+  * **App Download Counter (Firestore-backed)**:
+    * **Unique Install Tracking**: Each unique device install is tracked via `SharedPreferences` flag (`app_install_tracked`) + Firestore atomic increment (`FieldValue.increment(1)`) at path `app_stats/downloads`.
+    * **Dashboard Stat Card**: "📥 App Downloads" stat card on `AdminDashboardScreen` showing the total unique install count from Firestore.
+    * **Analytics Integration**: App download count also displayed in the `AdminAnalyticsDashboard` header alongside Google/Email user breakdown.
+    * **Functions**: `trackAppInstall()` (called in `MainActivity.onCreate`), `fetchAppDownloadCount()` (called when Admin Dashboard opens), `incrementAppDownloadCount()` and `getAppDownloadCount()` in `FirestoreUserRepository`.
   * **Order Management & Dispatch**: Manually assign riders to pending fuel/water orders.
   * **Audit Log Viewer**: Full history of system events, security updates, and admin actions.
 
 ---
 
 ## 6. Rider / Bowser Driver Portal
-* **Location**: `RiderHomeScreen`
+* **Location**: `RiderHomeScreen`, `RiderCompleteProfileScreen` (`Screens.kt`)
 * **Key Functions**:
+  * **Mandatory Google Sign-In Rider Verification Flow (`RiderCompleteProfileScreen`)**:
+    * **Incomplete Profile Guard (`isRiderProfileIncomplete` in `MainViewModel`)**: When a rider registers or logs in via "Continue with Google" without password registration, their account is flagged as having an incomplete profile until they complete the full Pakistani transport verification form.
+    * **Automated Routing Redirect**: Google Sign-In riders with incomplete profiles are immediately routed to `RiderCompleteProfileScreen` upon login, splash screen check, or opening the app.
+    * **Verification Profile Form**: Pre-fills the rider's name, email, and Google profile picture, and collects mandatory fields:
+      * **1. Personal Information**: Full Name (as per CNIC), Father's Name, Date of Birth (DD-MM-YYYY), Gender (Male/Female/Other), Phone Number.
+      * **2. National Identity**: CNIC Number (auto-formatted `xxxxx-xxxxxxx-x`), CNIC Issue Date, CNIC Expiry Date.
+      * **3. Residential Address**: Complete Address, City, Province, Postal Code.
+      * **4. Vehicle Information**: Vehicle Type (Bike/Car), Vehicle Registration Number (e.g. LHR-20-4567).
+      * **5. Emergency Contact**: Name, Relationship, Contact Phone.
+      * **6. Legal Confirmations**: Terms & Conditions acceptance and Rider Legal Declaration checkboxes.
+    * **Order Acceptance Block**: Riders cannot accept Lahore delivery queue orders (`acceptRiderOrder`, `ReceivedOrdersDialog`, `RiderOrderCard`) until this verification profile is completed and submitted. If attempted, an alert prompt immediately directs them to the verification form.
+    * **Admin Notification & Audit Sync**: Submitting the form assigns a sequential `Rider #` and `Rider ID`, logs the event in `AuditLogEntity`, dispatches an automated verification email, and sets `adminApprovalStatus = "Pending"`.
   * **Active Duty Queue**: View assigned orders with navigation destination and customer contact info.
   * **One-Tap Status Progress**: Update order status seamlessly (Dispatched -> En Route -> Arrived -> Completed).
   * **Live GPS Coordinate Broadcast**: Automatically broadcasts rider location updates to customer map.
@@ -177,7 +205,11 @@ The app strictly segments access control across three user roles:
       * **Admin-Controlled Broadcast Schedule**: The central administrator controls how many hours after which real-time fuel price update notifications automatically broadcast to system users (e.g., 1 Hour, 2 Hours, 4 Hours, 6 Hours, 12 Hours, 24 Hours, or custom hours).
       * **Admin Panel Form (`AdminFuelPriceNotificationScheduleCard`)**: Located in the Admin Center under the "Fuel Prices" tab. The Admin can set the exact interval in hours, enable/disable broadcasts, apply schedules to `FuelPriceWorker` WorkManager, or trigger test broadcasts immediately.
       * **Centralized User Experience**: Users cannot decide or alter the broadcast schedule. No popup dialogs or selection forms are shown to regular customers upon login/app open. Information in `SecuritySettingsScreen` reflects the Admin's active broadcast schedule.
-  * **Firebase Cloud Messaging (FCM) Integration**: Real-time push payload processing via `ZyphuelFcmService.kt` with foreground banners and background system notification triggers using the monochrome vector notification icon (`@drawable/ic_notification`).
+  * **System Notification Icon & UI Alignment Architecture**:
+    * **Monochrome Vector Small Icon (`@drawable/ic_notification`)**: Android System UI-compliant 24x24dp monochrome vector drawable featuring the signature Zyphuel fuel drop with transparent 'Z' cutout (`fillType="evenOdd"`), optical padding safe-zones (2dp margin), and dynamic status-bar tinting support.
+    * **Brand Primary Accent Tinting**: Automatic notification header and small icon tinting using Zyphuel primary blue (`#0284C7` / `R.color.primary`).
+    * **High-Res Large Icon Display**: Rich notification shade cards decode and render the full-color Zyphuel brand badge (`@drawable/icon`) via `setLargeIcon` across FCM pushes, local notifications, foreground services, and WorkManager price alerts.
+  * **Firebase Cloud Messaging (FCM) Integration**: Real-time push payload processing via `ZyphuelFcmService.kt` with foreground banners and background system notification triggers using the monochrome vector notification icon (`@drawable/ic_notification`) and high-res brand large icon.
   * **Real-time Email Dispatch**: Instant automated email receipts and order status updates sent to customer inbox.
   * **WhatsApp Hotline Integration**: Direct deep-linking to official WhatsApp support line (`+92 323 0112464`).
   * **In-App Notification Center**: Local Room DB persistence (`NotificationEntity`) for user notification log history.

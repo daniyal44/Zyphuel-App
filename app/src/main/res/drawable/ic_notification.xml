@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item
-        android:width="48dp"
-        android:height="48dp"
-        android:drawable="@drawable/icon"
-        android:gravity="center" />
-</layer-list>
-
-
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:fillType="evenOdd"
+        android:pathData="M 12,2 C 12,2 19.5,9.5 19.5,14.5 C 19.5,18.64 16.14,22 12,22 C 7.86,22 4.5,18.64 4.5,14.5 C 4.5,9.5 12,2 12,2 Z M 8,9.5 H 16 V 11.2 L 10.8,15.8 H 16 V 17.5 H 8 V 15.8 L 13.2,11.2 H 8 Z" />
+</vector>

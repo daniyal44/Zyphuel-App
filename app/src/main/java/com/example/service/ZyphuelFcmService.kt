@@ -100,11 +100,18 @@ class ZyphuelFcmService : FirebaseMessagingService() {
         val iconRes = try {
             UnifiedAssetManager.NOTIFICATION_SMALL_ICON
         } catch (e: Exception) {
-            R.drawable.ic_launcher_foreground
+            R.drawable.ic_notification
+        }
+
+        val largeIcon = try {
+            android.graphics.BitmapFactory.decodeResource(resources, R.drawable.icon)
+        } catch (e: Exception) {
+            null
         }
 
         val builder = NotificationCompat.Builder(this, FCM_CHANNEL_ID)
             .setSmallIcon(iconRes)
+            .setColor(androidx.core.content.ContextCompat.getColor(this, R.color.primary))
             .setContentTitle(title)
             .setContentText(message)
             .setStyle(NotificationCompat.BigTextStyle().bigText(message))
@@ -113,6 +120,10 @@ class ZyphuelFcmService : FirebaseMessagingService() {
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .setVibrate(longArrayOf(0, 250, 100, 250))
+
+        if (largeIcon != null) {
+            builder.setLargeIcon(largeIcon)
+        }
 
         try {
             notificationManager.notify((System.currentTimeMillis() % 100000).toInt(), builder.build())
