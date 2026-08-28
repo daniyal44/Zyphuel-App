@@ -127,6 +127,48 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _deviceLongitude = MutableStateFlow(74.3587)
     val deviceLongitude = _deviceLongitude.asStateFlow()
 
+    // --- App Download / Install Counter (Firestore-backed) ---
+    private val _appDownloadCount = MutableStateFlow(0L)
+    val appDownloadCount: StateFlow<Long> = _appDownloadCount.asStateFlow()
+
+    /**
+     * Tracks unique app installs by checking a SharedPreferences flag.
+     * If this device hasn't been counted before, atomically increments the
+     * Firestore counter at `app_stats/downloads` and sets the flag.
+     */
+    fun trackAppInstall(context: Context = getApplication()) {
+        val prefs = context.getSharedPreferences("zyphuel_install_prefs", Context.MODE_PRIVATE)
+        val alreadyTracked = prefs.getBoolean("app_install_tracked", false)
+        if (alreadyTracked) return
+
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val success = repository.firestoreUserRepository.incrementAppDownloadCount()
+                if (success) {
+                    prefs.edit().putBoolean("app_install_tracked", true).apply()
+                    DebugLogger.i("MainViewModel", "App install tracked in Firestore")
+                }
+            } catch (e: Exception) {
+                DebugLogger.w("MainViewModel", "Failed to track app install: ${e.message}")
+            }
+        }
+    }
+
+    /**
+     * Fetches the current app download count from Firestore and updates the StateFlow.
+     * Called when Admin Dashboard is loaded.
+     */
+    fun fetchAppDownloadCount() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val count = repository.firestoreUserRepository.getAppDownloadCount()
+                _appDownloadCount.value = count
+            } catch (e: Exception) {
+                DebugLogger.w("MainViewModel", "Failed to fetch download count: ${e.message}")
+            }
+        }
+    }
+
     private val _webPushNotification = MutableStateFlow<WebPushPayload?>(null)
     val webPushNotification = _webPushNotification.asStateFlow()
 
@@ -306,11 +348,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val iconRes = try {
                 com.example.util.UnifiedAssetManager.NOTIFICATION_SMALL_ICON
             } catch (e: Exception) {
-                com.example.R.drawable.ic_launcher_foreground
+                com.example.R.drawable.ic_notification
+            }
+
+            val largeIcon = try {
+                android.graphics.BitmapFactory.decodeResource(context.resources, com.example.R.drawable.icon)
+            } catch (e: Exception) {
+                null
             }
 
             val builder = androidx.core.app.NotificationCompat.Builder(context, channelId)
                 .setSmallIcon(iconRes)
+                .setColor(androidx.core.content.ContextCompat.getColor(context, com.example.R.color.primary))
                 .setContentTitle(title)
                 .setContentText(message)
                 .setStyle(androidx.core.app.NotificationCompat.BigTextStyle().bigText(message))
@@ -319,6 +368,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true)
                 .setVibrate(longArrayOf(0, 250, 100, 250))
+
+            if (largeIcon != null) {
+                builder.setLargeIcon(largeIcon)
+            }
 
             notificationManager.notify((System.currentTimeMillis() % 100000).toInt(), builder.build())
             DebugLogger.i("MainViewModel", "Local System Notification dispatched: $title - $message")
@@ -1110,6 +1163,121 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         sessionPrefs.edit().putString("logged_in_email", user.email).apply()
     }
 
+    /**
+     * Checks if a rider account is missing the mandatory verification fields
+     * that are collected during the full Rider Registration Form.
+     * Google Sign-In riders skip the registration form and need to complete it before accepting orders.
+     */
+    fun isRiderProfileIncomplete(user: UserEntity): Boolean {
+        if (user.role != "rider") return false
+        return user.cnicOrPassport.isNullOrBlank() ||
+                user.vehicleNo.isNullOrBlank() ||
+                user.fathersName.isNullOrBlank() ||
+                user.dob.isNullOrBlank() ||
+                user.cnicIssueDate.isNullOrBlank() ||
+                user.cnicExpiryDate.isNullOrBlank() ||
+                user.residentialAddress.isNullOrBlank() ||
+                user.city.isNullOrBlank() ||
+                user.province.isNullOrBlank() ||
+                user.postalCode.isNullOrBlank() ||
+                user.vehicleType.isNullOrBlank() ||
+                (user.phoneNumber.isBlank() || user.phoneNumber == "+92 300 0000000") ||
+                !user.termsAccepted ||
+                !user.declarationAccepted
+    }
+
+    /**
+     * Updates a Google-signed-in rider's profile with the full verification form data.
+     * Called from RiderCompleteProfileScreen after rider fills in all mandatory fields.
+     */
+    fun completeRiderProfile(
+        user: UserEntity,
+        phone: String,
+        fathersName: String,
+        dob: String,
+        gender: String,
+        cnicNumber: String,
+        cnicIssueDate: String,
+        cnicExpiryDate: String,
+        residentialAddress: String,
+        city: String,
+        province: String,
+        postalCode: String,
+        vehicleType: String,
+        vehicleNo: String,
+        emergencyName: String,
+        emergencyRelationship: String,
+        emergencyPhone: String,
+        termsAccepted: Boolean,
+        declarationAccepted: Boolean,
+        onSuccess: (UserEntity) -> Unit
+    ) {
+        viewModelScope.launch {
+            try {
+                val existingRiders = repository.userDao.getUsersByRole("rider")
+                val assignedRiderNum = user.riderNumber ?: (existingRiders.size + 1)
+                val riderId = user.riderId ?: "RIDER-$assignedRiderNum"
+
+                val updatedUser = user.copy(
+                    phoneNumber = phone.trim(),
+                    fathersName = fathersName.trim(),
+                    dob = dob,
+                    gender = gender,
+                    country = "Pakistan",
+                    documentType = "CNIC",
+                    cnicOrPassport = cnicNumber.trim(),
+                    cnicIssueDate = cnicIssueDate,
+                    cnicExpiryDate = cnicExpiryDate,
+                    cnicFrontImage = "cnic_front.jpg",
+                    cnicBackImage = "cnic_back.jpg",
+                    residentialAddress = residentialAddress.trim(),
+                    city = city.trim(),
+                    province = province.trim(),
+                    postalCode = postalCode.trim(),
+                    vehicleType = vehicleType,
+                    vehicleNo = vehicleNo.trim(),
+                    isFaceVerified = true,
+                    emergencyName = emergencyName.trim(),
+                    emergencyRelationship = emergencyRelationship.trim(),
+                    emergencyPhone = emergencyPhone.trim(),
+                    termsAccepted = termsAccepted,
+                    declarationAccepted = declarationAccepted,
+                    riderNumber = assignedRiderNum,
+                    riderId = riderId,
+                    cnicVerificationStatus = "Pending",
+                    adminApprovalStatus = "Pending",
+                    registrationStatus = "Pending",
+                    isVerified = false,
+                    updatedAt = System.currentTimeMillis()
+                )
+
+                withContext(Dispatchers.IO) {
+                    repository.updateUser(updatedUser)
+                }
+
+                _currentUser.value = updatedUser
+                repository.insertAuditLog(
+                    AuditLogEntity(
+                        action = "RIDER_PROFILE_COMPLETED",
+                        performedBy = updatedUser.email,
+                        details = "Google Sign-In rider completed verification form. Assigned Rider #$assignedRiderNum ($riderId). Pending Admin Approval."
+                    )
+                )
+
+                dispatchRealtimeEmail(
+                    recipientEmail = updatedUser.email,
+                    subject = "📋 Zyphuel Rider Verification Submitted - Rider #$assignedRiderNum",
+                    body = "Hello ${updatedUser.name},\n\nYour rider verification form has been submitted successfully. You are assigned Rider #$assignedRiderNum (Rider ID: $riderId).\n\nYour application is now pending Admin Approval.\n\nZyphuel Operations Team"
+                )
+
+                _uiMessage.value = "✅ Rider verification submitted! Assigned Rider #$assignedRiderNum ($riderId). Pending Admin Approval."
+                onSuccess(updatedUser)
+            } catch (e: Exception) {
+                _uiMessage.value = "Failed to submit rider profile: ${e.message}"
+            }
+        }
+    }
+
     fun loginWithSocialAccount(
         provider: String,
         socialEmail: String,
@@ -1832,6 +2000,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun acceptRiderOrder(orderId: Int) {
         val user = _currentUser.value ?: return
+        if (isRiderProfileIncomplete(user)) {
+            _uiMessage.value = "⚠️ Please complete your rider verification profile before accepting orders."
+            return
+        }
         viewModelScope.launch {
             repository.acceptOrder(orderId, user.email, user.name)
             val updatedOrder = repository.orderDao.getOrderById(orderId)

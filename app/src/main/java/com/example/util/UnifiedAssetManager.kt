@@ -33,9 +33,10 @@ object UnifiedAssetManager {
      */
     fun verifyAssetIntegrity(context: Context): Boolean {
         return try {
-            val drawable = context.getDrawable(PRIMARY_APP_ICON)
-            val isValid = drawable != null
-            DebugLogger.i("UnifiedAssetManager", "Asset integrity check completed. Valid: $isValid")
+            val appDrawable = context.getDrawable(PRIMARY_APP_ICON)
+            val notifDrawable = context.getDrawable(NOTIFICATION_SMALL_ICON)
+            val isValid = appDrawable != null && notifDrawable != null
+            DebugLogger.i("UnifiedAssetManager", "Asset integrity check completed. Valid: $isValid (Primary: ${appDrawable != null}, Notif: ${notifDrawable != null})")
             isValid
         } catch (e: Exception) {
             DebugLogger.e("UnifiedAssetManager", "Asset integrity check failed", e)

@@ -3,6 +3,7 @@ package com.example.data
 import android.content.Context
 import android.util.Log
 import com.google.firebase.FirebaseApp
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.tasks.await
@@ -61,5 +62,45 @@ class FirestoreUserRepository(private val context: Context) {
             false
         }
     }
-}
 
+    /**
+     * Atomically increments the app download/install counter in Firestore at `app_stats/downloads`.
+     * Called once per unique device install (guarded by SharedPreferences in MainViewModel).
+     */
+    suspend fun incrementAppDownloadCount(): Boolean = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        val firestore = db ?: return@withContext false
+        try {
+            kotlinx.coroutines.withTimeoutOrNull(2000L) {
+                val docRef = firestore.collection("app_stats").document("downloads")
+                docRef.set(
+                    mapOf("count" to FieldValue.increment(1), "lastUpdated" to System.currentTimeMillis()),
+                    SetOptions.merge()
+                ).await()
+            }
+            Log.d(TAG, "App download counter incremented in Firestore")
+            true
+        } catch (e: Exception) {
+            Log.w(TAG, "Error incrementing app download counter: ${e.message}")
+            false
+        }
+    }
+
+    /**
+     * Reads the current app download/install count from Firestore at `app_stats/downloads`.
+     * Returns 0 if the document doesn't exist yet.
+     */
+    suspend fun getAppDownloadCount(): Long = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        val firestore = db ?: return@withContext 0L
+        try {
+            val snapshot = kotlinx.coroutines.withTimeoutOrNull(2000L) {
+                firestore.collection("app_stats").document("downloads").get().await()
+            }
+            val count = snapshot?.getLong("count") ?: 0L
+            Log.d(TAG, "App download count fetched from Firestore: $count")
+            count
+        } catch (e: Exception) {
+            Log.w(TAG, "Error fetching app download count: ${e.message}")
+            0L
+        }
+    }
+}

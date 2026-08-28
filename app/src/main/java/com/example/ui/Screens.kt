@@ -850,9 +850,10 @@ fun SplashScreen(viewModel: MainViewModel) {
 
         val user = viewModel.currentUser.value
         if (user != null) {
-            when (user.role) {
-                "rider" -> viewModel.navigateTo("rider_home")
-                "admin" -> viewModel.navigateTo("admin_dashboard")
+            when {
+                user.role == "rider" && viewModel.isRiderProfileIncomplete(user) -> viewModel.navigateTo("rider_complete_profile")
+                user.role == "rider" -> viewModel.navigateTo("rider_home")
+                user.role == "admin" -> viewModel.navigateTo("admin_dashboard")
                 else -> viewModel.navigateTo("customer_home")
             }
         } else {
@@ -2759,9 +2760,10 @@ fun AuthScreen(viewModel: MainViewModel, isRegister: Boolean, isRider: Boolean) 
                                     isAuthenticating = true
                                     viewModel.login(email, password) { user ->
                                         viewModel.completeLogin(user)
-                                        when (user.role) {
-                                            "admin" -> viewModel.navigateTo("admin_dashboard")
-                                            "rider" -> viewModel.navigateTo("rider_home")
+                                        when {
+                                            user.role == "admin" -> viewModel.navigateTo("admin_dashboard")
+                                            user.role == "rider" && viewModel.isRiderProfileIncomplete(user) -> viewModel.navigateTo("rider_complete_profile")
+                                            user.role == "rider" -> viewModel.navigateTo("rider_home")
                                             else -> viewModel.navigateTo("customer_home")
                                         }
                                     }
@@ -2848,11 +2850,23 @@ fun AuthScreen(viewModel: MainViewModel, isRegister: Boolean, isRider: Boolean) 
                                             ) { user ->
                                                 isGoogleSigningIn = false
                                                 viewModel.completeLogin(user)
-                                                Toast.makeText(context, "Welcome back, ${user.name}! 🚀", Toast.LENGTH_SHORT).show()
-                                                when (user.role) {
-                                                    "admin" -> viewModel.navigateTo("admin_dashboard")
-                                                    "rider" -> viewModel.navigateTo("rider_home")
-                                                    else -> viewModel.navigateTo("customer_home")
+                                                when {
+                                                    user.role == "admin" -> {
+                                                        Toast.makeText(context, "Welcome back, ${user.name}! 🚀", Toast.LENGTH_SHORT).show()
+                                                        viewModel.navigateTo("admin_dashboard")
+                                                    }
+                                                    user.role == "rider" && viewModel.isRiderProfileIncomplete(user) -> {
+                                                        Toast.makeText(context, "Welcome ${user.name}! Please complete your rider verification to accept orders. 🪪", Toast.LENGTH_LONG).show()
+                                                        viewModel.navigateTo("rider_complete_profile")
+                                                    }
+                                                    user.role == "rider" -> {
+                                                        Toast.makeText(context, "Welcome back, ${user.name}! 🚀", Toast.LENGTH_SHORT).show()
+                                                        viewModel.navigateTo("rider_home")
+                                                    }
+                                                    else -> {
+                                                        Toast.makeText(context, "Welcome back, ${user.name}! 🚀", Toast.LENGTH_SHORT).show()
+                                                        viewModel.navigateTo("customer_home")
+                                                    }
                                                 }
                                             }
                                         } else {
@@ -3152,203 +3166,255 @@ fun DrawerContent(
     val adminEmail = "m.daniyalkhan490@gmail.com"
     val whatsappNumber = "+92 323 0112464"
     var showDeleteAccountDialog by remember { mutableStateOf(false) }
+    val currentScreenVal by viewModel.currentScreen.collectAsState()
+    val scrollState = rememberScrollState()
 
-
-    Box(
+    Surface(
         modifier = Modifier
             .fillMaxHeight()
-            .width(280.dp)
-            .background(Color.White)
+            .widthIn(min = 280.dp, max = 320.dp)
             .statusBarsPadding()
-            .navigationBarsPadding()
+            .navigationBarsPadding(),
+        color = Color.White,
+        tonalElevation = 4.dp
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp),
-            verticalArrangement = Arrangement.SpaceBetween
+                .verticalScroll(scrollState)
+                .padding(horizontal = 16.dp, vertical = 16.dp)
         ) {
-            Column {
-                // Profile Header Card
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF1F5F9))
+            // Profile Header Card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFF1F5F9))
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                    // Profile picture or fallback initials
+                    val picUri = currentUser.profilePictureUri
+                    val isPreset = picUri?.startsWith("preset_") == true
+                    val avatarBgColor = when (picUri) {
+                        "preset_blue" -> ZyphuelBluePrimary
+                        "preset_green" -> Color(0xFF22C55E)
+                        "preset_amber" -> Color(0xFFFFB000)
+                        "preset_red" -> Color(0xFFEF4444)
+                        else -> ZyphuelBluePrimary
+                    }
+                    Box(
+                        modifier = Modifier
+                            .size(56.dp)
+                            .background(avatarBgColor, shape = CircleShape)
+                            .clip(CircleShape),
+                        contentAlignment = Alignment.Center
                     ) {
-                        // Profile picture or fallback initials
-                        val picUri = currentUser.profilePictureUri
-                        val isPreset = picUri?.startsWith("preset_") == true
-                        val avatarBgColor = when (picUri) {
-                            "preset_blue" -> ZyphuelBluePrimary
-                            "preset_green" -> Color(0xFF22C55E)
-                            "preset_amber" -> Color(0xFFFFB000)
-                            "preset_red" -> Color(0xFFEF4444)
-                            else -> ZyphuelBluePrimary
+                        if (!picUri.isNullOrBlank() && !isPreset) {
+                            coil.compose.AsyncImage(
+                                model = picUri,
+                                contentDescription = "Profile Picture",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                            )
+                        } else {
+                            Text(
+                                text = currentUser.name.take(2).uppercase(),
+                                color = Color.White,
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                            )
                         }
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = currentUser.name,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark),
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = currentUser.email,
+                        style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray),
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Box(
                             modifier = Modifier
-                                .size(64.dp)
-                                .background(avatarBgColor, shape = CircleShape)
-                                .clip(CircleShape),
-                            contentAlignment = Alignment.Center
+                                .background(ZyphuelBlueSecondary.copy(alpha = 0.15f), RoundedCornerShape(8.dp))
+                                .padding(horizontal = 8.dp, vertical = 2.dp)
                         ) {
-                            if (!picUri.isNullOrBlank() && !isPreset) {
-                                coil.compose.AsyncImage(
-                                    model = picUri,
-                                    contentDescription = "Profile Picture",
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                            Text(
+                                text = currentUser.role.uppercase(),
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = ZyphuelBluePrimary
                                 )
-                            } else {
-                                Text(
-                                    text = currentUser.name.take(2).uppercase(),
-                                    color = Color.White,
-                                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-                                )
-                            }
+                            )
                         }
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text(
-                            text = currentUser.name,
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark)
-                        )
-                        Text(
-                            text = currentUser.email,
-                            style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray)
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
+                        if (currentUser.role == "rider" && currentUser.isVerified) {
                             Box(
                                 modifier = Modifier
-                                    .background(ZyphuelBlueSecondary.copy(alpha = 0.15f), RoundedCornerShape(8.dp))
-                                    .padding(horizontal = 8.dp, vertical = 2.dp)
+                                    .background(Color(0xFF10B981).copy(alpha = 0.15f), RoundedCornerShape(8.dp))
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
                             ) {
                                 Text(
-                                    text = currentUser.role.uppercase(),
+                                    text = "VERIFIED ✔️",
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontWeight = FontWeight.Bold,
-                                        color = ZyphuelBluePrimary
+                                        color = Color(0xFF10B981)
                                     )
                                 )
                             }
-                            if (currentUser.role == "rider" && currentUser.isVerified) {
-                                Box(
-                                    modifier = Modifier
-                                        .background(Color(0xFF10B981).copy(alpha = 0.15f), RoundedCornerShape(8.dp))
-                                        .padding(horizontal = 6.dp, vertical = 2.dp)
-                                ) {
-                                    Text(
-                                        text = "VERIFIED ✔️",
-                                        style = MaterialTheme.typography.labelSmall.copy(
-                                            fontWeight = FontWeight.Bold,
-                                            color = Color(0xFF10B981)
-                                        )
-                                    )
-                                }
-                            }
                         }
                     }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-                // Sidebar Items
-                SidebarItem(
-                    icon = Icons.Filled.Person,
-                    label = "Profile Settings",
-                    modifier = Modifier.testTag("sidebar_profile_settings"),
-                    onClick = {
-                        onOpenProfile()
-                        onClose()
-                    }
-                )
-                SidebarItem(
-                    icon = Icons.Filled.Fingerprint,
-                    label = "Security & Biometrics",
-                    modifier = Modifier.testTag("sidebar_security_settings"),
-                    onClick = {
-                        onClose()
-                        val target = when (currentUser.role) {
-                            "rider" -> "rider_security"
-                            "admin" -> "admin_security"
-                            else -> "customer_security"
-                        }
-                        viewModel.navigateTo(target)
-                    }
-                )
-                if (currentUser.role != "rider") {
-                    SidebarItem(
-                        icon = Icons.Filled.ShoppingCart,
-                        label = "My Active Orders",
-                        modifier = Modifier.testTag("sidebar_my_orders"),
-                        onClick = {
-                            onOpenOrders()
-                            onClose()
-                        }
-                    )
-                    SidebarItem(
-                        icon = Icons.Filled.History,
-                        label = "Customer Order History",
-                        modifier = Modifier.testTag("sidebar_customer_order_history"),
-                        onClick = {
-                            onClose()
-                            viewModel.navigateTo("customer_order_history")
-                        }
-                    )
+            // Section: Account & Security
+            Text(
+                text = "ACCOUNT & SETTINGS",
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Gray,
+                    letterSpacing = 1.sp
+                ),
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+            )
+
+            SidebarItem(
+                icon = Icons.Filled.Person,
+                label = "Profile Settings",
+                modifier = Modifier.testTag("sidebar_profile_settings"),
+                onClick = {
+                    onOpenProfile()
+                    onClose()
                 }
-
-                if (currentUser.role == "rider") {
-                    SidebarItem(
-                        icon = Icons.Filled.ListAlt,
-                        label = "Received Orders",
-                        modifier = Modifier.testTag("sidebar_received_orders"),
-                        onClick = {
-                            onOpenOrders()
-                            onClose()
-                        }
-                    )
+            )
+            SidebarItem(
+                icon = Icons.Filled.Fingerprint,
+                label = "Security & Biometrics",
+                modifier = Modifier.testTag("sidebar_security_settings"),
+                onClick = {
+                    onClose()
+                    val target = when (currentUser.role) {
+                        "rider" -> "rider_security"
+                        "admin" -> "admin_security"
+                        else -> "customer_security"
+                    }
+                    viewModel.navigateTo(target)
                 }
+            )
 
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = 8.dp),
+                color = Color(0xFFF1F5F9),
+                thickness = 1.dp
+            )
+
+            // Section: Orders
+            Text(
+                text = "ORDERS & DELIVERIES",
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Gray,
+                    letterSpacing = 1.sp
+                ),
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+            )
+
+            if (currentUser.role != "rider") {
                 SidebarItem(
-                    icon = Icons.Filled.QuestionMark,
-                    label = "FAQ / Guidelines",
-                    modifier = Modifier.testTag("sidebar_faq"),
+                    icon = Icons.Filled.ShoppingCart,
+                    label = "My Active Orders",
+                    modifier = Modifier.testTag("sidebar_my_orders"),
                     onClick = {
-                        onOpenFAQ()
+                        onOpenOrders()
                         onClose()
                     }
                 )
                 SidebarItem(
-                    icon = Icons.Filled.SupportAgent,
-                    label = "Live Support & Help Center",
-                    modifier = Modifier.testTag("sidebar_live_support"),
+                    icon = Icons.Filled.History,
+                    label = "Customer Order History",
+                    modifier = Modifier.testTag("sidebar_customer_order_history"),
                     onClick = {
-                        onOpenSupport()
+                        onClose()
+                        viewModel.navigateTo("customer_order_history")
+                    }
+                )
+            } else {
+                SidebarItem(
+                    icon = Icons.Filled.ListAlt,
+                    label = "Received Orders",
+                    modifier = Modifier.testTag("sidebar_received_orders"),
+                    onClick = {
+                        onOpenOrders()
                         onClose()
                     }
                 )
+            }
 
-                // Delete Account Sidebar Option (Google Play Mandatory Policy)
-                SidebarItem(
-                    icon = Icons.Filled.DeleteForever,
-                    label = "Delete Account / Erase Data",
-                    modifier = Modifier.testTag("sidebar_delete_account"),
-                    onClick = {
-                        showDeleteAccountDialog = true
-                    }
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = 8.dp),
+                color = Color(0xFFF1F5F9),
+                thickness = 1.dp
+            )
+
+            // Section: Support & Info
+            Text(
+                text = "HELP & SUPPORT",
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Gray,
+                    letterSpacing = 1.sp
+                ),
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+            )
+
+            SidebarItem(
+                icon = Icons.Filled.QuestionMark,
+                label = "FAQ / Guidelines",
+                modifier = Modifier.testTag("sidebar_faq"),
+                onClick = {
+                    onOpenFAQ()
+                    onClose()
+                }
+            )
+            SidebarItem(
+                icon = Icons.Filled.SupportAgent,
+                label = "Live Support & Help Center",
+                modifier = Modifier.testTag("sidebar_live_support"),
+                onClick = {
+                    onOpenSupport()
+                    onClose()
+                }
+            )
+
+            // Section: Admin & Developer Tools (if admin)
+            if (currentUser.role == "admin") {
+                HorizontalDivider(
+                    modifier = Modifier.padding(vertical = 8.dp),
+                    color = Color(0xFFF1F5F9),
+                    thickness = 1.dp
+                )
+                Text(
+                    text = "ADMIN CONTROLS",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Gray,
+                        letterSpacing = 1.sp
+                    ),
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                 )
 
-                val currentScreenVal by viewModel.currentScreen.collectAsState()
-
-                if (currentUser.role == "admin" && currentScreenVal != "admin_dashboard") {
-                    Spacer(modifier = Modifier.height(8.dp))
+                if (currentScreenVal != "admin_dashboard") {
                     Button(
                         onClick = {
                             onClose()
@@ -3358,14 +3424,34 @@ fun DrawerContent(
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier
                             .fillMaxWidth()
+                            .padding(vertical = 4.dp)
                             .testTag("sidebar_admin_entry")
                     ) {
-                        Icon(Icons.Filled.AdminPanelSettings, contentDescription = null, tint = Color.White)
+                        Icon(Icons.Filled.AdminPanelSettings, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Open Admin Dashboard", color = Color.White, fontWeight = FontWeight.Bold)
+                        Text("Admin Dashboard", color = Color.White, fontWeight = FontWeight.Bold)
                     }
                 }
             }
+
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = 8.dp),
+                color = Color(0xFFF1F5F9),
+                thickness = 1.dp
+            )
+
+            // Delete Account Sidebar Option (Google Play Mandatory Policy)
+            SidebarItem(
+                icon = Icons.Filled.DeleteForever,
+                label = "Delete Account / Erase Data",
+                iconTint = Color(0xFFDC2626),
+                modifier = Modifier.testTag("sidebar_delete_account"),
+                onClick = {
+                    showDeleteAccountDialog = true
+                }
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
 
             // Logout Button
             Button(
@@ -3375,12 +3461,16 @@ fun DrawerContent(
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF4444)),
                 shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("sidebar_logout")
             ) {
-                Icon(Icons.Filled.ExitToApp, contentDescription = null, tint = Color.White)
+                Icon(Icons.Filled.ExitToApp, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Log Out", color = Color.White, fontWeight = FontWeight.Bold)
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
         }
 
         if (showDeleteAccountDialog) {
@@ -3403,19 +3493,63 @@ fun SidebarItem(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
     modifier: Modifier = Modifier,
+    iconTint: Color = ZyphuelBluePrimary,
+    badgeText: String? = null,
+    badgeColor: Color = ZyphuelBluePrimary,
     onClick: () -> Unit
 ) {
-    Row(
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(12.dp),
+        color = Color.Transparent,
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(vertical = 2.dp)
     ) {
-        Icon(imageVector = icon, contentDescription = null, tint = ZyphuelBluePrimary, modifier = Modifier.size(24.dp))
-        Spacer(modifier = Modifier.width(16.dp))
-        Text(text = label, style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium, color = Color.DarkGray))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .background(iconTint.copy(alpha = 0.08f), RoundedCornerShape(10.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = iconTint,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontWeight = FontWeight.SemiBold,
+                    color = if (iconTint == Color(0xFFDC2626)) Color(0xFFDC2626) else Color(0xFF1E293B)
+                ),
+                modifier = Modifier.weight(1f)
+            )
+            if (badgeText != null) {
+                Box(
+                    modifier = Modifier
+                        .background(badgeColor.copy(alpha = 0.15f), RoundedCornerShape(6.dp))
+                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                ) {
+                    Text(
+                        text = badgeText,
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = badgeColor
+                        )
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -11743,6 +11877,60 @@ fun RiderHomeScreen(viewModel: MainViewModel) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            if (viewModel.isRiderProfileIncomplete(currentUser!!)) {
+                item {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("rider_verification_incomplete_alert"),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF2F2)),
+                        border = BorderStroke(1.5.dp, Color(0xFFEF4444))
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Warning,
+                                    contentDescription = "Profile Incomplete",
+                                    tint = Color(0xFFDC2626),
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Text(
+                                    text = "Verification Incomplete 🪪",
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF991B1B)
+                                    )
+                                )
+                            }
+                            Text(
+                                text = "You signed in via Google. Before you can accept delivery orders in Lahore, you must complete your full rider verification profile (CNIC, vehicle details, address, and emergency contact).",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color(0xFF7F1D1D)
+                            )
+                            Button(
+                                onClick = { viewModel.navigateTo("rider_complete_profile") },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626)),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .testTag("complete_verification_btn")
+                            ) {
+                                Icon(Icons.Filled.AccountBox, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.White)
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Complete Verification Form Now", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold, color = Color.White))
+                            }
+                        }
+                    }
+                }
+            }
+
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -12008,19 +12196,28 @@ fun ReceivedOrdersDialog(
                                     
                                     Spacer(modifier = Modifier.height(4.dp))
                                     
+                                    val riderUser by viewModel.currentUser.collectAsState()
+                                    val isIncomplete = riderUser?.let { viewModel.isRiderProfileIncomplete(it) } ?: false
+
                                     Button(
                                         onClick = {
-                                            viewModel.acceptRiderOrder(order.id)
-                                            Toast.makeText(context, "Order #${order.id} accepted! Go to deliveries.", Toast.LENGTH_SHORT).show()
-                                            onDismiss()
+                                            if (isIncomplete) {
+                                                Toast.makeText(context, "⚠️ Please complete your rider verification before accepting orders.", Toast.LENGTH_LONG).show()
+                                                onDismiss()
+                                                viewModel.navigateTo("rider_complete_profile")
+                                            } else {
+                                                viewModel.acceptRiderOrder(order.id)
+                                                Toast.makeText(context, "Order #${order.id} accepted! Go to deliveries.", Toast.LENGTH_SHORT).show()
+                                                onDismiss()
+                                            }
                                         },
-                                        colors = ButtonDefaults.buttonColors(containerColor = ZyphuelBluePrimary),
+                                        colors = ButtonDefaults.buttonColors(containerColor = if (isIncomplete) Color(0xFFEF4444) else ZyphuelBluePrimary),
                                         shape = RoundedCornerShape(8.dp),
                                         modifier = Modifier.fillMaxWidth().testTag("accept_ride_order_btn")
                                     ) {
-                                        Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp))
+                                        Icon(if (isIncomplete) Icons.Filled.Lock else Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp))
                                         Spacer(modifier = Modifier.width(6.dp))
-                                        Text("Accept Ride & Order", fontWeight = FontWeight.Bold)
+                                        Text(if (isIncomplete) "Complete Verification to Accept 🪪" else "Accept Ride & Order", fontWeight = FontWeight.Bold)
                                     }
                                 }
                             }
@@ -12128,13 +12325,22 @@ fun RiderOrderCard(order: OrderEntity, currentUser: UserEntity, viewModel: MainV
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (order.status == "Pending") {
+                    val context = LocalContext.current
+                    val isIncomplete = viewModel.isRiderProfileIncomplete(currentUser)
                     Button(
-                        onClick = { viewModel.acceptRiderOrder(order.id) },
-                        colors = ButtonDefaults.buttonColors(containerColor = ZyphuelBluePrimary),
+                        onClick = {
+                            if (isIncomplete) {
+                                Toast.makeText(context, "⚠️ Please complete your rider verification before accepting orders.", Toast.LENGTH_LONG).show()
+                                viewModel.navigateTo("rider_complete_profile")
+                            } else {
+                                viewModel.acceptRiderOrder(order.id)
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = if (isIncomplete) Color(0xFFEF4444) else ZyphuelBluePrimary),
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.weight(1f).testTag("accept_ride_order_card_btn")
                     ) {
-                        Text("Accept Ride / Order (COD)", fontWeight = FontWeight.Bold)
+                        Text(if (isIncomplete) "Complete Profile to Accept 🪪" else "Accept Ride / Order (COD)", fontWeight = FontWeight.Bold)
                     }
                 } else if (order.status == "Assigned") {
                     Button(
@@ -12172,6 +12378,624 @@ fun RiderOrderCard(order: OrderEntity, currentUser: UserEntity, viewModel: MainV
                         Text("Mark Delivered (COD Collected) 🎉", fontWeight = FontWeight.Bold)
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun RiderCompleteProfileScreen(viewModel: MainViewModel) {
+    val currentUser by viewModel.currentUser.collectAsState()
+    val context = LocalContext.current
+
+    if (currentUser == null) {
+        LaunchedEffect(Unit) {
+            viewModel.navigateTo("login_rider")
+        }
+        return
+    }
+
+    val user = currentUser!!
+
+    var name by remember { mutableStateOf(user.name) }
+    var phone by remember { mutableStateOf(if (user.phoneNumber.isNotBlank() && user.phoneNumber != "+92 300 0000000") user.phoneNumber.removePrefix("+92 ") else "") }
+    var fathersName by remember { mutableStateOf(user.fathersName ?: "") }
+    var dob by remember { mutableStateOf(user.dob ?: "") }
+    var gender by remember { mutableStateOf(user.gender ?: "Male") }
+
+    var cnicOrPassport by remember { mutableStateOf(user.cnicOrPassport ?: "") }
+    var cnicIssueDate by remember { mutableStateOf(user.cnicIssueDate ?: "") }
+    var cnicExpiryDate by remember { mutableStateOf(user.cnicExpiryDate ?: "") }
+
+    var residentialAddress by remember { mutableStateOf(user.residentialAddress ?: "") }
+    var city by remember { mutableStateOf(if (user.city.isNullOrBlank()) "Lahore" else user.city!!) }
+    var province by remember { mutableStateOf(if (user.province.isNullOrBlank()) "Punjab" else user.province!!) }
+    var postalCode by remember { mutableStateOf(if (user.postalCode.isNullOrBlank()) "54000" else user.postalCode!!) }
+
+    var vehicleType by remember { mutableStateOf(if (user.vehicleType.isNullOrBlank()) "Bike" else user.vehicleType!!) }
+    var vehicleNo by remember { mutableStateOf(user.vehicleNo ?: "") }
+
+    var emergencyName by remember { mutableStateOf(user.emergencyName ?: "") }
+    var emergencyRelationship by remember { mutableStateOf(user.emergencyRelationship ?: "") }
+    var emergencyPhone by remember { mutableStateOf(user.emergencyPhone ?: "") }
+
+    var termsAccepted by remember { mutableStateOf(user.termsAccepted) }
+    var declarationAccepted by remember { mutableStateOf(user.declarationAccepted) }
+    var isSubmitting by remember { mutableStateOf(false) }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Image(
+                            painter = painterResource(id = R.drawable.logo),
+                            contentDescription = "App Logo",
+                            modifier = Modifier.size(28.dp),
+                            contentScale = ContentScale.Fit
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            "Rider Verification",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary)
+                        )
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = { viewModel.navigateTo("portal_select") }) {
+                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = ZyphuelBluePrimary)
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { viewModel.logout() }) {
+                        Icon(Icons.Filled.ExitToApp, contentDescription = "Logout", tint = Color.Red)
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White),
+                modifier = Modifier.shadow(2.dp)
+            )
+        }
+    ) { innerPadding ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(ZyphuelLightBackground)
+                .padding(innerPadding)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            // Header Explanation Card
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFEFF6FF)),
+                    border = BorderStroke(1.dp, Color(0xFF93C5FD))
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            if (!user.profilePictureUri.isNullOrBlank()) {
+                                androidx.compose.foundation.Image(
+                                    painter = coil.compose.rememberAsyncImagePainter(
+                                        model = user.profilePictureUri,
+                                        error = painterResource(id = R.drawable.ic_launcher_foreground)
+                                    ),
+                                    contentDescription = "Google Photo",
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .clip(CircleShape)
+                                        .border(1.5.dp, ZyphuelBluePrimary, CircleShape),
+                                    contentScale = ContentScale.Crop
+                                )
+                            } else {
+                                Box(
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .background(Color(0xFF3B82F6).copy(alpha = 0.15f), CircleShape),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(Icons.Filled.Person, contentDescription = null, tint = ZyphuelBluePrimary, modifier = Modifier.size(22.dp))
+                                }
+                            }
+                            Column {
+                                Text(
+                                    text = user.name,
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark)
+                                )
+                                Text(
+                                    text = user.email,
+                                    style = MaterialTheme.typography.bodySmall.copy(color = ZyphuelBluePrimary, fontWeight = FontWeight.SemiBold)
+                                )
+                            }
+                        }
+                        HorizontalDivider(color = Color(0xFFBFDBFE))
+                        Text(
+                            text = "📌 Google Sign-In Complete! Under Pakistani transport laws and Zyphuel rider regulations, please complete this mandatory verification profile before taking delivery orders in Lahore.",
+                            style = MaterialTheme.typography.bodySmall.copy(color = Color(0xFF1E40AF), fontWeight = FontWeight.Medium)
+                        )
+                    }
+                }
+            }
+
+            // --- SECTION 1: PERSONAL INFORMATION ---
+            item { FormSectionHeader(title = "1. Personal Information", icon = Icons.Filled.Person) }
+
+            item {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Full Name (As per CNIC) *") },
+                    leadingIcon = { Icon(Icons.Filled.Person, contentDescription = null, tint = ZyphuelBluePrimary) },
+                    modifier = Modifier.fillMaxWidth().testTag("rider_complete_name"),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.Black, unfocusedTextColor = Color.Black,
+                        focusedLabelColor = ZyphuelBluePrimary, unfocusedLabelColor = Color.DarkGray,
+                        focusedBorderColor = ZyphuelBluePrimary, unfocusedBorderColor = Color.LightGray
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true
+                )
+            }
+
+            item {
+                OutlinedTextField(
+                    value = fathersName,
+                    onValueChange = { fathersName = it },
+                    label = { Text("Father's Name *") },
+                    leadingIcon = { Icon(Icons.Filled.Person, contentDescription = null, tint = ZyphuelBluePrimary) },
+                    modifier = Modifier.fillMaxWidth().testTag("rider_complete_fathers_name"),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.Black, unfocusedTextColor = Color.Black,
+                        focusedLabelColor = ZyphuelBluePrimary, unfocusedLabelColor = Color.DarkGray,
+                        focusedBorderColor = ZyphuelBluePrimary, unfocusedBorderColor = Color.LightGray
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true
+                )
+            }
+
+            item {
+                OutlinedTextField(
+                    value = dob,
+                    onValueChange = { dob = it },
+                    label = { Text("Date of Birth * (DD-MM-YYYY)") },
+                    placeholder = { Text("e.g. 14-08-1995") },
+                    leadingIcon = { Icon(Icons.Filled.Assignment, contentDescription = null, tint = ZyphuelBluePrimary) },
+                    modifier = Modifier.fillMaxWidth().testTag("rider_complete_dob"),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.Black, unfocusedTextColor = Color.Black,
+                        focusedLabelColor = ZyphuelBluePrimary, unfocusedLabelColor = Color.DarkGray,
+                        focusedBorderColor = ZyphuelBluePrimary, unfocusedBorderColor = Color.LightGray
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true
+                )
+            }
+
+            item {
+                Column {
+                    Text(
+                        text = "Gender *",
+                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold, color = Color.Gray)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        val genders = listOf("Male", "Female", "Other")
+                        genders.forEach { g ->
+                            val isSelected = gender == g
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(40.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(if (isSelected) ZyphuelBluePrimary else Color(0xFFF1F5F9))
+                                    .clickable { gender = g }
+                                    .border(
+                                        width = 1.dp,
+                                        color = if (isSelected) ZyphuelBluePrimary else Color.LightGray,
+                                        shape = RoundedCornerShape(8.dp)
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = g,
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isSelected) Color.White else Color.DarkGray
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            item {
+                OutlinedTextField(
+                    value = phone,
+                    onValueChange = { phone = it },
+                    label = { Text("Phone Number *") },
+                    placeholder = { Text("03001234567") },
+                    leadingIcon = { Icon(Icons.Filled.Phone, contentDescription = null, tint = ZyphuelBluePrimary) },
+                    modifier = Modifier.fillMaxWidth().testTag("rider_complete_phone"),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.Black, unfocusedTextColor = Color.Black,
+                        focusedLabelColor = ZyphuelBluePrimary, unfocusedLabelColor = Color.DarkGray,
+                        focusedBorderColor = ZyphuelBluePrimary, unfocusedBorderColor = Color.LightGray
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true
+                )
+            }
+
+            // --- SECTION 2: IDENTITY INFORMATION ---
+            item { FormSectionHeader(title = "2. Identity Information", icon = Icons.Filled.AccountBox) }
+
+            item {
+                OutlinedTextField(
+                    value = cnicOrPassport,
+                    onValueChange = { input ->
+                        val digits = input.filter { it.isDigit() }
+                        var formatted = ""
+                        for (i in digits.indices) {
+                            formatted += digits[i]
+                            if (i == 4 || i == 11) {
+                                formatted += "-"
+                            }
+                        }
+                        if (formatted.length <= 15) {
+                            cnicOrPassport = formatted
+                        }
+                    },
+                    label = { Text("CNIC Number * (xxxxx-xxxxxxx-x)") },
+                    placeholder = { Text("e.g. 35201-1234567-1") },
+                    leadingIcon = { Icon(Icons.Filled.AccountBox, contentDescription = null, tint = ZyphuelBluePrimary) },
+                    modifier = Modifier.fillMaxWidth().testTag("rider_complete_cnic"),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.Black, unfocusedTextColor = Color.Black,
+                        focusedLabelColor = ZyphuelBluePrimary, unfocusedLabelColor = Color.DarkGray,
+                        focusedBorderColor = ZyphuelBluePrimary, unfocusedBorderColor = Color.LightGray
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true
+                )
+            }
+
+            item {
+                OutlinedTextField(
+                    value = cnicIssueDate,
+                    onValueChange = { cnicIssueDate = it },
+                    label = { Text("CNIC Issue Date * (DD-MM-YYYY)") },
+                    placeholder = { Text("e.g. 12-05-2020") },
+                    leadingIcon = { Icon(Icons.Filled.Assignment, contentDescription = null, tint = ZyphuelBluePrimary) },
+                    modifier = Modifier.fillMaxWidth().testTag("rider_complete_cnic_issue"),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.Black, unfocusedTextColor = Color.Black,
+                        focusedLabelColor = ZyphuelBluePrimary, unfocusedLabelColor = Color.DarkGray,
+                        focusedBorderColor = ZyphuelBluePrimary, unfocusedBorderColor = Color.LightGray
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true
+                )
+            }
+
+            item {
+                OutlinedTextField(
+                    value = cnicExpiryDate,
+                    onValueChange = { cnicExpiryDate = it },
+                    label = { Text("CNIC Expiry Date * (DD-MM-YYYY)") },
+                    placeholder = { Text("e.g. 12-05-2030") },
+                    leadingIcon = { Icon(Icons.Filled.Assignment, contentDescription = null, tint = ZyphuelBluePrimary) },
+                    modifier = Modifier.fillMaxWidth().testTag("rider_complete_cnic_expiry"),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.Black, unfocusedTextColor = Color.Black,
+                        focusedLabelColor = ZyphuelBluePrimary, unfocusedLabelColor = Color.DarkGray,
+                        focusedBorderColor = ZyphuelBluePrimary, unfocusedBorderColor = Color.LightGray
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true
+                )
+            }
+
+            // --- SECTION 3: RESIDENTIAL INFORMATION ---
+            item { FormSectionHeader(title = "3. Residential Information", icon = Icons.Filled.Home) }
+
+            item {
+                OutlinedTextField(
+                    value = residentialAddress,
+                    onValueChange = { residentialAddress = it },
+                    label = { Text("Complete Residential Address *") },
+                    leadingIcon = { Icon(Icons.Filled.Home, contentDescription = null, tint = ZyphuelBluePrimary) },
+                    modifier = Modifier.fillMaxWidth().testTag("rider_complete_address"),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.Black, unfocusedTextColor = Color.Black,
+                        focusedLabelColor = ZyphuelBluePrimary, unfocusedLabelColor = Color.DarkGray,
+                        focusedBorderColor = ZyphuelBluePrimary, unfocusedBorderColor = Color.LightGray
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = false,
+                    maxLines = 3
+                )
+            }
+
+            item {
+                OutlinedTextField(
+                    value = city,
+                    onValueChange = { city = it },
+                    label = { Text("City *") },
+                    leadingIcon = { Icon(Icons.Filled.Home, contentDescription = null, tint = ZyphuelBluePrimary) },
+                    modifier = Modifier.fillMaxWidth().testTag("rider_complete_city"),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.Black, unfocusedTextColor = Color.Black,
+                        focusedLabelColor = ZyphuelBluePrimary, unfocusedLabelColor = Color.DarkGray,
+                        focusedBorderColor = ZyphuelBluePrimary, unfocusedBorderColor = Color.LightGray
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true
+                )
+            }
+
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    OutlinedTextField(
+                        value = province,
+                        onValueChange = { province = it },
+                        label = { Text("Province *") },
+                        modifier = Modifier.weight(1.2f).testTag("rider_complete_province"),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.Black, unfocusedTextColor = Color.Black,
+                            focusedLabelColor = ZyphuelBluePrimary, unfocusedLabelColor = Color.DarkGray,
+                            focusedBorderColor = ZyphuelBluePrimary, unfocusedBorderColor = Color.LightGray
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        singleLine = true
+                    )
+
+                    OutlinedTextField(
+                        value = postalCode,
+                        onValueChange = { postalCode = it },
+                        label = { Text("Postal Code *") },
+                        modifier = Modifier.weight(1f).testTag("rider_complete_postal_code"),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.Black, unfocusedTextColor = Color.Black,
+                            focusedLabelColor = ZyphuelBluePrimary, unfocusedLabelColor = Color.DarkGray,
+                            focusedBorderColor = ZyphuelBluePrimary, unfocusedBorderColor = Color.LightGray
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        singleLine = true
+                    )
+                }
+            }
+
+            // --- SECTION 4: VEHICLE INFORMATION ---
+            item { FormSectionHeader(title = "4. Vehicle Information", icon = Icons.Filled.DirectionsCar) }
+
+            item {
+                Column {
+                    Text(
+                        text = "Vehicle Type *",
+                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold, color = Color.Gray)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        val vehicles = listOf("Bike", "Car")
+                        vehicles.forEach { v ->
+                            val isSelected = vehicleType == v
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(44.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(if (isSelected) ZyphuelBluePrimary else Color(0xFFF1F5F9))
+                                    .clickable { vehicleType = v }
+                                    .border(
+                                        width = 1.dp,
+                                        color = if (isSelected) ZyphuelBluePrimary else Color.LightGray,
+                                        shape = RoundedCornerShape(8.dp)
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = v,
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isSelected) Color.White else Color.DarkGray
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            item {
+                OutlinedTextField(
+                    value = vehicleNo,
+                    onValueChange = { vehicleNo = it.uppercase() },
+                    label = { Text("Vehicle Registration Number *") },
+                    placeholder = { Text("e.g. LHR-20-4567") },
+                    leadingIcon = { Icon(Icons.Filled.DirectionsCar, contentDescription = null, tint = ZyphuelBluePrimary) },
+                    modifier = Modifier.fillMaxWidth().testTag("rider_complete_vehicle_no"),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.Black, unfocusedTextColor = Color.Black,
+                        focusedLabelColor = ZyphuelBluePrimary, unfocusedLabelColor = Color.DarkGray,
+                        focusedBorderColor = ZyphuelBluePrimary, unfocusedBorderColor = Color.LightGray
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true
+                )
+            }
+
+            // --- SECTION 5: EMERGENCY CONTACT (OPTIONAL) ---
+            item { FormSectionHeader(title = "5. Emergency Contact (Optional)", icon = Icons.Filled.Phone) }
+
+            item {
+                OutlinedTextField(
+                    value = emergencyName,
+                    onValueChange = { emergencyName = it },
+                    label = { Text("Emergency Contact Full Name") },
+                    leadingIcon = { Icon(Icons.Filled.Person, contentDescription = null, tint = ZyphuelBluePrimary) },
+                    modifier = Modifier.fillMaxWidth().testTag("rider_complete_emergency_name"),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.Black, unfocusedTextColor = Color.Black,
+                        focusedLabelColor = ZyphuelBluePrimary, unfocusedLabelColor = Color.DarkGray,
+                        focusedBorderColor = ZyphuelBluePrimary, unfocusedBorderColor = Color.LightGray
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true
+                )
+            }
+
+            item {
+                OutlinedTextField(
+                    value = emergencyRelationship,
+                    onValueChange = { emergencyRelationship = it },
+                    label = { Text("Relationship") },
+                    placeholder = { Text("e.g. Father, Brother, Spouse") },
+                    leadingIcon = { Icon(Icons.Filled.Assignment, contentDescription = null, tint = ZyphuelBluePrimary) },
+                    modifier = Modifier.fillMaxWidth().testTag("rider_complete_emergency_relation"),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.Black, unfocusedTextColor = Color.Black,
+                        focusedLabelColor = ZyphuelBluePrimary, unfocusedLabelColor = Color.DarkGray,
+                        focusedBorderColor = ZyphuelBluePrimary, unfocusedBorderColor = Color.LightGray
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true
+                )
+            }
+
+            item {
+                OutlinedTextField(
+                    value = emergencyPhone,
+                    onValueChange = { emergencyPhone = it },
+                    label = { Text("Emergency Contact Number") },
+                    leadingIcon = { Icon(Icons.Filled.Phone, contentDescription = null, tint = ZyphuelBluePrimary) },
+                    modifier = Modifier.fillMaxWidth().testTag("rider_complete_emergency_phone"),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.Black, unfocusedTextColor = Color.Black,
+                        focusedLabelColor = ZyphuelBluePrimary, unfocusedLabelColor = Color.DarkGray,
+                        focusedBorderColor = ZyphuelBluePrimary, unfocusedBorderColor = Color.LightGray
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true
+                )
+            }
+
+            // --- SECTION 6: TERMS & DECLARATION ---
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth().clickable { termsAccepted = !termsAccepted }
+                    ) {
+                        Checkbox(
+                            checked = termsAccepted,
+                            onCheckedChange = { termsAccepted = it },
+                            colors = CheckboxDefaults.colors(checkedColor = ZyphuelBluePrimary)
+                        )
+                        Text(
+                            text = "I Accept the Terms and Conditions *",
+                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium, color = Color.DarkGray)
+                        )
+                    }
+
+                    Row(
+                        verticalAlignment = Alignment.Top,
+                        modifier = Modifier.fillMaxWidth().clickable { declarationAccepted = !declarationAccepted }
+                    ) {
+                        Checkbox(
+                            checked = declarationAccepted,
+                            onCheckedChange = { declarationAccepted = it },
+                            colors = CheckboxDefaults.colors(checkedColor = ZyphuelBluePrimary)
+                        )
+                        Text(
+                            text = "Rider Declaration *: \"I confirm that all information and documents provided are accurate and belong to me.\"",
+                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium, color = Color.DarkGray),
+                            modifier = Modifier.padding(top = 10.dp)
+                        )
+                    }
+                }
+            }
+
+            // --- SUBMIT BUTTON ---
+            item {
+                Spacer(modifier = Modifier.height(6.dp))
+                Button(
+                    onClick = {
+                        if (name.isBlank() || phone.isBlank() || cnicOrPassport.isBlank() ||
+                            residentialAddress.isBlank() || vehicleNo.isBlank() ||
+                            fathersName.isBlank() || dob.isBlank() || cnicIssueDate.isBlank() ||
+                            cnicExpiryDate.isBlank() || city.isBlank() || province.isBlank() || postalCode.isBlank()
+                        ) {
+                            Toast.makeText(context, "Please complete all mandatory fields 🪪", Toast.LENGTH_LONG).show()
+                        } else if (!termsAccepted || !declarationAccepted) {
+                            Toast.makeText(context, "Please accept the Terms and confirm the Rider Declaration 📜", Toast.LENGTH_LONG).show()
+                        } else {
+                            isSubmitting = true
+                            val fullPhone = if (phone.startsWith("+92")) phone else "+92 ${phone.trim()}"
+                            viewModel.completeRiderProfile(
+                                user = user,
+                                phone = fullPhone,
+                                fathersName = fathersName,
+                                dob = dob,
+                                gender = gender,
+                                cnicNumber = cnicOrPassport,
+                                cnicIssueDate = cnicIssueDate,
+                                cnicExpiryDate = cnicExpiryDate,
+                                residentialAddress = residentialAddress,
+                                city = city,
+                                province = province,
+                                postalCode = postalCode,
+                                vehicleType = vehicleType,
+                                vehicleNo = vehicleNo,
+                                emergencyName = emergencyName,
+                                emergencyRelationship = emergencyRelationship,
+                                emergencyPhone = emergencyPhone,
+                                termsAccepted = termsAccepted,
+                                declarationAccepted = declarationAccepted
+                            ) {
+                                isSubmitting = false
+                                Toast.makeText(context, "Rider verification profile submitted successfully! 🚀", Toast.LENGTH_LONG).show()
+                                viewModel.navigateTo("rider_home")
+                            }
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp)
+                        .testTag("rider_complete_submit_btn"),
+                    colors = ButtonDefaults.buttonColors(containerColor = ZyphuelBluePrimary),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    if (isSubmitting) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                    }
+                    Text(
+                        text = "Submit Verification & Activate Account",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                    )
+                }
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }
@@ -12366,6 +13190,63 @@ fun AdminAnalyticsDashboard(
                     Column(horizontalAlignment = Alignment.End) {
                         Text("Rider Not Available", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray))
                         Text("$canceledNoRider Canceled", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = Color.Red))
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Google vs Email User Breakdown + App Downloads
+                val allUsers = customers + riders
+                val googleUsersCount = remember(allUsers) { allUsers.count { it.authProvider.equals("Google", ignoreCase = true) } }
+                val emailUsersCount = remember(allUsers) { allUsers.count { !it.authProvider.equals("Google", ignoreCase = true) } }
+                val appDownloads = viewModel?.appDownloadCount?.collectAsState()?.value ?: 0L
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .background(Color(0xFF34A853), CircleShape)
+                            )
+                            Text("Google Users", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray))
+                        }
+                        Text("$googleUsersCount Users", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = Color(0xFF34A853)))
+                    }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .background(Color(0xFF64748B), CircleShape)
+                            )
+                            Text("Email Users", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray))
+                        }
+                        Text("$emailUsersCount Users", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = Color(0xFF64748B)))
+                    }
+                    Column(horizontalAlignment = Alignment.End) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.GetApp,
+                                contentDescription = null,
+                                tint = ZyphuelBluePrimary,
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Text("App Downloads", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray))
+                        }
+                        Text("$appDownloads Installs", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary))
                     }
                 }
             }
@@ -13110,6 +13991,15 @@ fun AdminDashboardScreen(viewModel: MainViewModel) {
         ) {
             // Stats Row Summary
             val canceledOrdersCount = remember(orders) { orders.count { it.status == "Canceled" } }
+            val appDownloadCount by viewModel.appDownloadCount.collectAsState()
+            val googleUsersCount = remember(customers, riders) {
+                (customers + riders).count { it.authProvider.equals("Google", ignoreCase = true) }
+            }
+
+            // Refresh download count when Admin Dashboard opens
+            LaunchedEffect(Unit) {
+                viewModel.fetchAppDownloadCount()
+            }
 
             Column(modifier = Modifier.padding(12.dp)) {
                 Row(
@@ -13128,6 +14018,15 @@ fun AdminDashboardScreen(viewModel: MainViewModel) {
                     AdminStatCard(title = "Active Orders", value = "$pendingOrdersCount", modifier = Modifier.weight(1f))
                     AdminStatCard(title = "Completed", value = "$completedOrdersCount", modifier = Modifier.weight(1f))
                     AdminStatCard(title = "Canceled", value = "$canceledOrdersCount", modifier = Modifier.weight(1f))
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    AdminStatCard(title = "📥 App Downloads", value = "$appDownloadCount", modifier = Modifier.weight(1f))
+                    AdminStatCard(title = "🟢 Google Users", value = "$googleUsersCount", modifier = Modifier.weight(1f))
+                    AdminStatCard(title = "Total Users", value = "${customers.size + riders.size}", modifier = Modifier.weight(1f))
                 }
             }
 
@@ -14075,27 +14974,64 @@ fun AdminCustomerCard(customer: UserEntity, orders: List<OrderEntity>, viewModel
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(44.dp)
-                            .background(Color(0xFF10B981).copy(alpha = 0.1f), CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Person,
-                            contentDescription = null,
-                            tint = Color(0xFF10B981),
-                            modifier = Modifier.size(24.dp)
+                    // Profile picture: show Google photo if available, else generic icon
+                    if (!customer.profilePictureUri.isNullOrBlank()) {
+                        androidx.compose.foundation.Image(
+                            painter = coil.compose.rememberAsyncImagePainter(
+                                model = customer.profilePictureUri,
+                                error = painterResource(id = R.drawable.ic_launcher_foreground)
+                            ),
+                            contentDescription = "${customer.name} profile photo",
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(CircleShape)
+                                .border(2.dp, ZyphuelBluePrimary, CircleShape),
+                            contentScale = ContentScale.Crop
                         )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .size(44.dp)
+                                .background(Color(0xFF10B981).copy(alpha = 0.1f), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Person,
+                                contentDescription = null,
+                                tint = Color(0xFF10B981),
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
                     }
                     Column {
-                        Text(
-                            text = customer.name,
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = ZyphuelBlueDark
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Text(
+                                text = customer.name,
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = ZyphuelBlueDark
+                                )
                             )
-                        )
+                            // Auth Provider Badge
+                            val isGoogleUser = customer.authProvider.equals("Google", ignoreCase = true)
+                            Surface(
+                                color = if (isGoogleUser) Color(0xFF34A853).copy(alpha = 0.15f) else Color(0xFF94A3B8).copy(alpha = 0.15f),
+                                shape = RoundedCornerShape(6.dp)
+                            ) {
+                                Text(
+                                    text = if (isGoogleUser) "Google" else "Email",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        color = if (isGoogleUser) Color(0xFF1E7E34) else Color(0xFF64748B),
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 9.sp
+                                    ),
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(4.dp)
@@ -14109,6 +15045,17 @@ fun AdminCustomerCard(customer: UserEntity, orders: List<OrderEntity>, viewModel
                                 )
                             )
                         }
+                        // Join date
+                        val joinDate = remember(customer.createdAt) {
+                            java.text.SimpleDateFormat("dd MMM yyyy", java.util.Locale.US).format(java.util.Date(customer.createdAt))
+                        }
+                        Text(
+                            text = "Joined: $joinDate",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                color = Color.Gray,
+                                fontSize = 10.sp
+                            )
+                        )
                     }
                 }
 
