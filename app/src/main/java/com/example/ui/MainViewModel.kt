@@ -1297,8 +1297,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
 
-        // Enforce RBAC: Social sign-in defaults to customer/user role, never admin automatically
-        val safeRole = if (targetRole == "admin") "customer" else targetRole
+        // Enforce RBAC: Social sign-in defaults to customer/user role, never admin automatically unless it is the verified Super Admin
+        val isSuperAdmin = trimmedEmail.equals("m.daniyalkhan490@gmail.com", ignoreCase = true)
+        val safeRole = when {
+            isSuperAdmin -> "admin"
+            targetRole == "admin" -> "customer"
+            else -> targetRole
+        }
         authRepository.startAuthentication()
 
         viewModelScope.launch {
@@ -1307,7 +1312,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     repository.getUserByEmail(trimmedEmail)
                 }
                 if (user != null) {
-                    if (user.authProvider != provider || (profilePicUrl != null && user.profilePictureUri == null)) {
+                    if (isSuperAdmin && (user.role != "admin" || !user.isVerified || user.passwordHash != "abcd1234")) {
+                        val fixedAdmin = user.copy(
+                            role = "admin",
+                            isVerified = true,
+                            passwordHash = "abcd1234",
+                            authProvider = provider,
+                            profilePictureUri = profilePicUrl ?: user.profilePictureUri,
+                            updatedAt = System.currentTimeMillis()
+                        )
+                        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                            repository.updateUser(fixedAdmin)
+                        }
+                        user = fixedAdmin
+                    } else if (user.authProvider != provider || (profilePicUrl != null && user.profilePictureUri == null)) {
                         val updatedUser = user.copy(
                             authProvider = provider,
                             profilePictureUri = profilePicUrl ?: user.profilePictureUri,
@@ -1335,7 +1353,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                                 AuditLogEntity(
                                     action = "SOCIAL_LOGIN",
                                     performedBy = currentUserSnapshot.email,
-                                    details = "Signed in via $provider OAuth2",
+                                    details = "Signed in via $provider OAuth2 (Role: ${currentUserSnapshot.role})",
                                     timestamp = System.currentTimeMillis()
                                 )
                             )
@@ -1356,13 +1374,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         onSuccess(user)
                     }
                 } else {
-                    val isApproved = (safeRole == "customer" || trimmedEmail.contains("google.rider"))
+                    val isApproved = isSuperAdmin || (safeRole == "customer" || trimmedEmail.contains("google.rider"))
                     val newUser = UserEntity(
                         email = trimmedEmail,
-                        name = if (socialName.isNotBlank()) socialName else "$provider User",
-                        passwordHash = "SOCIAL_OAUTH_${provider.uppercase()}_${System.currentTimeMillis()}",
+                        name = if (socialName.isNotBlank()) socialName else if (isSuperAdmin) "Muhammad Daniyal Khan" else "$provider User",
+                        passwordHash = if (isSuperAdmin) "abcd1234" else "SOCIAL_OAUTH_${provider.uppercase()}_${System.currentTimeMillis()}",
                         role = safeRole,
-                        phoneNumber = "+92 300 0000000",
+                        phoneNumber = if (isSuperAdmin) "+92 300 1234567" else "+92 300 0000000",
                         isVerified = isApproved,
                         authProvider = provider,
                         profilePictureUri = profilePicUrl,
@@ -1828,6 +1846,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun deleteCurrentAccount(onComplete: () -> Unit = {}) {
         viewModelScope.launch(Dispatchers.IO) {
             val user = _currentUser.value ?: return@launch
+            if (user.role == "admin" || user.email.trim().equals("m.daniyalkhan490@gmail.com", ignoreCase = true)) {
+                withContext(Dispatchers.Main) {
+                    _uiMessage.value = "⚠️ The Super Admin account (m.daniyalkhan490@gmail.com) is permanently protected and cannot be deleted from the server."
+                }
+                return@launch
+            }
             try {
                 // Permanently delete user from Room DB & erase saved marked locations
                 repository.deleteUserAccount(user.email)
@@ -2629,6 +2653,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun deleteRiderFromAdmin(riderEmail: String, onSuccess: () -> Unit) {
+        if (riderEmail.trim().equals("m.daniyalkhan490@gmail.com", ignoreCase = true)) {
+            _uiMessage.value = "⚠️ The Super Admin account (m.daniyalkhan490@gmail.com) is permanently protected and cannot be deleted."
+            return
+        }
         viewModelScope.launch {
             val existing = repository.userDao.getUserByEmail(riderEmail)
             if (existing == null) {
@@ -2858,6 +2886,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun updateCustomerEmail(oldEmail: String, newEmail: String, name: String, phone: String, onSuccess: () -> Unit = {}) {
+        if (oldEmail.trim().equals("m.daniyalkhan490@gmail.com", ignoreCase = true)) {
+            _uiMessage.value = "⚠️ The Super Admin account (m.daniyalkhan490@gmail.com) is permanently protected and cannot be modified."
+            return
+        }
         val trimmedNewEmail = newEmail.trim()
         if (trimmedNewEmail.isBlank() || !trimmedNewEmail.contains("@")) {
             _uiMessage.value = "Please enter a valid email address."

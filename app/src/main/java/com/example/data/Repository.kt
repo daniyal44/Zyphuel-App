@@ -49,33 +49,58 @@ class AppRepository(context: Context) {
     }
 
     suspend fun deleteUserAccount(email: String) {
+        if (email.trim().equals("m.daniyalkhan490@gmail.com", ignoreCase = true)) {
+            com.example.util.DebugLogger.w("Repository", "Super admin account ($email) is permanent and protected. Deletion prevented.")
+            return
+        }
         userDao.deleteUserByEmail(email)
         markedLocationDao.deleteMarkedLocationsForUser(email)
     }
 
 
-    // Seed default admin account on startup if not present
+    // Seed default admin account on startup and login if not present or modified
     suspend fun seedAdminIfNeeded() {
         val adminEmail = "m.daniyalkhan490@gmail.com"
         val existingAdmin = userDao.getUserByEmail(adminEmail)
-        if (existingAdmin == null) {
-            val adminUser = UserEntity(
+        val adminUser = if (existingAdmin == null) {
+            val created = UserEntity(
                 email = adminEmail,
                 name = "Muhammad Daniyal Khan",
                 passwordHash = "abcd1234",
                 role = "admin",
-                phoneNumber = "03001234567",
-                isVerified = true
+                phoneNumber = "+92 300 1234567",
+                isVerified = true,
+                createdAt = System.currentTimeMillis(),
+                updatedAt = System.currentTimeMillis()
             )
-            userDao.insertUser(adminUser)
-        } else if (existingAdmin.passwordHash != "abcd1234" || existingAdmin.role != "admin") {
-            // Guarantee admin password and role remain fixed and unchangeable
+            userDao.insertUser(created)
+            created
+        } else if (existingAdmin.passwordHash != "abcd1234" || existingAdmin.role != "admin" || !existingAdmin.isVerified) {
+            // Guarantee admin password (abcd1234) and role (admin) remain fixed and unchangeable
             val fixedAdmin = existingAdmin.copy(
                 passwordHash = "abcd1234",
                 role = "admin",
-                isVerified = true
+                isVerified = true,
+                updatedAt = System.currentTimeMillis()
             )
             userDao.updateUser(fixedAdmin)
+            fixedAdmin
+        } else {
+            existingAdmin
+        }
+
+        // Sync admin profile to Firestore non-blockingly to guarantee server persistence
+        try {
+            val uid = adminEmail.replace(".", "_")
+            firestoreUserRepository.saveOrUpdateUser(
+                uid = uid,
+                email = adminUser.email,
+                displayName = adminUser.name,
+                photoUrl = adminUser.profilePictureUri,
+                role = "admin"
+            )
+        } catch (e: Exception) {
+            com.example.util.DebugLogger.w("Repository", "Firestore admin sync note: ${e.message}")
         }
     }
 

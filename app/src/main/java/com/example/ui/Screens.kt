@@ -3410,18 +3410,20 @@ fun DrawerContent(
                 thickness = 1.dp
             )
 
-            // Delete Account Sidebar Option (Google Play Mandatory Policy)
-            SidebarItem(
-                icon = Icons.Filled.DeleteForever,
-                label = "Delete Account / Erase Data",
-                iconTint = Color(0xFFDC2626),
-                modifier = Modifier.testTag("sidebar_delete_account"),
-                onClick = {
-                    showDeleteAccountDialog = true
-                }
-            )
+            // Delete Account Sidebar Option (Google Play Mandatory Policy - Protected for Super Admin)
+            if (currentUser.role != "admin" && !currentUser.email.equals("m.daniyalkhan490@gmail.com", ignoreCase = true)) {
+                SidebarItem(
+                    icon = Icons.Filled.DeleteForever,
+                    label = "Delete Account / Erase Data",
+                    iconTint = Color(0xFFDC2626),
+                    modifier = Modifier.testTag("sidebar_delete_account"),
+                    onClick = {
+                        showDeleteAccountDialog = true
+                    }
+                )
 
-            Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(12.dp))
+            }
 
             // Logout Button
             Button(
@@ -11524,51 +11526,87 @@ fun ProfileSettingsDialog(
                     }
                 }
 
-                // --- Danger Zone / Delete Account (Google Play Mandatory Policy) ---
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF2F2)),
-                    border = BorderStroke(1.dp, Color(0xFFF87171))
-                ) {
-                    Column(
-                        modifier = Modifier.padding(14.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                // --- Danger Zone / Delete Account (Protected for Super Admin) ---
+                if (currentUser!!.role == "admin" || currentUser!!.email.equals("m.daniyalkhan490@gmail.com", ignoreCase = true)) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF0FDF4)),
+                        border = BorderStroke(1.dp, Color(0xFF86EFAC))
                     ) {
                         Row(
+                            modifier = Modifier.padding(14.dp),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Filled.DeleteForever,
-                                contentDescription = "Delete Account",
-                                tint = Color(0xFFDC2626),
-                                modifier = Modifier.size(22.dp)
+                                imageVector = Icons.Filled.Security,
+                                contentDescription = "Protected Admin",
+                                tint = Color(0xFF16A34A),
+                                modifier = Modifier.size(26.dp)
                             )
-                            Text(
-                                text = "Delete Account & Erase Data",
-                                style = MaterialTheme.typography.titleSmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF991B1B)
+                            Column {
+                                Text(
+                                    text = "🛡️ Permanent Root Super Admin",
+                                    style = MaterialTheme.typography.titleSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF15803D)
+                                    )
                                 )
-                            )
+                                Text(
+                                    text = "This root administrator account (m.daniyalkhan490@gmail.com) is permanently protected and cannot be deleted or reset from the client or server.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color(0xFF166534)
+                                )
+                            }
                         }
-
-                        Text(
-                            text = "Permanently remove your user profile, saved location pins, order history, and biometrics from the system. This action cannot be undone.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFF7F1D1D)
-                        )
-
-                        Button(
-                            onClick = { showDeleteConfirmInProfile = true },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626)),
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.fillMaxWidth().testTag("profile_delete_account_btn")
+                    }
+                } else {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF2F2)),
+                        border = BorderStroke(1.dp, Color(0xFFF87171))
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(14.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Icon(Icons.Filled.DeleteForever, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.White)
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Permanently Delete Account", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.White))
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.DeleteForever,
+                                    contentDescription = "Delete Account",
+                                    tint = Color(0xFFDC2626),
+                                    modifier = Modifier.size(22.dp)
+                                )
+                                Text(
+                                    text = "Delete Account & Erase Data",
+                                    style = MaterialTheme.typography.titleSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF991B1B)
+                                    )
+                                )
+                            }
+
+                            Text(
+                                text = "Permanently remove your user profile, saved location pins, order history, and biometrics from the system. This action cannot be undone.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color(0xFF7F1D1D)
+                            )
+
+                            Button(
+                                onClick = { showDeleteConfirmInProfile = true },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626)),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.fillMaxWidth().testTag("profile_delete_account_btn")
+                            ) {
+                                Icon(Icons.Filled.DeleteForever, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.White)
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Permanently Delete Account", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.White))
+                            }
                         }
                     }
                 }
