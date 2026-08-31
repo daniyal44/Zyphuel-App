@@ -2061,30 +2061,38 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         }
                     }
 
-                    // Real-time email alert to assigned Rider
-                    val assignedRider = realActiveDriver
-                    if (assignedRider != null && assignedRider.email.isNotBlank() && assignedRider.email.contains("@")) {
-                        val riderSubject = "🚚 New Delivery Assigned - Order #${order.id}"
-                        val riderBody = buildString {
-                            appendLine("Assalam o Alaikum ${assignedRider.name},")
-                            appendLine()
-                            appendLine("A new delivery order #${order.id} has been assigned to you! 📦")
-                            appendLine()
-                            appendLine("📋 Delivery Details:")
-                            appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━")
-                            appendLine("🆔 Order ID: #${order.id}")
-                            appendLine("👤 Customer: ${user.name} (${user.phoneNumber})")
-                            appendLine("⛽ Service: $safeServiceType")
-                            appendLine("📦 Quantity: $safeQuantity units")
-                            appendLine("💰 COD Amount: Rs. ${String.format("%.2f", safePrice)}")
-                            appendLine("📍 Destination: $finalAddress")
-                            appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━")
-                            appendLine()
-                            appendLine("Please open the Zyphuel Rider App to start your delivery route.")
-                            appendLine("Zyphuel Logistics Dispatch")
-                        }
-                        withContext(Dispatchers.Main) {
-                            dispatchRealtimeEmail(assignedRider.email, riderSubject, riderBody)
+                    // Real-time email alert to Rider(s)
+                    val allRidersList = repository.userDao.getUsersByRole("rider")
+                    val targetRiders = if (realActiveDriver != null) listOf(realActiveDriver) else allRidersList
+                    for (rider in targetRiders) {
+                        if (rider.email.isNotBlank() && rider.email.contains("@")) {
+                            val isDirectAssigned = realActiveDriver != null && rider.email == realActiveDriver.email
+                            val riderSubject = if (isDirectAssigned) "🚚 New Delivery Assigned - Order #${order.id}" else "🔔 New Available Delivery Order #${order.id}"
+                            val riderBody = buildString {
+                                appendLine("Assalam o Alaikum ${rider.name},")
+                                appendLine()
+                                if (isDirectAssigned) {
+                                    appendLine("A new delivery order #${order.id} has been directly assigned to you! 📦")
+                                } else {
+                                    appendLine("A new delivery order #${order.id} is available in Lahore for pickup! 📦")
+                                }
+                                appendLine()
+                                appendLine("📋 Delivery Details:")
+                                appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━")
+                                appendLine("🆔 Order ID: #${order.id}")
+                                appendLine("👤 Customer: ${user.name} (${user.phoneNumber})")
+                                appendLine("⛽ Service: $safeServiceType")
+                                appendLine("📦 Quantity: $safeQuantity units")
+                                appendLine("💰 COD Amount: Rs. ${String.format("%.2f", safePrice)}")
+                                appendLine("📍 Destination: $finalAddress")
+                                appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━")
+                                appendLine()
+                                appendLine("Please open the Zyphuel Rider App to start or accept your delivery.")
+                                appendLine("Zyphuel Logistics Operations")
+                            }
+                            withContext(Dispatchers.Main) {
+                                dispatchRealtimeEmail(rider.email, riderSubject, riderBody)
+                            }
                         }
                     }
                 } catch (e: Exception) {
@@ -2980,13 +2988,25 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _sentEmails.value = listOf(newEmail) + _sentEmails.value
 
         viewModelScope.launch(Dispatchers.IO) {
-            repository.auditLogDao.insertLog(
-                AuditLogEntity(
-                    action = "REALTIME_GMAIL_ALERT_DISPATCHED",
-                    performedBy = "System Email Engine",
-                    details = "Dispatched real-time alert to: $recipientEmail | Subject: $subject"
+            try {
+                repository.auditLogDao.insertLog(
+                    AuditLogEntity(
+                        action = "REALTIME_GMAIL_ALERT_DISPATCHED",
+                        performedBy = "System Email Engine",
+                        details = "Dispatched real-time alert to: $recipientEmail | Subject: $subject"
+                    )
                 )
-            )
+                repository.notificationDao.insertNotification(
+                    NotificationEntity(
+                        title = subject,
+                        message = "Real-time email sent to $recipientEmail\n${body.take(120)}...",
+                        targetRole = "all"
+                    )
+                )
+                postLocalSystemNotification(subject, "Real-time email delivered to $recipientEmail")
+            } catch (e: Exception) {
+                DebugLogger.w("MainViewModel", "dispatchRealtimeEmail notification warning: ${e.message}")
+            }
         }
     }
 
