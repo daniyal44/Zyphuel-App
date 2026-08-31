@@ -2,10 +2,48 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
-    android:viewportWidth="24"
-    android:viewportHeight="24">
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+
+    <!-- Zyphuel flame-Z logo: Outer flame silhouette with Z lightning bolt cutout -->
+    <!-- Flame body - the teardrop/flame shape -->
     <path
         android:fillColor="#FFFFFFFF"
-        android:fillType="evenOdd"
-        android:pathData="M 12,2 C 12,2 19.5,9.5 19.5,14.5 C 19.5,18.64 16.14,22 12,22 C 7.86,22 4.5,18.64 4.5,14.5 C 4.5,9.5 12,2 12,2 Z M 8,9.5 H 16 V 11.2 L 10.8,15.8 H 16 V 17.5 H 8 V 15.8 L 13.2,11.2 H 8 Z" />
+        android:pathData="
+            M 50,2
+            C 52,2 72,22 78,38
+            C 84,54 82,68 78,76
+            C 74,84 66,92 56,96
+            C 50,98 44,98 38,96
+            C 28,92 20,84 16,74
+            C 12,64 14,50 20,38
+            C 26,26 42,10 50,2
+            Z" />
+
+    <!-- Inner flame accent - right side flick -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="
+            M 62,8
+            C 66,14 74,26 76,34
+            C 78,40 76,46 72,42
+            C 68,38 64,30 62,22
+            C 60,16 61,10 62,8
+            Z" />
+
+    <!-- Z lightning bolt - cut into the flame as negative space -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="
+            M 30,32
+            L 66,32
+            L 66,42
+            L 44,66
+            L 66,66
+            L 66,76
+            L 30,76
+            L 30,66
+            L 52,42
+            L 30,42
+            Z" />
 </vector>
