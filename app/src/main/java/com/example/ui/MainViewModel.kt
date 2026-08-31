@@ -2989,6 +2989,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
+                // Background real email transmission directly to Gmail/inbox
+                com.example.util.RealtimeEmailEngine.sendRealtimeEmail(
+                    recipientEmail = recipientEmail,
+                    subject = subject,
+                    bodyText = body
+                )
+
                 repository.auditLogDao.insertLog(
                     AuditLogEntity(
                         action = "REALTIME_GMAIL_ALERT_DISPATCHED",
