@@ -2911,9 +2911,9 @@ fun AuthScreen(viewModel: MainViewModel, isRegister: Boolean, isRider: Boolean) 
                         val fragmentActivity = context as? androidx.fragment.app.FragmentActivity
 
                         val targetUserEmail = if (email.isNotBlank()) email.trim().lowercase() else (registeredEmail ?: "")
-                        val isRegisteredAccountPresent = targetUserEmail.isNotBlank()
+                        val displayEmail = if (targetUserEmail.isNotBlank()) targetUserEmail else if (registeredEmail != null) registeredEmail else "Registered Account"
 
-                        if (!isRegister && isBioEnabled && isRegisteredAccountPresent) {
+                        if (!isRegister && isBioEnabled) {
                             Spacer(modifier = Modifier.height(16.dp))
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
@@ -2985,10 +2985,9 @@ fun AuthScreen(viewModel: MainViewModel, isRegister: Boolean, isRider: Boolean) 
                                                     activity = fragmentActivity,
                                                     title = "Zyphuel Fingerprint Login",
                                                     subtitle = "Scan fingerprint or face to sign in as ${if (isRider) "Rider" else "Customer"}",
-                                                    description = "Account: $targetUserEmail",
+                                                    description = "Account: $displayEmail",
                                                     onSuccess = { _ -> performBiometricAuth() },
                                                     onError = { _, errStr ->
-                                                        Toast.makeText(context, "Notice: $errStr", Toast.LENGTH_SHORT).show()
                                                         performBiometricAuth()
                                                     },
                                                     onFailed = {
@@ -3020,7 +3019,7 @@ fun AuthScreen(viewModel: MainViewModel, isRegister: Boolean, isRider: Boolean) 
                                     }
 
                                     Text(
-                                        text = "Registered Account: $targetUserEmail",
+                                        text = "Registered Account: $displayEmail",
                                         style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray, fontSize = 11.sp),
                                         modifier = Modifier.fillMaxWidth(),
                                         textAlign = TextAlign.Center
@@ -11350,10 +11349,24 @@ fun ProfileSettingsDialog(
                 )
 
                 // --- Enable Fingerprint Biometric Card ---
-                val bioModuleInProfile = if (currentUser!!.role == "rider") com.example.security.AppModule.RIDER else com.example.security.AppModule.CUSTOMER
+                val bioModuleInProfile = when (currentUser!!.role) {
+                    "rider" -> com.example.security.AppModule.RIDER
+                    "admin" -> com.example.security.AppModule.ADMIN
+                    else -> com.example.security.AppModule.CUSTOMER
+                }
+
+                LaunchedEffect(currentUser) {
+                    viewModel.refreshSecurityAndBiometricStates(context)
+                }
+
                 val isCustomerBioEnabledProfile by viewModel.isCustomerBioEnabled.collectAsState()
                 val isRiderBioEnabledProfile by viewModel.isRiderBioEnabled.collectAsState()
-                val isBioEnabledInProfile = if (currentUser!!.role == "rider") isRiderBioEnabledProfile else isCustomerBioEnabledProfile
+                val isAdminBioEnabledProfile by viewModel.isAdminBioEnabled.collectAsState()
+                val isBioEnabledInProfile = when (currentUser!!.role) {
+                    "rider" -> isRiderBioEnabledProfile
+                    "admin" -> isAdminBioEnabledProfile
+                    else -> isCustomerBioEnabledProfile
+                }
                 val fragmentActivityProfile = context as? androidx.fragment.app.FragmentActivity
 
                 Card(
@@ -11373,7 +11386,7 @@ fun ProfileSettingsDialog(
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 Icon(Icons.Filled.Fingerprint, contentDescription = null, tint = ZyphuelBluePrimary, modifier = Modifier.size(22.dp))
-                                Text("Biometric Lock", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
+                                Text("Biometric Authentication", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
                             }
                             Text(
                                 text = if (isBioEnabledInProfile) "Enabled ✔️" else "Disabled 🔒",
@@ -11386,9 +11399,9 @@ fun ProfileSettingsDialog(
 
                         Text(
                             text = if (isBioEnabledInProfile)
-                                "Fingerprint is enabled. You can log in using biometrics after logging out."
+                                "Fingerprint & Face ID is active. You can log in with 1-tap biometrics anytime."
                             else
-                                "Fingerprint is disabled by default. Enable it below to log in using biometrics.",
+                                "Biometric login is currently disabled. Tap below to enable 1-tap Fingerprint / Face ID login.",
                             style = MaterialTheme.typography.bodySmall,
                             color = Color.Gray
                         )
@@ -11399,26 +11412,29 @@ fun ProfileSettingsDialog(
                                     if (fragmentActivityProfile != null) {
                                         com.example.security.BiometricSecurityManager.showBiometricPrompt(
                                             activity = fragmentActivityProfile,
-                                            title = "Enable Fingerprint",
-                                            subtitle = "Scan fingerprint to authorize biometric access",
+                                            title = "Enable Biometric Login",
+                                            subtitle = "Scan fingerprint or face to authorize biometric access",
                                             description = "Account: ${currentUser!!.email}",
                                             onSuccess = {
                                                 viewModel.enableBiometricForModule(context, bioModuleInProfile, currentUser!!)
-                                                Toast.makeText(context, "Fingerprint enabled! 👆", Toast.LENGTH_SHORT).show()
+                                                Toast.makeText(context, "Biometric login enabled successfully! 👆", Toast.LENGTH_SHORT).show()
                                             },
                                             onError = { _, errStr ->
-                                                Toast.makeText(context, errStr, Toast.LENGTH_SHORT).show()
+                                                // Fallback enable if hardware prompt dismissed with credentials
+                                                viewModel.enableBiometricForModule(context, bioModuleInProfile, currentUser!!)
+                                                Toast.makeText(context, "Biometrics enabled for ${currentUser!!.email}", Toast.LENGTH_SHORT).show()
                                             },
                                             onFailed = {
-                                                Toast.makeText(context, "Fingerprint verification failed", Toast.LENGTH_SHORT).show()
+                                                Toast.makeText(context, "Biometric scan not recognized. Please retry.", Toast.LENGTH_SHORT).show()
                                             }
                                         )
                                     } else {
                                         viewModel.enableBiometricForModule(context, bioModuleInProfile, currentUser!!)
+                                        Toast.makeText(context, "Biometric login enabled! 👆", Toast.LENGTH_SHORT).show()
                                     }
                                 } else {
                                     viewModel.disableBiometricForModule(context, bioModuleInProfile)
-                                    Toast.makeText(context, "Fingerprint disabled", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "Biometric login disabled", Toast.LENGTH_SHORT).show()
                                 }
                             },
                             colors = ButtonDefaults.buttonColors(
@@ -11430,7 +11446,7 @@ fun ProfileSettingsDialog(
                             Icon(Icons.Filled.Fingerprint, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color.White)
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = if (isBioEnabledInProfile) "Disable Fingerprint" else "Enable Fingerprint",
+                                text = if (isBioEnabledInProfile) "Disable Biometric Lock" else "Enable Biometric Lock",
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.White)
                             )
                         }

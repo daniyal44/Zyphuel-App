@@ -1161,6 +1161,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun completeLogin(user: UserEntity) {
         _currentUser.value = user
         sessionPrefs.edit().putString("logged_in_email", user.email).apply()
+        val module = when (user.role) {
+            "rider" -> AppModule.RIDER
+            "admin" -> AppModule.ADMIN
+            else -> AppModule.CUSTOMER
+        }
+        val token = "SEC_TOKEN_${module.name}_${user.email}_${System.currentTimeMillis()}"
+        SecureStorageManager.saveSecureCredentials(getApplication(), module, user.email, token)
+        refreshSecurityAndBiometricStates(getApplication())
     }
 
     /**
@@ -2024,7 +2032,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             appendLine("💳 Payment: $paymentMethod")
                             appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━")
                             appendLine()
-                            appendLine("🚚 A rider will be assigned shortly. Track your delivery live in the Zyphuel app!")
+                            appendLine("🚚 A rider will be assigned shortly. Track your delivery in the Zyphuel app!")
                             appendLine()
                             appendLine("Thank you for choosing Zyphuel - Lahore's Premium Delivery Network.")
                             appendLine("📞 Support: +92 300 1234567")
@@ -2051,6 +2059,33 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             }
                         } catch (e: Exception) {
                             DebugLogger.w("MainViewModel", "Email intent dispatch fallback: ${e.message}")
+                        }
+                    }
+
+                    // Real-time email alert to assigned Rider
+                    val assignedRider = realActiveDriver
+                    if (assignedRider != null && assignedRider.email.isNotBlank() && assignedRider.email.contains("@")) {
+                        val riderSubject = "🚚 New Delivery Assigned - Order #${order.id}"
+                        val riderBody = buildString {
+                            appendLine("Assalam o Alaikum ${assignedRider.name},")
+                            appendLine()
+                            appendLine("A new delivery order #${order.id} has been assigned to you! 📦")
+                            appendLine()
+                            appendLine("📋 Delivery Details:")
+                            appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━")
+                            appendLine("🆔 Order ID: #${order.id}")
+                            appendLine("👤 Customer: ${user.name} (${user.phoneNumber})")
+                            appendLine("⛽ Service: $safeServiceType")
+                            appendLine("📦 Quantity: $safeQuantity units")
+                            appendLine("💰 COD Amount: Rs. ${String.format("%.2f", safePrice)}")
+                            appendLine("📍 Destination: $finalAddress")
+                            appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━")
+                            appendLine()
+                            appendLine("Please open the Zyphuel Rider App to start your delivery route.")
+                            appendLine("Zyphuel Logistics Dispatch")
+                        }
+                        withContext(Dispatchers.Main) {
+                            dispatchRealtimeEmail(assignedRider.email, riderSubject, riderBody)
                         }
                     }
                 } catch (e: Exception) {
@@ -2101,6 +2136,39 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 body = bodyStr,
                 type = "status"
             )
+
+            // Real-time email to Customer: Rider accepted order
+            val custEmail = updatedOrder?.customerEmail
+            if (!custEmail.isNullOrBlank() && custEmail.contains("@")) {
+                val subject = "🚚 Rider Assigned - Order #$orderId"
+                val body = buildString {
+                    appendLine("Assalam o Alaikum ${updatedOrder.customerName},")
+                    appendLine()
+                    appendLine("Great news! Rider ${user.name} (${user.phoneNumber}) has accepted your order #$orderId.")
+                    appendLine("Service: ${updatedOrder.serviceType} (${updatedOrder.quantity} units)")
+                    appendLine("Destination: ${updatedOrder.deliveryAddress}")
+                    appendLine("Estimated Arrival: ~${updatedOrder.etaMinutes} minutes")
+                    appendLine()
+                    appendLine("Track your driver live in the Zyphuel app.")
+                }
+                dispatchRealtimeEmail(custEmail, subject, body)
+            }
+
+            // Real-time confirmation email to Rider
+            if (user.email.isNotBlank() && user.email.contains("@")) {
+                val riderSubject = "✅ Order #$orderId Accepted"
+                val riderBody = buildString {
+                    appendLine("Assalam o Alaikum ${user.name},")
+                    appendLine()
+                    appendLine("You have accepted Order #$orderId.")
+                    appendLine("Customer: ${updatedOrder?.customerName ?: "Customer"} (${updatedOrder?.customerPhone ?: ""})")
+                    appendLine("Address: ${updatedOrder?.deliveryAddress ?: ""}")
+                    appendLine("Collect on Delivery (COD): Rs. ${String.format("%.2f", updatedOrder?.totalPrice ?: 0.0)}")
+                    appendLine()
+                    appendLine("Please proceed to the station or delivery location.")
+                }
+                dispatchRealtimeEmail(user.email, riderSubject, riderBody)
+            }
         }
     }
 
@@ -2134,7 +2202,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
 
             // Start/stop the real-time rider GPS foreground service (Uber/Careem-style).
-            // Rider publishes live location while actively delivering; stops on terminal states.
             if (user.role == "rider") {
                 val app = getApplication<android.app.Application>()
                 val activeStatuses = setOf(
@@ -2153,7 +2220,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
             val (titleStr, bodyStr) = when (nextStatus) {
                 "Assigned", "Accepted" -> "Driver Assigned 🚚" to "Driver assigned for Order #${orderId}."
-                "Delivering", "Dispatched", "Out for Delivery" -> "Out for Delivery 🛵" to "Your Order #${orderId} is now Out for Delivery! Track your delivery vehicle live on the map."
+                "Delivering", "Dispatched", "Out for Delivery" -> "Out for Delivery 🛵" to "Your Order #${orderId} is now Out for Delivery! Bowser is en route to your location."
                 "Arriving", "Arriving Soon" -> "Arriving Soon 📍" to "Your delivery driver for Order #${orderId} is Arriving Soon! Please get ready."
                 "Arrived", "Reached Location", "At Location" -> "Driver Reached Location! 📍" to "Your delivery driver for Order #${orderId} has reached your location! Please meet the bowser driver."
                 "Completed", "Delivered" -> "Order Delivered 🎉" to "Your Order #${orderId} has been successfully delivered!"
@@ -2176,6 +2243,45 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 type = "status"
             )
             logFcmEvent("FCM Real-Time Delivery Status Push -> Order #$orderId: $nextStatus")
+
+            // Real-time status update emails to BOTH Customer and Rider
+            val customerEmail = updatedOrder?.customerEmail ?: existingOrder.customerEmail
+            val riderEmail = updatedOrder?.riderEmail ?: existingOrder.riderEmail ?: user.email
+            val userFriendlyStatus = mapStatusToUserFriendly(nextStatus)
+
+            // 1. Send real-time email to Customer
+            if (!customerEmail.isNullOrBlank() && customerEmail.contains("@")) {
+                val custSubject = "📦 Order #$orderId Status: $userFriendlyStatus"
+                val custBody = buildString {
+                    appendLine("Assalam o Alaikum ${updatedOrder?.customerName ?: "Customer"},")
+                    appendLine()
+                    appendLine("Status update for your Zyphuel Order #$orderId:")
+                    appendLine("📌 Status: $userFriendlyStatus")
+                    appendLine("📝 Details: $bodyStr")
+                    appendLine("⛽ Service: ${existingOrder.serviceType} (${existingOrder.quantity} units)")
+                    appendLine("📍 Delivery Address: ${existingOrder.deliveryAddress}")
+                    appendLine()
+                    appendLine("Thank you for choosing Zyphuel!")
+                    appendLine("📞 Support: +92 300 1234567")
+                }
+                dispatchRealtimeEmail(customerEmail, custSubject, custBody)
+            }
+
+            // 2. Send real-time email to Rider
+            if (!riderEmail.isNullOrBlank() && riderEmail.contains("@") && (user.role == "rider" || user.role == "admin")) {
+                val riderSubject = "🚚 Order #$orderId Update: $userFriendlyStatus"
+                val riderBody = buildString {
+                    appendLine("Assalam o Alaikum,")
+                    appendLine()
+                    appendLine("Order #$orderId status has been updated to: $userFriendlyStatus")
+                    appendLine("Customer: ${existingOrder.customerName} (${existingOrder.customerPhone})")
+                    appendLine("Delivery Address: ${existingOrder.deliveryAddress}")
+                    appendLine("COD Total: Rs. ${String.format("%.2f", existingOrder.totalPrice)}")
+                    appendLine()
+                    appendLine("Zyphuel Fleet Operations")
+                }
+                dispatchRealtimeEmail(riderEmail, riderSubject, riderBody)
+            }
         }
     }
 
