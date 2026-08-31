@@ -7361,7 +7361,7 @@ fun RealTimeOrderTrackingCard(
         order = order,
         viewModel = viewModel,
         highlighted = true,
-        onClick = onFullTrackClick
+        onTrackClick = onFullTrackClick
     )
 }
 
@@ -9166,7 +9166,6 @@ fun TrackerScreen(viewModel: MainViewModel) {
             }
         }
     }
-}
 
     // --- RIDE-HAILING / DELIVERY DIALOG OVERLAYS ---
 
@@ -10854,6 +10853,10 @@ fun ProfileSettingsDialog(
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text("Permanently Delete Account", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.White))
                             }
+                        }
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(4.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
