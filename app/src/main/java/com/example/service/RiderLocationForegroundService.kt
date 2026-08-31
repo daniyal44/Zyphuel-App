@@ -177,20 +177,7 @@ class RiderLocationForegroundService : Service() {
 
             val callback = object : LocationCallback() {
                 override fun onLocationResult(result: LocationResult) {
-                    val loc = result.lastLocation ?: return
-                    val speedKmh = if (loc.hasSpeed()) loc.speed * 3.6f else 0f
-                    val bearing = if (loc.hasBearing()) loc.bearing else 0f
-                    scope.launch {
-                        liveTrackingRepository?.publishLocation(
-                            orderId = orderId,
-                            riderEmail = riderEmail,
-                            lat = loc.latitude,
-                            lng = loc.longitude,
-                            bearing = bearing,
-                            speedKmh = speedKmh,
-                            status = status
-                        )
-                    }
+                    // Server live tracking permanently disabled
                 }
             }
             locationCallback = callback

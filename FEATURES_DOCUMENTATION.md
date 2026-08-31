@@ -121,6 +121,11 @@ The app strictly segments access control across three user roles:
   * **Real-Time Customer Orders Flow (`getCustomerOrdersFlow`)**: Real-time snapshot listener emitting updated order list ordered by creation timestamp (`createdAt DESC`).
   * **Rider Delivery History Flow (`getRiderDeliveryHistoryFlow`)**: Real-time snapshot listener delivering active and past order history for assigned riders.
   * **Order Ratings & Feedback Persistence (`rateOrder`, `submitOrderRating`)**: Saves user star ratings ($1-5$ stars) and detailed delivery feedback directly to Firestore documents and local Room database.
+* **Server Live Tracking Permanent Removal**:
+  * Continuous GPS streaming and upload to the Cloud Firestore `live_tracking` collection has been permanently removed from the server.
+  * Server writes in `LiveTrackingRepository` and `RiderLocationForegroundService` are completely disabled, preventing battery drain and unwanted cloud server position storage.
+  * Any leftover legacy `live_tracking` documents on Firestore are automatically purged upon application startup via `LiveTrackingRepository.purgeAllServerLiveTracking()`.
+  * Order and route presentation runs strictly on local origin-destination coordinates and order status events.
 * **Polyline Corridor**: Clear visual route line starting from Green Town HQ -> Driver Bowser -> Customer Destination.
   * **Rider Order Progression & Pickup Validation**: Enforces strict step-by-step order progression (`Pending` -> `Accept Ride` -> `Pick Up Fuel at Station` -> `Start Route` -> `Reached Location` -> `Complete & Collect COD`) in `MainViewModel.changeOrderStatus`, preventing riders from completing orders without picking up petrol/fuel first.
 
