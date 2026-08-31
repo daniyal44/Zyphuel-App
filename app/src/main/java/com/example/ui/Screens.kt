@@ -4173,204 +4173,41 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                         }
                     }
 
-                    // Native Google Maps SDK Live Delivery Tracking Overlay on Home Screen
-                    item {
-                        val activeTrackingOrder = activeOrders.firstOrNull()
-                        val allRidersList by viewModel.allRiders.collectAsState()
-                        val assignedRider = remember(activeTrackingOrder, allRidersList) {
-                            if (activeTrackingOrder != null && !activeTrackingOrder.riderEmail.isNullOrBlank()) {
-                                allRidersList.find { it.email == activeTrackingOrder.riderEmail }
-                            } else null
-                        }
-
-                        AnimatedVisibility(
-                            visible = true,
-                            enter = fadeIn(animationSpec = tween(400)) + expandVertically(animationSpec = tween(400))
-                        ) {
-                            GoogleMapsLiveDeliveryTrackingOverlay(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(bottom = 6.dp),
-                                order = activeTrackingOrder,
-                                assignedRider = assignedRider,
-                                viewModel = viewModel,
-                                onExpandFullscreen = {
-                                    if (activeTrackingOrder != null) {
-                                        viewModel.setTrackingOrder(activeTrackingOrder)
-                                        viewModel.navigateTo("tracker")
-                                    }
-                                }
-                            )
-                        }
-                    }
                 }
 
-
-                if (activeOrders.isNotEmpty() && tourStep != 1) {
-                    item {
-                        var showCoverageMapPreview by remember { mutableStateOf(false) }
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .testTag("active_order_dashboard_map_card"),
-                            colors = CardDefaults.cardColors(containerColor = Color.White),
-                            shape = RoundedCornerShape(16.dp),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                            border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+                if (activeOrders.isNotEmpty()) {
+                    itemsIndexed(activeOrders, key = { _, order -> order.id }) { index, order ->
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                            modifier = Modifier.padding(bottom = 12.dp)
                         ) {
-                            Column(modifier = Modifier.padding(14.dp)) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Filled.Map,
-                                            contentDescription = null,
-                                            tint = ZyphuelBluePrimary,
-                                            modifier = Modifier.size(20.dp)
-                                        )
-                                        Column {
-                                            Text(
-                                                text = "Lahore Live Rider Fleet & Coverage",
-                                                style = MaterialTheme.typography.titleSmall.copy(
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = ZyphuelBlueDark
-                                                )
-                                            )
-                                            Text(
-                                                text = "Real-time delivery coverage across Gulberg & DHA",
-                                                style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray)
-                                            )
-                                        }
-                                    }
-
-                                    IconButton(onClick = { showCoverageMapPreview = !showCoverageMapPreview }) {
-                                        Icon(
-                                            imageVector = if (showCoverageMapPreview) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
-                                            contentDescription = "Toggle Map",
-                                            tint = ZyphuelBluePrimary
-                                        )
-                                    }
-                                }
-
-                                if (showCoverageMapPreview) {
-                                    Spacer(modifier = Modifier.height(10.dp))
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height(180.dp)
-                                            .clip(RoundedCornerShape(12.dp))
-                                            .border(1.dp, Color(0xFFCBD5E1), RoundedCornerShape(12.dp))
-                                    ) {
-                                        LahoreGoogleEmbedMapView(
-                                            modifier = Modifier.fillMaxSize()
-                                        )
-                                    }
-                                }
-
-                                Spacer(modifier = Modifier.height(10.dp))
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                    ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(10.dp)
-                                                .background(Color(0xFF22C55E), CircleShape)
-                                        )
-                                        Text(
-                                            text = "14 Active Bowsers & Tankers Online",
-                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                fontWeight = FontWeight.Bold,
-                                                color = Color(0xFF15803D)
-                                            )
-                                        )
-                                    }
-
-                                    Button(
-                                        onClick = {
-                                            viewModel.placeOrder(
-                                                serviceType = "Petrol",
-                                                quantity = 10,
-                                                totalPrice = 2970.0,
-                                                deliveryAddress = "Main Boulevard, Gulberg III, Lahore",
-                                                onSuccess = {
-                                                    Toast.makeText(context, "Sample order created! Tracking activated on dashboard.", Toast.LENGTH_SHORT).show()
-                                                }
-                                            )
-                                        },
-                                        colors = ButtonDefaults.buttonColors(containerColor = ZyphuelBluePrimary),
-                                        shape = RoundedCornerShape(8.dp),
-                                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                                        modifier = Modifier.testTag("simulate_map_tracking_btn")
-                                    ) {
-                                        Icon(Icons.Filled.Navigation, contentDescription = null, modifier = Modifier.size(12.dp), tint = Color.White)
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Text("Simulate Live Tracking 📍", style = MaterialTheme.typography.labelSmall.copy(color = Color.White, fontSize = 11.sp))
-                                    }
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    if (tourStep == 1 && activeOrders.isEmpty()) {
-                        item {
-                            val user = currentUser
-                            val dummyOrder = OrderEntity(
-                                id = 999,
-                                customerEmail = user?.email ?: "customer@example.com",
-                                customerName = user?.name ?: "Customer",
-                                customerPhone = user?.phoneNumber ?: "03001234567",
-                                serviceType = "High-Octane",
-                                quantity = 15,
-                                totalPrice = 4463.0,
-                                deliveryAddress = "Lahore, Pakistan",
-                                status = "Pending"
-                            )
-                            CustomerOrderCard(order = dummyOrder, viewModel = viewModel, highlighted = true) {
-                                viewModel.setTrackingOrder(dummyOrder)
+                            CustomerOrderCard(
+                                order = order,
+                                viewModel = viewModel,
+                                highlighted = (index == 0)
+                            ) {
+                                viewModel.setTrackingOrder(order)
                                 viewModel.navigateTo("tracker")
                             }
                         }
-                    } else {
-                        // Only the newest active order renders the full live-map card. Each of those
-                        // cards hosts a WebView map, and stacking one per order made this list stutter
-                        // badly on a real phone. The remaining orders render as light summary cards
-                        // that open the full-screen tracker on tap.
-                        itemsIndexed(activeOrders, key = { _, order -> order.id }) { index, order ->
-                            Column(
-                                verticalArrangement = Arrangement.spacedBy(10.dp),
-                                modifier = Modifier.padding(bottom = 12.dp)
-                            ) {
-                                if (index == 0) {
-                                    RealTimeOrderTrackingCard(
-                                        order = order,
-                                        viewModel = viewModel
-                                    ) {
-                                        viewModel.setTrackingOrder(order)
-                                        viewModel.navigateTo("tracker")
-                                    }
-                                } else {
-                                    CustomerOrderCard(
-                                        order = order,
-                                        viewModel = viewModel,
-                                        highlighted = false
-                                    ) {
-                                        viewModel.setTrackingOrder(order)
-                                        viewModel.navigateTo("tracker")
-                                    }
-                                }
-                            }
+                    }
+                } else if (tourStep == 1) {
+                    item {
+                        val user = currentUser
+                        val dummyOrder = OrderEntity(
+                            id = 999,
+                            customerEmail = user?.email ?: "customer@example.com",
+                            customerName = user?.name ?: "Customer",
+                            customerPhone = user?.phoneNumber ?: "03001234567",
+                            serviceType = "High-Octane",
+                            quantity = 15,
+                            totalPrice = 4463.0,
+                            deliveryAddress = "Lahore, Pakistan",
+                            status = "Pending"
+                        )
+                        CustomerOrderCard(order = dummyOrder, viewModel = viewModel, highlighted = true) {
+                            viewModel.setTrackingOrder(dummyOrder)
+                            viewModel.navigateTo("tracker")
                         }
                     }
                 }
@@ -9499,11 +9336,11 @@ fun TrackerScreen(viewModel: MainViewModel) {
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        "Live Tracking - Order #${trackingOrder!!.id}",
+                        "Order Details #${trackingOrder!!.id}",
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark)
                     )
                     Text(
-                        "ETA: ${trackingOrder!!.etaMinutes} mins | Lahore Delivery Corridor",
+                        "Status: ${trackingOrder!!.status} • Delivery Order",
                         style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray)
                     )
                 }
@@ -9534,236 +9371,71 @@ fun TrackerScreen(viewModel: MainViewModel) {
                 }
             }
 
-            AnimatedVisibility(visible = showSummary) {
-                OrderSummaryCard(order = trackingOrder!!, viewModel = viewModel)
-            }
-
-            // Real Live Delivery Google Map Area (Lahore, Pakistan)
-            Box(
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .clipToBounds()
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                GoogleMapsLiveDeliveryTrackingOverlay(
-                    modifier = Modifier.fillMaxSize(),
-                    order = trackingOrder,
-                    assignedRider = trackingRider,
-                    viewModel = viewModel
-                )
-
-                // Overlapping Floating Status HUD
+                // 1. Order Status & Stepper Header
                 Card(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(8.dp)
-                        .fillMaxWidth(),
-
+                    modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                    border = BorderStroke(1.dp, Color(0xFFE2E8F0))
                 ) {
-                    if (isHudMinimized) {
+                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { isHudMinimized = false }
-                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                            modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                Box(modifier = Modifier.size(8.dp).background(ZyphuelBlueSecondary, CircleShape))
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Box(modifier = Modifier.size(10.dp).background(ZyphuelBlueSecondary, CircleShape))
                                 Text(
-                                    "STATUS: ${trackingOrder!!.status.uppercase()} • COD: ${viewModel.formatPrice(trackingOrder!!.totalPrice)}",
-                                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark)
+                                    text = "STATUS: ${trackingOrder!!.status.uppercase()}",
+                                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark)
                                 )
                             }
                             Text(
-                                "Expand 🔼",
-                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary)
+                                text = "COD: ${viewModel.formatPrice(trackingOrder!!.totalPrice)}",
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary)
                             )
                         }
-                    } else {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            // Header Status & COD
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(8.dp)
-                                            .background(ZyphuelBlueSecondary, CircleShape)
-                                    )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(
-                                        "STATUS: ${trackingOrder!!.status.uppercase()}",
-                                        style = MaterialTheme.typography.labelMedium.copy(
-                                            fontWeight = FontWeight.Bold,
-                                            color = ZyphuelBlueDark,
-                                            letterSpacing = 0.5.sp
-                                        )
-                                    )
-                                }
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier
-                                            .clickable { showFareBreakdownDialog = true }
-                                            .padding(vertical = 2.dp)
-                                            .testTag("fare_breakdown_trigger")
-                                    ) {
-                                        Text(
-                                            "COD: ${viewModel.formatPrice(trackingOrder!!.totalPrice)}",
-                                            style = MaterialTheme.typography.titleSmall.copy(
-                                                fontWeight = FontWeight.Bold,
-                                                color = ZyphuelBluePrimary
-                                            )
-                                        )
 
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Icon(
-                                            imageVector = Icons.Filled.Info,
-                                            contentDescription = "Fare Breakdown",
-                                            tint = ZyphuelBluePrimary,
-                                            modifier = Modifier.size(14.dp)
-                                        )
-                                    }
-                                    
-                                    // Minimize HUD Toggle
-                                    IconButton(
-                                        onClick = { isHudMinimized = true },
-                                        modifier = Modifier.size(28.dp)
-                                    ) {
-                                        Text("🔽", fontSize = 12.sp)
-                                    }
-                                }
-                            }
+                        OrderStatusAnimatedTransitionHeader(
+                            order = trackingOrder!!,
+                            pathProgress = 1f
+                        )
 
-                        Spacer(modifier = Modifier.height(12.dp))
-                        HorizontalDivider(color = Color.LightGray.copy(alpha = 0.4f))
-                        Spacer(modifier = Modifier.height(12.dp))
+                        OrderTrackingStepper(currentStatus = trackingOrder!!.status)
+                    }
+                }
 
-                        if (isRiderRegistered) {
-                            // Real distances/ETA derived from the rider's live GPS (haversine)
-                            val totalDistance = totalRouteKmT.toFloat()
-                            val remainingDistance = if (hasLiveFix) remainingKmT.toFloat() else totalDistance
-                            val traveledDistance = (totalDistance - remainingDistance).coerceAtLeast(0f)
-                            val dynamicEta = liveEtaMinutes
+                // 2. Order Summary Card
+                OrderSummaryCard(order = trackingOrder!!, viewModel = viewModel)
 
-                            // Real rider coordinates (published by the rider's foreground location service)
-                            val driverLat = liveDriverLat ?: depotLatT
-                            val driverLng = liveDriverLng ?: depotLngT
-                            val driverCoordinatesStr = if (hasLiveFix)
-                                "${String.format(Locale.US, "%.5f", driverLat)}° N, ${String.format(Locale.US, "%.5f", driverLng)}° E"
-                            else "Waiting for driver to start…"
-
-                            // ETA & Distance Stats Banner
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .background(ZyphuelBluePrimary.copy(alpha = 0.06f), RoundedCornerShape(12.dp))
-                                    .padding(12.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Column {
-                                        Text(
-                                            text = "Arriving in $dynamicEta mins",
-                                            style = MaterialTheme.typography.titleMedium.copy(
-                                                fontWeight = FontWeight.Bold,
-                                                color = ZyphuelBlueDark
-                                            )
-                                        )
-                                        Text(
-                                            text = "${String.format(Locale.US, "%.1f", traveledDistance)} km traveled • ${String.format(Locale.US, "%.1f", remainingDistance)} km left",
-                                            style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray)
-                                        )
-                                    }
-                                    Icon(
-                                        imageVector = Icons.Filled.DirectionsCar,
-                                        contentDescription = "Driver moving",
-                                        tint = ZyphuelBluePrimary,
-                                        modifier = Modifier.size(28.dp)
-                                    )
-                                }
-                                
-                                HorizontalDivider(color = Color.LightGray.copy(alpha = 0.3f))
-                                
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Filled.LocationOn,
-                                        contentDescription = "Driver Coordinates",
-                                        tint = Color(0xFFEF4444),
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                    Text(
-                                        text = "Driver Live GPS: $driverCoordinatesStr",
-                                        style = MaterialTheme.typography.bodySmall.copy(
-                                            fontWeight = FontWeight.SemiBold,
-                                            color = ZyphuelBlueDark
-                                        )
-                                    )
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(12.dp))
-
-                            // Live Order Status Notification Card with Smooth Transition Animation
-                            OrderStatusAnimatedTransitionHeader(
-                                order = trackingOrder!!,
-                                pathProgress = pathProgress
+                // 3. Assigned Rider / Bowser Details (if assigned)
+                if (isRiderRegistered) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                        border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Text(
+                                text = "Assigned Delivery Fleet",
+                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark)
                             )
-
-                            Spacer(modifier = Modifier.height(12.dp))
-
-                            // 4-Step Tracker Progress Stepper
-                            OrderTrackingStepper(currentStatus = trackingOrder!!.status, pathProgress = pathProgress)
-
-                            Spacer(modifier = Modifier.height(12.dp))
-
-                            // Nice Custom Horizontal Progress Bar
-                            LinearProgressIndicator(
-                                progress = { pathProgress },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(6.dp)
-                                    .clip(CircleShape),
-                                color = ZyphuelBluePrimary,
-                                trackColor = Color(0xFFE2E8F0)
-                            )
-
-                            if (trackingOrder!!.status == "Completed" || trackingOrder!!.status == "Delivered") {
-                                Spacer(modifier = Modifier.height(16.dp))
-                                PostDeliveryRatingCard(
-                                    order = trackingOrder!!,
-                                    viewModel = viewModel
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            // Rider Profile & Contact
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
-                                // Avatar with initials
                                 Box(
                                     modifier = Modifier
                                         .size(48.dp)
@@ -9771,53 +9443,19 @@ fun TrackerScreen(viewModel: MainViewModel) {
                                     contentAlignment = Alignment.Center
                                 ) {
                                     val initials = trackingOrder!!.riderName?.split(" ")?.mapNotNull { it.firstOrNull() }?.joinToString("")?.take(2)?.uppercase() ?: "R"
-                                    Text(
-                                        text = initials,
-                                        style = MaterialTheme.typography.titleMedium.copy(
-                                            color = Color.White,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    )
+                                    Text(text = initials, style = MaterialTheme.typography.titleMedium.copy(color = Color.White, fontWeight = FontWeight.Bold))
                                 }
-
-                                // Rider & Vehicle Info (Registration/ID kept private from customer)
                                 Column(modifier = Modifier.weight(1f)) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                    ) {
-                                        Text(
-                                            text = trackingOrder!!.riderName ?: "Rider Assigned",
-                                            style = MaterialTheme.typography.titleSmall.copy(
-                                                fontWeight = FontWeight.Bold,
-                                                color = Color.DarkGray
-                                            )
-                                        )
-                                        Icon(
-                                            imageVector = Icons.Filled.Verified,
-                                            contentDescription = "Verified Rider",
-                                            tint = Color(0xFF22C55E),
-                                            modifier = Modifier.size(16.dp)
-                                        )
+                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                        Text(text = trackingOrder!!.riderName ?: "Rider Assigned", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
+                                        Icon(Icons.Filled.Verified, contentDescription = "Verified", tint = Color(0xFF22C55E), modifier = Modifier.size(16.dp))
                                     }
-                                    
-                                    val vehicleTypeStr = trackingRider?.vehicleType ?: "Bike"
+                                    val vehicleTypeStr = trackingRider?.vehicleType ?: "Bowser Unit"
                                     val phoneNoStr = trackingRider?.phoneNumber ?: "0300-1234567"
-
-                                    Text(
-                                        text = "Verified Delivery Agent",
-                                        style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray)
-                                    )
-                                    Spacer(modifier = Modifier.height(2.dp))
-                                    Text(
-                                        text = "$vehicleTypeStr • $phoneNoStr",
-                                        style = MaterialTheme.typography.labelSmall.copy(color = ZyphuelBluePrimary, fontWeight = FontWeight.Bold)
-                                    )
+                                    Text(text = "$vehicleTypeStr • $phoneNoStr", style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray))
                                 }
 
-                                // Dial Call Button (real phone dialer)
                                 val phoneToCall = trackingRider?.phoneNumber ?: "0300-1234567"
-                                val context = LocalContext.current
                                 IconButton(
                                     onClick = {
                                         try {
@@ -9828,169 +9466,42 @@ fun TrackerScreen(viewModel: MainViewModel) {
                                             Toast.makeText(context, "No dialer app available", Toast.LENGTH_SHORT).show()
                                         }
                                     },
-                                    modifier = Modifier
-                                        .size(40.dp)
-                                        .background(Color(0xFFDCFCE7), CircleShape)
+                                    modifier = Modifier.size(40.dp).background(Color(0xFFDCFCE7), CircleShape)
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.Filled.Phone,
-                                        contentDescription = "Call Rider",
-                                        tint = Color(0xFF15803D),
-                                        modifier = Modifier.size(18.dp)
-                                    )
+                                    Icon(Icons.Filled.Phone, contentDescription = "Call", tint = Color(0xFF15803D), modifier = Modifier.size(18.dp))
                                 }
 
-                                // Chat Button
                                 IconButton(
                                     onClick = { showDriverChat = true },
-                                    modifier = Modifier
-                                        .size(40.dp)
-                                        .background(Color(0xFFE0F2FE), CircleShape)
-                                        .testTag("chat_driver_btn")
+                                    modifier = Modifier.size(40.dp).background(Color(0xFFE0F2FE), CircleShape).testTag("chat_driver_btn")
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.Filled.Chat,
-                                        contentDescription = "Chat with Driver",
-                                        tint = ZyphuelBluePrimary,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                }
-
-                                // Block / Unblock User Button
-                                val otherEmail = if (currentUser?.role == "rider") trackingOrder!!.customerEmail else (trackingOrder!!.riderEmail ?: "")
-                                if (otherEmail.isNotEmpty()) {
-                                    val isBlockedByMe = currentUser?.blockedUsers?.split(",")?.map { it.trim() }?.contains(otherEmail) == true
-                                    IconButton(
-                                        onClick = {
-                                            if (isBlockedByMe) {
-                                                viewModel.unblockUser(otherEmail)
-                                            } else {
-                                                viewModel.blockUser(otherEmail)
-                                            }
-                                        },
-                                        modifier = Modifier
-                                            .size(40.dp)
-                                            .background(if (isBlockedByMe) Color(0xFFFEE2E2) else Color(0xFFF3F4F6), CircleShape)
-                                            .testTag("block_unblock_user_btn")
-                                    ) {
-                                        Icon(
-                                            imageVector = if (isBlockedByMe) Icons.Filled.LockOpen else Icons.Filled.Block,
-                                            contentDescription = if (isBlockedByMe) "Unblock User" else "Block User",
-                                            tint = if (isBlockedByMe) Color(0xFFDC2626) else Color.Gray,
-                                            modifier = Modifier.size(18.dp)
-                                        )
-                                    }
-                                }
-                            }
-
-                            if (trackingOrder!!.status != "Completed" && trackingOrder!!.status != "Cancelled") {
-                                Spacer(modifier = Modifier.height(12.dp))
-                                OutlinedButton(
-                                    onClick = { showCancelReasonDialog = true },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .testTag("cancel_ride_with_reason_btn"),
-                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFEF4444)),
-                                    border = BorderStroke(1.dp, Color(0xFFFCA5A5)),
-                                    shape = RoundedCornerShape(10.dp)
-                                ) {
-                                    Icon(Icons.Filled.Cancel, contentDescription = null, modifier = Modifier.size(16.dp))
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text("Cancel Order (Select Reason)", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
-                                }
-                            }
-                        } else if (trackingOrder!!.status == "Cancelled") {
-                            // Cancelled State due to rider timeout
-                            Column(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Filled.Cancel,
-                                    contentDescription = "Order Cancelled",
-                                    tint = Color(0xFFEF4444),
-                                    modifier = Modifier.size(48.dp)
-                                )
-                                Text(
-                                    text = "Order Cancelled ⚠️",
-                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = Color(0xFFEF4444)),
-                                    textAlign = TextAlign.Center
-                                )
-                                Text(
-                                    text = "This order was automatically cancelled because no riders accepted the request within 5 minutes. We apologize for the inconvenience.",
-                                    style = MaterialTheme.typography.bodyMedium.copy(color = Color.Gray),
-                                    textAlign = TextAlign.Center
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Button(
-                                    onClick = { viewModel.navigateTo("customer_home") },
-                                    colors = ButtonDefaults.buttonColors(containerColor = ZyphuelBluePrimary)
-                                ) {
-                                    Text("Go to Home")
-                                }
-                            }
-                        } else {
-                            // Searching state (Pending status)
-                            Column(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                OrderTrackingStepper(currentStatus = trackingOrder!!.status)
-                                Spacer(modifier = Modifier.height(4.dp))
-
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center,
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    CircularProgressIndicator(
-                                        color = ZyphuelBluePrimary,
-                                        modifier = Modifier.size(24.dp),
-                                        strokeWidth = 3.dp
-                                    )
-                                    Spacer(modifier = Modifier.width(10.dp))
-                                    Text(
-                                        text = "Order Confirmed • Processing Delivery...",
-                                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark)
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.height(4.dp))
-
-                                // Order Dispatch Status Card
-                                Card(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = RoundedCornerShape(12.dp),
-                                    colors = CardDefaults.cardColors(containerColor = Color(0xFFEFF6FF)),
-                                    border = BorderStroke(1.dp, Color(0xFFBFDBFE))
-                                ) {
-                                    Row(
-                                        modifier = Modifier.padding(12.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Filled.LocalShipping,
-                                            contentDescription = "Service Delivery",
-                                            tint = ZyphuelBluePrimary,
-                                            modifier = Modifier.size(22.dp)
-                                        )
-                                        Column(modifier = Modifier.weight(1f)) {
-                                            Text(
-                                                text = "Service Order Confirmed",
-                                                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark)
-                                            )
-                                            Text(
-                                                text = "Your service request is confirmed and scheduled for instant fulfillment to your specified address.",
-                                                style = MaterialTheme.typography.bodySmall.copy(color = Color.DarkGray)
-                                            )
-                                        }
-                                    }
+                                    Icon(Icons.Filled.Chat, contentDescription = "Chat", tint = ZyphuelBluePrimary, modifier = Modifier.size(18.dp))
                                 }
                             }
                         }
+                    }
+                }
+
+                // 4. Rating Card if Completed
+                if (trackingOrder!!.status == "Completed" || trackingOrder!!.status == "Delivered") {
+                    PostDeliveryRatingCard(
+                        order = trackingOrder!!,
+                        viewModel = viewModel
+                    )
+                }
+
+                // 5. Cancel Order Option if still active
+                if (trackingOrder!!.status != "Completed" && trackingOrder!!.status != "Cancelled") {
+                    OutlinedButton(
+                        onClick = { showCancelReasonDialog = true },
+                        modifier = Modifier.fillMaxWidth().testTag("cancel_ride_with_reason_btn"),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFEF4444)),
+                        border = BorderStroke(1.dp, Color(0xFFFCA5A5)),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Icon(Icons.Filled.Cancel, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Cancel Order (Select Reason)", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
                     }
                 }
             }

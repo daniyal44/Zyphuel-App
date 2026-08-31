@@ -1989,9 +1989,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 withContext(Dispatchers.Main) {
                     _isPlacingOrder.value = false
                     navigateTo("tracker")
-                    checkAndTriggerDailyGpsDisclaimer()
                     _isPromoApplied.value = false
-                    _uiMessage.value = "Order placed successfully! Live rider map activated."
+                    _uiMessage.value = "Order placed successfully! Order #${order.id} confirmed."
                     onSuccess()
                 }
 
