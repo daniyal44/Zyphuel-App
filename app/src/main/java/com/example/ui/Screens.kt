@@ -798,31 +798,13 @@ fun SplashScreen(viewModel: MainViewModel) {
         }
     }
 
-    // 3-second animated progress bar
+    // Smooth animated progress bar
     val progress = remember { androidx.compose.animation.core.Animatable(0f) }
 
-    // Pulse scale animation for logo
-    val infiniteTransition = rememberInfiniteTransition(label = "splash_logo_pulse")
-    val logoScale by infiniteTransition.animateFloat(
-        initialValue = 0.92f,
-        targetValue = 1.08f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1200, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "logoScale"
-    )
-
-    // Smooth spinning rotation for inner logo
-    val logoRotation by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(3000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "logoRotation"
-    )
+    // Fade-in animation for company logo
+    val companyAlpha = remember { androidx.compose.animation.core.Animatable(0f) }
+    // Fade-in animation for Zyphuel logo and text (appears after company logo)
+    val contentAlpha = remember { androidx.compose.animation.core.Animatable(0f) }
 
     LaunchedEffect(Unit) {
         try {
@@ -835,7 +817,24 @@ fun SplashScreen(viewModel: MainViewModel) {
             // Safe fallback
         }
 
-        // Fast animated loading bar over 600ms
+        // Animate company logo fade-in
+        launch {
+            companyAlpha.animateTo(
+                targetValue = 1f,
+                animationSpec = tween(durationMillis = 800, easing = FastOutSlowInEasing)
+            )
+        }
+
+        // Animate content fade-in with slight delay
+        launch {
+            delay(400)
+            contentAlpha.animateTo(
+                targetValue = 1f,
+                animationSpec = tween(durationMillis = 600, easing = FastOutSlowInEasing)
+            )
+        }
+
+        // Animated loading bar
         launch {
             progress.animateTo(
                 targetValue = 1f,
@@ -846,7 +845,6 @@ fun SplashScreen(viewModel: MainViewModel) {
         // Wait for session to load — clean coroutine await, no busy polling
         viewModel.isSessionLoaded.filter { it }.first()
         delay(300)
-
 
         val user = viewModel.currentUser.value
         if (user != null) {
@@ -876,38 +874,30 @@ fun SplashScreen(viewModel: MainViewModel) {
                 .fillMaxWidth()
                 .padding(32.dp)
         ) {
-            // Animated Zyphuel Logo Container with 3-second heartbeat entrance
-            Box(
+            // MDK Company Logo — static image, no heartbeat animation
+            Image(
+                painter = painterResource(id = R.drawable.company_splash),
+                contentDescription = "MDK Company Logo",
                 modifier = Modifier
-                    .size(140.dp)
-                    .background(
-                        color = ZyphuelBluePrimary.copy(alpha = 0.08f),
-                        shape = CircleShape
-                    )
-                    .padding(12.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .rotate(logoRotation)
-                        .border(
-                            width = 3.dp,
-                            brush = Brush.sweepGradient(
-                                colors = listOf(
-                                    ZyphuelBluePrimary,
-                                    ZyphuelBlueSecondary,
-                                    ZyphuelBluePrimary.copy(alpha = 0.2f),
-                                    ZyphuelBluePrimary
-                                )
-                            ),
-                            shape = CircleShape
-                        )
-                )
-                ZyphuelInnerLogoAnimated(modifier = Modifier.fillMaxSize(0.72f))
-            }
+                    .size(160.dp)
+                    .alpha(companyAlpha.value)
+                    .testTag("splash_company_logo"),
+                contentScale = ContentScale.Fit
+            )
 
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Zyphuel logo (smaller, below company logo)
+            Image(
+                painter = painterResource(id = R.drawable.logo),
+                contentDescription = "Zyphuel App Logo",
+                modifier = Modifier
+                    .size(64.dp)
+                    .alpha(contentAlpha.value),
+                contentScale = ContentScale.Fit
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             Text(
                 text = "Lahore's Premium Delivery Network",
@@ -916,14 +906,17 @@ fun SplashScreen(viewModel: MainViewModel) {
                     color = ZyphuelBlueDark,
                     fontSize = 18.sp
                 ),
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                modifier = Modifier.alpha(contentAlpha.value)
             )
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Smooth 3-second animated loading bar
+            // Smooth animated loading bar
             Column(
-                modifier = Modifier.width(220.dp),
+                modifier = Modifier
+                    .width(220.dp)
+                    .alpha(contentAlpha.value),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -1134,33 +1127,27 @@ fun PortalSelectScreen(viewModel: MainViewModel) {
 
 @Composable
 fun PlatformTransitionSplashScreen(targetPlatformName: String) {
-    // 3-second animated progress bar
+    // Animated progress bar
     val progress = remember { androidx.compose.animation.core.Animatable(0f) }
 
-    // Pulse scale animation for logo
-    val infiniteTransition = rememberInfiniteTransition(label = "platform_logo_pulse")
-    val logoScale by infiniteTransition.animateFloat(
-        initialValue = 0.92f,
-        targetValue = 1.08f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1200, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "logoScale"
-    )
-
-    // Smooth spinning rotation for inner logo
-    val logoRotation by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(3000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "logoRotation"
-    )
+    // Fade-in animation for company logo
+    val companyAlpha = remember { androidx.compose.animation.core.Animatable(0f) }
+    val contentAlpha = remember { androidx.compose.animation.core.Animatable(0f) }
 
     LaunchedEffect(Unit) {
+        launch {
+            companyAlpha.animateTo(
+                targetValue = 1f,
+                animationSpec = tween(durationMillis = 800, easing = FastOutSlowInEasing)
+            )
+        }
+        launch {
+            delay(400)
+            contentAlpha.animateTo(
+                targetValue = 1f,
+                animationSpec = tween(durationMillis = 600, easing = FastOutSlowInEasing)
+            )
+        }
         progress.animateTo(
             targetValue = 1f,
             animationSpec = tween(durationMillis = 3000, easing = LinearEasing)
@@ -1182,38 +1169,17 @@ fun PlatformTransitionSplashScreen(targetPlatformName: String) {
                 .fillMaxWidth()
                 .padding(32.dp)
         ) {
-            // Animated Zyphuel Logo Container with 3-second heartbeat transition
-            Box(
+            // MDK Company Logo — static image
+            Image(
+                painter = painterResource(id = R.drawable.company_splash),
+                contentDescription = "MDK Company Logo",
                 modifier = Modifier
-                    .size(140.dp)
-                    .background(
-                        color = ZyphuelBluePrimary.copy(alpha = 0.08f),
-                        shape = CircleShape
-                    )
-                    .padding(12.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .rotate(logoRotation)
-                        .border(
-                            width = 3.dp,
-                            brush = Brush.sweepGradient(
-                                colors = listOf(
-                                    ZyphuelBluePrimary,
-                                    ZyphuelBlueSecondary,
-                                    ZyphuelBluePrimary.copy(alpha = 0.2f),
-                                    ZyphuelBluePrimary
-                                )
-                            ),
-                            shape = CircleShape
-                        )
-                )
-                ZyphuelInnerLogoAnimated(modifier = Modifier.fillMaxSize(0.72f))
-            }
+                    .size(160.dp)
+                    .alpha(companyAlpha.value),
+                contentScale = ContentScale.Fit
+            )
 
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             Text(
                 text = "Switching to $targetPlatformName",
@@ -1222,7 +1188,8 @@ fun PlatformTransitionSplashScreen(targetPlatformName: String) {
                     color = ZyphuelBlueDark,
                     fontSize = 22.sp
                 ),
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                modifier = Modifier.alpha(contentAlpha.value)
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -1233,14 +1200,17 @@ fun PlatformTransitionSplashScreen(targetPlatformName: String) {
                     color = Color.Gray,
                     letterSpacing = 0.5.sp
                 ),
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                modifier = Modifier.alpha(contentAlpha.value)
             )
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // 3-second animated progress bar
+            // Animated progress bar
             Column(
-                modifier = Modifier.width(220.dp),
+                modifier = Modifier
+                    .width(220.dp)
+                    .alpha(contentAlpha.value),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -3820,11 +3790,26 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                                 }
 
                                 Surface(
-                                    onClick = { showEditLocationDialog = true },
+                                    onClick = {
+                                        val lat = viewModel.deviceLatitude.value
+                                        val lng = viewModel.deviceLongitude.value
+                                        val addr = viewModel.currentGpsLabel.value
+                                        if (lat != 0.0 && lng != 0.0) {
+                                            val shareText = "📍 My Delivery Location:\n$addr\nhttps://maps.google.com/?q=$lat,$lng"
+                                            val shareIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                                                type = "text/plain"
+                                                putExtra(android.content.Intent.EXTRA_SUBJECT, "Zyphuel - My Delivery Location")
+                                                putExtra(android.content.Intent.EXTRA_TEXT, shareText)
+                                            }
+                                            context.startActivity(android.content.Intent.createChooser(shareIntent, "Share Location via"))
+                                        } else {
+                                            Toast.makeText(context, "Location not available. Please enable GPS first.", Toast.LENGTH_SHORT).show()
+                                        }
+                                    },
                                     shape = RoundedCornerShape(12.dp),
                                     color = ZyphuelBluePrimary.copy(alpha = 0.4f),
                                     border = BorderStroke(1.dp, ZyphuelBlueSecondary.copy(alpha = 0.5f)),
-                                    modifier = Modifier.testTag("edit_location_badge")
+                                    modifier = Modifier.testTag("share_location_badge")
                                 ) {
                                     Row(
                                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
@@ -3832,13 +3817,13 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                                     ) {
                                         Icon(
-                                            imageVector = Icons.Filled.EditLocation,
-                                            contentDescription = "Edit Location",
+                                            imageVector = Icons.Filled.Share,
+                                            contentDescription = "Share Location",
                                             tint = Color.White,
                                             modifier = Modifier.size(16.dp)
                                         )
                                         Text(
-                                            text = "Edit",
+                                            text = "Share",
                                             style = MaterialTheme.typography.labelMedium.copy(
                                                 fontWeight = FontWeight.Bold,
                                                 color = Color.White
@@ -3892,8 +3877,23 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 Button(
-                                    onClick = { showEditLocationDialog = true },
-                                    modifier = Modifier.weight(1f).testTag("edit_location_btn"),
+                                    onClick = {
+                                        val lat = viewModel.deviceLatitude.value
+                                        val lng = viewModel.deviceLongitude.value
+                                        val addr = viewModel.currentGpsLabel.value
+                                        if (lat != 0.0 && lng != 0.0) {
+                                            val shareText = "📍 My Delivery Location:\n$addr\nhttps://maps.google.com/?q=$lat,$lng"
+                                            val shareIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                                                type = "text/plain"
+                                                putExtra(android.content.Intent.EXTRA_SUBJECT, "Zyphuel - My Delivery Location")
+                                                putExtra(android.content.Intent.EXTRA_TEXT, shareText)
+                                            }
+                                            context.startActivity(android.content.Intent.createChooser(shareIntent, "Share Location via"))
+                                        } else {
+                                            Toast.makeText(context, "Location not available. Please enable GPS first.", Toast.LENGTH_SHORT).show()
+                                        }
+                                    },
+                                    modifier = Modifier.weight(1f).testTag("share_location_btn"),
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = ZyphuelBluePrimary,
                                         contentColor = Color.White
@@ -3901,9 +3901,9 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                                     shape = RoundedCornerShape(10.dp),
                                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp)
                                 ) {
-                                    Icon(Icons.Filled.Edit, contentDescription = null, modifier = Modifier.size(14.dp))
+                                    Icon(Icons.Filled.Share, contentDescription = null, modifier = Modifier.size(14.dp))
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text("Edit Address", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                                    Text("Share Location", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                                 }
 
                                 OutlinedButton(

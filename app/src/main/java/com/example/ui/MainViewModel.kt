@@ -1980,6 +1980,55 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         body = bodyStr,
                         type = "status"
                     )
+
+                    // Real-time Gmail email confirmation to the customer
+                    val customerEmail = user.email
+                    if (customerEmail.isNotBlank() && customerEmail.contains("@")) {
+                        val emailSubject = "🧾 Zyphuel Order Confirmation - Order #${order.id}"
+                        val emailBody = buildString {
+                            appendLine("Assalam o Alaikum ${user.name},")
+                            appendLine()
+                            appendLine("Your order has been placed successfully on Zyphuel! 🎉")
+                            appendLine()
+                            appendLine("📋 Order Details:")
+                            appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━")
+                            appendLine("🆔 Order ID: #${order.id}")
+                            appendLine("⛽ Service: $safeServiceType")
+                            appendLine("📦 Quantity: $safeQuantity units")
+                            appendLine("💰 Total Price: Rs. ${String.format("%.2f", safePrice)}")
+                            appendLine("📍 Delivery Address: $finalAddress")
+                            appendLine("💳 Payment: $paymentMethod")
+                            appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━")
+                            appendLine()
+                            appendLine("🚚 A rider will be assigned shortly. Track your delivery live in the Zyphuel app!")
+                            appendLine()
+                            appendLine("Thank you for choosing Zyphuel - Lahore's Premium Delivery Network.")
+                            appendLine("📞 Support: +92 300 1234567")
+                        }
+
+                        // Dispatch to internal email log system
+                        withContext(Dispatchers.Main) {
+                            dispatchRealtimeEmail(customerEmail, emailSubject, emailBody)
+                        }
+
+                        // Send actual email via Android email intent (background-safe)
+                        try {
+                            val appContext = getApplication<android.app.Application>()
+                            val emailIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                                type = "message/rfc822"
+                                putExtra(android.content.Intent.EXTRA_EMAIL, arrayOf(customerEmail))
+                                putExtra(android.content.Intent.EXTRA_SUBJECT, emailSubject)
+                                putExtra(android.content.Intent.EXTRA_TEXT, emailBody)
+                                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            val resolvedActivity = emailIntent.resolveActivity(appContext.packageManager)
+                            if (resolvedActivity != null) {
+                                appContext.startActivity(emailIntent)
+                            }
+                        } catch (e: Exception) {
+                            DebugLogger.w("MainViewModel", "Email intent dispatch fallback: ${e.message}")
+                        }
+                    }
                 } catch (e: Exception) {
                     DebugLogger.w("MainViewModel", "Notification dispatch warning: ${e.message}")
                 }
