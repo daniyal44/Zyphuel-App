@@ -20,6 +20,8 @@ android {
     versionCode = 2
     versionName = "2.2.0"
 
+    manifestPlaceholders["MAPS_API_KEY"] = "AIzaZyphuelPlaceholderKey"
+
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
