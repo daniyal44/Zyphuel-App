@@ -7011,20 +7011,34 @@ fun OrderConfirmedLahoreMapDialog(
                     style = MaterialTheme.typography.bodySmall.copy(color = Color.DarkGray)
                 )
 
-                // Embedded Google Map for Lahore
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(190.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .border(1.dp, Color(0xFFCBD5E1), RoundedCornerShape(12.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFEFF6FF)),
+                    border = BorderStroke(1.dp, Color(0xFFBFDBFE))
                 ) {
-                    LahoreGoogleEmbedMapView(
-                        modifier = Modifier.fillMaxSize(),
-                        serviceType = order.serviceType,
-                        orderStatus = order.status,
-                        driverName = order.riderName ?: "Assigned Bowser Driver"
-                    )
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.LocalShipping,
+                            contentDescription = "Order Delivery",
+                            tint = ZyphuelBluePrimary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Column {
+                            Text(
+                                text = "${order.serviceType} • ${order.quantity} Units",
+                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark)
+                            )
+                            Text(
+                                text = "COD Total: Rs. ${String.format(java.util.Locale.US, "%.2f", order.totalPrice)}",
+                                style = MaterialTheme.typography.bodySmall.copy(color = ZyphuelBluePrimary, fontWeight = FontWeight.Bold)
+                            )
+                        }
+                    }
                 }
 
                 Row(
@@ -7137,16 +7151,7 @@ fun OrderStatusAndCoverageBottomSheet(
                 }
             }
 
-            // Embedded Google Map of Lahore
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(210.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .border(1.5.dp, Color(0xFF38BDF8), RoundedCornerShape(16.dp))
-            ) {
-                LahoreGoogleEmbedMapView(modifier = Modifier.fillMaxSize())
-            }
+
 
             // Visual Overlay Card for Lahore Service Coverage Areas (GeoJSON)
             Card(
@@ -7341,369 +7346,12 @@ fun RealTimeOrderTrackingCard(
     modifier: Modifier = Modifier,
     onFullTrackClick: () -> Unit
 ) {
-    val context = LocalContext.current
-    val allRiders by viewModel.allRiders.collectAsState()
-    val assignedRider = remember(allRiders, order.riderEmail) {
-        if (!order.riderEmail.isNullOrBlank()) {
-            allRiders.find { it.email == order.riderEmail }
-        } else null
-    }
-
-    // --- REAL-TIME rider GPS for THIS order (published by the rider foreground service) ---
-    val riderLive by remember(order.id) { viewModel.observeRiderLocation(order.id) }
-        .collectAsState(initial = null)
-    val cardHasLiveFix = riderLive != null
-
-    val cardDestLat = order.destLat ?: 31.5204
-    val cardDestLng = order.destLng ?: 74.3587
-    val cardDepotLat = order.originLat ?: 31.4380
-    val cardDepotLng = order.originLng ?: 74.3050
-
-    val cardTotalKm = trackerHaversineKm(cardDepotLat, cardDepotLng, cardDestLat, cardDestLng).coerceAtLeast(0.1)
-    val cardRemainingKm = if (cardHasLiveFix) trackerHaversineKm(riderLive!!.lat, riderLive!!.lng, cardDestLat, cardDestLng) else cardTotalKm
-    val cardSpeedKmh = riderLive?.speedKmh?.let { Math.round(it).toInt() } ?: 0
-
-    // Real progress along the route — stays at 0 until the rider actually shares GPS.
-    val pathProgress: Float = if (cardHasLiveFix) {
-        (1.0 - (cardRemainingKm / cardTotalKm)).coerceIn(0.0, 1.0).toFloat()
-    } else 0f
-
-    val remainingEtaMinutes = if (cardHasLiveFix) {
-        if (cardSpeedKmh > 4) Math.ceil(cardRemainingKm / cardSpeedKmh * 60.0).toInt().coerceAtLeast(1)
-        else Math.ceil(cardRemainingKm * 3.0).toInt().coerceAtLeast(1)
-    } else order.etaMinutes.coerceAtLeast(1)
-
-    var cardMapMode by remember { mutableStateOf("driver") }
-
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .sharedOrderBounds("order_card_${order.id}")
-            .testTag("realtime_order_tracking_card"),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        border = BorderStroke(1.5.dp, ZyphuelBluePrimary.copy(alpha = 0.4f))
-    ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            // Card Top Header Bar
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .sharedOrderElement("order_header_${order.id}")
-                    .background(
-                        Brush.horizontalGradient(
-                            colors = listOf(ZyphuelBlueDark, Color(0xFF1E293B))
-                        )
-                    )
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Box(contentAlignment = Alignment.Center, modifier = Modifier.size(16.dp)) {
-                        val pulseScale by rememberInfiniteTransition(label = "pulse_card_header").animateFloat(
-                            initialValue = 0.8f,
-                            targetValue = 1.3f,
-                            animationSpec = infiniteRepeatable(
-                                animation = tween(900, easing = FastOutSlowInEasing),
-                                repeatMode = RepeatMode.Reverse
-                            ),
-                            label = "header_pulse"
-                        )
-                        Box(
-                            modifier = Modifier
-                                .scale(pulseScale)
-                                .size(14.dp)
-                                .background(Color(0xFF22C55E).copy(alpha = 0.4f), CircleShape)
-                        )
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .background(Color(0xFF22C55E), CircleShape)
-                        )
-                    }
-                    Column {
-                        Text(
-                            text = "LIVE ORDER TRACKING • #${order.id}",
-                            style = MaterialTheme.typography.labelMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White,
-                                letterSpacing = 0.5.sp
-                            )
-                        )
-                        Text(
-                            text = "${order.serviceType} (${order.quantity}L) • ${order.deliveryAddress}",
-                            style = MaterialTheme.typography.labelSmall.copy(color = Color(0xFFCBD5E1)),
-                            maxLines = 1
-                        )
-                    }
-                }
-
-                Surface(
-                    shape = RoundedCornerShape(20.dp),
-                    color = Color(0xFF059669).copy(alpha = 0.25f),
-                    border = BorderStroke(1.dp, Color(0xFF34D399))
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Speed,
-                            contentDescription = null,
-                            tint = Color(0xFF34D399),
-                            modifier = Modifier.size(12.dp)
-                        )
-                        Text(
-                            text = "~$remainingEtaMinutes MINS",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF34D399),
-                                fontSize = 10.sp
-                            )
-                        )
-                    }
-                }
-            }
-
-            // Map Mode Switcher Sub-header
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFFF8FAFC))
-                    .padding(horizontal = 8.dp, vertical = 6.dp),
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Surface(
-                    onClick = { cardMapMode = "driver" },
-                    shape = RoundedCornerShape(6.dp),
-                    color = if (cardMapMode == "driver") ZyphuelBluePrimary else Color.White,
-                    contentColor = if (cardMapMode == "driver") Color.White else ZyphuelBlueDark,
-                    border = BorderStroke(1.dp, if (cardMapMode == "driver") ZyphuelBluePrimary else Color(0xFFE2E8F0)),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(vertical = 4.dp),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(Icons.Filled.DirectionsCar, contentDescription = null, modifier = Modifier.size(13.dp))
-                        Spacer(modifier = Modifier.width(3.dp))
-                        Text("Driver Map 🚚", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, fontSize = 10.sp))
-                    }
-                }
-
-                Surface(
-                    onClick = { cardMapMode = "google" },
-                    shape = RoundedCornerShape(6.dp),
-                    color = if (cardMapMode == "google") ZyphuelBluePrimary else Color.White,
-                    contentColor = if (cardMapMode == "google") Color.White else ZyphuelBlueDark,
-                    border = BorderStroke(1.dp, if (cardMapMode == "google") ZyphuelBluePrimary else Color(0xFFE2E8F0)),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(vertical = 4.dp),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(Icons.Filled.Map, contentDescription = null, modifier = Modifier.size(13.dp))
-                        Spacer(modifier = Modifier.width(3.dp))
-                        Text("Google Map 📍", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, fontSize = 10.sp))
-                    }
-                }
-            }
-
-            // Embedded Real-Time Map View
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(230.dp)
-            ) {
-                if (cardMapMode == "driver") {
-                    DriverRealTimeTrackingMap(
-                        modifier = Modifier.fillMaxSize(),
-                        userLat = cardDestLat,
-                        userLng = cardDestLng,
-                        driverLat = if (cardHasLiveFix) riderLive!!.lat else null,
-                        driverLng = if (cardHasLiveFix) riderLive!!.lng else null,
-                        driverName = order.riderName ?: assignedRider?.name ?: if (order.status == "Pending") "Assigning nearby driver..." else "Assigned Delivery Driver",
-                        driverPhone = assignedRider?.phoneNumber ?: "+92 323 0112464",
-                        vehicleType = assignedRider?.vehicleType ?: "${order.serviceType} Delivery",
-                        serviceType = order.serviceType,
-                        orderStatus = order.status,
-                        deliveryAddress = order.deliveryAddress,
-                        pathProgress = pathProgress,
-                        etaMinutes = remainingEtaMinutes,
-                        distanceKm = cardRemainingKm.coerceAtLeast(0.0)
-                    )
-                } else {
-                    LahoreGoogleEmbedMapView(
-                        modifier = Modifier.fillMaxSize(),
-                        riderLat = cardDestLat,
-                        riderLng = cardDestLng,
-                        driverLat = if (cardHasLiveFix) riderLive!!.lat else null,
-                        driverLng = if (cardHasLiveFix) riderLive!!.lng else null,
-                        driverName = order.riderName ?: assignedRider?.name ?: if (order.status == "Pending") "Assigning driver..." else "Delivery Rider",
-                        driverPhone = assignedRider?.phoneNumber ?: "+92 323 0112464",
-                        vehicleType = assignedRider?.vehicleType ?: "${order.serviceType} Delivery",
-
-                        orderStatus = order.status,
-                        serviceType = order.serviceType,
-                        deliveryAddress = order.deliveryAddress,
-                        pathProgress = pathProgress,
-                        etaMinutes = remainingEtaMinutes,
-                        distanceKm = cardRemainingKm.coerceAtLeast(0.0)
-                    )
-                }
-
-                // Top GPS Signal Banner Overlay
-                Surface(
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(8.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    color = Color(0xFF0F172A).copy(alpha = 0.85f)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Navigation,
-                            contentDescription = "GPS Active",
-                            tint = Color(0xFF38BDF8),
-                            modifier = Modifier.size(12.dp)
-                        )
-                        Text(
-                            text = "GPS Signal: Strong (Lahore 4G)",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                color = Color.White,
-                                fontSize = 9.sp
-                            )
-                        )
-                    }
-                }
-            }
-
-            // Order Stepper Status
-            Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
-                OrderTrackingStepper(currentStatus = order.status, pathProgress = pathProgress)
-
-                HorizontalDivider(color = Color.LightGray.copy(alpha = 0.3f))
-
-                // Rider Information Bar
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(38.dp)
-                                .background(ZyphuelBluePrimary, CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = (order.riderName ?: "R").take(1).uppercase(),
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
-                                )
-                            )
-                        }
-
-                        Column {
-                            Text(
-                                text = order.riderName ?: "Assigned Driver",
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = ZyphuelBlueDark
-                                )
-                            )
-                            Text(
-                                text = "${assignedRider?.vehicleType ?: "Refuel Vehicle"} • ${assignedRider?.phoneNumber ?: "+92 323 0112464"}",
-                                style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray)
-                            )
-                        }
-                    }
-
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        IconButton(
-                            onClick = {
-                                val phoneNo = assignedRider?.phoneNumber ?: "+923230112464"
-                                val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$phoneNo"))
-                                try {
-                                    context.startActivity(intent)
-                                } catch (e: Exception) {
-                                    Toast.makeText(context, "Call: $phoneNo", Toast.LENGTH_SHORT).show()
-                                }
-                            },
-                            modifier = Modifier.size(36.dp)
-                        ) {
-                            Icon(Icons.Filled.Phone, contentDescription = "Call Driver", tint = ZyphuelBluePrimary)
-                        }
-
-                        IconButton(
-                            onClick = {
-                                val msg = "Hello, checking on my Zyphuel delivery order #${order.id}"
-                                val intent = Intent(Intent.ACTION_VIEW).apply {
-                                    data = Uri.parse("https://wa.me/923230112464?text=${Uri.encode(msg)}")
-                                }
-                                try {
-                                    context.startActivity(intent)
-                                } catch (e: Exception) {
-                                    Toast.makeText(context, "WhatsApp Support: +92 323 0112464", Toast.LENGTH_SHORT).show()
-                                }
-                            },
-                            modifier = Modifier.size(36.dp)
-                        ) {
-                            Icon(Icons.Filled.Chat, contentDescription = "Chat Driver", tint = Color(0xFF25D366))
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // Fullscreen Tracking Map Action Button
-                Button(
-                    onClick = onFullTrackClick,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("open_fullscreen_tracker_btn"),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = ZyphuelBluePrimary,
-                        contentColor = Color.White
-                    ),
-                    shape = RoundedCornerShape(10.dp),
-                    contentPadding = PaddingValues(vertical = 10.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Map,
-                        contentDescription = "Open Full Tracker Map",
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Open Fullscreen Interactive Tracking Map",
-                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
-                    )
-                }
-            }
-        }
-    }
+    CustomerOrderCard(
+        order = order,
+        viewModel = viewModel,
+        highlighted = true,
+        onClick = onFullTrackClick
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -11908,16 +11556,7 @@ fun RiderOrderCard(order: OrderEntity, currentUser: UserEntity, viewModel: MainV
                 }
             }
 
-            // Rider Google Map View
-            LahoreGoogleEmbedMapView(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(180.dp)
-                    .padding(vertical = 4.dp),
-                serviceType = order.serviceType,
-                orderStatus = order.status,
-                driverName = currentUser.name
-            )
+
             
             if (order.rating != null) {
                 Spacer(modifier = Modifier.height(8.dp))

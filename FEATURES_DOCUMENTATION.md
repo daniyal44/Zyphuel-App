@@ -95,34 +95,19 @@ The app strictly segments access control across three user roles:
 
 ---
 
-## 4. Real-Time GPS Driver Tracking Map & Custom Vehicle Marker
-* **Component**: `UnifiedGoogleMapView`, `DriverRealTimeTrackingMap`, `DeliveryTrackerComponent`, `GoogleMapComposeView`, `InteractiveLocationPickerMap`, `handleExternalMapIntent` (`Screens.kt`)
-* **Custom Ride-Sharing Vehicle Marker (`DeliveryVehicleCustomMarker`)**:
-  * **Dynamic Real-Time Rotation**: Computes and animates heading bearing degree (`0° - 360°`) smoothly as the vehicle moves along its route.
-  * **Vehicle Type Support**: Supports customized icons and symbols for Fuel Bowsers (🚚), Delivery Bikes (🏍️), Cars (🚗), and Water Tankers.
-  * **Pulsing Sonar Radar Effect**: Active real-time GPS pulse ring animation around the vehicle marker to signal active GPS signal transmission.
-  * **Interactive Driver Profile Popup**: Tapping the rider marker sends an `onDriverClicked` callback via JavaScript `AndroidBridge` interface to display the complete driver profile dialog.
-  * **Time Remaining Header**: Prominent ETA header bar rendered directly above the map showing estimated arrival time (`~X mins`), total route distance (`km`), and current order status.
-* **Green Town Main Headquarters (Origin Depot)**:
-  * Central main branch and dispatch hub is located at **Green Town, Lahore** (31.4380, 74.3050).
-  * All delivery bowsers start and finish their routes from Green Town HQ.
-  * The map renders Green Town HQ (`🏢 HQ Green Town`) as the fixed starting/ending dispatch marker with direct "Open in Google Maps 📍" external action links.
-* **Interactive Live GPS Map & Pin Marking**:
-  * **FusedLocationProviderClient Automatic Live GPS Engine (`LocationService.kt`)**: Refactored to use `FusedLocationProviderClient` with `Priority.PRIORITY_HIGH_ACCURACY`, `LocationRequest`, and application context for reliable, automatic background location updates without memory leaks. Exposes `lastFreshLocation`, `isTrackingActive`, `isLocationAvailable`, and `locationError` state flows.
-  * **Seamless Fallback & Manual Address Override**: If GPS signal detection fails, permissions are missing, or user prefers custom delivery coordinates, `LocationService` triggers graceful fallbacks and allows full manual address entry (`setCustomLocation`) or location pin fine-tuning on `InteractiveLocationPickerMap`. Re-enabling automatic tracking (`resetToAutoGpsLocation`) seamlessly clears overrides and resumes high-accuracy `FusedLocationProviderClient` updates.
-  * **Customer Location Fine-Tune**: Customers can tap anywhere on the map or drag the pin marker to specify their exact delivery landmark.
-  * **Driver Location Sync**: Assigned bowser driver (`driverLat`, `driverLng`) sees the exact customer delivery pin in real-time.
-  * **Cloud Firestore Order & Delivery History Repository (`FirestoreOrderRepository.kt`)**:
-  * **Real-Time Order Storage & Synchronization**: Syncs order creation, rider acceptance, status updates, and order ratings directly with Google Cloud Firestore (`orders` collection).
-  * **Real-Time Customer Orders Flow (`getCustomerOrdersFlow`)**: Real-time snapshot listener emitting updated order list ordered by creation timestamp (`createdAt DESC`).
-  * **Rider Delivery History Flow (`getRiderDeliveryHistoryFlow`)**: Real-time snapshot listener delivering active and past order history for assigned riders.
-  * **Order Ratings & Feedback Persistence (`rateOrder`, `submitOrderRating`)**: Saves user star ratings ($1-5$ stars) and detailed delivery feedback directly to Firestore documents and local Room database.
+## 4. Location Pin Marking & Map Architecture
+* **Component**: `UnifiedGoogleMapView`, `InteractiveLocationPickerMap`, `handleExternalMapIntent` (`Screens.kt`)
+* **Permanent Removal of Google Maps Live Order Tracking**:
+  * All continuous live Google Maps tracking overlays, driver radar animations, and in-app live vehicle tracking loops on `CustomerHomeScreen`, `TrackerScreen`, and `RiderHomeScreen` have been permanently removed.
+  * Replaced with a fast, lightweight native Compose Order Details and Status Stepper architecture.
+* **Location Pin Marking & Address Resolution**:
+  * **Interactive Landmark Picker (`InteractiveLocationPickerMap`)**: When entering or editing custom addresses, customers can tap on the interactive map to pin their exact delivery landmark with instant reverse geocoding.
+  * **Share Location Feature**: Users can share their delivery destination via native Android share sheet with formatted GPS coordinates and Google Maps link.
 * **Server Live Tracking Permanent Removal**:
   * Continuous GPS streaming and upload to the Cloud Firestore `live_tracking` collection has been permanently removed from the server.
   * Server writes in `LiveTrackingRepository` and `RiderLocationForegroundService` are completely disabled, preventing battery drain and unwanted cloud server position storage.
   * Any leftover legacy `live_tracking` documents on Firestore are automatically purged upon application startup via `LiveTrackingRepository.purgeAllServerLiveTracking()`.
   * Order and route presentation runs strictly on local origin-destination coordinates and order status events.
-* **Polyline Corridor**: Clear visual route line starting from Green Town HQ -> Driver Bowser -> Customer Destination.
   * **Rider Order Progression & Pickup Validation**: Enforces strict step-by-step order progression (`Pending` -> `Accept Ride` -> `Pick Up Fuel at Station` -> `Start Route` -> `Reached Location` -> `Complete & Collect COD`) in `MainViewModel.changeOrderStatus`, preventing riders from completing orders without picking up petrol/fuel first.
 
 ---
