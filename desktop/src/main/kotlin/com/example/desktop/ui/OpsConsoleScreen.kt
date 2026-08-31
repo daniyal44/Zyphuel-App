@@ -376,6 +376,7 @@ private fun DetailPane(
         Row(horizontalArrangement = Arrangement.spacedBy(18.dp)) {
             StatCell("Customer", order.customerName)
             StatCell("Phone", order.customerPhone.ifBlank { "—" })
+            StatCell("Email", order.customerEmail.ifBlank { "—" })
             StatCell("Rider", order.riderName ?: "Unassigned")
             StatCell("Quantity", "${order.quantity} units")
             StatCell("Amount", "Rs. " + formatMoney(order.totalPrice))
@@ -436,6 +437,44 @@ private fun DetailPane(
             ) {
                 Text("Cancel order", fontSize = 11.sp, color = Color(0xFFDC2626))
             }
+
+            Spacer(Modifier.width(4.dp))
+
+            // Share Location — opens destination in Google Maps
+            OutlinedButton(
+                onClick = {
+                    try {
+                        val dest = order.destination
+                        val url = "https://maps.google.com/?q=${dest.lat},${dest.lng}"
+                        if (java.awt.Desktop.isDesktopSupported() && java.awt.Desktop.getDesktop().isSupported(java.awt.Desktop.Action.BROWSE)) {
+                            java.awt.Desktop.getDesktop().browse(java.net.URI(url))
+                        }
+                    } catch (_: Exception) {}
+                },
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text("📍 Share Location", fontSize = 11.sp, color = Sky, fontWeight = FontWeight.Bold)
+            }
+
+            // Send Email — opens email client with order confirmation
+            if (order.customerEmail.isNotBlank() && order.customerEmail.contains("@")) {
+                OutlinedButton(
+                    onClick = {
+                        try {
+                            val subject = "Zyphuel Order Confirmation - Order %23${order.id}"
+                            val body = "Your order %23${order.id} for ${order.serviceType} (${order.quantity} units) - Rs. ${formatMoney(order.totalPrice)} has been placed. Delivery to: ${order.deliveryAddress}"
+                            val mailto = "mailto:${order.customerEmail}?subject=$subject&body=$body"
+                            if (java.awt.Desktop.isDesktopSupported() && java.awt.Desktop.getDesktop().isSupported(java.awt.Desktop.Action.BROWSE)) {
+                                java.awt.Desktop.getDesktop().browse(java.net.URI(mailto))
+                            }
+                        } catch (_: Exception) {}
+                    },
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text("📧 Send Email", fontSize = 11.sp, color = Color(0xFF16A34A), fontWeight = FontWeight.Bold)
+                }
+            }
+
             if (isBusy) {
                 CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 2.dp, color = Sky)
             }
