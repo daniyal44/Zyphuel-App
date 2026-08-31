@@ -39,7 +39,8 @@ class FirestoreRest(val config: DesktopConfig.Firebase) {
     }
 
     suspend fun listLivePositions(): List<RiderPosition> = withContext(Dispatchers.IO) {
-        listAll("live_tracking").mapNotNull { (docId, fields) -> toRiderPosition(docId, fields) }
+        // Server live tracking permanently removed
+        emptyList()
     }
 
     // ---------------- Writes ----------------

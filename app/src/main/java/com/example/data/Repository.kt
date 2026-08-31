@@ -102,6 +102,13 @@ class AppRepository(context: Context) {
         } catch (e: Exception) {
             com.example.util.DebugLogger.w("Repository", "Firestore admin sync note: ${e.message}")
         }
+
+        // Permanently purge any legacy live_tracking records from the cloud server
+        try {
+            liveTrackingRepository.purgeAllServerLiveTracking()
+        } catch (e: Exception) {
+            com.example.util.DebugLogger.w("Repository", "Server live-tracking purge notice: ${e.message}")
+        }
     }
 
     // --- Authentication Operations ---

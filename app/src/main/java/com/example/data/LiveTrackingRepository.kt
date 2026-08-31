@@ -4,14 +4,12 @@ import android.content.Context
 import android.util.Log
 import com.google.firebase.FirebaseApp
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.SetOptions
-import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.tasks.await
 
 /**
- * Snapshot of a rider's live position for one order, streamed in real time.
+ * Snapshot of a rider's live position for one order.
  */
 data class RiderLiveLocation(
     val orderId: Int,
@@ -25,11 +23,9 @@ data class RiderLiveLocation(
 )
 
 /**
- * Real-time rider location channel (Uber/Careem-style).
- *
- * Uses a dedicated Firestore collection `live_tracking/{orderId}` so that the
- * frequent (every few seconds) position writes do not churn the larger order
- * document. Riders publish; customers observe.
+ * Server Live Tracking Manager.
+ * Live tracking has been permanently disabled on the cloud server (Firestore).
+ * Server writes are blocked, listeners are removed, and server records are purged.
  */
 class LiveTrackingRepository(private val context: Context) {
 
@@ -49,8 +45,7 @@ class LiveTrackingRepository(private val context: Context) {
         }
 
     /**
-     * Publishes the rider's current position for an order. Uses merge so the
-     * doc is created on first write and updated thereafter.
+     * Disabled: No GPS coordinates are published to the cloud server.
      */
     suspend fun publishLocation(
         orderId: Int,
@@ -61,74 +56,20 @@ class LiveTrackingRepository(private val context: Context) {
         speedKmh: Float,
         status: String
     ): Boolean {
-        val firestore = db ?: return false
-        return try {
-            val data = mapOf(
-                "orderId" to orderId,
-                "riderEmail" to riderEmail,
-                "lat" to lat,
-                "lng" to lng,
-                "bearing" to bearing,
-                "speedKmh" to speedKmh,
-                "status" to status,
-                "updatedAt" to System.currentTimeMillis()
-            )
-            firestore.collection(COLLECTION)
-                .document(orderId.toString())
-                .set(data, SetOptions.merge())
-                .await()
-            true
-        } catch (e: Exception) {
-            Log.e(TAG, "Error publishing live location for order #$orderId: ${e.message}", e)
-            false
-        }
+        // Permanently disabled on server
+        return false
     }
 
     /**
-     * Streams the rider's live position for an order. Emits null until the
-     * first location arrives (or if tracking is unavailable).
+     * Disabled: Returns an empty flow to avoid opening Firestore server snapshot listeners.
      */
-    fun observeLocation(orderId: Int): Flow<RiderLiveLocation?> = callbackFlow {
-        val firestore = db
-        if (firestore == null || orderId <= 0) {
-            trySend(null)
-            close()
-            return@callbackFlow
-        }
-
-        val listener = firestore.collection(COLLECTION)
-            .document(orderId.toString())
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    Log.e(TAG, "Error listening to live location for order #$orderId", error)
-                    return@addSnapshotListener
-                }
-                if (snapshot != null && snapshot.exists()) {
-                    val data = snapshot.data
-                    if (data != null) {
-                        trySend(
-                            RiderLiveLocation(
-                                orderId = (data["orderId"] as? Number)?.toInt() ?: orderId,
-                                riderEmail = data["riderEmail"] as? String ?: "",
-                                lat = (data["lat"] as? Number)?.toDouble() ?: 0.0,
-                                lng = (data["lng"] as? Number)?.toDouble() ?: 0.0,
-                                bearing = (data["bearing"] as? Number)?.toFloat() ?: 0f,
-                                speedKmh = (data["speedKmh"] as? Number)?.toFloat() ?: 0f,
-                                status = data["status"] as? String ?: "",
-                                updatedAt = (data["updatedAt"] as? Number)?.toLong() ?: 0L
-                            )
-                        )
-                    }
-                } else {
-                    trySend(null)
-                }
-            }
-
-        awaitClose { listener.remove() }
+    fun observeLocation(orderId: Int): Flow<RiderLiveLocation?> {
+        // Permanently disabled on server
+        return flowOf(null)
     }
 
     /**
-     * Clears the live-tracking doc for an order once delivery is finished.
+     * Clears any lingering live-tracking document for an order from Firestore server.
      */
     suspend fun clearLocation(orderId: Int): Boolean {
         val firestore = db ?: return false
@@ -136,7 +77,25 @@ class LiveTrackingRepository(private val context: Context) {
             firestore.collection(COLLECTION).document(orderId.toString()).delete().await()
             true
         } catch (e: Exception) {
-            Log.e(TAG, "Error clearing live location for order #$orderId: ${e.message}", e)
+            Log.w(TAG, "Notice clearing server live-tracking document #$orderId: ${e.message}")
+            false
+        }
+    }
+
+    /**
+     * Permanently purges and deletes the entire live_tracking collection from the Firestore server.
+     */
+    suspend fun purgeAllServerLiveTracking(): Boolean {
+        val firestore = db ?: return false
+        return try {
+            val snapshots = firestore.collection(COLLECTION).get().await()
+            for (doc in snapshots.documents) {
+                doc.reference.delete().await()
+            }
+            Log.i(TAG, "Successfully purged ${snapshots.size()} server live-tracking records from Firestore.")
+            true
+        } catch (e: Exception) {
+            Log.w(TAG, "Server live tracking purge notice: ${e.message}")
             false
         }
     }
