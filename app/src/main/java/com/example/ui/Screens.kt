@@ -3483,6 +3483,17 @@ fun DrawerContent(
                 Text("Log Out", color = Color.White, fontWeight = FontWeight.Bold)
             }
 
+            Spacer(modifier = Modifier.height(14.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Zyphuel App v2.2.0 • Build 2026",
+                    style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontSize = 11.sp)
+                )
+            }
             Spacer(modifier = Modifier.height(16.dp))
         }
 
@@ -10843,8 +10854,16 @@ fun ProfileSettingsDialog(
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text("Permanently Delete Account", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.White))
                             }
-                        }
-                    }
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Zyphuel Platform v2.2.0 • Release 2026",
+                        style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontSize = 11.sp)
+                    )
                 }
             }
         },

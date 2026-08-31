@@ -1,36 +1,38 @@
-# 🚚 Zyphuel - Doorstep Fuel & Clean Water Delivery Platform (Android)
+# 🚚 Zyphuel Platform (Android v2.2.0 • Release 2026)
 
 <div align="center">
-  <img src="app/src/main/res/drawable/logo.png" width="120" height="120" alt="Zyphuel Logo" />
-  <h3>Pakistan's Premier On-Demand Energy & Water Delivery Ecosystem</h3>
-  <p><b>Target SDK 36 • Android 15/16 Ready • Jetpack Compose Material 3 • Room DB • Live GPS Radar Telematics</b></p>
+  <img src="company .png" width="140" height="140" alt="Zyphuel MDK Logo" />
+  <h3>Pakistan's Premier On-Demand Energy & Clean Water Ecosystem</h3>
+  <p><b>Version 2.2.0 (Build 2) • Target SDK 36 • Android 15/16 Ready • Jetpack Compose Material 3 • Room DB • Real-Time Dual Notifications</b></p>
 </div>
 
 ---
 
 ## 📌 About Zyphuel
-Zyphuel brings on-demand doorstep delivery of **Super Petrol, High-Speed Diesel, High-Octane, LPG Gas Cylinders, and Pure Mineral Drinking Water** across Lahore, Punjab. The platform coordinates residential and fleet deliveries with automated route dispatching from the central Green Town Depot origin to customer destination pins.
+Zyphuel is Pakistan's premier on-demand doorstep delivery platform for **Super Petrol, High-Speed Diesel, High-Octane, LPG Gas Cylinders, and Pure Mineral Drinking Water** across Lahore, Punjab. The platform delivers seamless consumer, rider, and admin operations backed by real-time dual email dispatch, biometric security, and 0ms instantaneous order processing.
 
 ---
 
-## 🚀 Key Features
+## 🚀 Key Features (v2.2.0 Latest)
 
-* **Instant Multi-Product Ordering**: Seamless multi-item selection with automatic 50% bundled delivery discounts and clean Cash on Delivery (COD) checkout.
-* **Native Live Google Maps Telematics (`TrackerScreen`)**: Real-time vehicle radar, custom heading-oriented bowser markers, dynamic driver assignment, and live Haversine distance computations.
-* **Daily 1-Time Order Safety GPS Notice (`DailyGpsSafetyDisclaimerDialog`)**: Daily safety disclosure banner informing customers of active GPS tracking for secure delivery fulfillment.
-* **Biometric & Encrypted Security**: AndroidX `BiometricPrompt` hardware authentication, AES-256 encrypted session tokens, SHA-256 password hashing, and brute-force rate limiters.
-* **Google Play Policy Compliant**: Full support for In-App and Sidebar Account Deletion (`deleteCurrentAccount`), foreground service disclosures, and OGRA hazardous materials guidelines.
+* **Real-Time Dual Gmail Order Confirmations**: Automatic instant email dispatch to **both customer and assigned rider** upon order placement, acceptance, and delivery status milestones via Android `ACTION_SEND` and internal audit logging.
+* **Verified Admin Blue Tick & Permanent Super Admin Guard**: Root Administrator account (`m.daniyalkhan490@gmail.com`) is permanently protected from deletion, resets, or removal across local Room DB and Cloud Firestore, displaying the official **Blue Tick Verified Badge** across Drawer, Profile, and Admin headers.
+* **Native Share Location Integration**: Replaced static address edits with native Android Share Location functionality, sending GPS latitude/longitude and Google Maps coordinates directly via messaging/social apps.
+* **High-Performance Order Details & Status Stepper**: Replaced heavy map overlays with a blazing-fast, 0ms responsive native Order Details and 4-step delivery progress timeline (`TrackerScreen` & `CustomerOrderCard`).
+* **Universal Biometric Authentication**: Hardware-backed AndroidX `BiometricPrompt` authentication available for **both Google Sign-In and Manual Email logins**, configurable directly from Profile and Security Settings.
+* **Instant Multi-Product Ordering**: Seamless multi-item selection with automatic bundled delivery discounts and clean Cash on Delivery (COD) checkout.
+* **Google Play Policy Compliant**: Full support for In-App and Sidebar Account Deletion (`deleteCurrentAccount`), encrypted AES-256 session tokens, SHA-256 password hashing, and OGRA safety compliance.
 
 ---
 
 ## 🛠️ Tech Stack & Architecture
 
-* **Language**: Kotlin 2.0+
-* **UI Toolkit**: Jetpack Compose with Material Design 3
-* **State Management**: Centralized `MainViewModel` with Kotlin `StateFlow`
-* **Local Persistence**: Android Room DB (SQLite) with KSP compiler
-* **Cloud & Push**: Firebase Cloud Messaging (FCM), Cloud Firestore real-time listeners
-* **Location Engine**: Google Play Services `FusedLocationProviderClient` (`PRIORITY_HIGH_ACCURACY`)
+* **Language**: Kotlin 2.0+ (Jetpack Compose with Material Design 3)
+* **Architecture**: MVVM with `MainViewModel` and Kotlin `StateFlow`
+* **Local Persistence**: Android Room DB (SQLite) with KSP compiler (v11 schema)
+* **Cloud Sync**: Google Cloud Firestore real-time listeners & Firebase Cloud Messaging (FCM)
+* **Security & Auth**: AndroidX `BiometricPrompt`, `EncryptedSharedPreferences`, Google OAuth & SHA-256 hashing
+* **Location & Sharing**: Google Play Services `FusedLocationProviderClient` (`PRIORITY_HIGH_ACCURACY`) and Android `ACTION_SEND`
 
 ---
 
@@ -50,7 +52,7 @@ $env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-25.0.4.7-hotspot"; & "C:
 ---
 
 ## 📁 Key Documentation References
-* [`FEATURES_DOCUMENTATION.md`](file:///d:/Games/New%20folder-web/Claude/FEATURES_DOCUMENTATION.md): Comprehensive feature inventory & component specifications.
+* [`FEATURES_DOCUMENTATION.md`](file:///d:/Games/New%20folder-web/Claude/FEATURES_DOCUMENTATION.md): Comprehensive feature inventory & component specifications (v2.2.0).
 * [`ARCHITECTURE.md`](file:///d:/Games/New%20folder-web/Claude/ARCHITECTURE.md): System architecture, layered diagram, and data flow constraints.
 * [`PLAY_STORE_ASO_BLUEPRINT.md`](file:///d:/Games/New%20folder-web/Claude/PLAY_STORE_ASO_BLUEPRINT.md): App Store Optimization, keywords, and release assets guide.
 * [`bugs.md`](file:///d:/Games/New%20folder-web/Claude/bugs.md): Master bug resolution and verification ledger.
