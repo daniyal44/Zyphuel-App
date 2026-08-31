@@ -3196,12 +3196,26 @@ fun DrawerContent(
                         }
                     }
                     Spacer(modifier = Modifier.height(10.dp))
-                    Text(
-                        text = currentUser.name,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark),
-                        maxLines = 1,
-                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = currentUser.name,
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark),
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                        )
+                        if (currentUser.role == "admin" || currentUser.email.equals("m.daniyalkhan490@gmail.com", ignoreCase = true)) {
+                            Spacer(modifier = Modifier.width(5.dp))
+                            Icon(
+                                imageVector = Icons.Filled.Verified,
+                                contentDescription = "Verified Admin",
+                                tint = Color(0xFF0284C7),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
                     Text(
                         text = currentUser.email,
                         style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray),
@@ -3213,32 +3227,60 @@ fun DrawerContent(
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .background(ZyphuelBlueSecondary.copy(alpha = 0.15f), RoundedCornerShape(8.dp))
-                                .padding(horizontal = 8.dp, vertical = 2.dp)
-                        ) {
-                            Text(
-                                text = currentUser.role.uppercase(),
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = ZyphuelBluePrimary
-                                )
-                            )
-                        }
-                        if (currentUser.role == "rider" && currentUser.isVerified) {
+                        if (currentUser.role == "admin" || currentUser.email.equals("m.daniyalkhan490@gmail.com", ignoreCase = true)) {
                             Box(
                                 modifier = Modifier
-                                    .background(Color(0xFF10B981).copy(alpha = 0.15f), RoundedCornerShape(8.dp))
-                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                                    .background(Color(0xFFE0F2FE), RoundedCornerShape(8.dp))
+                                    .border(1.dp, Color(0xFF38BDF8), RoundedCornerShape(8.dp))
+                                    .padding(horizontal = 8.dp, vertical = 2.dp)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Verified,
+                                        contentDescription = null,
+                                        tint = Color(0xFF0284C7),
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                    Text(
+                                        text = "VERIFIED ADMIN",
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color(0xFF0284C7)
+                                        )
+                                    )
+                                }
+                            }
+                        } else {
+                            Box(
+                                modifier = Modifier
+                                    .background(ZyphuelBlueSecondary.copy(alpha = 0.15f), RoundedCornerShape(8.dp))
+                                    .padding(horizontal = 8.dp, vertical = 2.dp)
                             ) {
                                 Text(
-                                    text = "VERIFIED ✔️",
+                                    text = currentUser.role.uppercase(),
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontWeight = FontWeight.Bold,
-                                        color = Color(0xFF10B981)
+                                        color = ZyphuelBluePrimary
                                     )
                                 )
+                            }
+                            if (currentUser.role == "rider" && currentUser.isVerified) {
+                                Box(
+                                    modifier = Modifier
+                                        .background(Color(0xFF10B981).copy(alpha = 0.15f), RoundedCornerShape(8.dp))
+                                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                                ) {
+                                    Text(
+                                        text = "VERIFIED ✔️",
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color(0xFF10B981)
+                                        )
+                                    )
+                                }
                             }
                         }
                     }
@@ -11454,15 +11496,24 @@ fun ProfileSettingsDialog(
                 }
 
                 // --- Verified Badge Authority Card ---
+                val isAdminAccount = currentUser!!.role == "admin" || currentUser!!.email.equals("m.daniyalkhan490@gmail.com", ignoreCase = true)
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = if (currentUser!!.role == "rider" && currentUser!!.isVerified) Color(0xFFECFDF5) else Color(0xFFF8FAFC)
+                        containerColor = when {
+                            isAdminAccount -> Color(0xFFF0F9FF)
+                            currentUser!!.role == "rider" && currentUser!!.isVerified -> Color(0xFFECFDF5)
+                            else -> Color(0xFFF8FAFC)
+                        }
                     ),
                     border = BorderStroke(
                         1.dp,
-                        if (currentUser!!.role == "rider" && currentUser!!.isVerified) Color(0xFF10B981) else Color(0xFFE2E8F0)
+                        when {
+                            isAdminAccount -> Color(0xFF38BDF8)
+                            currentUser!!.role == "rider" && currentUser!!.isVerified -> Color(0xFF10B981)
+                            else -> Color(0xFFE2E8F0)
+                        }
                     )
                 ) {
                     Column(
@@ -11474,21 +11525,31 @@ fun ProfileSettingsDialog(
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Icon(
-                                imageVector = if (currentUser!!.role == "rider" && currentUser!!.isVerified) Icons.Filled.Verified else Icons.Filled.Shield,
+                                imageVector = if (isAdminAccount || (currentUser!!.role == "rider" && currentUser!!.isVerified)) Icons.Filled.Verified else Icons.Filled.Shield,
                                 contentDescription = "Badge Status",
-                                tint = if (currentUser!!.role == "rider" && currentUser!!.isVerified) Color(0xFF10B981) else ZyphuelBluePrimary,
+                                tint = if (isAdminAccount) Color(0xFF0284C7) else if (currentUser!!.role == "rider" && currentUser!!.isVerified) Color(0xFF10B981) else ZyphuelBluePrimary,
                                 modifier = Modifier.size(22.dp)
                             )
                             Text(
-                                text = if (currentUser!!.role == "rider" && currentUser!!.isVerified) "Verified Badge Awarded ✔️" else "Verified Badge Status",
+                                text = when {
+                                    isAdminAccount -> "Verified Admin Badge Active (Blue Tick) ✔️"
+                                    currentUser!!.role == "rider" && currentUser!!.isVerified -> "Verified Badge Awarded ✔️"
+                                    else -> "Verified Badge Status"
+                                },
                                 style = MaterialTheme.typography.titleSmall.copy(
                                     fontWeight = FontWeight.Bold,
-                                    color = if (currentUser!!.role == "rider" && currentUser!!.isVerified) Color(0xFF065F46) else ZyphuelBlueDark
+                                    color = if (isAdminAccount) Color(0xFF0369A1) else if (currentUser!!.role == "rider" && currentUser!!.isVerified) Color(0xFF065F46) else ZyphuelBlueDark
                                 )
                             )
                         }
 
-                        if (currentUser!!.role == "rider") {
+                        if (isAdminAccount) {
+                            Text(
+                                text = "Official Administrator Verified Badge (Blue Tick) active. You hold permanent root management and verification authority across the entire Zyphuel network.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color(0xFF0C4A6E)
+                            )
+                        } else if (currentUser!!.role == "rider") {
                             if (currentUser!!.isVerified) {
                                 Text(
                                     text = "Your account has been granted a Verified Badge at the Admin's sole discretion.",
@@ -11521,7 +11582,7 @@ fun ProfileSettingsDialog(
                                     },
                                     colors = ButtonDefaults.buttonColors(containerColor = ZyphuelBluePrimary),
                                     shape = RoundedCornerShape(8.dp),
-                                    modifier = Modifier.fillMaxWidth()
+                                    modifier = Modifier.fillMaxWidth().testTag("profile_email_admin_btn")
                                 ) {
                                     Icon(Icons.Filled.Email, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.White)
                                     Spacer(modifier = Modifier.width(6.dp))
@@ -13996,6 +14057,13 @@ fun AdminDashboardScreen(viewModel: MainViewModel) {
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("Zyphuel Admin Center", fontWeight = FontWeight.Bold, color = ZyphuelBlueDark)
+                        Spacer(modifier = Modifier.width(5.dp))
+                        Icon(
+                            imageVector = Icons.Filled.Verified,
+                            contentDescription = "Verified Admin",
+                            tint = Color(0xFF0284C7),
+                            modifier = Modifier.size(18.dp)
+                        )
                     }
                 },
                 navigationIcon = {
