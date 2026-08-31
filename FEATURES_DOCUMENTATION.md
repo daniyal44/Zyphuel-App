@@ -1,4 +1,5 @@
 # Zyphuel App - Comprehensive Features & Functions Documentation 🚀
+**App Version:** `v2.2.0 (Build 2)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** `2026`
 
 Welcome to the complete architectural and functional guide for the **Zyphuel** Android application. This document outlines every single feature, function, database entity, and user flow from start to finish.
 
