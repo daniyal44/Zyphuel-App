@@ -276,4 +276,39 @@ class ZyphuelComprehensiveAppTest {
         assertTrue(tourTitles[6].contains("Real-Time Email"))
         assertTrue(tourTitles[7].contains("Biometrics"))
     }
+
+    // =========================================================================
+    // 8. REAL-TIME MULTI-CHANNEL EMAIL GATEWAY & TRIPLE DISPATCH TEST
+    // =========================================================================
+    @Test
+    fun `test Triple Email Dispatch - Customer Confirmation, Rider Alert and Super Admin Notification`() {
+        val orderId = 7788
+        val customerEmail = "customer.daniyal@gmail.com"
+        val riderEmail = "rider.bowser@gmail.com"
+        val adminEmail = "m.daniyalkhan490@gmail.com"
+
+        // 1. Verify Admin Alert Template
+        val adminSubject = "🚨 New Order #$orderId Confirmed - High-Speed Diesel"
+        val adminBody = "Admin Alert: New Customer Order Received!\nOrder ID: #$orderId\nAmount: Rs. 15,000.00"
+        val adminHtml = RealtimeEmailEngine.generateHtmlEmail(adminSubject, adminBody)
+        assertTrue(adminHtml.contains("Zyphuel On-Demand Delivery"))
+        assertTrue(adminHtml.contains("Order #$orderId"))
+        assertTrue(adminHtml.contains("Official Transaction & Order Notification"))
+
+        // 2. Verify SmtpConfig Defaults & Diagnostics
+        val defaultConfig = com.example.security.SmtpConfig()
+        assertEquals("smtp.gmail.com", defaultConfig.host)
+        assertEquals(465, defaultConfig.port)
+        assertEquals("m.daniyalkhan490@gmail.com", defaultConfig.senderEmail)
+        assertEquals("Zyphuel Delivery Operations", defaultConfig.senderName)
+        assertEquals("pkymsolzualgbgzn", defaultConfig.appPassword)
+        assertTrue(defaultConfig.isEnabled)
+
+        // 3. Verify Google Apps Script Template Provision
+        val gasTemplate = RealtimeEmailEngine.getGoogleAppsScriptTemplate()
+        assertTrue(gasTemplate.contains("MailApp.sendEmail"))
+        assertTrue(gasTemplate.contains("doPost"))
+        assertTrue(gasTemplate.contains("doGet"))
+        assertTrue(gasTemplate.contains("handleEmailRequest"))
+    }
 }
