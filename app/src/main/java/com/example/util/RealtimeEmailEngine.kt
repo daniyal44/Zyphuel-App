@@ -140,7 +140,7 @@ object RealtimeEmailEngine {
                 .post(requestBody)
                 .addHeader("Content-Type", "application/json")
                 .addHeader("Accept", "application/json")
-                .addHeader("User-Agent", "Zyphuel-Delivery-App/2.2.0")
+                .addHeader("User-Agent", "Zyphuel-Delivery-App/2.3.0")
                 .build()
 
             httpClient.newCall(request).execute().use { response ->
@@ -180,7 +180,7 @@ object RealtimeEmailEngine {
                 .url("https://formspree.io/f/mqkvrkpq") // Zyphuel public relay endpoint
                 .post(requestBody)
                 .addHeader("Accept", "application/json")
-                .addHeader("User-Agent", "Zyphuel-Android-Client/2.2.0")
+                .addHeader("User-Agent", "Zyphuel-Android-Client/2.3.0")
                 .build()
 
             httpClient.newCall(request).execute().use { response ->
