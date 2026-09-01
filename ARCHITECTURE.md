@@ -46,6 +46,7 @@ Zyphuel is engineered as a modern, high-performance, offline-first Android appli
 * **Local Database**: Android Room DB (SQLite) with KSP compiler and Kotlin Coroutines/Flow integration.
 * **Security & Biometrics**: AndroidX `BiometricPrompt` API, SHA-256 password hashing, AES-256 encrypted preferences (`SecureStorageManager`), input sanitization (`SecurityInputValidator`), and rate limiting (`SecurityRateLimiter`).
 * **Push Notifications & Messaging**: Android System Push Notification Manager (`zyphuel_order_updates` high-importance channel) and Firebase Cloud Messaging (`ZyphuelFcmService.kt`).
+* **Real-Time Transactional Email Gateway**: Multi-channel authenticated engine (`RealtimeEmailEngine.kt`) supporting direct TLS/SSL Port 465, RFC 3207 STARTTLS Port 587, and Port 443 HTTPS Webhook relay with cross-device Cloud Firestore sync (`system_config/email_gateway`).
 * **Asynchronous Execution**: Kotlin Coroutines (`Dispatchers.IO`, `viewModelScope`) and reactive `Flow` pipelines.
 
 ---
@@ -57,9 +58,9 @@ app/src/main/java/com/example/
 ├── data/
 │   ├── AppDatabase.kt          # Room Database Instance & Version Migrations
 │   ├── Models.kt               # Room Data Entities & DAOs (UserDao, OrderDao, AuditLogDao, NotificationDao, MarkedLocationDao)
-│   ├── Repository.kt           # Unified Data Repository Abstraction
+│   ├── Repository.kt           # Unified Data Repository Abstraction (with Admin Master Supervisory Authority)
 │   ├── FirestoreOrderRepository.kt # Firestore Cloud Order Sync & Live Listeners
-│   └── FirestoreUserRepository.kt  # Firestore Cloud User Sync
+│   └── FirestoreUserRepository.kt  # Firestore Cloud User Sync & Email Gateway Real-time Config Sync
 ├── notifications/
 │   └── ZyphuelFcmService.kt    # Firebase Cloud Messaging & System Push Handler
 ├── security/
@@ -70,13 +71,14 @@ app/src/main/java/com/example/
 ├── service/
 │   ├── LocationService.kt      # FusedLocationProviderClient Background & Live GPS Provider
 │   └── RiderLocationForegroundService.kt # Foreground Service for Live Delivery Navigation
-└── ui/
-    ├── MainViewModel.kt        # Central ViewModel, Telematics Calculations & Business Logic Hub
-    ├── Screens.kt              # Jetpack Compose Screens, Order Dialog, Profile & Drawer UI
-    ├── GoogleMapsLiveDeliveryTrackingOverlay.kt # Native Real-Time Radar & Google Maps Tracking
-    ├── Theme.kt                # Material 3 Custom Theme Colors, Shapes & Typography
-    └── components/
-        └── DeliveryNotificationPermissionPrompt.kt # Notification Permission Onboarding Modal
+├── ui/
+│   ├── MainViewModel.kt        # Central ViewModel, Telematics Calculations & Business Logic Hub
+│   ├── Screens.kt              # Jetpack Compose Screens, Order Dialog, Profile, Drawer UI & Admin Mailbox
+│   ├── Theme.kt                # Material 3 Custom Theme Colors, Shapes & Typography
+│   └── components/
+│       └── DeliveryNotificationPermissionPrompt.kt # Notification Permission Onboarding Modal
+└── util/
+    └── RealtimeEmailEngine.kt  # RFC 5321 / RFC 3207 Real-Time Multi-Channel Email Gateway
 ```
 
 ---

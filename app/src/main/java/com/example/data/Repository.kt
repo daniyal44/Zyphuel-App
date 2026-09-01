@@ -292,9 +292,11 @@ class AppRepository(context: Context) {
         }
     }
 
-    suspend fun updateOrderStatus(orderId: Int, newStatus: String, riderEmail: String) {
+    suspend fun updateOrderStatus(orderId: Int, newStatus: String, performedByEmail: String) {
         val order = orderDao.getOrderById(orderId)
-        if (order != null && order.riderEmail == riderEmail) {
+        val user = userDao.getUserByEmail(performedByEmail)
+        val isAuthorized = order != null && (order.riderEmail == performedByEmail || user?.role == "admin")
+        if (isAuthorized && order != null) {
             if (order.status != newStatus) {
                 val updated = order.copy(status = newStatus)
                 orderDao.insertOrder(updated)
@@ -302,8 +304,8 @@ class AppRepository(context: Context) {
                 auditLogDao.insertLog(
                     AuditLogEntity(
                         action = "ORDER_STATUS_CHANGED",
-                        performedBy = riderEmail,
-                        details = "Order #$orderId changed status to $newStatus"
+                        performedBy = performedByEmail,
+                        details = "Order #$orderId changed status to $newStatus (by ${user?.role ?: "rider"})"
                     )
                 )
 
