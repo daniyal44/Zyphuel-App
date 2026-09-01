@@ -51,10 +51,12 @@ Watch your rider approach in real-time on our smart dynamic map. Know exactly wh
 Your satisfaction is our absolute priority. If you have any delivery status concerns, access our direct WhatsApp support or make a direct voice call to our Lahore coordination desk inside the app.
 
 --- Key Features at a Glance: ---
-• Seamless, secure registration in seconds.
-• One-tap smart location setting and address management.
+• Seamless, secure registration in seconds with Google Sign-In & Biometric Unlock.
+• Real-time transactional confirmation & invoice emails sent directly to your Gmail inbox.
+• One-tap smart location setting and native coordinate sharing.
 • Real-time transparent pricing calculations with zero hidden fees.
 • Live timeline logs to track order preparing, dispatch, and completion.
+• Verified dispatch riders and Admin direct fulfillment support.
 • Fully offline-resilient local database caching for a smooth UI experience.
 • Gorgeous modern Material Design 3 layout with dark/light themes.
 

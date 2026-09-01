@@ -2256,6 +2256,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 return@launch
             }
             if (nextStatus == "Completed" &&
+                user.role != "admin" &&
                 existingOrder.status != "Delivering" &&
                 existingOrder.status != "Picking Up" &&
                 existingOrder.status != "Picked Up Fuel" &&
@@ -2498,13 +2499,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 return@launch
             }
 
-            // Select rider
+            // Select rider or self-assign if no rider is available
             val riderToAssign = assignedRider 
                 ?: activeVerifiedRiders.value.firstOrNull() 
                 ?: repository.userDao.getUsersByRole("rider").firstOrNull { it.isVerified }
             
-            val riderEmail = riderToAssign?.email ?: "dispatch.rider@zyphuel.com"
-            val riderName = riderToAssign?.name ?: "Zyphuel Assigned Bowser Rider"
+            val riderEmail = riderToAssign?.email ?: user.email
+            val riderName = riderToAssign?.name ?: "${user.name} (Admin Direct Delivery)"
 
             val updated = order.copy(
                 status = "Assigned",
@@ -2518,9 +2519,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 AuditLogEntity(
                     action = "ADMIN_ORDER_ACCEPTED",
                     performedBy = user.email,
-                    details = "Admin approved Order #$orderId and assigned rider $riderName ($riderEmail)"
+                    details = if (riderToAssign != null) {
+                        "Admin approved Order #$orderId and assigned rider $riderName ($riderEmail)"
+                    } else {
+                        "Admin approved Order #$orderId for direct fulfillment (No rider online - Admin Direct Delivery)"
+                    }
                 )
             )
+
+            withContext(Dispatchers.Main) {
+                _uiMessage.value = if (riderToAssign != null) {
+                    "Order #$orderId accepted & assigned to $riderName"
+                } else {
+                    "Order #$orderId accepted by Admin for direct delivery!"
+                }
+            }
 
             val titleStr = "Order #$orderId Approved by Admin ✅"
             val bodyStr = "Your order #$orderId has been approved by Zyphuel Admin and assigned to $riderName!"
