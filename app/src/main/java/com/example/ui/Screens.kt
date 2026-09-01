@@ -3499,7 +3499,7 @@ fun DrawerContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Zyphuel App v2.2.0 • Build 2026",
+                    text = "Zyphuel App v2.3.0 • Build 2026",
                     style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontSize = 11.sp)
                 )
             }
@@ -10873,7 +10873,7 @@ fun ProfileSettingsDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Zyphuel Platform v2.2.0 • Release 2026",
+                        text = "Zyphuel Platform v2.3.0 • Release 2026",
                         style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontSize = 11.sp)
                     )
                 }

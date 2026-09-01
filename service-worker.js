@@ -7,7 +7,7 @@
  * network disruptions or cell-tower handover latency in Lahore, Pakistan.
  */
 
-const CACHE_VERSION = 'v2.2.0';
+const CACHE_VERSION = 'v2.3.0';
 const CACHE_NAME = `zyphuel-cache-${CACHE_VERSION}`;
 
 // Critical resources to cache immediately on installation
