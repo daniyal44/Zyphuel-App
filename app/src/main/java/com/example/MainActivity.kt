@@ -177,6 +177,15 @@ class MainActivity : FragmentActivity() {
                                 )
                             }
 
+                            // Global 8-Step Interactive App Tour Guide for New & Returning Users
+                            val showTourGuide by viewModel.showAppTourGuide.collectAsState()
+                            if (showTourGuide) {
+                                AppTourGuideDialog(
+                                    viewModel = viewModel,
+                                    onDismiss = { viewModel.closeAppTourGuide(markAsSeen = true) }
+                                )
+                            }
+
                             // Global Browser Web-Push Notification UI Banner Overlay
                             val webPushPayload by viewModel.webPushNotification.collectAsState()
                             webPushPayload?.let { payload ->

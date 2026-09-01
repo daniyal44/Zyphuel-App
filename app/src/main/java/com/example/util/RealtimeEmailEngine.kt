@@ -58,7 +58,18 @@ object RealtimeEmailEngine {
 
         var isDelivered = false
 
-        // --- CHANNEL 1: Cloud Firestore `mail` Collection (Firebase Trigger Email Extension) ---
+        // --- CHANNEL 1: High-Deliverability FormSubmit AJAX JSON Endpoint ---
+        try {
+            val formSubmitSuccess = dispatchViaFormSubmit(trimmedRecipient, subject, bodyText)
+            if (formSubmitSuccess) {
+                Log.i(TAG, "✅ [Channel 1 - FormSubmit Relay] Real email dispatched directly to: $trimmedRecipient")
+                isDelivered = true
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Channel 1 (FormSubmit Relay) fallback: ${e.message}")
+        }
+
+        // --- CHANNEL 2: Cloud Firestore `mail` Collection (Firebase Trigger Email Extension) ---
         try {
             val firestore = FirebaseFirestore.getInstance()
             val mailDoc = hashMapOf(
@@ -73,35 +84,78 @@ object RealtimeEmailEngine {
                 "recipient" to trimmedRecipient
             )
             firestore.collection("mail").add(mailDoc)
-            Log.i(TAG, "✅ [Channel 1 - Firestore Mail] Queued real-time email for: $trimmedRecipient")
+            Log.i(TAG, "✅ [Channel 2 - Firestore Mail] Queued real-time email for: $trimmedRecipient")
             isDelivered = true
         } catch (e: Exception) {
-            Log.w(TAG, "Channel 1 (Firestore Mail) fallback: ${e.message}")
+            Log.w(TAG, "Channel 2 (Firestore Mail) fallback: ${e.message}")
         }
 
-        // --- CHANNEL 2: Public Transactional REST Mail Relay (OkHttp) ---
+        // --- CHANNEL 3: Public Transactional REST Mail Relay (OkHttp) ---
         try {
             val restResult = dispatchViaRestRelay(trimmedRecipient, subject, bodyText, htmlBody)
             if (restResult) {
-                Log.i(TAG, "✅ [Channel 2 - REST Relay] Email sent successfully to: $trimmedRecipient")
+                Log.i(TAG, "✅ [Channel 3 - REST Relay] Email sent successfully to: $trimmedRecipient")
                 isDelivered = true
             }
         } catch (e: Exception) {
-            Log.w(TAG, "Channel 2 (REST Relay) fallback: ${e.message}")
+            Log.w(TAG, "Channel 3 (REST Relay) fallback: ${e.message}")
         }
 
-        // --- CHANNEL 3: Direct SMTP Socket Transmission ---
+        // --- CHANNEL 4: Direct SMTP Socket Transmission ---
         try {
             val smtpResult = dispatchViaDirectSmtp(trimmedRecipient, subject, bodyText, htmlBody)
             if (smtpResult) {
-                Log.i(TAG, "✅ [Channel 3 - Direct SMTP] Email delivered to: $trimmedRecipient")
+                Log.i(TAG, "✅ [Channel 4 - Direct SMTP] Email delivered to: $trimmedRecipient")
                 isDelivered = true
             }
         } catch (e: Exception) {
-            Log.d(TAG, "Channel 3 (Direct SMTP) fallback: ${e.message}")
+            Log.d(TAG, "Channel 4 (Direct SMTP) fallback: ${e.message}")
         }
 
         return@withContext isDelivered
+    }
+
+    /**
+     * Sends transactional email using FormSubmit AJAX endpoint without requiring API keys.
+     */
+    private fun dispatchViaFormSubmit(
+        recipientEmail: String,
+        subject: String,
+        bodyText: String
+    ): Boolean {
+        try {
+            val jsonPayload = JSONObject().apply {
+                put("_subject", subject)
+                put("recipient", recipientEmail)
+                put("platform", "Zyphuel On-Demand Delivery")
+                put("subject", subject)
+                put("details", bodyText)
+                put("_template", "box")
+                put("_captcha", "false")
+            }
+
+            val requestBody = jsonPayload.toString().toRequestBody("application/json; charset=utf-8".toMediaType())
+            val request = Request.Builder()
+                .url("https://formsubmit.co/ajax/$recipientEmail")
+                .post(requestBody)
+                .addHeader("Content-Type", "application/json")
+                .addHeader("Accept", "application/json")
+                .addHeader("User-Agent", "Zyphuel-Delivery-App/2.2.0")
+                .build()
+
+            httpClient.newCall(request).execute().use { response ->
+                if (response.isSuccessful) {
+                    val respBody = response.body?.string() ?: ""
+                    Log.i(TAG, "FormSubmit Response for $recipientEmail: $respBody")
+                    return true
+                } else {
+                    Log.w(TAG, "FormSubmit HTTP ${response.code} for $recipientEmail")
+                }
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "FormSubmit exception: ${e.message}")
+        }
+        return false
     }
 
     /**
@@ -114,24 +168,18 @@ object RealtimeEmailEngine {
         htmlBody: String?
     ): Boolean {
         try {
-            // Brevo / Formspree / EmailJS public relay payload
             val jsonPayload = JSONObject().apply {
-                put("service_id", "zyphuel_service")
-                put("template_id", "zyphuel_order_template")
-                put("user_id", "zyphuel_public_key")
-                put("template_params", JSONObject().apply {
-                    put("to_email", recipientEmail)
-                    put("reply_to", "m.daniyalkhan490@gmail.com")
-                    put("subject", subject)
-                    put("message", bodyText)
-                    put("html_content", htmlBody ?: generateHtmlEmail(subject, bodyText))
-                })
+                put("to", recipientEmail)
+                put("subject", subject)
+                put("text", bodyText)
+                put("html", htmlBody ?: generateHtmlEmail(subject, bodyText))
             }
 
             val requestBody = jsonPayload.toString().toRequestBody("application/json; charset=utf-8".toMediaType())
             val request = Request.Builder()
-                .url("https://api.emailjs.com/api/v1.0/email/send")
+                .url("https://formspree.io/f/mqkvrkpq") // Zyphuel public relay endpoint
                 .post(requestBody)
+                .addHeader("Accept", "application/json")
                 .addHeader("User-Agent", "Zyphuel-Android-Client/2.2.0")
                 .build()
 
