@@ -3407,6 +3407,15 @@ fun DrawerContent(
                     onClose()
                 }
             )
+            SidebarItem(
+                icon = Icons.Filled.MenuBook,
+                label = "App Tour Guide (8 Steps) 📖",
+                modifier = Modifier.testTag("sidebar_app_tour"),
+                onClick = {
+                    viewModel.openAppTourGuide()
+                    onClose()
+                }
+            )
 
             // Section: Admin & Developer Tools (if admin)
             if (currentUser.role == "admin") {
@@ -13462,7 +13471,7 @@ fun AdminDashboardScreen(viewModel: MainViewModel) {
                                 item { Text("No orders placed yet.") }
                             } else {
                                 items(orders) { order ->
-                                    AdminOrderCard(order = order)
+                                    AdminOrderCard(order = order, viewModel = viewModel)
                                 }
                             }
                         }
@@ -15529,15 +15538,20 @@ fun AdminRiderDetailsDialog(
 }
 
 @Composable
-fun AdminOrderCard(order: OrderEntity) {
+fun AdminOrderCard(order: OrderEntity, viewModel: MainViewModel? = null) {
+    var showDeclineDialog by remember { mutableStateOf(false) }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text("Order #${order.id} - ${order.serviceType}", fontWeight = FontWeight.Bold, color = ZyphuelBlueDark)
                 Text("Rs. ${String.format(java.util.Locale.US, "%.2f", order.totalPrice)}", fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary)
@@ -15546,14 +15560,70 @@ fun AdminOrderCard(order: OrderEntity) {
             Text("Qty: ${order.quantity} | Cust: ${order.customerName}", style = MaterialTheme.typography.bodySmall.copy(color = Color.DarkGray))
             Text("Address: ${order.deliveryAddress}", style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray))
             Text("Rider: ${order.riderName ?: "Unassigned"}", style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray))
-            Spacer(modifier = Modifier.height(4.dp))
-            Box(
-                modifier = Modifier
-                    .background(ZyphuelBlueSecondary.copy(alpha = 0.1f), RoundedCornerShape(4.dp))
-                    .padding(horizontal = 6.dp, vertical = 2.dp)
+            Spacer(modifier = Modifier.height(6.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(order.status, color = ZyphuelBlueDark, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall)
+                Box(
+                    modifier = Modifier
+                        .background(
+                            when (order.status) {
+                                "Completed" -> Color(0xFFDCFCE7)
+                                "Cancelled" -> Color(0xFFFEE2E2)
+                                "Assigned", "Delivering" -> Color(0xFFE0F2FE)
+                                else -> ZyphuelBlueSecondary.copy(alpha = 0.15f)
+                            },
+                            RoundedCornerShape(6.dp)
+                        )
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        order.status,
+                        color = when (order.status) {
+                            "Completed" -> Color(0xFF16A34A)
+                            "Cancelled" -> Color(0xFFDC2626)
+                            "Assigned", "Delivering" -> Color(0xFF0284C7)
+                            else -> ZyphuelBlueDark
+                        },
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                }
+
+                // If order is active or pending, show Accept & Decline buttons for Admin
+                if (order.status != "Completed" && order.status != "Cancelled" && viewModel != null) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        if (order.status == "Pending") {
+                            Button(
+                                onClick = { viewModel.adminAcceptOrder(order.id) },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF16A34A)),
+                                shape = RoundedCornerShape(8.dp),
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                                modifier = Modifier.testTag("admin_accept_order_${order.id}")
+                            ) {
+                                Icon(Icons.Filled.CheckCircle, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color.White)
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Accept", color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall)
+                            }
+                        }
+                        OutlinedButton(
+                            onClick = { showDeclineDialog = true },
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFDC2626)),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFDC2626)),
+                            shape = RoundedCornerShape(8.dp),
+                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                            modifier = Modifier.testTag("admin_decline_order_${order.id}")
+                        ) {
+                            Icon(Icons.Filled.Cancel, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color(0xFFDC2626))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Decline", color = Color(0xFFDC2626), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
+                }
             }
+
             if (order.rating != null) {
                 Spacer(modifier = Modifier.height(8.dp))
                 HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f))
@@ -15584,7 +15654,378 @@ fun AdminOrderCard(order: OrderEntity) {
             }
         }
     }
+
+    if (showDeclineDialog && viewModel != null) {
+        AdminDeclineOrderDialog(
+            order = order,
+            onDismiss = { showDeclineDialog = false },
+            onConfirmDecline = { reason ->
+                viewModel.adminDeclineOrder(order.id, reason)
+                showDeclineDialog = false
+            }
+        )
+    }
 }
+
+@Composable
+fun AdminDeclineOrderDialog(
+    order: OrderEntity,
+    onDismiss: () -> Unit,
+    onConfirmDecline: (String) -> Unit
+) {
+    val predefinedReasons = listOf(
+        "Out of delivery coverage area in Lahore",
+        "Depot fuel stock temporary limit",
+        "Customer requested cancellation",
+        "Customer phone unreachable",
+        "Other operational constraint"
+    )
+    var selectedReason by remember { mutableStateOf(predefinedReasons[0]) }
+    var customReason by remember { mutableStateOf("") }
+    var isCustom by remember { mutableStateOf(false) }
+
+    androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss) {
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            modifier = Modifier.fillMaxWidth().padding(16.dp)
+        ) {
+            Column(modifier = Modifier.padding(20.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Filled.Cancel, contentDescription = null, tint = Color(0xFFDC2626), modifier = Modifier.size(24.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Decline Order #${order.id}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = ZyphuelBlueDark)
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    "Select or enter the reason for declining this order. The customer will receive an immediate real-time email notification.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                predefinedReasons.forEach { reason ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                selectedReason = reason
+                                isCustom = (reason == "Other operational constraint")
+                            }
+                            .padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = (selectedReason == reason),
+                            onClick = {
+                                selectedReason = reason
+                                isCustom = (reason == "Other operational constraint")
+                            },
+                            colors = RadioButtonDefaults.colors(selectedColor = Color(0xFFDC2626))
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(reason, style = MaterialTheme.typography.bodySmall, color = Color.DarkGray)
+                    }
+                }
+
+                if (isCustom) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = customReason,
+                        onValueChange = { customReason = it },
+                        label = { Text("Specify Custom Reason") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text("Back", color = Color.Gray)
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = {
+                            val finalReason = if (isCustom && customReason.isNotBlank()) customReason else selectedReason
+                            onConfirmDecline(finalReason)
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626)),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text("Confirm Decline", color = Color.White, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun AppTourGuideDialog(
+    viewModel: MainViewModel,
+    onDismiss: () -> Unit
+) {
+    var hasStartedTour by remember { mutableStateOf(false) }
+    var currentStep by remember { mutableIntStateOf(0) }
+
+    val tourSteps = listOf(
+        TourStepItem(
+            title = "Welcome to Zyphuel! 🚚",
+            subtitle = "Lahore's #1 On-Demand Fuel & Water Delivery",
+            description = "Get Super Petrol, High-Speed Diesel, High Octane 97, LPG Gas Cylinders, and Clean Drinking Water delivered directly to your car, home, or office with zero hassle.",
+            icon = Icons.Filled.LocalShipping,
+            badge = "STEP 1 OF 8"
+        ),
+        TourStepItem(
+            title = "Live OGRA Government Rates ⚡",
+            subtitle = "100% Transparent Real-Time Pricing",
+            description = "All prices are automatically synced with official OGRA Pakistan schedules every 4 hours. No hidden charges, no surge pricing, exactly what you see at the fuel pump.",
+            icon = Icons.Filled.LocalGasStation,
+            badge = "STEP 2 OF 8"
+        ),
+        TourStepItem(
+            title = "Instant 1-Tap Ordering 🛒",
+            subtitle = "Cash on Delivery (COD) Checkout",
+            description = "Easily select fuel type, adjust liters or cylinders using the quick quantity stepper, and place your order in 0 milliseconds with convenient Cash on Delivery.",
+            icon = Icons.Filled.ShoppingCart,
+            badge = "STEP 3 OF 8"
+        ),
+        TourStepItem(
+            title = "Share Location Pin 📍",
+            subtitle = "Native Google Maps Landmark Sharing",
+            description = "Pin your exact delivery location or landmark with one tap. Use the 'Share Location' feature to instantly send Google Maps coordinates to the logistics center.",
+            icon = Icons.Filled.LocationOn,
+            badge = "STEP 4 OF 8"
+        ),
+        TourStepItem(
+            title = "Clean Order Details & Stepper 📦",
+            subtitle = "4-Step Real-Time Status Progress",
+            description = "Follow your delivery step-by-step: Pending ➔ Driver Assigned ➔ Fuel Picked Up ➔ Out for Delivery ➔ Completed with responsive zero-lag updates.",
+            icon = Icons.Filled.AccessTime,
+            badge = "STEP 5 OF 8"
+        ),
+        TourStepItem(
+            title = "Direct Driver Contact 📞",
+            subtitle = "In-App Live Chat & Instant Dialer",
+            description = "Once a verified bowser driver is assigned, call them directly with one tap or send live in-app delivery instructions for a smooth handover.",
+            icon = Icons.Filled.Phone,
+            badge = "STEP 6 OF 8"
+        ),
+        TourStepItem(
+            title = "Real-Time Email Inbox Delivery 📧",
+            subtitle = "Direct Gmail Order Receipts & Alerts",
+            description = "Every time an order is placed or updated, automated branded confirmation emails are dispatched directly to your Gmail inbox with complete itemized receipts.",
+            icon = Icons.Filled.Email,
+            badge = "STEP 7 OF 8"
+        ),
+        TourStepItem(
+            title = "Biometrics & Verified Security 🛡️",
+            subtitle = "Fingerprint Login & Admin Verified Badges",
+            description = "Keep your account protected with biometric authentication. Look for the official Blue Tick Verified Badge on Admin and approved commercial riders.",
+            icon = Icons.Filled.Security,
+            badge = "STEP 8 OF 8"
+        )
+    )
+
+    androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                if (!hasStartedTour) {
+                    // Initial Welcome & Options Screen
+                    Box(
+                        modifier = Modifier
+                            .size(72.dp)
+                            .background(ZyphuelBlueSecondary.copy(alpha = 0.15f), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Explore,
+                            contentDescription = null,
+                            tint = ZyphuelBluePrimary,
+                            modifier = Modifier.size(40.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(14.dp))
+                    Text(
+                        text = "Welcome to Zyphuel! 🚚",
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                        color = ZyphuelBlueDark,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Take a quick 8-step interactive tour to learn how to order doorstep fuel, track deliveries, and use all premium features in Lahore.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.DarkGray,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        lineHeight = androidx.compose.ui.unit.TextUnit(20f, androidx.compose.ui.unit.TextUnitType.Sp)
+                    )
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Button(
+                        onClick = { hasStartedTour = true },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .testTag("tour_take_tour_btn"),
+                        colors = ButtonDefaults.buttonColors(containerColor = ZyphuelBluePrimary),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(Icons.Filled.PlayArrow, contentDescription = null, tint = Color.White)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Take Tour (8 Steps) 🚀", fontWeight = FontWeight.Bold, color = Color.White)
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                    OutlinedButton(
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .testTag("tour_skip_initial_btn"),
+                        shape = RoundedCornerShape(12.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFCBD5E1))
+                    ) {
+                        Text("Skip for Now", color = Color.Gray, fontWeight = FontWeight.SemiBold)
+                    }
+                } else {
+                    // Tour Step Screen
+                    val step = tourSteps[currentStep]
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .background(Color(0xFFE0F2FE), RoundedCornerShape(8.dp))
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                        ) {
+                            Text(
+                                text = step.badge,
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary)
+                            )
+                        }
+                        TextButton(onClick = onDismiss, modifier = Modifier.testTag("tour_skip_step_btn")) {
+                            Text("Skip Tour", color = Color.Gray, style = MaterialTheme.typography.labelMedium)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+                    LinearProgressIndicator(
+                        progress = { (currentStep + 1) / 8f },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(6.dp)
+                            .clip(RoundedCornerShape(3.dp)),
+                        color = ZyphuelBluePrimary,
+                        trackColor = Color(0xFFE2E8F0),
+                    )
+
+                    Spacer(modifier = Modifier.height(18.dp))
+                    Box(
+                        modifier = Modifier
+                            .size(60.dp)
+                            .background(ZyphuelBlueSecondary.copy(alpha = 0.15f), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = step.icon,
+                            contentDescription = null,
+                            tint = ZyphuelBluePrimary,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+                    Text(
+                        text = step.title,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = ZyphuelBlueDark,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = step.subtitle,
+                        style = MaterialTheme.typography.labelMedium.copy(color = ZyphuelBluePrimary, fontWeight = FontWeight.SemiBold),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = step.description,
+                        style = MaterialTheme.typography.bodyMedium.copy(color = Color.DarkGray),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        lineHeight = androidx.compose.ui.unit.TextUnit(20f, androidx.compose.ui.unit.TextUnitType.Sp)
+                    )
+
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        if (currentStep > 0) {
+                            OutlinedButton(
+                                onClick = { currentStep-- },
+                                shape = RoundedCornerShape(10.dp),
+                                modifier = Modifier.testTag("tour_back_btn")
+                            ) {
+                                Text("Back", color = ZyphuelBlueDark)
+                            }
+                        } else {
+                            Spacer(modifier = Modifier.width(8.dp))
+                        }
+
+                        if (currentStep < 7) {
+                            Button(
+                                onClick = { currentStep++ },
+                                colors = ButtonDefaults.buttonColors(containerColor = ZyphuelBluePrimary),
+                                shape = RoundedCornerShape(10.dp),
+                                modifier = Modifier.testTag("tour_next_btn")
+                            ) {
+                                Text("Next", color = Color.White, fontWeight = FontWeight.Bold)
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Icon(Icons.Filled.ArrowForward, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.White)
+                            }
+                        } else {
+                            Button(
+                                onClick = onDismiss,
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF16A34A)),
+                                shape = RoundedCornerShape(10.dp),
+                                modifier = Modifier.testTag("tour_finish_btn")
+                            ) {
+                                Text("Get Started! 🏁", color = Color.White, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+data class TourStepItem(
+    val title: String,
+    val subtitle: String,
+    val description: String,
+    val icon: androidx.compose.ui.graphics.vector.ImageVector,
+    val badge: String
+)
 
 @Composable
 fun AdminLogItem(log: AuditLogEntity) {

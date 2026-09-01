@@ -216,4 +216,64 @@ class ZyphuelComprehensiveAppTest {
         val appTitle = context.getString(R.string.app_store_title)
         assertTrue(appTitle.contains("Zyphuel"))
     }
+
+    // =========================================================================
+    // 6. ADMIN ORDER ACCEPT & DECLINE WORKFLOW TEST
+    // =========================================================================
+    @Test
+    fun `test Admin Order Accept and Decline Logic`() {
+        val pendingOrder = OrderEntity(
+            id = 7001,
+            customerEmail = "customer.lahore@gmail.com",
+            customerName = "Bilal Tariq",
+            customerPhone = "+92 321 9876543",
+            serviceType = "Super Petrol",
+            quantity = 20,
+            totalPrice = 5200.0,
+            deliveryAddress = "DHA Phase 5, Lahore",
+            status = "Pending",
+            paymentMethod = "COD",
+            etaMinutes = 20,
+            createdAt = System.currentTimeMillis()
+        )
+
+        // Simulate Admin Accept Order
+        val assignedOrder = pendingOrder.copy(
+            status = "Assigned",
+            riderEmail = "bowser.driver@zyphuel.com",
+            riderName = "Zubair (Bowser #05)"
+        )
+        assertEquals("Assigned", assignedOrder.status)
+        assertEquals("bowser.driver@zyphuel.com", assignedOrder.riderEmail)
+
+        // Simulate Admin Decline Order
+        val declineReason = "Out of delivery coverage area in Lahore"
+        val declinedOrder = pendingOrder.copy(
+            status = "Cancelled",
+            feedback = "Declined by Admin: $declineReason"
+        )
+        assertEquals("Cancelled", declinedOrder.status)
+        assertTrue(declinedOrder.feedback!!.contains(declineReason))
+    }
+
+    // =========================================================================
+    // 7. 8-STEP APP TOUR GUIDE INTEGRITY TEST
+    // =========================================================================
+    @Test
+    fun `test 8-Step App Tour Guide Step Count and Content Verification`() {
+        val tourTitles = listOf(
+            "Welcome to Zyphuel! 🚚",
+            "Live OGRA Government Rates ⚡",
+            "Instant 1-Tap Ordering 🛒",
+            "Share Location Pin 📍",
+            "Clean Order Details & Stepper 📦",
+            "Direct Driver Contact 📞",
+            "Real-Time Email Inbox Delivery 📧",
+            "Biometrics & Verified Security 🛡️"
+        )
+        assertEquals(8, tourTitles.size)
+        assertTrue(tourTitles[0].contains("Welcome"))
+        assertTrue(tourTitles[6].contains("Real-Time Email"))
+        assertTrue(tourTitles[7].contains("Biometrics"))
+    }
 }

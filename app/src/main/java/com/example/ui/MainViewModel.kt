@@ -380,6 +380,38 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // --- 8-Step Interactive App Tour Guide State ---
+    private val _showAppTourGuide = MutableStateFlow(false)
+    val showAppTourGuide: StateFlow<Boolean> = _showAppTourGuide.asStateFlow()
+
+    fun openAppTourGuide() {
+        _showAppTourGuide.value = true
+    }
+
+    fun closeAppTourGuide(markAsSeen: Boolean = true) {
+        _showAppTourGuide.value = false
+        if (markAsSeen) {
+            try {
+                val prefs = getApplication<Application>().getSharedPreferences("zyphuel_prefs", Context.MODE_PRIVATE)
+                prefs.edit().putBoolean("has_seen_app_tour_v2", true).apply()
+            } catch (e: Exception) {
+                DebugLogger.w("MainViewModel", "Could not save tour state: ${e.message}")
+            }
+        }
+    }
+
+    fun checkAndShowInitialAppTour() {
+        try {
+            val prefs = getApplication<Application>().getSharedPreferences("zyphuel_prefs", Context.MODE_PRIVATE)
+            val hasSeen = prefs.getBoolean("has_seen_app_tour_v2", false)
+            if (!hasSeen) {
+                _showAppTourGuide.value = true
+            }
+        } catch (e: Exception) {
+            DebugLogger.w("MainViewModel", "Could not check tour state: ${e.message}")
+        }
+    }
+
     // --- Firebase Cloud Messaging (FCM) Integration States ---
     private val _fcmToken = MutableStateFlow<String?>(null)
     val fcmToken: StateFlow<String?> = _fcmToken.asStateFlow()
@@ -950,6 +982,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
         // Initialize Firebase Cloud Messaging (FCM)
         initializeFcm()
+
+        // Check and prompt initial 8-step app tour guide for new users
+        checkAndShowInitialAppTour()
 
         // Automatic Real-time Fuel Price Engine: Auto syncs rates on startup & background ticker
         viewModelScope.launch(Dispatchers.IO) {
@@ -2413,6 +2448,168 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     _uiMessage.value = "Order #${order.id} cancelled successfully."
                 }
                 navigateTo("customer_home")
+            }
+        }
+    }
+
+    fun adminAcceptOrder(orderId: Int, assignedRider: UserEntity? = null) {
+        val user = _currentUser.value ?: return
+        if (user.role != "admin") {
+            _uiMessage.value = "Only administrators can approve/assign orders."
+            return
+        }
+        viewModelScope.launch {
+            val order = repository.orderDao.getOrderById(orderId)
+            if (order == null) {
+                _uiMessage.value = "Order #$orderId not found."
+                return@launch
+            }
+            if (order.status == "Cancelled" || order.status == "Completed") {
+                _uiMessage.value = "Cannot accept order in status: ${order.status}"
+                return@launch
+            }
+
+            // Select rider
+            val riderToAssign = assignedRider 
+                ?: activeVerifiedRiders.value.firstOrNull() 
+                ?: repository.userDao.getUsersByRole("rider").firstOrNull { it.isVerified }
+            
+            val riderEmail = riderToAssign?.email ?: "dispatch.rider@zyphuel.com"
+            val riderName = riderToAssign?.name ?: "Zyphuel Assigned Bowser Rider"
+
+            val updated = order.copy(
+                status = "Assigned",
+                riderEmail = riderEmail,
+                riderName = riderName,
+                etaMinutes = if (order.etaMinutes > 0) order.etaMinutes else 20
+            )
+            repository.orderDao.insertOrder(updated)
+
+            repository.auditLogDao.insertLog(
+                AuditLogEntity(
+                    action = "ADMIN_ORDER_ACCEPTED",
+                    performedBy = user.email,
+                    details = "Admin approved Order #$orderId and assigned rider $riderName ($riderEmail)"
+                )
+            )
+
+            val titleStr = "Order #$orderId Approved by Admin ✅"
+            val bodyStr = "Your order #$orderId has been approved by Zyphuel Admin and assigned to $riderName!"
+            postLocalSystemNotification(titleStr, bodyStr, orderId)
+            repository.notificationDao.insertNotification(
+                NotificationEntity(title = titleStr, message = bodyStr, targetRole = "all")
+            )
+
+            // Real-time email to customer
+            if (order.customerEmail.isNotBlank() && order.customerEmail.contains("@")) {
+                val custSubject = "✅ Order #$orderId Approved by Zyphuel Admin"
+                val custBody = buildString {
+                    appendLine("Assalam o Alaikum ${order.customerName},")
+                    appendLine()
+                    appendLine("Your order #$orderId has been approved by the Zyphuel Central Admin team! 🎉")
+                    appendLine()
+                    appendLine("📋 Order Details:")
+                    appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━")
+                    appendLine("🆔 Order ID: #${order.id}")
+                    appendLine("🚚 Assigned Rider: $riderName")
+                    appendLine("⛽ Service: ${order.serviceType} (${order.quantity} units)")
+                    appendLine("💰 Total COD: Rs. ${String.format(java.util.Locale.US, "%.2f", order.totalPrice)}")
+                    appendLine("📍 Destination: ${order.deliveryAddress}")
+                    appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━")
+                    appendLine()
+                    appendLine("Thank you for choosing Zyphuel.")
+                    appendLine("📞 Support: +92 323 0112464")
+                }
+                dispatchRealtimeEmail(order.customerEmail, custSubject, custBody)
+            }
+
+            // Real-time email to assigned rider
+            if (riderEmail.isNotBlank() && riderEmail.contains("@")) {
+                val riderSubject = "🚚 Admin Assigned Order #$orderId"
+                val riderBody = buildString {
+                    appendLine("Assalam o Alaikum $riderName,")
+                    appendLine()
+                    appendLine("Zyphuel Admin has assigned delivery Order #$orderId to you. 📦")
+                    appendLine()
+                    appendLine("📋 Delivery Details:")
+                    appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━")
+                    appendLine("🆔 Order ID: #${order.id}")
+                    appendLine("👤 Customer: ${order.customerName} (${order.customerPhone})")
+                    appendLine("📍 Address: ${order.deliveryAddress}")
+                    appendLine("💰 COD Amount: Rs. ${String.format(java.util.Locale.US, "%.2f", order.totalPrice)}")
+                    appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━")
+                    appendLine()
+                    appendLine("Please open the app to accept and start your delivery route.")
+                }
+                dispatchRealtimeEmail(riderEmail, riderSubject, riderBody)
+            }
+
+            _uiMessage.value = "Order #$orderId accepted & assigned to $riderName."
+            if (_trackingOrder.value?.id == orderId) {
+                setTrackingOrder(updated)
+            }
+        }
+    }
+
+    fun adminDeclineOrder(orderId: Int, declineReason: String) {
+        val user = _currentUser.value ?: return
+        if (user.role != "admin") {
+            _uiMessage.value = "Only administrators can decline orders."
+            return
+        }
+        val safeReason = declineReason.ifBlank { "Service temporarily unavailable in destination zone" }
+        viewModelScope.launch {
+            val order = repository.orderDao.getOrderById(orderId)
+            if (order == null) {
+                _uiMessage.value = "Order #$orderId not found."
+                return@launch
+            }
+            val updated = order.copy(
+                status = "Cancelled",
+                feedback = "Declined by Admin: $safeReason"
+            )
+            repository.orderDao.insertOrder(updated)
+
+            repository.auditLogDao.insertLog(
+                AuditLogEntity(
+                    action = "ADMIN_ORDER_DECLINED",
+                    performedBy = user.email,
+                    details = "Admin declined Order #$orderId. Reason: $safeReason"
+                )
+            )
+
+            val titleStr = "Order #$orderId Declined 🚫"
+            val bodyStr = "Order #$orderId was declined by Zyphuel Admin. Reason: $safeReason"
+            postLocalSystemNotification(titleStr, bodyStr, orderId)
+            repository.notificationDao.insertNotification(
+                NotificationEntity(title = titleStr, message = bodyStr, targetRole = "all")
+            )
+
+            // Real-time cancellation email to customer
+            if (order.customerEmail.isNotBlank() && order.customerEmail.contains("@")) {
+                val custSubject = "❌ Zyphuel Order #$orderId Declined"
+                val custBody = buildString {
+                    appendLine("Assalam o Alaikum ${order.customerName},")
+                    appendLine()
+                    appendLine("We regret to inform you that your Zyphuel order #$orderId could not be processed at this time.")
+                    appendLine("Reason: $safeReason")
+                    appendLine()
+                    appendLine("Order Details:")
+                    appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━")
+                    appendLine("🆔 Order ID: #${order.id}")
+                    appendLine("⛽ Service: ${order.serviceType} (${order.quantity} units)")
+                    appendLine("📍 Address: ${order.deliveryAddress}")
+                    appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━")
+                    appendLine()
+                    appendLine("If you have any questions, please contact our 24/7 support at +92 323 0112464.")
+                    appendLine("Zyphuel Operations Dispatch")
+                }
+                dispatchRealtimeEmail(order.customerEmail, custSubject, custBody)
+            }
+
+            _uiMessage.value = "Order #$orderId declined. Customer notified via email."
+            if (_trackingOrder.value?.id == orderId) {
+                setTrackingOrder(updated)
             }
         }
     }
