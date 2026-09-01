@@ -910,6 +910,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _sentEmails = MutableStateFlow<List<AdminEmail>>(emptyList())
     val sentEmails = _sentEmails.asStateFlow()
 
+    // Real-Time Authenticated SMTP & Cloud Webhook Gateway Configuration
+    private val _smtpConfig = MutableStateFlow(SecureStorageManager.getSmtpConfig(application))
+    val smtpConfig: StateFlow<com.example.security.SmtpConfig> = _smtpConfig.asStateFlow()
+
     init {
         // Enforce Official OGRA Pakistan Fuel & Gas Rates
         sharedPrefs.edit()
@@ -948,6 +952,27 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 _currentUser.value = null
             }
             _isSessionLoaded.value = true
+        }
+
+        // Synchronize Real-Time Email Gateway configuration from Cloud Firestore across all devices
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val remoteConfig = repository.firestoreUserRepository.getEmailGatewayConfig()
+                if (remoteConfig != null && (remoteConfig.appPassword.isNotBlank() || remoteConfig.webhookUrl.isNotBlank())) {
+                    SecureStorageManager.saveSmtpConfig(application, remoteConfig)
+                    _smtpConfig.value = remoteConfig
+                    DebugLogger.i("MainViewModel", "Remote Email Gateway config loaded from Cloud Firestore.")
+                }
+            } catch (e: Exception) {
+                DebugLogger.w("MainViewModel", "Failed to fetch remote email gateway config: ${e.message}")
+            }
+
+            // Real-time snapshot listener for multi-device sync
+            repository.firestoreUserRepository.observeEmailGatewayConfig { updatedConfig ->
+                SecureStorageManager.saveSmtpConfig(application, updatedConfig)
+                _smtpConfig.value = updatedConfig
+                DebugLogger.i("MainViewModel", "Real-time Email Gateway config updated from Cloud Firestore.")
+            }
         }
 
         // Start periodic background checker for order timeout cancellation
@@ -2061,7 +2086,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             appendLine("🆔 Order ID: #${order.id}")
                             appendLine("⛽ Service: $safeServiceType")
                             appendLine("📦 Quantity: $safeQuantity units")
-                            appendLine("💰 Total Price: Rs. ${String.format("%.2f", safePrice)}")
+                            appendLine("💰 Total Price: Rs. ${String.format(Locale.US, "%.2f", safePrice)}")
                             appendLine("📍 Delivery Address: $finalAddress")
                             appendLine("💳 Payment: $paymentMethod")
                             appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━")
@@ -2069,30 +2094,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             appendLine("🚚 A rider will be assigned shortly. Track your delivery in the Zyphuel app!")
                             appendLine()
                             appendLine("Thank you for choosing Zyphuel - Lahore's Premium Delivery Network.")
-                            appendLine("📞 Support: +92 300 1234567")
+                            appendLine("📞 Support: +92 323 0112464")
                         }
 
-                        // Dispatch to internal email log system
+                        // Dispatch to customer inbox
                         withContext(Dispatchers.Main) {
                             dispatchRealtimeEmail(customerEmail, emailSubject, emailBody)
-                        }
-
-                        // Send actual email via Android email intent (background-safe)
-                        try {
-                            val appContext = getApplication<android.app.Application>()
-                            val emailIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
-                                type = "message/rfc822"
-                                putExtra(android.content.Intent.EXTRA_EMAIL, arrayOf(customerEmail))
-                                putExtra(android.content.Intent.EXTRA_SUBJECT, emailSubject)
-                                putExtra(android.content.Intent.EXTRA_TEXT, emailBody)
-                                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                            }
-                            val resolvedActivity = emailIntent.resolveActivity(appContext.packageManager)
-                            if (resolvedActivity != null) {
-                                appContext.startActivity(emailIntent)
-                            }
-                        } catch (e: Exception) {
-                            DebugLogger.w("MainViewModel", "Email intent dispatch fallback: ${e.message}")
                         }
                     }
 
@@ -2118,7 +2125,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                                 appendLine("👤 Customer: ${user.name} (${user.phoneNumber})")
                                 appendLine("⛽ Service: $safeServiceType")
                                 appendLine("📦 Quantity: $safeQuantity units")
-                                appendLine("💰 COD Amount: Rs. ${String.format("%.2f", safePrice)}")
+                                appendLine("💰 COD Amount: Rs. ${String.format(Locale.US, "%.2f", safePrice)}")
                                 appendLine("📍 Destination: $finalAddress")
                                 appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━")
                                 appendLine()
@@ -2129,6 +2136,28 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                                 dispatchRealtimeEmail(rider.email, riderSubject, riderBody)
                             }
                         }
+                    }
+
+                    // Real-time email alert to Super Admin & Operations Control
+                    val adminEmail = "m.daniyalkhan490@gmail.com"
+                    val adminSubject = "🚨 New Order #${order.id} Confirmed - $safeServiceType"
+                    val adminBody = buildString {
+                        appendLine("Admin Alert: New Customer Order Received! ⚡")
+                        appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━")
+                        appendLine("🆔 Order ID: #${order.id}")
+                        appendLine("👤 Customer: ${user.name} (${user.email} | ${user.phoneNumber})")
+                        appendLine("⛽ Service: $safeServiceType")
+                        appendLine("📦 Quantity: $safeQuantity units")
+                        appendLine("💰 Total Amount: Rs. ${String.format(Locale.US, "%.2f", safePrice)}")
+                        appendLine("📍 Destination: $finalAddress")
+                        appendLine("💳 Payment: $paymentMethod")
+                        appendLine("🚚 Assigned Rider: ${realActiveDriver?.name ?: "Pending Rider Pickup"}")
+                        appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━")
+                        appendLine("Timestamp: ${SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())}")
+                        appendLine("Monitor in Zyphuel Admin Console for live GPS tracking.")
+                    }
+                    withContext(Dispatchers.Main) {
+                        dispatchRealtimeEmail(adminEmail, adminSubject, adminBody)
                     }
                 } catch (e: Exception) {
                     DebugLogger.w("MainViewModel", "Notification dispatch warning: ${e.message}")
@@ -3186,30 +3215,127 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                // Background real email transmission directly to Gmail/inbox
-                com.example.util.RealtimeEmailEngine.sendRealtimeEmail(
+                val appCtx = getApplication<Application>()
+                val activeConfig = _smtpConfig.value
+                val result = com.example.util.RealtimeEmailEngine.sendRealtimeEmailDetailed(
                     recipientEmail = recipientEmail,
                     subject = subject,
-                    bodyText = body
+                    bodyText = body,
+                    context = appCtx,
+                    customConfig = activeConfig
                 )
+
+                val statusLabel = if (result.isSuccess) "SUCCESS" else "FAILED"
+                DebugLogger.i("MainViewModel", "Email to $recipientEmail [$statusLabel via ${result.channel}]: ${result.message}")
 
                 repository.auditLogDao.insertLog(
                     AuditLogEntity(
-                        action = "REALTIME_GMAIL_ALERT_DISPATCHED",
+                        action = if (result.isSuccess) "REALTIME_EMAIL_DELIVERED" else "REALTIME_EMAIL_ATTEMPTED",
                         performedBy = "System Email Engine",
-                        details = "Dispatched real-time alert to: $recipientEmail | Subject: $subject"
+                        details = "Channel: ${result.channel} | Status: $statusLabel | To: $recipientEmail | ${result.message}"
                     )
                 )
                 repository.notificationDao.insertNotification(
                     NotificationEntity(
                         title = subject,
-                        message = "Real-time email sent to $recipientEmail\n${body.take(120)}...",
+                        message = if (result.isSuccess) "Delivered to $recipientEmail via ${result.channel}" else "Email attempt to $recipientEmail: ${result.message}",
                         targetRole = "all"
                     )
                 )
-                postLocalSystemNotification(subject, "Real-time email delivered to $recipientEmail")
+                if (result.isSuccess) {
+                    postLocalSystemNotification(subject, "Real-time email delivered to $recipientEmail")
+                } else {
+                    val isSuperAdmin = _currentUser.value?.role == "admin" || _currentUser.value?.email?.equals("m.daniyalkhan490@gmail.com", ignoreCase = true) == true
+                    if (isSuperAdmin && result.channel == "Configuration Required") {
+                        withContext(Dispatchers.Main) {
+                            _uiMessage.value = "⚠️ Email Gateway: Google App Password required in Admin Mailbox settings to dispatch real emails."
+                        }
+                    }
+                }
             } catch (e: Exception) {
                 DebugLogger.w("MainViewModel", "dispatchRealtimeEmail notification warning: ${e.message}")
+            }
+        }
+    }
+
+    fun refreshSmtpConfig() {
+        val appCtx = getApplication<Application>()
+        _smtpConfig.value = SecureStorageManager.getSmtpConfig(appCtx)
+        viewModelScope.launch(Dispatchers.IO) {
+            val remote = repository.firestoreUserRepository.getEmailGatewayConfig()
+            if (remote != null && (remote.appPassword.isNotBlank() || remote.webhookUrl.isNotBlank())) {
+                SecureStorageManager.saveSmtpConfig(appCtx, remote)
+                _smtpConfig.value = remote
+            }
+        }
+    }
+
+    fun saveSmtpSettings(
+        host: String,
+        port: Int,
+        senderEmail: String,
+        appPassword: String,
+        senderName: String,
+        webhookUrl: String,
+        isEnabled: Boolean = true
+    ) {
+        val appCtx = getApplication<Application>()
+        val newConfig = com.example.security.SmtpConfig(
+            host = host.trim().ifBlank { "smtp.gmail.com" },
+            port = if (port > 0) port else 465,
+            senderEmail = senderEmail.trim().ifBlank { "m.daniyalkhan490@gmail.com" },
+            appPassword = appPassword.replace(" ", "").trim(),
+            senderName = senderName.trim().ifBlank { "Zyphuel Delivery Operations" },
+            webhookUrl = webhookUrl.trim(),
+            isEnabled = isEnabled
+        )
+        SecureStorageManager.saveSmtpConfig(appCtx, newConfig)
+        _smtpConfig.value = newConfig
+
+        viewModelScope.launch(Dispatchers.IO) {
+            val cloudSynced = repository.firestoreUserRepository.saveEmailGatewayConfig(newConfig)
+            withContext(Dispatchers.Main) {
+                if (cloudSynced) {
+                    _uiMessage.value = "✅ SMTP & Email Gateway settings saved locally and synced across all devices via Cloud Firestore!"
+                } else {
+                    _uiMessage.value = "✅ SMTP & Email Gateway settings saved locally."
+                }
+            }
+        }
+    }
+
+    fun sendTestEmail(targetEmail: String, onResult: (Boolean, String) -> Unit) {
+        val recipient = targetEmail.trim().ifBlank { "m.daniyalkhan490@gmail.com" }
+        viewModelScope.launch(Dispatchers.IO) {
+            val appCtx = getApplication<Application>()
+            val activeConfig = _smtpConfig.value
+            val subject = "🧪 Zyphuel Live SMTP Test Dispatch"
+            val body = """
+                This is an automated live test email dispatched from Zyphuel On-Demand Delivery.
+                ━━━━━━━━━━━━━━━━━━━━━━━━━
+                Timestamp: ${SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())}
+                Recipient: $recipient
+                Active Sender: ${activeConfig.senderEmail}
+                Active Host: ${activeConfig.host}:${activeConfig.port}
+                ━━━━━━━━━━━━━━━━━━━━━━━━━
+                If you are reading this email in your Gmail inbox, your real-time email delivery gateway is 100% operational! 🚀
+            """.trimIndent()
+
+            val result = com.example.util.RealtimeEmailEngine.sendRealtimeEmailDetailed(
+                recipientEmail = recipient,
+                subject = subject,
+                bodyText = body,
+                context = appCtx,
+                customConfig = activeConfig
+            )
+
+            withContext(Dispatchers.Main) {
+                if (result.isSuccess) {
+                    _uiMessage.value = "✅ Test email delivered to $recipient via ${result.channel}!"
+                } else {
+                    _uiMessage.value = "❌ Delivery Failed: ${result.message}"
+                }
+                onResult(result.isSuccess, "[${result.channel}] ${result.message}")
             }
         }
     }

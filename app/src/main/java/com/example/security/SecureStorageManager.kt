@@ -179,4 +179,49 @@ object SecureStorageManager {
             // Hardware key generation handled gracefully
         }
     }
+
+    /**
+     * Retrieves stored SMTP & Email Relay Gateway configuration from Admin enclave.
+     */
+    fun getSmtpConfig(context: Context): SmtpConfig {
+        val prefs = getEncryptedPreferences(context, AppModule.ADMIN)
+        return SmtpConfig(
+            host = prefs.getString("smtp_host", "smtp.gmail.com") ?: "smtp.gmail.com",
+            port = prefs.getInt("smtp_port", 465),
+            senderEmail = prefs.getString("smtp_sender_email", "m.daniyalkhan490@gmail.com") ?: "m.daniyalkhan490@gmail.com",
+            appPassword = prefs.getString("smtp_app_password", "pkymsolzualgbgzn") ?: "pkymsolzualgbgzn",
+            senderName = prefs.getString("smtp_sender_name", "Zyphuel Delivery Operations") ?: "Zyphuel Delivery Operations",
+            webhookUrl = prefs.getString("smtp_webhook_url", "") ?: "",
+            isEnabled = prefs.getBoolean("smtp_enabled", true)
+        )
+    }
+
+    /**
+     * Persists updated SMTP credentials and cloud webhook relay URL into Admin enclave.
+     */
+    fun saveSmtpConfig(context: Context, config: SmtpConfig) {
+        val prefs = getEncryptedPreferences(context, AppModule.ADMIN)
+        prefs.edit()
+            .putString("smtp_host", config.host.trim())
+            .putInt("smtp_port", config.port)
+            .putString("smtp_sender_email", config.senderEmail.trim())
+            .putString("smtp_app_password", config.appPassword.trim())
+            .putString("smtp_sender_name", config.senderName.trim())
+            .putString("smtp_webhook_url", config.webhookUrl.trim())
+            .putBoolean("smtp_enabled", config.isEnabled)
+            .apply()
+    }
 }
+
+/**
+ * Data class representing SMTP & Email Gateway settings for real-time inbox dispatch.
+ */
+data class SmtpConfig(
+    val host: String = "smtp.gmail.com",
+    val port: Int = 465,
+    val senderEmail: String = "m.daniyalkhan490@gmail.com",
+    val appPassword: String = "pkymsolzualgbgzn",
+    val senderName: String = "Zyphuel Delivery Operations",
+    val webhookUrl: String = "",
+    val isEnabled: Boolean = true
+)

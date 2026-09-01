@@ -13758,62 +13758,290 @@ fun AdminDashboardScreen(viewModel: MainViewModel) {
                             }
                         }
                     }
-                    6 -> { // Simulated Admin Mailbox / SMTP outgoing logs
+                    6 -> { // Real-Time Email Gateway & Admin Mailbox
                         val sentEmails by viewModel.sentEmails.collectAsState()
+                        val smtpConfig by viewModel.smtpConfig.collectAsState()
+                        val currentContext = androidx.compose.ui.platform.LocalContext.current
+
+                        var senderEmailInput by remember(smtpConfig.senderEmail) { mutableStateOf(smtpConfig.senderEmail) }
+                        var appPasswordInput by remember(smtpConfig.appPassword) { mutableStateOf(smtpConfig.appPassword) }
+                        var webhookUrlInput by remember(smtpConfig.webhookUrl) { mutableStateOf(smtpConfig.webhookUrl) }
+                        var showPassword by remember { mutableStateOf(false) }
+                        var showSetupGuide by remember { mutableStateOf(false) }
+
+                        var testRecipientEmail by remember { mutableStateOf("m.daniyalkhan490@gmail.com") }
+                        var isSendingTest by remember { mutableStateOf(false) }
+                        var testResultFeedback by remember { mutableStateOf<Pair<Boolean, String>?>(null) }
 
                         Column(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .verticalScroll(rememberScrollState()),
+                            verticalArrangement = Arrangement.spacedBy(14.dp)
                         ) {
+                            // Header Banner
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
                                 colors = CardDefaults.cardColors(containerColor = Color(0xFFEFF6FF)),
                                 border = BorderStroke(1.dp, Color(0xFFBFDBFE))
                             ) {
                                 Row(
-                                    modifier = Modifier.padding(12.dp),
+                                    modifier = Modifier.padding(14.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Icon(Icons.Filled.Email, contentDescription = null, tint = ZyphuelBluePrimary, modifier = Modifier.size(24.dp))
+                                    Icon(Icons.Filled.Email, contentDescription = null, tint = ZyphuelBluePrimary, modifier = Modifier.size(28.dp))
                                     Spacer(modifier = Modifier.width(12.dp))
                                     Column {
-                                        Text("Admin Outgoing Mailbox", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge, color = ZyphuelBlueDark)
-                                        Text("Verifies emails dispatched dynamically to m.dDaniyalKhan490@gmail.com", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                                        Text("Real-Time Email Gateway", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium, color = ZyphuelBlueDark)
+                                        Text("Dispatches real emails directly to User, Rider & Admin Gmail inboxes", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                                     }
                                 }
                             }
 
+                            // Gateway Configuration Card
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(containerColor = Color.White),
+                                border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+                            ) {
+                                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text("⚙️ Gateway Credentials", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge)
+                                        val isConfigured = smtpConfig.appPassword.isNotBlank() || smtpConfig.webhookUrl.isNotBlank()
+                                        Surface(
+                                            color = if (isConfigured) Color(0xFFECFDF5) else Color(0xFFFEF2F2),
+                                            shape = RoundedCornerShape(12.dp),
+                                            border = BorderStroke(1.dp, if (isConfigured) Color(0xFF6EE7B7) else Color(0xFFFCA5A5))
+                                        ) {
+                                            Text(
+                                                text = if (isConfigured) "● Gateway Active & Synced to Cloud" else "● App Password Required",
+                                                color = if (isConfigured) Color(0xFF047857) else Color(0xFFB91C1C),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                            )
+                                        }
+                                    }
+
+                                    OutlinedTextField(
+                                        value = senderEmailInput,
+                                        onValueChange = { senderEmailInput = it },
+                                        label = { Text("Sender Gmail Address") },
+                                        placeholder = { Text("m.daniyalkhan490@gmail.com") },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        singleLine = true
+                                    )
+
+                                    OutlinedTextField(
+                                        value = appPasswordInput,
+                                        onValueChange = { appPasswordInput = it },
+                                        label = { Text("Google 16-Letter App Password") },
+                                        placeholder = { Text("e.g. abcd efgh ijkl mnop") },
+                                        visualTransformation = if (showPassword) androidx.compose.ui.text.input.VisualTransformation.None else PasswordVisualTransformation(),
+                                        trailingIcon = {
+                                            IconButton(onClick = { showPassword = !showPassword }) {
+                                                Icon(
+                                                    if (showPassword) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                                                    contentDescription = "Toggle Password"
+                                                )
+                                            }
+                                        },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        singleLine = true,
+                                        supportingText = {
+                                            Text("Generated from Google Account -> Security -> App Passwords", style = MaterialTheme.typography.labelSmall)
+                                        }
+                                    )
+
+                                    OutlinedTextField(
+                                        value = webhookUrlInput,
+                                        onValueChange = { webhookUrlInput = it },
+                                        label = { Text("Optional HTTPS Webhook / Apps Script URL") },
+                                        placeholder = { Text("https://script.google.com/macros/s/.../exec") },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        singleLine = true,
+                                        supportingText = {
+                                            Text("Cloud relay backup for cellular networks that block SMTP ports", style = MaterialTheme.typography.labelSmall)
+                                        }
+                                    )
+
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        TextButton(onClick = { showSetupGuide = !showSetupGuide }) {
+                                            Text(if (showSetupGuide) "Hide Setup Guide ▲" else "How to get App Password? ▼", color = ZyphuelBluePrimary)
+                                        }
+
+                                        Button(
+                                            onClick = {
+                                                viewModel.saveSmtpSettings(
+                                                    host = "smtp.gmail.com",
+                                                    port = 465,
+                                                    senderEmail = senderEmailInput,
+                                                    appPassword = appPasswordInput,
+                                                    senderName = "Zyphuel Delivery Operations",
+                                                    webhookUrl = webhookUrlInput,
+                                                    isEnabled = true
+                                                )
+                                            },
+                                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981))
+                                        ) {
+                                            Icon(Icons.Filled.Save, contentDescription = null, tint = Color.White)
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text("Save & Sync to Cloud", fontWeight = FontWeight.Bold, color = Color.White)
+                                        }
+                                    }
+
+                                    if (showSetupGuide) {
+                                        Card(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
+                                            border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+                                        ) {
+                                            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                                Text("📋 1-Minute Google App Password Setup:", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge, color = ZyphuelBlueDark)
+                                                Text("1. Open Google Account Security: myaccount.google.com/security", style = MaterialTheme.typography.bodySmall)
+                                                Text("2. Turn on '2-Step Verification' on your Gmail account.", style = MaterialTheme.typography.bodySmall)
+                                                Text("3. Search 'App Passwords' or visit myaccount.google.com/apppasswords", style = MaterialTheme.typography.bodySmall)
+                                                Text("4. Enter App name 'Zyphuel App' and click Generate.", style = MaterialTheme.typography.bodySmall)
+                                                Text("5. Copy the 16-character password into the field above and tap 'Save & Sync to Cloud'.", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
+                                                
+                                                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = Color(0xFFE2E8F0))
+                                                Text("🌐 Alternative: Free Serverless Google Apps Script Relay:", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium, color = ZyphuelBlueDark)
+                                                Text("Bypasses cellular carrier port blocks (Zong/Jazz/Ufone) over standard HTTPS Port 443.", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                                                
+                                                val clipboardManager = androidx.compose.ui.platform.LocalClipboardManager.current
+                                                OutlinedButton(
+                                                    onClick = {
+                                                        val gasCode = com.example.util.RealtimeEmailEngine.getGoogleAppsScriptTemplate()
+                                                        clipboardManager.setText(androidx.compose.ui.text.AnnotatedString(gasCode))
+                                                        android.widget.Toast.makeText(currentContext, "Copied Google Apps Script code to clipboard! Paste into script.google.com", android.widget.Toast.LENGTH_LONG).show()
+                                                    },
+                                                    modifier = Modifier.fillMaxWidth()
+                                                ) {
+                                                    Icon(Icons.Filled.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
+                                                    Spacer(modifier = Modifier.width(6.dp))
+                                                    Text("Copy Free Apps Script Relay Code", style = MaterialTheme.typography.labelMedium)
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Live Test Email Card
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(containerColor = Color.White),
+                                border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+                            ) {
+                                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                    Text("🧪 Send Live Test Email (Diagnostic Check)", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge)
+                                    Text("Sends an immediate test email to verify that your Gmail SMTP or Webhook is delivering to real inboxes.", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        OutlinedTextField(
+                                            value = testRecipientEmail,
+                                            onValueChange = { testRecipientEmail = it },
+                                            label = { Text("Test Recipient Email") },
+                                            placeholder = { Text("your.email@gmail.com") },
+                                            modifier = Modifier.weight(1f),
+                                            singleLine = true
+                                        )
+
+                                        Button(
+                                            onClick = {
+                                                isSendingTest = true
+                                                testResultFeedback = null
+                                                viewModel.sendTestEmail(testRecipientEmail) { success, details ->
+                                                    isSendingTest = false
+                                                    testResultFeedback = Pair(success, details)
+                                                }
+                                            },
+                                            enabled = !isSendingTest && testRecipientEmail.isNotBlank(),
+                                            colors = ButtonDefaults.buttonColors(containerColor = ZyphuelBluePrimary),
+                                            modifier = Modifier.height(56.dp)
+                                        ) {
+                                            if (isSendingTest) {
+                                                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                                            } else {
+                                                Icon(Icons.Filled.Send, contentDescription = null, tint = Color.White)
+                                                Spacer(modifier = Modifier.width(4.dp))
+                                                Text("Send Test", fontWeight = FontWeight.Bold, color = Color.White)
+                                            }
+                                        }
+                                    }
+
+                                    testResultFeedback?.let { (success, details) ->
+                                        Surface(
+                                            color = if (success) Color(0xFFECFDF5) else Color(0xFFFEF2F2),
+                                            shape = RoundedCornerShape(8.dp),
+                                            border = BorderStroke(1.dp, if (success) Color(0xFF6EE7B7) else Color(0xFFFCA5A5)),
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            Column(modifier = Modifier.padding(10.dp)) {
+                                                Text(
+                                                    text = if (success) "✅ Email Delivered Successfully!" else "❌ Delivery Error:",
+                                                    fontWeight = FontWeight.Bold,
+                                                    style = MaterialTheme.typography.labelMedium,
+                                                    color = if (success) Color(0xFF047857) else Color(0xFFB91C1C)
+                                                )
+                                                Spacer(modifier = Modifier.height(2.dp))
+                                                Text(
+                                                    text = details,
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = if (success) Color(0xFF065F46) else Color(0xFF991B1B)
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Sent Outgoing Mailbox Logs
+                            Text("📬 Outgoing Email Dispatch History (${sentEmails.size})", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
+
                             if (sentEmails.isEmpty()) {
-                                Box(
-                                    modifier = Modifier.fillMaxWidth().weight(1f),
-                                    contentAlignment = Alignment.Center
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                                    border = BorderStroke(1.dp, Color(0xFFE2E8F0))
                                 ) {
-                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Icon(Icons.Filled.MailOutline, contentDescription = null, tint = Color.LightGray, modifier = Modifier.size(48.dp))
+                                    Column(
+                                        modifier = Modifier.fillMaxWidth().padding(24.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        Icon(Icons.Filled.MailOutline, contentDescription = null, tint = Color.LightGray, modifier = Modifier.size(40.dp))
                                         Spacer(modifier = Modifier.height(8.dp))
-                                        Text("No emails sent yet.", color = Color.Gray)
-                                        Text("Trigger a price update to send email alerts.", style = MaterialTheme.typography.labelSmall, color = Color.LightGray)
+                                        Text("No emails dispatched yet in this session.", color = Color.Gray, style = MaterialTheme.typography.bodySmall)
                                     }
                                 }
                             } else {
-                                LazyColumn(
-                                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                                    modifier = Modifier.fillMaxWidth().weight(1f)
-                                ) {
-                                    items(sentEmails) { email ->
+                                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                    sentEmails.take(15).forEach { email ->
                                         Card(
                                             modifier = Modifier.fillMaxWidth(),
                                             colors = CardDefaults.cardColors(containerColor = Color.White),
                                             border = BorderStroke(1.dp, Color(0xFFE2E8F0))
                                         ) {
-                                            Column(modifier = Modifier.padding(16.dp)) {
+                                            Column(modifier = Modifier.padding(14.dp)) {
                                                 Row(
                                                     modifier = Modifier.fillMaxWidth(),
                                                     horizontalArrangement = Arrangement.SpaceBetween,
                                                     verticalAlignment = Alignment.CenterVertically
                                                 ) {
                                                     Text(
-                                                        "RECIPIENT: ${email.recipient}",
+                                                        "TO: ${email.recipient}",
                                                         fontWeight = FontWeight.Bold,
                                                         style = MaterialTheme.typography.labelMedium,
                                                         color = ZyphuelBluePrimary
@@ -13824,33 +14052,23 @@ fun AdminDashboardScreen(viewModel: MainViewModel) {
                                                         color = Color.Gray
                                                     )
                                                 }
-                                                Spacer(modifier = Modifier.height(6.dp))
+                                                Spacer(modifier = Modifier.height(4.dp))
                                                 Text(
-                                                    "SUBJECT: ${email.subject}",
+                                                    email.subject,
                                                     fontWeight = FontWeight.Bold,
                                                     style = MaterialTheme.typography.bodyMedium,
                                                     color = Color.Black
                                                 )
-                                                Spacer(modifier = Modifier.height(8.dp))
-                                                HorizontalDivider(color = Color(0xFFF1F5F9))
-                                                Spacer(modifier = Modifier.height(8.dp))
-                                                
+                                                Spacer(modifier = Modifier.height(6.dp))
                                                 val cleanBody = email.body
                                                     .replace("<[^>]*>".toRegex(), "")
                                                     .replace("&nbsp;", " ")
                                                     .replace("&bull;", "•")
                                                     .trim()
-
                                                 Text(
-                                                    text = cleanBody,
-                                                    style = MaterialTheme.typography.bodySmall.copy(fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace),
-                                                    color = Color(0xFF334155),
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .background(Color(0xFFF8FAFC))
-                                                        .padding(10.dp)
-                                                        .heightIn(max = 200.dp)
-                                                        .verticalScroll(rememberScrollState())
+                                                    text = cleanBody.take(200) + if (cleanBody.length > 200) "..." else "",
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = Color(0xFF475569)
                                                 )
                                             }
                                         }
