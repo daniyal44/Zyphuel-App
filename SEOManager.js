@@ -15,7 +15,7 @@ export default function SEOManager() {
     "name": "Zyphuel",
     "operatingSystem": "Android",
     "applicationCategory": "BusinessApplication, Utilities",
-    "downloadUrl": "https://zyphuel.netlify.app/zyphuel.apk",
+    "downloadUrl": "https://www.zyphuel.com/zyphuel.apk",
     "featureList": [
       "Premium Super Petrol Euro V & High-Octane delivery",
       "Safe LPG Gas cylinder refills with pressure-tested seals",
@@ -24,7 +24,7 @@ export default function SEOManager() {
       "One-tap standby rider automated routing system",
       "Offline-resilient dynamic cache architecture"
     ],
-    "screenshot": "https://zyphuel.netlify.app/screenshot-dashboard.jpg",
+    "screenshot": "https://www.zyphuel.com/screenshot-dashboard.jpg",
     "offers": {
       "@type": "Offer",
       "price": "0.00",
@@ -41,8 +41,8 @@ export default function SEOManager() {
     "publisher": {
       "@type": "Organization",
       "name": "Zyphuel Logistics",
-      "logo": "https://zyphuel.netlify.app/logo-vector.png",
-      "url": "https://zyphuel.netlify.app/"
+      "logo": "https://www.zyphuel.com/logo-vector.png",
+      "url": "https://www.zyphuel.com/"
     }
   };
 
@@ -65,19 +65,19 @@ export default function SEOManager() {
 
       {/* Open Graph / Facebook Cards */}
       <meta property="og:type" content="website" />
-      <meta property="og:url" content="https://zyphuel.netlify.app/" />
+      <meta property="og:url" content="https://www.zyphuel.com/" />
       <meta property="og:title" content="Zyphuel App: Premium Fuel Delivery & Real-Time Logistics" />
       <meta property="og:description" content="Skip the station lines. Get premium super petrol, safe LPG gas cylinder refills, and purified mineral water gallons delivered straight to your exact coordinates with active live tracking." />
-      <meta property="og:image" content="https://zyphuel.netlify.app/og-image.jpg" />
+      <meta property="og:image" content="https://www.zyphuel.com/og-image.jpg" />
       <meta property="og:site_name" content="Zyphuel" />
       <meta property="og:locale" content="en_US" />
 
       {/* Twitter / X Cards */}
       <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:url" content="https://zyphuel.netlify.app/" />
+      <meta name="twitter:url" content="https://www.zyphuel.com/" />
       <meta name="twitter:title" content="Zyphuel App - Premium Fuel & Real-Time Logistics Tracker" />
       <meta name="twitter:description" content="Tesla-inspired, super high-speed logistics app for immediate petrol, gas, and mineral water delivery in Lahore. Direct-to-consumer delivery corridor." />
-      <meta name="twitter:image" content="https://zyphuel.netlify.app/og-image.jpg" />
+      <meta name="twitter:image" content="https://www.zyphuel.com/og-image.jpg" />
       <meta name="twitter:site" content="@ZyphuelApp" />
 
       {/* Structured Data JSON-LD (SoftwareApplication) */}

@@ -27,6 +27,12 @@ object InvoiceGenerator {
         val subtotal = (order.totalPrice - deliveryFee).coerceAtLeast(0.0)
         val dateStr = SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.US).format(Date(order.createdAt))
 
+        val isAdminFulfillment = order.riderEmail.isNullOrBlank() ||
+            order.riderName.isNullOrBlank() ||
+            order.riderName?.contains("Admin", ignoreCase = true) == true ||
+            order.riderEmail?.contains("admin", ignoreCase = true) == true ||
+            order.riderEmail?.equals("m.daniyalkhan490@gmail.com", ignoreCase = true) == true
+
         return buildString {
             appendLine("═════════════════════════════════════════")
             appendLine("       ⚡ ZYPHUEL ON-DEMAND DELIVERY ⚡")
@@ -43,9 +49,15 @@ object InvoiceGenerator {
             appendLine("• Phone:   ${order.customerPhone}")
             appendLine("• Address: ${order.deliveryAddress}")
             appendLine("─────────────────────────────────────────")
-            appendLine("🚚 DISPATCH & RIDER:")
-            appendLine("• Driver:  ${order.riderName ?: "Zyphuel Central Dispatch"}")
-            appendLine("• Contact: ${order.riderEmail ?: "dispatch@zyphuel.com"}")
+            if (isAdminFulfillment) {
+                appendLine("🏢 FULFILLMENT & DISPATCH:")
+                appendLine("• Mode:    Zyphuel Central Admin Operations")
+                appendLine("• Hub:     Lahore Operations Headquarters")
+            } else {
+                appendLine("🚚 DISPATCH & RIDER:")
+                appendLine("• Driver:  ${order.riderName}")
+                appendLine("• Contact: ${order.riderEmail ?: "dispatch@zyphuel.com"}")
+            }
             appendLine("─────────────────────────────────────────")
             appendLine("📋 ITEM SUMMARY:")
             appendLine("• Item:     ${order.serviceType}")
@@ -68,6 +80,11 @@ object InvoiceGenerator {
         val deliveryFee = FeeConstants.calculateDeliveryFee(order.serviceType)
         val subtotal = (order.totalPrice - deliveryFee).coerceAtLeast(0.0)
         val dateStr = SimpleDateFormat("dd MMMM yyyy - hh:mm a", Locale.US).format(Date(order.createdAt))
+        val isAdminFulfillment = order.riderEmail.isNullOrBlank() ||
+            order.riderName.isNullOrBlank() ||
+            order.riderName?.contains("Admin", ignoreCase = true) == true ||
+            order.riderEmail?.contains("admin", ignoreCase = true) == true ||
+            order.riderEmail?.equals("m.daniyalkhan490@gmail.com", ignoreCase = true) == true
 
         return """
         <!DOCTYPE html>
@@ -285,11 +302,19 @@ object InvoiceGenerator {
                         </td>
                         <td style="width: 2%;"></td>
                         <td class="info-col">
+                            ${if (isAdminFulfillment) """
+                            <div class="info-label">Fulfillment & Operations</div>
+                            <div class="info-value">Zyphuel Central Admin Operations</div>
+                            <div class="info-sub">🏢 Lahore Headquarters Direct Fulfillment</div>
+                            <div class="info-sub" style="margin-top: 4px;">💳 <b>Payment Mode:</b> ${order.paymentMethod}</div>
+                            <div class="info-sub">⏱️ <b>Estimated Delivery:</b> ${if (order.etaMinutes > 0) "${order.etaMinutes} Mins" else "Direct Dispatch"}</div>
+                            """.trimIndent() else """
                             <div class="info-label">Fulfillment & Rider Details</div>
-                            <div class="info-value">${order.riderName ?: "Zyphuel Bowser Direct Dispatch"}</div>
+                            <div class="info-value">${order.riderName}</div>
                             <div class="info-sub">📧 ${order.riderEmail ?: "dispatch@zyphuel.com"}</div>
                             <div class="info-sub" style="margin-top: 4px;">💳 <b>Payment Mode:</b> ${order.paymentMethod}</div>
                             <div class="info-sub">⏱️ <b>Estimated Delivery:</b> ${if (order.etaMinutes > 0) "${order.etaMinutes} Mins" else "On Schedule"}</div>
+                            """.trimIndent()}
                         </td>
                     </tr>
                 </table>
@@ -336,7 +361,7 @@ object InvoiceGenerator {
                 <div class="footer">
                     <div>This is a computer-generated tax invoice verified by the Zyphuel Delivery Protocol.</div>
                     <div class="security-stamp">✓ Verified Transaction • Official Order Document</div>
-                    <div style="margin-top: 6px;">Questions regarding this invoice? Contact support at support@zyphuel.com or +92 323 0112464.</div>
+                    <div style="margin-top: 6px;">Questions regarding this invoice? Contact support at support@zyphuel.com or +92 323 0112464 • www.zyphuel.com</div>
                 </div>
             </div>
         </body>

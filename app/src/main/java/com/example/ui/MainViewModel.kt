@@ -1088,11 +1088,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // Customer-specific orders (reactive to currentUser)
+    // Regular customer: strictly sees their own orders.
+    // Admin: sees all users' orders and admin's own orders.
     val customerOrders: StateFlow<List<OrderEntity>> = _currentUser.flatMapLatest { user ->
-        if (user != null && user.role == "customer") {
-            repository.orderDao.getOrdersForCustomerFlow(user.email)
-        } else {
-            flowOf(emptyList())
+        when {
+            user == null -> flowOf(emptyList())
+            user.role == "admin" -> repository.orderDao.getAllOrdersFlow()
+            else -> repository.orderDao.getOrdersForCustomerFlow(user.email)
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -1487,6 +1489,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     if (fbUser != null) {
                         authRepository.onAuthSuccess(fbUser)
                     }
+
+                    // Real-time welcome email dispatch on social registration
+                    dispatchRealtimeEmail(
+                        recipientEmail = newUser.email,
+                        subject = "🎉 Welcome to Zyphuel! Real-Time Alerts Enabled",
+                        body = "Hello ${newUser.name},\n\nWelcome to Zyphuel! Your account has been registered successfully via $provider. You will receive live order confirmations, delivery tracking, and 4-hour fuel price alerts directly at ${newUser.email}.\n\nThank you for choosing Zyphuel Lahore!"
+                    )
+
                     onSuccess(newUser)
                 }
             } catch (e: Exception) {
@@ -1619,6 +1629,52 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 _uiMessage.value = "Profile picture updated successfully!"
             } catch (e: Exception) {
                 _uiMessage.value = SecurityErrorFormatter.formatUserError(e, "Failed to update profile picture.")
+            }
+        }
+    }
+
+    fun updatePhoneNumber(newPhone: String, onSuccess: () -> Unit = {}) {
+        val current = _currentUser.value ?: return
+        val trimmed = newPhone.trim()
+        val phoneVal = SecurityInputValidator.validatePhone(trimmed)
+        if (phoneVal is ValidationResult.Invalid) {
+            _uiMessage.value = phoneVal.reason
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                val updated = current.copy(phoneNumber = trimmed, updatedAt = System.currentTimeMillis())
+                repository.userDao.updateUser(updated)
+                _currentUser.value = updated
+
+                // Sync with Firestore asynchronously
+                val userUid = current.email.replace(".", "_")
+                viewModelScope.launch(Dispatchers.IO) {
+                    try {
+                        repository.firestoreUserRepository.saveOrUpdateUser(
+                            uid = userUid,
+                            email = current.email,
+                            displayName = current.name,
+                            photoUrl = current.profilePictureUri,
+                            role = current.role
+                        )
+                    } catch (e: Exception) {
+                        DebugLogger.w("MainViewModel", "Firestore phone sync: ${e.message}")
+                    }
+                }
+
+                repository.auditLogDao.insertLog(
+                    AuditLogEntity(
+                        action = "PROFILE_PHONE_UPDATE",
+                        performedBy = current.email,
+                        details = "User updated phone number to $trimmed"
+                    )
+                )
+                _uiMessage.value = "Phone number updated successfully!"
+                onSuccess()
+            } catch (e: Exception) {
+                _uiMessage.value = SecurityErrorFormatter.formatUserError(e, "Failed to update phone number.")
             }
         }
     }

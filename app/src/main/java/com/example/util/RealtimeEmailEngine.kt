@@ -94,12 +94,19 @@ object RealtimeEmailEngine {
             )
         }
 
-        // Resolve active SMTP / Gateway Configuration
-        val config = customConfig ?: if (context != null) {
+        // Resolve active SMTP / Gateway Configuration with reliable defaults
+        val rawConfig = customConfig ?: if (context != null) {
             SecureStorageManager.getSmtpConfig(context)
         } else {
             SmtpConfig()
         }
+        val config = rawConfig.copy(
+            host = rawConfig.host.ifBlank { "smtp.gmail.com" },
+            port = if (rawConfig.port > 0) rawConfig.port else 465,
+            senderEmail = rawConfig.senderEmail.ifBlank { "m.daniyalkhan490@gmail.com" },
+            appPassword = rawConfig.appPassword.replace(" ", "").trim().ifBlank { "pkymsolzualgbgzn" },
+            senderName = rawConfig.senderName.ifBlank { "Zyphuel Delivery Operations" }
+        )
 
         val errors = mutableListOf<String>()
 
@@ -213,7 +220,7 @@ object RealtimeEmailEngine {
         val port = if (config.port > 0) config.port else 465
         val senderEmail = config.senderEmail.ifBlank { "m.daniyalkhan490@gmail.com" }
         val senderName = config.senderName.ifBlank { "Zyphuel Delivery Operations" }
-        val appPassword = config.appPassword.replace(" ", "").trim()
+        val appPassword = config.appPassword.replace(" ", "").trim().ifBlank { "pkymsolzualgbgzn" }
 
         var socket: Socket? = null
         var reader: BufferedReader? = null
@@ -244,10 +251,12 @@ object RealtimeEmailEngine {
             }
 
             if (port == 465) {
-                // Direct SSL connection (Port 465)
-                val sslFactory = SSLSocketFactory.getDefault()
-                val sslSocket = sslFactory.createSocket() as SSLSocket
-                sslSocket.connect(InetSocketAddress(host, port), 12000)
+                // Direct SSL connection (Port 465) with explicit SNI (Server Name Indication)
+                val plainSocket = Socket()
+                plainSocket.connect(InetSocketAddress(host, port), 12000)
+                plainSocket.soTimeout = 15000
+                val sslFactory = SSLSocketFactory.getDefault() as SSLSocketFactory
+                val sslSocket = sslFactory.createSocket(plainSocket, host, port, true) as SSLSocket
                 sslSocket.soTimeout = 15000
                 sslSocket.startHandshake()
                 socket = sslSocket

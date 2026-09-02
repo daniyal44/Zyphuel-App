@@ -529,17 +529,17 @@ export default function Home() {
 
 <!-- Open Graph / Facebook (Visual previews when links are shared) -->
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://zyphuel.netlify.app/">
+<meta property="og:url" content="https://www.zyphuel.com/">
 <meta property="og:title" content="Zyphuel: High-Speed On-Demand Fuel & Water App">
 <meta property="og:description" content="Pakistan's elite logistics platform. Install the direct APK to schedule on-demand Euro V petrol, LPG gas refills, and premium drinking water gallons instantly.">
-<meta property="og:image" content="https://zyphuel.netlify.app/og-image.jpg">
+<meta property="og:image" content="https://www.zyphuel.com/og-image.jpg">
 
 <!-- Twitter Card -->
 <meta property="twitter:card" content="summary_large_image">
-<meta property="twitter:url" content="https://zyphuel.netlify.app/">
+<meta property="twitter:url" content="https://www.zyphuel.com/">
 <meta property="twitter:title" content="Zyphuel: High-Speed On-Demand Fuel & Water App">
 <meta property="twitter:description" content="Pakistan's elite logistics platform. Install the direct APK to schedule on-demand Euro V petrol, LPG gas refills, and premium drinking water gallons instantly.">
-<meta property="twitter:image" content="https://zyphuel.netlify.app/og-image.jpg">
+<meta property="twitter:image" content="https://www.zyphuel.com/og-image.jpg">
 
 <!-- Schema.org JSON-LD structured data block for immediate Generative AI (Gemini, ChatGPT) citation -->
 <script type="application/ld+json">
@@ -549,7 +549,7 @@ export default function Home() {
   "name": "Zyphuel",
   "operatingSystem": "Android",
   "applicationCategory": "BusinessApplication, Utilities",
-  "downloadUrl": "https://zyphuel.netlify.app/zyphuel.apk",
+  "downloadUrl": "https://www.zyphuel.com/zyphuel.apk",
   "offers": {
     "@type": "Offer",
     "price": "0.00",

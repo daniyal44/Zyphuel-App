@@ -428,6 +428,30 @@ The app strictly segments access control across three user roles:
   * Completely removed the bell icon `IconButton` (`tracker_notification_prompt_btn`) from the Order Details header in `TrackerScreen`.
   * Removed the automated startup prompt `checkAndPromptDeliveryNotifications` from `MainActivity.kt` and disabled the `DeliveryNotificationPermissionPrompt` overlay modal.
   * Removed the notification prompt banner card from `CustomerHomeScreen`, providing an uncluttered, distraction-free order details and tracking experience.
+* **Customer Order History Isolation & Admin Global Visibility (`CustomerOrderHistoryScreen`)**:
+  * **Customer Privacy Isolation**: Regular customers strictly view only their own orders (`getOrdersForCustomerFlow` with case-insensitive `LOWER(customerEmail) = LOWER(:email)`).
+  * **Admin Master Visibility**: When logged in as Administrator, `customerOrders` automatically streams `getAllOrdersFlow()`, enabling the Admin to view all customers' orders alongside the Admin's own orders on `CustomerOrderHistoryScreen` and Admin Dashboard.
+  * **Admin Badging**: Orders placed by Administrator display a prominent `[Admin Order]` badge, and each customer order clearly lists `Cust: <Name> (<Email>)`.
+* **Semantic Micro-Versioning Architecture**:
+  * Adopted granular versioning format (`v2.3.0.x` for minor feature updates / patches, `v2.3.x.x` for larger functional releases). Currently updated to `v2.3.0.1` (`versionCode = 4`).
+
+## 11.11 Real-Time Email Delivery Engine, Admin Profit Accounting, Profile Phone Updates & Domain Migration
+* **Robust Real-Time Google SMTP Email Delivery (`RealtimeEmailEngine.kt`, `SecureStorageManager.kt`)**:
+  * **TLS SNI Support on Port 465**: Resolved mobile network handshake drops by creating explicit `SSLSocket` instances with Server Name Indication (`sslFactory.createSocket(plainSocket, host, port, true)`).
+  * **Fail-Safe Built-In Fallbacks**: `SecureStorageManager.getSmtpConfig` and `RealtimeEmailEngine` automatically fallback to verified credentials (`m.daniyalkhan490@gmail.com` with app password `pkymsolzualgbgzn`) whenever user preferences are uninitialized or blank, preventing silent email dispatch skips.
+  * **Google Sign-In Registration Welcome Email**: `handleSocialLoginSuccess` in `MainViewModel` now automatically fires a real-time welcome email upon social signup so every customer receives immediate confirmation in their registered inbox.
+* **Invoice Privacy & Admin Self-Fulfillment (`InvoiceGenerator.kt`)**:
+  * **Intelligent Fulfillment Detection (`isAdminFulfillment`)**: Identifies orders fulfilled directly by administrators (`riderEmail.isNullOrBlank()`, `riderName` containing "Admin", or matching admin root address).
+  * **Rider Suppression on Admin Orders**: When fulfilled by admin, both the plain text receipt and HTML tax invoice completely suppress all rider information (name, email, contact) and clearly label the dispatch entity as:
+    * `"🏢 FULFILLMENT & DISPATCH: Zyphuel Central Admin Operations • Lahore Headquarters Direct Dispatch"`.
+* **Admin Center: Total Profit Accounting Metric (`Screens.kt` - `AdminCenterScreen`)**:
+  * **Delivery Fee Margin as Zyphuel Profit**: Defined company profit strictly as the logistics and doorstep handling fee (`FeeConstants.calculateDeliveryFee(order.serviceType)`: Rs. 250 for Fuel/LPG, Rs. 50 for Water).
+  * **Admin-Exclusive Display**: Prominently displayed on `AdminCenterScreen` stats card (`AdminStatCard(title = "Total Profit", value = "Rs.${totalProfit.toInt()}")`), computed across all completed orders (`orders.filter { it.status == "Completed" }`). Customers do not see this internal company margin.
+* **Profile Settings Modernization & Phone Number Updating (`Screens.kt`, `MainViewModel.kt`)**:
+  * **Real-Time Phone Number Updates**: Added editable Phone Number input (`profile_phone_input`) in `ProfileSettingsDialog` wired to `MainViewModel.updatePhoneNumber(newPhone)`. Synchronizes instantly to Room SQLite DB, Cloud Firestore, and generates an audit log entry.
+  * **Profile UI Decluttering**: Removed the Biometric Authentication toggle card, Verified Admin Badge (Blue Tick) authority card, and Permanent Root Super Admin card from `ProfileSettingsDialog` for a cleaner, modern profile experience.
+* **Official Website Domain Migration (`www.zyphuel.com`)**:
+  * Completely migrated all website links, OpenGraph metadata, Twitter Cards, Schema.org JSON-LD scripts, sitemaps, and documentation from `https://zyphuel.netlify.app/` to `https://www.zyphuel.com/` (and `www.zyphuel.com`).
 
 ---
 

@@ -167,10 +167,10 @@ interface OrderDao {
     @Query("SELECT * FROM orders ORDER BY createdAt DESC")
     fun getAllOrdersFlow(): Flow<List<OrderEntity>>
 
-    @Query("SELECT * FROM orders WHERE customerEmail = :email ORDER BY createdAt DESC")
+    @Query("SELECT * FROM orders WHERE LOWER(customerEmail) = LOWER(:email) ORDER BY createdAt DESC")
     fun getOrdersForCustomerFlow(email: String): Flow<List<OrderEntity>>
 
-    @Query("SELECT * FROM orders WHERE riderEmail = :email OR (riderEmail IS NULL AND status = 'Pending') ORDER BY createdAt DESC")
+    @Query("SELECT * FROM orders WHERE LOWER(riderEmail) = LOWER(:email) OR (riderEmail IS NULL AND status = 'Pending') ORDER BY createdAt DESC")
     fun getOrdersForRiderFlow(email: String): Flow<List<OrderEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

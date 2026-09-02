@@ -2,7 +2,7 @@
  * ZYPHUEL: OFFLINE-RESILIENT SERVICE WORKER
  * 
  * This service worker provides immediate local caching and offline capabilities for the 
- * Zyphuel web portal (https://zyphuel.netlify.app/). It ensures critical resources, 
+ * Zyphuel web portal (https://www.zyphuel.com/). It ensures critical resources, 
  * assets, metadata guidelines, and schemas are fully offline-accessible during intermittent 
  * network disruptions or cell-tower handover latency in Lahore, Pakistan.
  */

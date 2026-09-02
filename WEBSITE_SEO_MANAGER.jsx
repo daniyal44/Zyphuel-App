@@ -17,7 +17,7 @@ export default function SEOManager() {
       "name": "Zyphuel",
       "operatingSystem": "Android",
       "applicationCategory": "BusinessApplication, Utilities",
-      "downloadUrl": "https://zyphuel.netlify.app/zyphuel.apk",
+      "downloadUrl": "https://www.zyphuel.com/zyphuel.apk",
       "featureList": [
         "Premium Super Petrol Euro V & High-Octane delivery",
         "Safe LPG Gas cylinder refills with pressure-tested seals",
@@ -26,7 +26,7 @@ export default function SEOManager() {
         "One-tap standby rider automated routing system",
         "Offline-resilient dynamic cache architecture"
       ],
-      "screenshot": "https://zyphuel.netlify.app/screenshot-dashboard.jpg",
+      "screenshot": "https://www.zyphuel.com/screenshot-dashboard.jpg",
       "offers": {
         "@type": "Offer",
         "price": "0.00",
@@ -43,8 +43,8 @@ export default function SEOManager() {
       "publisher": {
         "@type": "Organization",
         "name": "Zyphuel Logistics",
-        "logo": "https://zyphuel.netlify.app/logo-vector.png",
-        "url": "https://zyphuel.netlify.app/"
+        "logo": "https://www.zyphuel.com/logo-vector.png",
+        "url": "https://www.zyphuel.com/"
       }
     },
 
@@ -54,10 +54,10 @@ export default function SEOManager() {
       "@type": "WebSite",
       "name": "Zyphuel",
       "alternateName": "Zyphuel App",
-      "url": "https://zyphuel.netlify.app/",
+      "url": "https://www.zyphuel.com/",
       "potentialAction": {
         "@type": "SearchAction",
-        "target": "https://zyphuel.netlify.app/search?q={search_term_string}",
+        "target": "https://www.zyphuel.com/search?q={search_term_string}",
         "query-input": "required name=search_term_string"
       }
     },
@@ -67,9 +67,9 @@ export default function SEOManager() {
       "@context": "https://schema.org",
       "@type": "LocalBusiness",
       "name": "Zyphuel",
-      "image": "https://zyphuel.netlify.app/og-image.jpg",
-      "@id": "https://zyphuel.netlify.app/#localbusiness",
-      "url": "https://zyphuel.netlify.app/",
+      "image": "https://www.zyphuel.com/og-image.jpg",
+      "@id": "https://www.zyphuel.com/#localbusiness",
+      "url": "https://www.zyphuel.com/",
       "telephone": "+923001234567",
       "priceRange": "$$",
       "address": {
@@ -169,7 +169,7 @@ export default function SEOManager() {
           "name": "Can I install the Zyphuel Android APK directly without Google Play?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Yes! You can download the verified Zyphuel Android App APK directly from our official Netlify website header by clicking 'Download Android APK'. This bypasses lengthy app store downloads and lets you access instant fuel delivery immediately on any Android device."
+            "text": "Yes! You can download the verified Zyphuel Android App APK directly from our official website header (www.zyphuel.com) by clicking 'Download Android APK'. This bypasses lengthy app store downloads and lets you access instant fuel delivery immediately on any Android device."
           }
         }
       ]
@@ -178,15 +178,13 @@ export default function SEOManager() {
 
   return (
     <Helmet>
-      {/* Dynamic Document Title */}
-      <title>Zyphuel App - Premium Fuel Delivery & Real-Time Logistics in Lahore</title>
+      {/* Set Document Title */}
+      <title>Zyphuel App - Premium Fuel Delivery & Real-Time Logistics</title>
 
-      {/* Primary Search Engine Optimization (SEO) Meta Tags */}
-      <meta name="title" content="Zyphuel App - Premium Fuel Delivery & Real-Time Logistics in Lahore" />
+      {/* Standard Meta Tags & Open Graph Properties */}
       <meta name="description" content="Download the Zyphuel App: Lahore's ultra-premium on-demand fuel delivery, LPG gas cylinder refill, and mineral water logistics service. Live real-time location tracking & 100% transparent pricing." />
       <meta name="keywords" content="premium fuel delivery, real-time logistics, Zyphuel app, fuel app Lahore, on-demand petrol delivery, LPG cylinder refill Lahore, mineral water delivery app, download Android APK, automatic routing fuel, roadside fuel assistance, Lahore logistics app" />
       <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
-      <meta name="language" content="English" />
       <meta name="author" content="Zyphuel Logistics LLC" />
 
       {/* Regional Geographical Target Headers (GEO Optimization for Lahore Hub) */}
@@ -197,10 +195,10 @@ export default function SEOManager() {
 
       {/* Open Graph (OG) Protocol for Rich Social Sharing Previews (WhatsApp, Slack, FB, LinkedIn) */}
       <meta property="og:type" content="website" />
-      <meta property="og:url" content="https://zyphuel.netlify.app/" />
+      <meta property="og:url" content="https://www.zyphuel.com/" />
       <meta property="og:title" content="Zyphuel App: Premium Fuel Delivery & Real-Time Logistics" />
       <meta property="og:description" content="Skip the station lines. Get premium super petrol, safe LPG gas cylinder refills, and purified mineral water gallons delivered straight to your exact coordinates with active live tracking." />
-      <meta property="og:image" content="https://zyphuel.netlify.app/og-image.jpg" />
+      <meta property="og:image" content="https://www.zyphuel.com/og-image.jpg" />
       <meta property="og:image:width" content="1200" />
       <meta property="og:image:height" content="630" />
       <meta property="og:image:alt" content="Zyphuel Premium Real-Time Logistics & Fuel Delivery App Interface" />
@@ -209,15 +207,15 @@ export default function SEOManager() {
 
       {/* Twitter / X Rich Card Metadata */}
       <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:url" content="https://zyphuel.netlify.app/" />
+      <meta name="twitter:url" content="https://www.zyphuel.com/" />
       <meta name="twitter:title" content="Zyphuel App - Premium Fuel & Real-Time Logistics Tracker" />
       <meta name="twitter:description" content="Tesla-inspired, super high-speed logistics app for immediate petrol, gas, and mineral water delivery in Lahore. Direct-to-consumer delivery corridor." />
-      <meta name="twitter:image" content="https://zyphuel.netlify.app/og-image.jpg" />
+      <meta name="twitter:image" content="https://www.zyphuel.com/og-image.jpg" />
       <meta name="twitter:site" content="@ZyphuelApp" />
       <meta name="twitter:creator" content="@ZyphuelApp" />
 
       {/* Smart Mobile App Integration & Banners */}
-      <meta name="apple-itunes-app" content="app-id=com.aistudio.zyphuel, app-argument=https://zyphuel.netlify.app/zyphuel.apk" />
+      <meta name="apple-itunes-app" content="app-id=com.aistudio.zyphuel, app-argument=https://www.zyphuel.com/zyphuel.apk" />
       <meta name="mobile-web-app-capable" content="yes" />
       <meta name="apple-mobile-web-app-capable" content="yes" />
       <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />

@@ -67,6 +67,10 @@
 * **Standardized Delivery Fee Calculation (`FeeConstants.kt`)**: Fixed delivery charge for Fuel (**Petrol, Diesel, High-Octane**) and LPG is permanently set to **Rs. 250.00** (Water: Rs. 50.00, 50% multi-item bundle discount) across `OrderDialog`, `OrderSummaryCard`, `TrackerScreen`, `showFareBreakdownDialog`, and official invoices.
 * **Streamlined Address Input in `OrderDialog`**: Removed redundant "Saved Addresses (Quick Fill)" and "Save Current" chips to deliver a clean, clutter-free checkout experience.
 * **Removed "Stay Updated on Your Fuel Delivery" Bell Icon & Dialog**: Removed the bell icon button from the Order Details header (`TrackerScreen`), removed the automatic prompt trigger from `MainActivity.kt`, and removed the notification banner card from `CustomerHomeScreen`.
+* **Customer Order History Isolation & Admin Visibility**:
+  - Regular customer: strictly views only their own orders (`getOrdersForCustomerFlow` with case-insensitive `LOWER(customerEmail) = LOWER(:email)`).
+  - Administrator: `customerOrders` automatically streams `getAllOrdersFlow()`, viewing all users' orders and Admin's own orders on `CustomerOrderHistoryScreen` and Admin Dashboard with `[Admin Order]` badges and customer details.
+* **Semantic Micro-Versioning**: Adopted versioning scheme `v2.3.0.1` (`versionCode = 4`) for minor patch updates, with `v2.3.x.x` reserved for major feature sets.
 
 ---
 

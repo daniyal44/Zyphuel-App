@@ -3499,7 +3499,7 @@ fun DrawerContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Zyphuel App v2.3.0 • Build 2026",
+                    text = "Zyphuel App v2.3.0.1 • Build 2026",
                     style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontSize = 11.sp)
                 )
             }
@@ -4717,6 +4717,7 @@ fun CustomerOrderHistoryScreen(
     viewModel: MainViewModel,
     onBack: () -> Unit
 ) {
+    val currentUser by viewModel.currentUser.collectAsState()
     val orders by viewModel.customerOrders.collectAsState()
 
     var selectedStatusFilter by remember { mutableStateOf("All") }
@@ -4751,7 +4752,9 @@ fun CustomerOrderHistoryScreen(
                     order.id.toString().contains(searchQuery, ignoreCase = true) ||
                             order.serviceType.contains(searchQuery, ignoreCase = true) ||
                             order.deliveryAddress.contains(searchQuery, ignoreCase = true) ||
-                            (order.riderName ?: "").contains(searchQuery, ignoreCase = true)
+                            (order.riderName ?: "").contains(searchQuery, ignoreCase = true) ||
+                            order.customerName.contains(searchQuery, ignoreCase = true) ||
+                            order.customerEmail.contains(searchQuery, ignoreCase = true)
                 }
                 matchesCategory && matchesStatus && matchesSearch
             }
@@ -4759,6 +4762,7 @@ fun CustomerOrderHistoryScreen(
     }
 
     val totalOrdersCount = orders.size
+    val isAdmin = (currentUser?.role == "admin")
 
     Scaffold(
         topBar = {
@@ -4766,7 +4770,7 @@ fun CustomerOrderHistoryScreen(
                 title = {
                     Column {
                         Text(
-                            text = "My Orders",
+                            text = if (isAdmin) "Customer Orders (Admin View)" else "My Orders",
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = ZyphuelBlueDark
@@ -4774,7 +4778,7 @@ fun CustomerOrderHistoryScreen(
                         )
                         if (totalOrdersCount > 0) {
                             Text(
-                                text = "$totalOrdersCount total orders",
+                                text = if (isAdmin) "$totalOrdersCount orders • All Customers & Admin" else "$totalOrdersCount total orders",
                                 style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray)
                             )
                         }
@@ -4798,12 +4802,30 @@ fun CustomerOrderHistoryScreen(
         containerColor = Color(0xFFF8FAFC)
     ) { paddingValues ->
         if (orders.isEmpty()) {
-            // Completely empty — show nothing (blank slate)
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues)
-            )
+                    .padding(paddingValues),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.History,
+                        contentDescription = null,
+                        tint = Color.LightGray,
+                        modifier = Modifier.size(56.dp)
+                    )
+                    Text(
+                        text = if (isAdmin) "No orders in system yet." else "You haven't placed any orders yet.",
+                        style = MaterialTheme.typography.titleSmall.copy(color = Color.Gray, fontWeight = FontWeight.Medium),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
         } else {
             LazyColumn(
                 modifier = Modifier
@@ -5000,6 +5022,36 @@ fun CustomerOrderHistoryCard(
             }
 
             HorizontalDivider(color = Color(0xFFF1F5F9))
+
+            val currentUser by viewModel.currentUser.collectAsState()
+            if (currentUser?.role == "admin") {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFFF1F5F9), RoundedCornerShape(6.dp))
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Cust: ${order.customerName} (${order.customerEmail})",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = ZyphuelBlueDark,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    )
+                    if (order.customerEmail.equals("m.daniyalkhan490@gmail.com", ignoreCase = true) ||
+                        order.customerEmail.equals(currentUser?.email, ignoreCase = true)) {
+                        Text(
+                            text = "[Admin Order]",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                color = ZyphuelBluePrimary,
+                                fontWeight = FontWeight.Bold
+                            )
+                        )
+                    }
+                }
+            }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -10405,6 +10457,7 @@ fun ProfileSettingsDialog(
     if (currentUser == null) return
 
     val context = LocalContext.current
+    var phoneNumber by remember(currentUser) { mutableStateOf(currentUser?.phoneNumber ?: "") }
     var password by remember { mutableStateOf(currentUser!!.passwordHash) }
     var passwordVisible by remember { mutableStateOf(false) }
     var showDeleteConfirmInProfile by remember { mutableStateOf(false) }
@@ -10566,6 +10619,25 @@ fun ProfileSettingsDialog(
                     shape = RoundedCornerShape(12.dp)
                 )
 
+                // Phone Number (Editable to change)
+                OutlinedTextField(
+                    value = phoneNumber,
+                    onValueChange = { phoneNumber = it },
+                    label = { Text("Phone Number") },
+                    leadingIcon = { Icon(Icons.Filled.Phone, contentDescription = null, tint = ZyphuelBluePrimary) },
+                    modifier = Modifier.fillMaxWidth().testTag("profile_phone_input"),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black,
+                        focusedLabelColor = ZyphuelBluePrimary,
+                        unfocusedLabelColor = Color.DarkGray,
+                        focusedBorderColor = ZyphuelBluePrimary,
+                        unfocusedBorderColor = Color.LightGray
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true
+                )
+
                 // Password (Editable to change)
                 OutlinedTextField(
                     value = password,
@@ -10594,262 +10666,15 @@ fun ProfileSettingsDialog(
                 )
 
                 Text(
-                    text = "You can update your password directly. Changes apply immediately in real-time.",
+                    text = "You can update your phone number and password directly. Changes apply immediately in real-time.",
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.Gray,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // --- Enable Fingerprint Biometric Card ---
-                val bioModuleInProfile = when (currentUser!!.role) {
-                    "rider" -> com.example.security.AppModule.RIDER
-                    "admin" -> com.example.security.AppModule.ADMIN
-                    else -> com.example.security.AppModule.CUSTOMER
-                }
-
-                LaunchedEffect(currentUser) {
-                    viewModel.refreshSecurityAndBiometricStates(context)
-                }
-
-                val isCustomerBioEnabledProfile by viewModel.isCustomerBioEnabled.collectAsState()
-                val isRiderBioEnabledProfile by viewModel.isRiderBioEnabled.collectAsState()
-                val isAdminBioEnabledProfile by viewModel.isAdminBioEnabled.collectAsState()
-                val isBioEnabledInProfile = when (currentUser!!.role) {
-                    "rider" -> isRiderBioEnabledProfile
-                    "admin" -> isAdminBioEnabledProfile
-                    else -> isCustomerBioEnabledProfile
-                }
-                val fragmentActivityProfile = context as? androidx.fragment.app.FragmentActivity
-
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    border = BorderStroke(1.dp, ZyphuelBluePrimary.copy(alpha = 0.3f))
-                ) {
-                    Column(
-                        modifier = Modifier.padding(14.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Icon(Icons.Filled.Fingerprint, contentDescription = null, tint = ZyphuelBluePrimary, modifier = Modifier.size(22.dp))
-                                Text("Biometric Authentication", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
-                            }
-                            Text(
-                                text = if (isBioEnabledInProfile) "Enabled ✔️" else "Disabled 🔒",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (isBioEnabledInProfile) Color(0xFF059669) else Color.Red
-                                )
-                            )
-                        }
-
-                        Text(
-                            text = if (isBioEnabledInProfile)
-                                "Fingerprint & Face ID is active. You can log in with 1-tap biometrics anytime."
-                            else
-                                "Biometric login is currently disabled. Tap below to enable 1-tap Fingerprint / Face ID login.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.Gray
-                        )
-
-                        Button(
-                            onClick = {
-                                if (!isBioEnabledInProfile) {
-                                    if (fragmentActivityProfile != null) {
-                                        com.example.security.BiometricSecurityManager.showBiometricPrompt(
-                                            activity = fragmentActivityProfile,
-                                            title = "Enable Biometric Login",
-                                            subtitle = "Scan fingerprint or face to authorize biometric access",
-                                            description = "Account: ${currentUser!!.email}",
-                                            onSuccess = {
-                                                viewModel.enableBiometricForModule(context, bioModuleInProfile, currentUser!!)
-                                                Toast.makeText(context, "Biometric login enabled successfully! 👆", Toast.LENGTH_SHORT).show()
-                                            },
-                                            onError = { _, errStr ->
-                                                // Fallback enable if hardware prompt dismissed with credentials
-                                                viewModel.enableBiometricForModule(context, bioModuleInProfile, currentUser!!)
-                                                Toast.makeText(context, "Biometrics enabled for ${currentUser!!.email}", Toast.LENGTH_SHORT).show()
-                                            },
-                                            onFailed = {
-                                                Toast.makeText(context, "Biometric scan not recognized. Please retry.", Toast.LENGTH_SHORT).show()
-                                            }
-                                        )
-                                    } else {
-                                        viewModel.enableBiometricForModule(context, bioModuleInProfile, currentUser!!)
-                                        Toast.makeText(context, "Biometric login enabled! 👆", Toast.LENGTH_SHORT).show()
-                                    }
-                                } else {
-                                    viewModel.disableBiometricForModule(context, bioModuleInProfile)
-                                    Toast.makeText(context, "Biometric login disabled", Toast.LENGTH_SHORT).show()
-                                }
-                            },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (isBioEnabledInProfile) Color(0xFFDC2626) else Color(0xFF059669)
-                            ),
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.fillMaxWidth().testTag("toggle_fingerprint_profile_btn")
-                        ) {
-                            Icon(Icons.Filled.Fingerprint, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color.White)
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = if (isBioEnabledInProfile) "Disable Biometric Lock" else "Enable Biometric Lock",
-                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.White)
-                            )
-                        }
-                    }
-                }
-
-                // --- Verified Badge Authority Card ---
-                val isAdminAccount = currentUser!!.role == "admin" || currentUser!!.email.equals("m.daniyalkhan490@gmail.com", ignoreCase = true)
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = when {
-                            isAdminAccount -> Color(0xFFF0F9FF)
-                            currentUser!!.role == "rider" && currentUser!!.isVerified -> Color(0xFFECFDF5)
-                            else -> Color(0xFFF8FAFC)
-                        }
-                    ),
-                    border = BorderStroke(
-                        1.dp,
-                        when {
-                            isAdminAccount -> Color(0xFF38BDF8)
-                            currentUser!!.role == "rider" && currentUser!!.isVerified -> Color(0xFF10B981)
-                            else -> Color(0xFFE2E8F0)
-                        }
-                    )
-                ) {
-                    Column(
-                        modifier = Modifier.padding(14.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Icon(
-                                imageVector = if (isAdminAccount || (currentUser!!.role == "rider" && currentUser!!.isVerified)) Icons.Filled.Verified else Icons.Filled.Shield,
-                                contentDescription = "Badge Status",
-                                tint = if (isAdminAccount) Color(0xFF0284C7) else if (currentUser!!.role == "rider" && currentUser!!.isVerified) Color(0xFF10B981) else ZyphuelBluePrimary,
-                                modifier = Modifier.size(22.dp)
-                            )
-                            Text(
-                                text = when {
-                                    isAdminAccount -> "Verified Admin Badge Active (Blue Tick) ✔️"
-                                    currentUser!!.role == "rider" && currentUser!!.isVerified -> "Verified Badge Awarded ✔️"
-                                    else -> "Verified Badge Status"
-                                },
-                                style = MaterialTheme.typography.titleSmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (isAdminAccount) Color(0xFF0369A1) else if (currentUser!!.role == "rider" && currentUser!!.isVerified) Color(0xFF065F46) else ZyphuelBlueDark
-                                )
-                            )
-                        }
-
-                        if (isAdminAccount) {
-                            Text(
-                                text = "Official Administrator Verified Badge (Blue Tick) active. You hold permanent root management and verification authority across the entire Zyphuel network.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color(0xFF0C4A6E)
-                            )
-                        } else if (currentUser!!.role == "rider") {
-                            if (currentUser!!.isVerified) {
-                                Text(
-                                    text = "Your account has been granted a Verified Badge at the Admin's sole discretion.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = Color(0xFF047857)
-                                )
-                            } else {
-                                Text(
-                                    text = "The Verified Badge is awarded strictly at the Admin's discretion. No one else can receive this badge.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = Color.DarkGray
-                                )
-                                Text(
-                                    text = "If you need this badge, please contact the admin via email:",
-                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                    color = Color.DarkGray
-                                )
-                                Button(
-                                    onClick = {
-                                        val emailIntent = Intent(Intent.ACTION_SENDTO).apply {
-                                            data = Uri.parse("mailto:m.daniyalkhan490@gmail.com")
-                                            putExtra(Intent.EXTRA_SUBJECT, "Request for Verified Badge - ${currentUser!!.name}")
-                                            putExtra(Intent.EXTRA_TEXT, "Hello Admin,\n\nI am requesting a Verified Badge for my rider account (${currentUser!!.email}).\n\nThank you.")
-                                        }
-                                        try {
-                                            context.startActivity(emailIntent)
-                                        } catch (e: Exception) {
-                                            android.widget.Toast.makeText(context, "Contact Admin at: m.daniyalkhan490@gmail.com", android.widget.Toast.LENGTH_LONG).show()
-                                        }
-                                    },
-                                    colors = ButtonDefaults.buttonColors(containerColor = ZyphuelBluePrimary),
-                                    shape = RoundedCornerShape(8.dp),
-                                    modifier = Modifier.fillMaxWidth().testTag("profile_email_admin_btn")
-                                ) {
-                                    Icon(Icons.Filled.Email, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.White)
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text("Email Admin (m.daniyalkhan490@gmail.com)", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.White))
-                                }
-                            }
-                        } else {
-                            Text(
-                                text = "Notice: The Verified Badge is strictly reserved for Riders at Admin discretion. Customers cannot receive this badge.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color.Gray
-                            )
-                            Text(
-                                text = "If you are a rider seeking verification, contact Admin via email: m.daniyalkhan490@gmail.com",
-                                style = MaterialTheme.typography.labelSmall.copy(color = ZyphuelBluePrimary, fontWeight = FontWeight.Bold)
-                            )
-                        }
-                    }
-                }
-
-                // --- Danger Zone / Delete Account (Protected for Super Admin) ---
-                if (currentUser!!.role == "admin" || currentUser!!.email.equals("m.daniyalkhan490@gmail.com", ignoreCase = true)) {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF0FDF4)),
-                        border = BorderStroke(1.dp, Color(0xFF86EFAC))
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(14.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Security,
-                                contentDescription = "Protected Admin",
-                                tint = Color(0xFF16A34A),
-                                modifier = Modifier.size(26.dp)
-                            )
-                            Column {
-                                Text(
-                                    text = "🛡️ Permanent Root Super Admin",
-                                    style = MaterialTheme.typography.titleSmall.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color(0xFF15803D)
-                                    )
-                                )
-                                Text(
-                                    text = "This root administrator account (m.daniyalkhan490@gmail.com) is permanently protected and cannot be deleted or reset from the client or server.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = Color(0xFF166534)
-                                )
-                            }
-                        }
-                    }
-                } else {
+                // --- Danger Zone / Delete Account (For Standard Users) ---
+                if (currentUser!!.role != "admin" && !currentUser!!.email.equals("m.daniyalkhan490@gmail.com", ignoreCase = true)) {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
@@ -10880,7 +10705,7 @@ fun ProfileSettingsDialog(
                             }
 
                             Text(
-                                text = "Permanently remove your user profile, saved location pins, order history, and biometrics from the system. This action cannot be undone.",
+                                text = "Permanently remove your user profile, saved location pins, and order history from the system. This action cannot be undone.",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Color(0xFF7F1D1D)
                             )
@@ -10906,7 +10731,7 @@ fun ProfileSettingsDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Zyphuel Platform v2.3.0 • Release 2026",
+                        text = "Zyphuel Platform v2.3.0.1 • Release 2026",
                         style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontSize = 11.sp)
                     )
                 }
@@ -10915,7 +10740,12 @@ fun ProfileSettingsDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    viewModel.updatePassword(password)
+                    if (phoneNumber.isNotBlank() && phoneNumber != currentUser!!.phoneNumber) {
+                        viewModel.updatePhoneNumber(phoneNumber)
+                    }
+                    if (password.isNotBlank() && password != currentUser!!.passwordHash) {
+                        viewModel.updatePassword(password)
+                    }
                     onDismiss()
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = ZyphuelBluePrimary),
@@ -13251,6 +13081,10 @@ fun AdminDashboardScreen(viewModel: MainViewModel) {
 
     // Analytics calculations from real Room local data cached using remember (equivalent of useMemo)
     val totalRevenue = remember(orders) { orders.filter { it.status == "Completed" }.sumOf { it.totalPrice } }
+    val totalProfit = remember(orders) {
+        orders.filter { it.status == "Completed" }
+            .sumOf { com.example.util.FeeConstants.calculateDeliveryFee(it.serviceType) }
+    }
     val completedOrdersCount = remember(orders) { orders.filter { it.status == "Completed" }.size }
     val pendingOrdersCount = remember(orders) { orders.filter { it.status == "Pending" }.size }
 
@@ -13342,7 +13176,16 @@ fun AdminDashboardScreen(viewModel: MainViewModel) {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+                    AdminStatCard(title = "Total Profit", value = "Rs.${totalProfit.toInt()}", modifier = Modifier.weight(1f))
                     AdminStatCard(title = "Revenue", value = "Rs.${totalRevenue.toInt()}", modifier = Modifier.weight(1f))
+                    AdminStatCard(title = "Completed", value = "$completedOrdersCount", modifier = Modifier.weight(1f))
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    AdminStatCard(title = "Active Orders", value = "$pendingOrdersCount", modifier = Modifier.weight(1f))
                     AdminStatCard(title = "Customers", value = "${customers.size}", modifier = Modifier.weight(1f))
                     AdminStatCard(title = "Riders", value = "${riders.size}", modifier = Modifier.weight(1f))
                 }
@@ -13351,17 +13194,8 @@ fun AdminDashboardScreen(viewModel: MainViewModel) {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    AdminStatCard(title = "Active Orders", value = "$pendingOrdersCount", modifier = Modifier.weight(1f))
-                    AdminStatCard(title = "Completed", value = "$completedOrdersCount", modifier = Modifier.weight(1f))
                     AdminStatCard(title = "Canceled", value = "$canceledOrdersCount", modifier = Modifier.weight(1f))
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    AdminStatCard(title = "📥 App Downloads", value = "$appDownloadCount", modifier = Modifier.weight(1f))
-                    AdminStatCard(title = "🟢 Google Users", value = "$googleUsersCount", modifier = Modifier.weight(1f))
+                    AdminStatCard(title = "📥 Downloads", value = "$appDownloadCount", modifier = Modifier.weight(1f))
                     AdminStatCard(title = "Total Users", value = "${customers.size + riders.size}", modifier = Modifier.weight(1f))
                 }
             }
@@ -15818,7 +15652,23 @@ fun AdminOrderCard(order: OrderEntity, viewModel: MainViewModel? = null) {
                 Text("Rs. ${String.format(java.util.Locale.US, "%.2f", order.totalPrice)}", fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary)
             }
             Spacer(modifier = Modifier.height(4.dp))
-            Text("Qty: ${order.quantity} | Cust: ${order.customerName}", style = MaterialTheme.typography.bodySmall.copy(color = Color.DarkGray))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Qty: ${order.quantity} | Cust: ${order.customerName} (${order.customerEmail})", style = MaterialTheme.typography.bodySmall.copy(color = Color.DarkGray))
+                if (order.customerEmail.equals("m.daniyalkhan490@gmail.com", ignoreCase = true) ||
+                    order.customerEmail.equals(viewModel?.currentUser?.value?.email, ignoreCase = true)) {
+                    Text(
+                        "[Admin Order]",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = ZyphuelBluePrimary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+                }
+            }
             Text("Address: ${order.deliveryAddress}", style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray))
             Text("Rider: ${order.riderName ?: "Unassigned"}", style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray))
             Spacer(modifier = Modifier.height(6.dp))
