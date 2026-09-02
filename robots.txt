@@ -26,4 +26,4 @@ Disallow: /settings.gradle.kts
 Disallow: /metadata.json
 
 # Site Map Location
-Sitemap: https://zyphuel.netlify.app/sitemap.xml
+Sitemap: https://www.zyphuel.com/sitemap.xml

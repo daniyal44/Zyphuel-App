@@ -1,9 +1,9 @@
-# 🚚 Zyphuel Platform (Android v2.3.0 • Release 2026)
+# 🚚 Zyphuel Platform (Android v2.3.0.1 • Release 2026)
 
 <div align="center">
   <img src="company .png" width="140" height="140" alt="Zyphuel MDK Logo" />
   <h3>Pakistan's Premier On-Demand Energy & Clean Water Ecosystem</h3>
-  <p><b>Version 2.3.0 (Build 3) • Target SDK 36 • Android 15/16 Ready • Jetpack Compose Material 3 • Room DB • Real-Time Dual Notifications</b></p>
+  <p><b>Version 2.3.0.1 (Build 4) • Target SDK 36 • Android 15/16 Ready • Jetpack Compose Material 3 • Room DB • Real-Time Dual Notifications</b></p>
 </div>
 
 ---
@@ -13,8 +13,9 @@ Zyphuel is Pakistan's premier on-demand doorstep delivery platform for **Super P
 
 ---
 
-## 🚀 Key Features (v2.3.0 Latest)
+## 🚀 Key Features (v2.3.0.1 Latest)
 
+* **Customer Order History Isolation & Admin Master Visibility (`CustomerOrderHistoryScreen`)**: Regular customers strictly view only their own orders with case-insensitive email matching. When logged in as Administrator, `customerOrders` automatically streams `getAllOrdersFlow()`, showing all users' orders and Admin orders with custom badges and full customer identifiers.
 * **Practical Step-by-Step App Tour Guide (`AppTourGuideDialog`)**: Actionable onboarding walkthrough with smooth `AnimatedContent` slide/fade transitions guiding users step-by-step through real app usage: selecting fuel/water, setting quantities, direct address entry, 1-tap COD ordering, live progress stepper, driver contact, and PDF invoice downloads. Re-launchable anytime from the Drawer.
 * **Official Order Tax Invoice Generation & PDF Download (`InvoiceGenerator.kt`)**: Generates official itemized tax invoices with complete customer, driver, and fare breakdowns. Features native Android `PrintManager` integration for 1-tap "Save as PDF" to phone storage, direct printing, and social sharing via WhatsApp and Email across Tracker, History, and Admin screens.
 * **Standardized Delivery Fee Engine (`FeeConstants.kt`)**: Fixed delivery charge for Fuel (Petrol, Diesel, High-Octane) and LPG is permanently set to **Rs. 250.00** (Water: Rs. 50.00) ensuring 100% mathematical consistency across OrderDialog, TrackerScreen, FareBreakdown, and Invoices.

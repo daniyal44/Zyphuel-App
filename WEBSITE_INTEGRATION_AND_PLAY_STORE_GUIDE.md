@@ -1,6 +1,6 @@
 # Zyphuel: React Website Header Integration & Play Store Launch Guide
 
-This document contains the exact code snippets and architectural guidance to integrate the "App Launch Soon" functionality into your React JS website (`https://zyphuel.netlify.app/`) and navigate the Google Play Store deployment process without a developer account.
+This document contains the exact code snippets and architectural guidance to integrate the "App Launch Soon" functionality into your React JS website (`https://www.zyphuel.com/`) and navigate the Google Play Store deployment process without a developer account.
 
 ---
 
@@ -190,7 +190,7 @@ There are established services and agencies that publish Android apps on their e
 * **Fiverr / Upwork Agencies:** You can hire verified freelancers with active developer accounts to publish your app. Search for *"Google Play Store Publishing Service"*. They will manage the release, test configurations, and upload the APK/AAB for a small fee ($10–$25).
 * **No-Code / Low-Code Publishers:** Sites like *Appypie*, *Adalo*, or *Thunkable* offer white-label publishing services where they publish the `.aab` file through their corporate developer accounts.
 
-### Option 2: Self-Host APK directly on Zyphuel Netlify Website (Best for immediate traction)
+### Option 2: Self-Host APK directly on Zyphuel Website (Best for immediate traction)
 Many modern start-ups make their Android apps immediately available via a direct APK download link on their landing pages (similar to how Telegram, Fortnite, and WhatsApp Beta operate).
 1. Place the compiled `zyphuel.apk` inside your React project's `public/` folder.
 2. In your Header component, update the "App Launch Soon" to a direct download button:
@@ -213,12 +213,12 @@ Google Play is not the only store. You can reach millions of users on:
 To ensure the website and app are indexed and recommended by AI Search Engines (**ChatGPT**, **Gemini**, **Grok**) and Google immediately upon launch, complete these tactical steps:
 
 1. **Submit to Google Search Console & Indexing API:**
-   * Register your URL `https://zyphuel.netlify.app/` on **Google Search Console**.
+   * Register your URL `https://www.zyphuel.com/` on **Google Search Console**.
    * Submit your `sitemap.xml` directly to force Google to crawl and index your pages within 4 hours.
 
 2. **Leverage AI Discovery (ChatGPT / Gemini Optimization):**
    * Feed AI crawlers by publishing high-quality blog posts on Medium, Dev.to, or LinkedIn with structured keywords: *"Zyphuel: The New Tesla-Inspired Fuel and Water Delivery App in Lahore."*
-   * Mention the Netlify link in these articles. Since LLMs scan fresh blogs, they will surface your site when users query AI about "fuel delivery apps in Pakistan".
+   * Mention the official website link (`https://www.zyphuel.com/`) in these articles. Since LLMs scan fresh blogs, they will surface your site when users query AI about "fuel delivery apps in Pakistan".
 
 3. **Viral Social Campaigns:**
    * Create short 15-second visual reels for TikTok and Instagram showing the live map tracking feature. Focus on the caption: *"Get petrol, LPG gas, or mineral water delivered instantly to your coordinates in Lahore! 🚀 Link in bio."*

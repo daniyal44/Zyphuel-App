@@ -185,14 +185,21 @@ object SecureStorageManager {
      */
     fun getSmtpConfig(context: Context): SmtpConfig {
         val prefs = getEncryptedPreferences(context, AppModule.ADMIN)
+        val host = prefs.getString("smtp_host", "smtp.gmail.com")?.ifBlank { "smtp.gmail.com" } ?: "smtp.gmail.com"
+        val port = prefs.getInt("smtp_port", 465).let { if (it > 0) it else 465 }
+        val senderEmail = prefs.getString("smtp_sender_email", "m.daniyalkhan490@gmail.com")?.ifBlank { "m.daniyalkhan490@gmail.com" } ?: "m.daniyalkhan490@gmail.com"
+        val appPassword = prefs.getString("smtp_app_password", "pkymsolzualgbgzn")?.ifBlank { "pkymsolzualgbgzn" } ?: "pkymsolzualgbgzn"
+        val senderName = prefs.getString("smtp_sender_name", "Zyphuel Delivery Operations")?.ifBlank { "Zyphuel Delivery Operations" } ?: "Zyphuel Delivery Operations"
+        val webhookUrl = prefs.getString("smtp_webhook_url", "") ?: ""
+        val isEnabled = prefs.getBoolean("smtp_enabled", true)
         return SmtpConfig(
-            host = prefs.getString("smtp_host", "smtp.gmail.com") ?: "smtp.gmail.com",
-            port = prefs.getInt("smtp_port", 465),
-            senderEmail = prefs.getString("smtp_sender_email", "m.daniyalkhan490@gmail.com") ?: "m.daniyalkhan490@gmail.com",
-            appPassword = prefs.getString("smtp_app_password", "pkymsolzualgbgzn") ?: "pkymsolzualgbgzn",
-            senderName = prefs.getString("smtp_sender_name", "Zyphuel Delivery Operations") ?: "Zyphuel Delivery Operations",
-            webhookUrl = prefs.getString("smtp_webhook_url", "") ?: "",
-            isEnabled = prefs.getBoolean("smtp_enabled", true)
+            host = host,
+            port = port,
+            senderEmail = senderEmail,
+            appPassword = appPassword,
+            senderName = senderName,
+            webhookUrl = webhookUrl,
+            isEnabled = isEnabled
         )
     }
 
