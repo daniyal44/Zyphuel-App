@@ -78,6 +78,8 @@ app/src/main/java/com/example/
 │   └── components/
 │       └── DeliveryNotificationPermissionPrompt.kt # Notification Permission Onboarding Modal
 └── util/
+    ├── FeeConstants.kt         # Centralized Delivery Fee Calculation Utility
+    ├── InvoiceGenerator.kt     # Tax Invoice Generator, Native Android PDF Printing & Sharing Engine
     └── RealtimeEmailEngine.kt  # RFC 5321 / RFC 3207 Real-Time Multi-Channel Email Gateway
 ```
 

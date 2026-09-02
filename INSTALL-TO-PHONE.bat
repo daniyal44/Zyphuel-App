@@ -91,15 +91,25 @@ for /f "skip=1 tokens=1,2" %%A in ('""%ADB%" devices"') do (
         set "FOUND=1"
         echo.
         echo  [3/3] Install kar rahe hain -^> %%A
-        "%ADB%" -s %%A install -r "%APK%"
+        "%ADB%" -s %%A install --user 0 -r -d -t "%APK%"
         if errorlevel 1 (
             echo.
-            echo  [!] Install fail hua ^(shayad purana signature^). Purani app
-            echo      hata kar dobara koshish kar rahe hain...
-            "%ADB%" -s %%A uninstall %PKG%
-            "%ADB%" -s %%A install -r "%APK%"
+            echo  [!] Standard install fail hua, fallback retry kar rahe hain...
+            timeout /t 2 >nul
+            "%ADB%" -s %%A install -r -d -t "%APK%"
             if errorlevel 1 (
-                echo  [X] %%A par install phir bhi fail hua. Upar ka message dekhein.
+                echo.
+                echo  [!] Purani app hata kar dobara koshish kar rahe hain...
+                "%ADB%" -s %%A uninstall %PKG%
+                timeout /t 2 >nul
+                "%ADB%" -s %%A install --user 0 -r -d -t "%APK%"
+                if errorlevel 1 (
+                    echo  [X] %%A par install phir bhi fail hua. Upar ka message dekhein.
+                ) else (
+                    echo  [OK] %%A par install ho gayi.
+                    "%ADB%" -s %%A shell monkey -p %PKG% -c android.intent.category.LAUNCHER 1 >nul 2>&1
+                    echo  [OK] App launch kar di gayi.
+                )
             ) else (
                 echo  [OK] %%A par install ho gayi.
                 "%ADB%" -s %%A shell monkey -p %PKG% -c android.intent.category.LAUNCHER 1 >nul 2>&1
