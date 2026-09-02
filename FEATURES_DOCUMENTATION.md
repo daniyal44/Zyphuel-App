@@ -399,6 +399,36 @@ The app strictly segments access control across three user roles:
   * **Firestore REST Client (`FirestoreRest.kt`, `DesktopConfig.kt`)**: Zero-dependency REST-based Cloud Firestore streaming client connecting with Firebase project credentials without requiring full Android SDK dependencies.
   * **One-Click Launch Scripts**: `RUN-DESKTOP.bat` and `RUN-DESKTOP-DEBUG.bat` for seamless local execution on Windows/macOS/Linux.
 
+## 11.10 Practical App Tour, Downloadable PDF Invoices & Delivery Fee Standardization
+* **Revamped Practical Step-by-Step App Tour Guide (`AppTourGuideDialog` in `Screens.kt`)**:
+  * Replaced generic marketing slides with concrete, actionable step-by-step guidance on how to use the app in practice:
+    1. **Service Selection**: Tap Super Petrol, High-Speed Diesel, High Octane, Pure Mineral Water, or LPG Cylinder cards on Home Screen.
+    2. **Quantity & Simple Address**: Configure liters/gallons with `+`/`-` stepper and enter delivery address directly with GPS location option.
+    3. **Pricing & 1-Tap COD**: Transparent live OGRA prices, standardized delivery fee, and instant COD confirmation.
+    4. **Live Order Tracker**: 4-stage visual status progress (Pending ➔ Assigned ➔ Out for Delivery ➔ Delivered) with live ETA countdown.
+    5. **Driver Contact**: 1-tap direct phone dialer and in-app live chat for dropoff instructions.
+    6. **Tax Invoices**: 1-tap PDF invoice download and real-time Gmail inbox receipt dispatch.
+    7. **Sidebar Menu**: Access order history, repeat previous orders with 1-tap, and relaunch the App Tour anytime.
+    8. **Biometric Security**: Quick fingerprint and face unlock configuration for instant secure logins.
+  * Motion polish: Fluid `AnimatedContent` slide/fade transitions and animated progress indicator (`FastOutSlowInEasing`).
+* **Official Order Invoice Generation & PDF Download (`InvoiceGenerator.kt`, `InvoiceDialog`)**:
+  * **Interactive Invoice Modal (`InvoiceDialog`)**: Detailed preview showing company header, customer details, assigned rider info, itemized rate and quantity table, delivery fee, and total COD payable.
+  * **Native Android PDF Download (`printOrSavePdf`)**: Leverages Android `PrintManager` and `WebView` to allow users to "Save as PDF" to phone storage or print directly without requiring risky storage permissions.
+  * **Receipt Sharing (`shareInvoice`)**: Formats itemized receipt text dispatched via Android `ACTION_SEND` intent for WhatsApp, SMS, or Email.
+  * **Universal Invoice Access**: Accessible directly from `OrderSummaryCard` (Tracker screen), `CustomerOrderCard` (Home & Order History), and `AdminOrderCard` (Admin Console).
+* **Delivery Fee Standardization (`FeeConstants.kt`)**:
+  * Unifies delivery fee calculations across all app surfaces:
+    * Fuel (Petrol, Diesel, High-Octane) & LPG Orders: Fixed Rs. 250.00.
+    * Pure Water Orders: Flat Rs. 50.00.
+    * Multi-item orders: 50% discount on base delivery fee.
+  * Guarantees 100% mathematical consistency across `OrderDialog`, `OrderSummaryCard`, `TrackerScreen`, `showFareBreakdownDialog`, and downloadable invoices, eliminating previous discrepancies.
+* **Address Input Simplification in `OrderDialog`**:
+  * Completely removed redundant "Saved Addresses (Quick Fill)" and "Save Current" chips to deliver a clean, spacious, direct delivery address input experience.
+* **Removal of "Stay Updated on Your Fuel Delivery" Bell Icon & Permission Prompt**:
+  * Completely removed the bell icon `IconButton` (`tracker_notification_prompt_btn`) from the Order Details header in `TrackerScreen`.
+  * Removed the automated startup prompt `checkAndPromptDeliveryNotifications` from `MainActivity.kt` and disabled the `DeliveryNotificationPermissionPrompt` overlay modal.
+  * Removed the notification prompt banner card from `CustomerHomeScreen`, providing an uncluttered, distraction-free order details and tracking experience.
+
 ---
 
 ## 12. Database Architecture & Data Models

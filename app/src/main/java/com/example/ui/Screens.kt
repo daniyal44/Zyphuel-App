@@ -4014,66 +4014,6 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                     }
                 }
 
-                // Delivery Push Notification Status Banner if Disabled
-                if (!isPushNotifGranted) {
-                    item {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { viewModel.triggerDeliveryNotificationPrompt() }
-                                .testTag("enable_delivery_notif_banner"),
-                            shape = RoundedCornerShape(14.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFFEFF6FF)),
-                            border = BorderStroke(1.dp, Color(0xFFBAE6FD))
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 14.dp, vertical = 12.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(36.dp)
-                                        .background(ZyphuelBluePrimary, CircleShape),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Filled.NotificationsActive,
-                                        contentDescription = "Enable Notifications",
-                                        tint = Color.White,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = "Enable Real-Time Delivery Updates",
-                                        style = MaterialTheme.typography.labelMedium.copy(
-                                            fontWeight = FontWeight.Bold,
-                                            color = Color(0xFF0C4A6E),
-                                            fontSize = 13.sp
-                                        )
-                                    )
-                                    Text(
-                                        text = "Get live pings on bowser dispatch, ETA, and arrival.",
-                                        style = MaterialTheme.typography.bodySmall.copy(
-                                            color = Color(0xFF0369A1),
-                                            fontSize = 11.5.sp
-                                        )
-                                    )
-                                }
-                                Icon(
-                                    imageVector = Icons.Filled.ChevronRight,
-                                    contentDescription = null,
-                                    tint = ZyphuelBluePrimary,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-                        }
-                    }
-                }
-
                 item {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -5669,6 +5609,7 @@ fun CustomerOrderCard(
     onTrackClick: () -> Unit
 ) {
     var showRateDialog by remember { mutableStateOf(false) }
+    var showCardInvoice by remember { mutableStateOf(false) }
 
     val allRiders by viewModel.allRiders.collectAsState()
     val assignedRider = remember(allRiders, order.riderEmail) {
@@ -5772,14 +5713,28 @@ fun CustomerOrderCard(
                             )
                         )
                     }
-
-                    if (order.status != "Completed" && order.status != "Cancelled") {
-                        Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
                         TextButton(
-                            onClick = onTrackClick,
-                            colors = ButtonDefaults.textButtonColors(contentColor = ZyphuelBluePrimary)
+                            onClick = { showCardInvoice = true },
+                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
                         ) {
-                            Text("Track Live", fontWeight = FontWeight.Bold)
+                            Icon(Icons.Filled.ReceiptLong, contentDescription = null, modifier = Modifier.size(13.dp), tint = ZyphuelBluePrimary)
+                            Spacer(modifier = Modifier.width(3.dp))
+                            Text("Invoice", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary))
+                        }
+
+                        if (order.status != "Completed" && order.status != "Cancelled") {
+                            TextButton(
+                                onClick = onTrackClick,
+                                colors = ButtonDefaults.textButtonColors(contentColor = ZyphuelBluePrimary),
+                                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Text("Track", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall)
+                            }
                         }
                     }
                 }
@@ -6038,6 +5993,10 @@ fun CustomerOrderCard(
                 }
             }
         }
+    }
+
+    if (showCardInvoice) {
+        InvoiceDialog(order = order, onDismiss = { showCardInvoice = false })
     }
 }
 
@@ -7445,8 +7404,8 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
     val hasFuelOrGas = petrolSelected || dieselSelected || octaneSelected || lpgSelected
     val hasWaterOnly = waterSelected && !hasFuelOrGas
     val baseDeliveryCharge = when {
-        hasFuelOrGas -> 250.0
-        hasWaterOnly -> 20.0
+        hasFuelOrGas -> com.example.util.FeeConstants.FUEL_DELIVERY_FEE
+        hasWaterOnly -> com.example.util.FeeConstants.WATER_DELIVERY_FEE
         else -> 0.0
     }
 
@@ -7766,108 +7725,6 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                     }
                 }
 
-                // Saved Delivery Addresses (Local Storage for Quick Checkout)
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 2.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Filled.Bookmark,
-                                contentDescription = null,
-                                tint = ZyphuelBluePrimary,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = "Saved Addresses (Quick Fill):",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = ZyphuelBlueDark
-                                )
-                            )
-                        }
-
-                        if (deliveryAddress.isNotBlank() && !savedAddresses.contains(deliveryAddress.trim())) {
-                            TextButton(
-                                onClick = { viewModel.addSavedAddress(deliveryAddress) },
-                                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Filled.Add,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(14.dp),
-                                    tint = ZyphuelBluePrimary
-                                )
-                                Spacer(modifier = Modifier.width(2.dp))
-                                Text(
-                                    "Save Current",
-                                    style = MaterialTheme.typography.labelSmall.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        color = ZyphuelBluePrimary
-                                    )
-                                )
-                            }
-                        }
-                    }
-
-                    if (savedAddresses.isNotEmpty()) {
-                        LazyRow(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .testTag("saved_addresses_row")
-                        ) {
-                            items(savedAddresses) { addr ->
-                                val isSelected = (deliveryAddress.trim() == addr.trim())
-                                Surface(
-                                    modifier = Modifier.clickable { deliveryAddress = addr },
-                                    shape = RoundedCornerShape(10.dp),
-                                    color = if (isSelected) ZyphuelBluePrimary else Color(0xFFF1F5F9),
-                                    border = BorderStroke(1.dp, if (isSelected) ZyphuelBluePrimary else Color(0xFFCBD5E1))
-                                ) {
-                                    Row(
-                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Filled.Place,
-                                            contentDescription = null,
-                                            tint = if (isSelected) Color.White else ZyphuelBluePrimary,
-                                            modifier = Modifier.size(12.dp)
-                                        )
-                                        Text(
-                                            text = addr,
-                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                color = if (isSelected) Color.White else Color.DarkGray,
-                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                                            ),
-                                            maxLines = 1
-                                        )
-                                        Spacer(modifier = Modifier.width(2.dp))
-                                        Icon(
-                                            imageVector = Icons.Filled.Close,
-                                            contentDescription = "Remove address",
-                                            tint = if (isSelected) Color.White.copy(alpha = 0.8f) else Color.Gray,
-                                            modifier = Modifier
-                                                .size(14.dp)
-                                                .clickable { viewModel.removeSavedAddress(addr) }
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
                 // Delivery address input
 
                 OutlinedTextField(
@@ -8061,9 +7918,161 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
     )
 }
 
+/**
+ * Official Order Invoice Preview and Download Modal.
+ * Renders complete itemized transaction details and provides 1-tap "Save as PDF" and "Share" options.
+ */
+@Composable
+fun InvoiceDialog(
+    order: OrderEntity,
+    onDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+    val deliveryFee = com.example.util.FeeConstants.calculateDeliveryFee(order.serviceType)
+    val subtotal = (order.totalPrice - deliveryFee).coerceAtLeast(0.0)
+    val dateStr = java.text.SimpleDateFormat("dd MMM yyyy, hh:mm a", java.util.Locale.US).format(java.util.Date(order.createdAt))
+
+    androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Header
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text("⚡ ZYPHUEL TAX INVOICE", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary))
+                        Text("INV-ZYP-${order.id} • $dateStr", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray))
+                    }
+                    IconButton(onClick = onDismiss) {
+                        Icon(Icons.Filled.Close, contentDescription = "Close", tint = Color.Gray)
+                    }
+                }
+
+                HorizontalDivider(color = Color(0xFFE2E8F0))
+
+                // Customer & Rider Details Card
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color(0xFFF8FAFC),
+                    border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("Customer:", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.Gray))
+                            Text(order.customerName, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold, color = ZyphuelBlueDark))
+                        }
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("Phone:", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.Gray))
+                            Text(order.customerPhone, style = MaterialTheme.typography.bodySmall.copy(color = Color.DarkGray))
+                        }
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("Delivery:", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.Gray))
+                            Text(order.deliveryAddress, style = MaterialTheme.typography.bodySmall.copy(color = Color.DarkGray), modifier = Modifier.fillMaxWidth(0.7f), maxLines = 2)
+                        }
+                        HorizontalDivider(color = Color(0xFFE2E8F0).copy(alpha = 0.5f))
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("Assigned Driver:", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.Gray))
+                            Text(order.riderName ?: "Zyphuel Dispatch Hub", style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold, color = Color(0xFF0284C7)))
+                        }
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("Payment Mode:", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.Gray))
+                            Text(order.paymentMethod, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFF16A34A)))
+                        }
+                    }
+                }
+
+                // Itemized Breakdown
+                Text("ORDER BREAKDOWN", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.Gray, letterSpacing = 0.5.sp))
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color(0xFFF8FAFC),
+                    border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("${order.serviceType} (${order.quantity} units)", style = MaterialTheme.typography.bodySmall.copy(color = Color.DarkGray, fontWeight = FontWeight.Medium))
+                            Text("Rs. ${String.format(java.util.Locale.US, "%,.2f", subtotal)}", style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
+                        }
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("Delivery Fee (Doorstep)", style = MaterialTheme.typography.bodySmall.copy(color = Color.DarkGray))
+                            Text("Rs. ${String.format(java.util.Locale.US, "%,.2f", deliveryFee)}", style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
+                        }
+                        HorizontalDivider(color = Color(0xFFE2E8F0))
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Text("Total COD Payable:", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark))
+                            Text("Rs. ${String.format(java.util.Locale.US, "%,.2f", order.totalPrice)}", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary))
+                        }
+                    }
+                }
+
+                // Official Verification Tag
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFFF0FDF4), RoundedCornerShape(8.dp))
+                        .padding(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = Color(0xFF16A34A), modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Official Tax Invoice • Verified Transaction", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFF16A34A)))
+                }
+
+                // Action Buttons: Download PDF & Share
+                Button(
+                    onClick = {
+                        com.example.util.InvoiceGenerator.printOrSavePdf(context, order)
+                    },
+                    modifier = Modifier.fillMaxWidth().testTag("download_pdf_invoice_btn"),
+                    colors = ButtonDefaults.buttonColors(containerColor = ZyphuelBluePrimary),
+                    shape = RoundedCornerShape(12.dp),
+                    contentPadding = PaddingValues(vertical = 12.dp)
+                ) {
+                    Icon(Icons.Filled.ReceiptLong, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("📥 Download / Save as PDF", fontWeight = FontWeight.Bold)
+                }
+
+                OutlinedButton(
+                    onClick = {
+                        com.example.util.InvoiceGenerator.shareInvoice(context, order)
+                    },
+                    modifier = Modifier.fillMaxWidth().testTag("share_invoice_btn"),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, ZyphuelBluePrimary),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = ZyphuelBluePrimary),
+                    contentPadding = PaddingValues(vertical = 10.dp)
+                ) {
+                    Icon(Icons.Filled.Share, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("📤 Share Receipt (WhatsApp / Email)", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.labelMedium)
+                }
+            }
+        }
+    }
+}
 
 @Composable
 fun OrderSummaryCard(order: OrderEntity, viewModel: MainViewModel) {
+    var showInvoiceDialog by remember { mutableStateOf(false) }
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -8197,7 +8206,7 @@ fun OrderSummaryCard(order: OrderEntity, viewModel: MainViewModel) {
             )
             Spacer(modifier = Modifier.height(8.dp))
 
-            val deliveryFee = 150.0
+            val deliveryFee = com.example.util.FeeConstants.calculateDeliveryFee(order.serviceType)
             val subtotal = (order.totalPrice - deliveryFee).coerceAtLeast(0.0)
 
             Row(
@@ -8228,6 +8237,22 @@ fun OrderSummaryCard(order: OrderEntity, viewModel: MainViewModel) {
                         color = ZyphuelBluePrimary
                     )
                 )
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+            OutlinedButton(
+                onClick = { showInvoiceDialog = true },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("download_invoice_btn_${order.id}"),
+                shape = RoundedCornerShape(10.dp),
+                border = BorderStroke(1.dp, ZyphuelBluePrimary),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = ZyphuelBluePrimary),
+                contentPadding = PaddingValues(vertical = 10.dp)
+            ) {
+                Icon(Icons.Filled.ReceiptLong, contentDescription = null, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text("📄 View & Download Tax Invoice", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium)
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -8264,6 +8289,10 @@ fun OrderSummaryCard(order: OrderEntity, viewModel: MainViewModel) {
                 }
             }
         }
+    }
+
+    if (showInvoiceDialog) {
+        InvoiceDialog(order = order, onDismiss = { showInvoiceDialog = false })
     }
 }
 
@@ -9013,20 +9042,6 @@ fun TrackerScreen(viewModel: MainViewModel) {
                     )
                 }
                 IconButton(
-                    onClick = { viewModel.triggerDeliveryNotificationPrompt() },
-                    modifier = Modifier.testTag("tracker_notification_prompt_btn")
-                ) {
-                    val isNotifActive = remember(context) {
-                        androidx.core.app.NotificationManagerCompat.from(context).areNotificationsEnabled()
-                    }
-                    Icon(
-                        imageVector = if (isNotifActive) Icons.Filled.NotificationsActive else Icons.Filled.NotificationsNone,
-                        contentDescription = "Delivery Notifications Alert",
-                        tint = if (isNotifActive) ZyphuelBluePrimary else Color.Gray,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-                IconButton(
                     onClick = { showSummary = !showSummary },
                     modifier = Modifier.testTag("toggle_order_summary_button")
                 ) {
@@ -9337,8 +9352,9 @@ fun TrackerScreen(viewModel: MainViewModel) {
     }
 
     // 3. Fare Breakdown & Surge Pricing Modal
+    var showInvoiceModalForTracking by remember { mutableStateOf(false) }
     if (showFareBreakdownDialog) {
-        val baseFare = 150.0
+        val baseFare = com.example.util.FeeConstants.calculateDeliveryFee(trackingOrder!!.serviceType)
         val total = trackingOrder!!.totalPrice
         val volumeFare = (total - baseFare).coerceAtLeast(0.0)
 
@@ -9376,7 +9392,24 @@ fun TrackerScreen(viewModel: MainViewModel) {
                 Button(onClick = { showFareBreakdownDialog = false }, colors = ButtonDefaults.buttonColors(containerColor = ZyphuelBluePrimary)) {
                     Text("Got It")
                 }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = {
+                        showFareBreakdownDialog = false
+                        showInvoiceModalForTracking = true
+                    }
+                ) {
+                    Text("Download Invoice 📄")
+                }
             }
+        )
+    }
+
+    if (showInvoiceModalForTracking && trackingOrder != null) {
+        InvoiceDialog(
+            order = trackingOrder!!,
+            onDismiss = { showInvoiceModalForTracking = false }
         )
     }
 
@@ -15758,6 +15791,7 @@ fun AdminRiderDetailsDialog(
 @Composable
 fun AdminOrderCard(order: OrderEntity, viewModel: MainViewModel? = null) {
     var showDeclineDialog by remember { mutableStateOf(false) }
+    var showAdminInvoiceDialog by remember { mutableStateOf(false) }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -15771,7 +15805,16 @@ fun AdminOrderCard(order: OrderEntity, viewModel: MainViewModel? = null) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Order #${order.id} - ${order.serviceType}", fontWeight = FontWeight.Bold, color = ZyphuelBlueDark)
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f, fill = false)) {
+                    Text("Order #${order.id} - ${order.serviceType}", fontWeight = FontWeight.Bold, color = ZyphuelBlueDark)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    IconButton(
+                        onClick = { showAdminInvoiceDialog = true },
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(Icons.Filled.ReceiptLong, contentDescription = "Tax Invoice", tint = ZyphuelBluePrimary, modifier = Modifier.size(16.dp))
+                    }
+                }
                 Text("Rs. ${String.format(java.util.Locale.US, "%.2f", order.totalPrice)}", fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary)
             }
             Spacer(modifier = Modifier.height(4.dp))
@@ -15914,6 +15957,13 @@ fun AdminOrderCard(order: OrderEntity, viewModel: MainViewModel? = null) {
             }
         )
     }
+
+    if (showAdminInvoiceDialog) {
+        InvoiceDialog(
+            order = order,
+            onDismiss = { showAdminInvoiceDialog = false }
+        )
+    }
 }
 
 @Composable
@@ -16023,60 +16073,60 @@ fun AppTourGuideDialog(
 
     val tourSteps = listOf(
         TourStepItem(
-            title = "Welcome to Zyphuel! 🚚",
-            subtitle = "Lahore's #1 On-Demand Fuel & Water Delivery",
-            description = "Get Super Petrol, High-Speed Diesel, High Octane 97, LPG Gas Cylinders, and Clean Drinking Water delivered directly to your car, home, or office with zero hassle.",
-            icon = Icons.Filled.LocalShipping,
-            badge = "STEP 1 OF 8"
-        ),
-        TourStepItem(
-            title = "Live OGRA Government Rates ⚡",
-            subtitle = "100% Transparent Real-Time Pricing",
-            description = "All prices are automatically synced with official OGRA Pakistan schedules every 4 hours. No hidden charges, no surge pricing, exactly what you see at the fuel pump.",
+            title = "Step 1: Choose Fuel or Water ⛽💧",
+            subtitle = "Home Screen ➔ Select Product",
+            description = "App open karte hi Home Screen par Super Petrol, High-Speed Diesel, High Octane, Pure Mineral Water, ya LPG Cylinder card par tap karein ya seedha 'Order Now' button dabayein.",
             icon = Icons.Filled.LocalGasStation,
-            badge = "STEP 2 OF 8"
+            badge = "STEP 1 OF 8 • SELECT SERVICE"
         ),
         TourStepItem(
-            title = "Instant 1-Tap Ordering 🛒",
-            subtitle = "Cash on Delivery (COD) Checkout",
-            description = "Easily select fuel type, adjust liters or cylinders using the quick quantity stepper, and place your order in 0 milliseconds with convenient Cash on Delivery.",
-            icon = Icons.Filled.ShoppingCart,
-            badge = "STEP 3 OF 8"
-        ),
-        TourStepItem(
-            title = "Share Location Pin 📍",
-            subtitle = "Native Google Maps Landmark Sharing",
-            description = "Pin your exact delivery location or landmark with one tap. Use the 'Share Location' feature to instantly send Google Maps coordinates to the logistics center.",
+            title = "Step 2: Set Quantity & Address 📝📍",
+            subtitle = "Quick Liters Stepper & Simple Address",
+            description = "Quantity stepper ('+' aur '-') se desired liters ya gallons select karein. Delivery address box mein apna Lahore ka ghar ya office address type karein ya GPS pin icon dabayein.",
             icon = Icons.Filled.LocationOn,
-            badge = "STEP 4 OF 8"
+            badge = "STEP 2 OF 8 • QUANTITY & ADDRESS"
         ),
         TourStepItem(
-            title = "Clean Order Details & Stepper 📦",
-            subtitle = "4-Step Real-Time Status Progress",
-            description = "Follow your delivery step-by-step: Pending ➔ Driver Assigned ➔ Fuel Picked Up ➔ Out for Delivery ➔ Completed with responsive zero-lag updates.",
+            title = "Step 3: Check Pricing & Confirm COD 💰⚡",
+            subtitle = "Transparent OGRA Rates • Cash on Delivery",
+            description = "Order summary mein live OGRA rate, item total, aur flat delivery fee check karein. Kisi card ki zaroorat nahi — 'Confirm Order (COD)' dabate hi order 0ms mein place ho jata hai!",
+            icon = Icons.Filled.ShoppingCart,
+            badge = "STEP 3 OF 8 • 1-TAP ORDER"
+        ),
+        TourStepItem(
+            title = "Step 4: Live Delivery Tracker 🚚📦",
+            subtitle = "Real-Time 4-Stage Status Progress",
+            description = "Order confirm hotay hi Live Tracker khul jayega: Pending ➔ Driver Assigned ➔ Fuel Picked Up ➔ Out for Delivery. Har step par live ETA countdown nazar ayega.",
             icon = Icons.Filled.AccessTime,
-            badge = "STEP 5 OF 8"
+            badge = "STEP 4 OF 8 • LIVE TRACKER"
         ),
         TourStepItem(
-            title = "Direct Driver Contact 📞",
-            subtitle = "In-App Live Chat & Instant Dialer",
-            description = "Once a verified bowser driver is assigned, call them directly with one tap or send live in-app delivery instructions for a smooth handover.",
+            title = "Step 5: Direct Driver Contact 📞💬",
+            subtitle = "Instant Phone Call & In-App Chat",
+            description = "Tracker card par 'Call Driver' dabayein verified bowser rider ko direct phone call milane ke liye, ya 'Chat' dabayein specific dropoff instructions dene ke liye.",
             icon = Icons.Filled.Phone,
-            badge = "STEP 6 OF 8"
+            badge = "STEP 5 OF 8 • DRIVER CONTACT"
         ),
         TourStepItem(
-            title = "Real-Time Email Inbox Delivery 📧",
-            subtitle = "Direct Gmail Order Receipts & Alerts",
-            description = "Every time an order is placed or updated, automated branded confirmation emails are dispatched directly to your Gmail inbox with complete itemized receipts.",
-            icon = Icons.Filled.Email,
-            badge = "STEP 7 OF 8"
+            title = "Step 6: Download PDF Invoice 📄📥",
+            subtitle = "Itemized Official Receipts & Gmail Alerts",
+            description = "Har order ke card par 'View & Download Tax Invoice' dabayein aur 1-tap se official PDF download karein ya WhatsApp par share karein. Real-time confirmation aapke Gmail par bhi aati hai.",
+            icon = Icons.Filled.ReceiptLong,
+            badge = "STEP 6 OF 8 • PDF INVOICE"
         ),
         TourStepItem(
-            title = "Biometrics & Verified Security 🛡️",
-            subtitle = "Fingerprint Login & Admin Verified Badges",
-            description = "Keep your account protected with biometric authentication. Look for the official Blue Tick Verified Badge on Admin and approved commercial riders.",
-            icon = Icons.Filled.Security,
-            badge = "STEP 8 OF 8"
+            title = "Step 7: Sidebar Menu & Re-Ordering 📜🔄",
+            subtitle = "Left Drawer (☰) • Order History",
+            description = "Top left menu (☰) tap karke Order History dekhein, purane orders ko 1-tap se repeat karein, profile update karein, ya kisi bhi waqt ye App Tour dobara open karein.",
+            icon = Icons.Filled.Menu,
+            badge = "STEP 7 OF 8 • SIDEBAR MENU"
+        ),
+        TourStepItem(
+            title = "Step 8: Biometric Quick Login 🛡️👆",
+            subtitle = "Fingerprint / Face Unlock Security",
+            description = "Settings mein Biometric Authentication activate karein taake har baar password type kiye baghair ek touch se app securely login ho sake aur aapke transactions mehfooz rahein.",
+            icon = Icons.Filled.Fingerprint,
+            badge = "STEP 8 OF 8 • BIOMETRIC SECURITY"
         )
     )
 
@@ -16175,9 +16225,15 @@ fun AppTourGuideDialog(
                         }
                     }
 
+                    val animatedProgress by animateFloatAsState(
+                        targetValue = (currentStep + 1) / 8f,
+                        animationSpec = tween(350, easing = FastOutSlowInEasing),
+                        label = "progress_anim"
+                    )
+
                     Spacer(modifier = Modifier.height(8.dp))
                     LinearProgressIndicator(
-                        progress = { (currentStep + 1) / 8f },
+                        progress = { animatedProgress },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(6.dp)
@@ -16186,41 +16242,63 @@ fun AppTourGuideDialog(
                         trackColor = Color(0xFFE2E8F0),
                     )
 
-                    Spacer(modifier = Modifier.height(18.dp))
-                    Box(
-                        modifier = Modifier
-                            .size(60.dp)
-                            .background(ZyphuelBlueSecondary.copy(alpha = 0.15f), CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = step.icon,
-                            contentDescription = null,
-                            tint = ZyphuelBluePrimary,
-                            modifier = Modifier.size(32.dp)
-                        )
-                    }
+                    AnimatedContent(
+                        targetState = currentStep,
+                        transitionSpec = {
+                            if (targetState > initialState) {
+                                (slideInHorizontally(animationSpec = tween(300, easing = FastOutSlowInEasing)) { width -> width } + fadeIn(animationSpec = tween(250))).togetherWith(
+                                    slideOutHorizontally(animationSpec = tween(300, easing = FastOutSlowInEasing)) { width -> -width } + fadeOut(animationSpec = tween(200))
+                                )
+                            } else {
+                                (slideInHorizontally(animationSpec = tween(300, easing = FastOutSlowInEasing)) { width -> -width } + fadeIn(animationSpec = tween(250))).togetherWith(
+                                    slideOutHorizontally(animationSpec = tween(300, easing = FastOutSlowInEasing)) { width -> width } + fadeOut(animationSpec = tween(200))
+                                )
+                            }
+                        },
+                        label = "tour_step_smooth_transition"
+                    ) { stepIdx ->
+                        val currentStepItem = tourSteps[stepIdx]
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Spacer(modifier = Modifier.height(18.dp))
+                            Box(
+                                modifier = Modifier
+                                    .size(64.dp)
+                                    .background(ZyphuelBlueSecondary.copy(alpha = 0.15f), CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = currentStepItem.icon,
+                                    contentDescription = null,
+                                    tint = ZyphuelBluePrimary,
+                                    modifier = Modifier.size(34.dp)
+                                )
+                            }
 
-                    Spacer(modifier = Modifier.height(14.dp))
-                    Text(
-                        text = step.title,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = ZyphuelBlueDark,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = step.subtitle,
-                        style = MaterialTheme.typography.labelMedium.copy(color = ZyphuelBluePrimary, fontWeight = FontWeight.SemiBold),
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                    )
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Text(
-                        text = step.description,
-                        style = MaterialTheme.typography.bodyMedium.copy(color = Color.DarkGray),
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                        lineHeight = androidx.compose.ui.unit.TextUnit(20f, androidx.compose.ui.unit.TextUnitType.Sp)
-                    )
+                            Spacer(modifier = Modifier.height(14.dp))
+                            Text(
+                                text = currentStepItem.title,
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                color = ZyphuelBlueDark,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = currentStepItem.subtitle,
+                                style = MaterialTheme.typography.labelMedium.copy(color = ZyphuelBluePrimary, fontWeight = FontWeight.SemiBold),
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Text(
+                                text = currentStepItem.description,
+                                style = MaterialTheme.typography.bodyMedium.copy(color = Color.DarkGray),
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                lineHeight = androidx.compose.ui.unit.TextUnit(20f, androidx.compose.ui.unit.TextUnitType.Sp)
+                            )
+                        }
+                    }
 
                     Spacer(modifier = Modifier.height(20.dp))
                     Row(

@@ -95,7 +95,6 @@ class MainActivity : FragmentActivity() {
                     // Center notification engine & App open price notification preference check
                     LaunchedEffect(Unit) {
                         viewModel.checkAppOpenNotificationChoicePrompt(this@MainActivity)
-                        viewModel.checkAndPromptDeliveryNotifications(this@MainActivity)
                     }
 
                     LaunchedEffect(uiMessage) {
@@ -165,15 +164,6 @@ class MainActivity : FragmentActivity() {
                                     onSaveLocation = { label, address, lat, lng ->
                                         viewModel.savePermanentMarkedLocation(label, address, lat, lng)
                                     }
-                                )
-                            }
-
-                            // Global User-Friendly Fuel Delivery Push Notification Permission Prompt
-                            val showDeliveryNotifPrompt by viewModel.showDeliveryNotificationPrompt.collectAsState()
-                            if (showDeliveryNotifPrompt) {
-                                com.example.ui.components.DeliveryNotificationPermissionPrompt(
-                                    viewModel = viewModel,
-                                    onDismiss = { viewModel.dismissDeliveryNotificationPrompt() }
                                 )
                             }
 
