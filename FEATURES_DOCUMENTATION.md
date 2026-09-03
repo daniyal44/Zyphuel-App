@@ -465,7 +465,95 @@ Room Local Persistence layer (`AppDatabase.kt` v9):
 
 ---
 
+---
+
 ## 13. Auto-Update & Maintenance Protocol
 This document (`FEATURES_DOCUMENTATION.md`) serves as the single source of truth for app features. Whenever a new screen, viewmodel function, or database field is added:
 1. Update `FEATURES_DOCUMENTATION.md` under the respective section.
 2. Maintain `AGENTS.md` instructions so AI agents continue maintaining this file in sync with future codebase changes.
+
+---
+
+## 14. Desktop Operations Console Architecture & Dispatch System (`ZyphuelOpsConsole`)
+The desktop companion application (`desktop` module) is an enterprise-grade operations and fleet dispatch command console built in Kotlin and Jetpack Compose Desktop (Material 3). It connects directly to the same Cloud Firestore backend as the Android mobile app, enabling real-time dispatch, fleet supervision, and revenue analytics without requiring mobile device hardware.
+
+### 14.1 Multi-Tab Command Center Architecture (`ConsoleTab`)
+The console features a top-level tabbed navigation bar allowing dispatchers to switch between four operational perspectives:
+1. **🚚 Live Dispatch (`DISPATCH`)**: Real-time order queue with status chips, search engine, interactive OpenStreetMap canvas with routing, detailed telemetry card, order lifecycle controls, and direct bowser assignment.
+2. **🏍️ Fleet & Bowsers (`FLEET`)**: Grid monitoring of all 4 registered Zyphuel bowser tankers (Alpha, Beta, Gamma, Delta), showing vehicle specs (model, registration, tank capacity), active assigned mission, driver phone/email, and live GPS reporting status.
+3. **📊 Analytics & Revenue (`ANALYTICS`)**: Executive metrics dashboard calculating Total Sales Revenue (PKR), Completed Orders, Average Ticket size, product volume delivery distribution bars (Super Petrol, HSD, Octane 97, Drinking Water, LPG), and revenue percentage share.
+4. **⚙️ Cloud & Database (`SYSTEM`)**: Diagnostic cockpit providing live Firestore endpoint latency, project ID target (`ai-420`), database creation guides, 1-click cloud seeding (`btn_seed_firestore_settings`), and instant CSV data export.
+
+### 14.2 Real-Data Connection & Dual Polling Pipeline
+* **Unified Cloud Firestore Pipeline**: Desktop speaks HTTP/2 REST directly to `https://firestore.googleapis.com/v1/projects/ai-420/databases/(default)/documents/` matching the mobile app's schema (`orders` and `live_tracking`).
+* **Dual Polling Cadence**:
+  * Orders poll every **5 seconds** (`pollOrdersForever()`).
+  * Rider GPS positions poll every **3 seconds** (`pollLiveTrackingForever()`).
+* **Connection State Machine (`ConnState`)**:
+  * `CONNECTING` — Pulse animation indicating initial handshake with Google Cloud APIs.
+  * `CONNECTED` — Real-time live synchronization with mobile fleet.
+  * `SETUP_NEEDED` — Displays one-click Firebase Console guide when Firestore has not yet been initialized (HTTP 404).
+  * `ERROR` — Surfaces network interruptions or authorization issues with clear troubleshooting steps.
+
+### 14.3 Interactive Slippy Map Canvas & Live Controls (`TileMapView`)
+* Web Mercator raster tile compositor over OpenStreetMap HTTP endpoints with custom User-Agent identifying Zyphuel.
+* **On-Canvas Floating Control Panel**:
+  * `➕ Zoom In` (`btn_map_zoom_in`): Incrementally increases zoom level up to max zoom 17.
+  * `➖ Zoom Out` (`btn_map_zoom_out`): Decreases zoom level to view broader provincial corridors.
+  * `🎯 Auto-Fit Recenter` (`btn_map_recenter`): Automatically recalculates bounding box containing depot, vehicle, and delivery destination.
+  * `🏢 Focus Depot` (`btn_map_focus_depot`): Centers viewport directly over the Zyphuel Lahore Central Depot (31.4380, 74.3050).
+  * `🏍️ Focus Rider` (`btn_map_focus_rider`): Dynamically pans map to follow moving bowser tanker.
+* **Telematics Rendering**: Dynamic route path with dashed stroke, depot slate marker, crimson destination pin, and live green/amber vehicle marker with bearing directional heading arrow.
+
+### 14.4 Driver & Bowser Assignment Modal (`AssignRiderDialog`)
+* Allows central dispatchers to assign unassigned or pending deliveries to any registered bowser in the fleet:
+  * **Bowser Alpha**: Rashid Minhas (`rider.rashid@zyphuel.com`) · Hino 500 Heavy (5,000L Petrol)
+  * **Bowser Beta**: Hamza Akram (`rider.hamza@zyphuel.com`) · Isuzu Forward (3,000L Diesel)
+  * **Bowser Gamma**: Usman Farooq (`rider.usman@zyphuel.com`) · FAW J5M (4,000L Drinking Water)
+  * **Bowser Delta**: Tariq Mehmood (`rider.tariq@zyphuel.com`) · Master Forland (2,500L LPG / High Octane)
+* Dispatches `updateOrderStatus` PATCH to Firestore updating `riderName`, `riderEmail`, and advancing status to `Assigned`.
+
+### 14.5 Tax Invoice & Receipt Generator (`InvoiceDialog`)
+* Built-in invoice viewer displaying customer particulars, order timestamps, line items, volume, delivery address, payment method, and dispatch depot.
+* **1-Click Clipboard Exporter (`btn_copy_invoice`)**: Formats receipt in standardized monospaced text ready for SMS, WhatsApp Web, or printing.
+
+### 14.6 Data Export & Audio Alert Engine
+* **Automated Audio Chime (`Toolkit.getDefaultToolkit().beep()`)**: Fires an audible notification whenever a new customer order arrives from the mobile app.
+* **New Order Banner (`BannerNotificationBar`)**: Displays high-priority green banner at top of screen with customer name and order ID.
+* **Full CSV Export Engine (`exportOrdersCsv()`)**: Serializes all orders into RFC-4180 compliant CSV format and writes directly to system clipboard for instant pasting into Microsoft Excel or Google Sheets.
+
+### 14.7 Order Dispatch Modal (`CreateOrderDialog`)
+* Modal triggered via `➕ Dispatch Order` (`btn_new_order`).
+* Calculates unit prices in real time (Super Petrol @ 278, HSD @ 280, High Octane @ 315, Water @ 50, LPG @ 2800).
+* Writes full order payload to Firestore via REST with auto-generated coordinates within the Lahore service area.
+
+---
+
+
+## 15. Mobile Application Cyber Security Architecture & Threat Model Audit
+
+### 15.1 Defensive Security Implementations (Current Protections)
+* **AES-256-GCM Secure Storage (`SecureStorageManager.kt`)**: User session credentials, biometric flags, and authentication tokens are encrypted using Android Keystore-backed `EncryptedSharedPreferences`.
+* **Biometric Authentication Hardware Bridge (`BiometricSecurityManager.kt`)**: Leverages AndroidX `BiometricPrompt` integrating with device TEE/SE for biometric authentication.
+* **Input Sanitization & Validation (`SecurityInputValidator.kt`)**: Strict regex checking on all user inputs (emails, phones, addresses, volumes) preventing injection payloads.
+* **Brute-Force Rate Limiting (`SecurityRateLimiter.kt`)**: Sliding-window rate limiter blocking credential stuffing and repeated OTP/login attempts.
+* **Google OAuth 2.0 & Firebase Auth Integration (`AuthManager.kt`)**: Validates cryptographically signed Google ID tokens.
+* **Android Private Storage Sandbox**: Room SQLite database isolated within `/data/data/com.aistudio.zyphuel.appv2/databases/`.
+
+### 15.2 Vulnerability Assessment & Threat Surfaces (Security Findings)
+* **Hardcoded Plaintext Super Admin Password (CRITICAL)**: Root administrator credentials (`m.daniyalkhan490@gmail.com` with password `"abcd1234"`) are hardcoded in `Repository.kt` and `MainViewModel.kt`. Any decompilation reveals these credentials immediately.
+* **Disabled Code Obfuscation (HIGH)**: `isMinifyEnabled = false` in `app/build.gradle.kts` allows decompilation into readable Kotlin source code via JADX-GUI.
+* **Unencrypted Local Room SQLite DB (HIGH)**: `AppDatabase` uses standard SQLite without SQLCipher, allowing plaintext extraction on rooted devices or via ADB backup.
+* **Client-Side Firestore Writes (HIGH)**: Direct client writes to `orders` collection without backend Cloud Functions validation allow malicious price, quantity, or status alterations if Firestore security rules are permissive.
+* **Lack of Mock Location Detection (MEDIUM)**: Rider location tracking does not inspect `location.isFromMockProvider()`, allowing fake GPS spoofing.
+* **Exported Activity Exposure (MEDIUM)**: `LoginActivity` has `android:exported="true"` without intent filters or permissions.
+* **Frida / Xposed Runtime Hooking (MEDIUM)**: Absence of root detection or anti-hooking mechanisms leaves biometric callbacks vulnerable to runtime function hooking.
+
+### 15.3 Hardening Roadmap & Remediation Strategy
+1. Remove plaintext admin passwords; migrate root supervisory roles to Firebase Authentication Custom Claims.
+2. Enable R8/ProGuard obfuscation (`isMinifyEnabled = true`, `shrinkResources = true`) in release builds.
+3. Integrate SQLCipher 256-bit AES encryption for Room database.
+4. Enforce strict server-side Firestore Security Rules and Cloud Functions for order price calculation.
+5. Add `location.isMock` checks to `LocationService.kt` to block GPS spoofing apps.
+6. Set `android:exported="false"` for internal activities in `AndroidManifest.xml`.
+
