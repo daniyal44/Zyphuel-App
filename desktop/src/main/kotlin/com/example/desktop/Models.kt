@@ -103,3 +103,61 @@ fun tripProgress(origin: LatLng, current: LatLng, destination: LatLng): Float {
     val remaining = haversineKm(current, destination)
     return (1.0 - (remaining / total)).coerceIn(0.0, 1.0).toFloat()
 }
+
+/**
+ * Fleet vehicle and rider specifications for the operations console.
+ */
+data class DesktopFleetRider(
+    val id: String,
+    val name: String,
+    val email: String,
+    val phone: String,
+    val vehicleName: String,
+    val vehicleNumber: String,
+    val capacityLiters: Int,
+    val fuelType: String
+)
+
+val DEFAULT_FLEET_RIDERS = listOf(
+    DesktopFleetRider(
+        id = "RIDER-1",
+        name = "Rashid Minhas",
+        email = "rider.rashid@zyphuel.com",
+        phone = "+92 300 1234567",
+        vehicleName = "Bowser Alpha (Hino 500 Heavy)",
+        vehicleNumber = "LHR-7890",
+        capacityLiters = 5000,
+        fuelType = "Super Petrol"
+    ),
+    DesktopFleetRider(
+        id = "RIDER-2",
+        name = "Hamza Akram",
+        email = "rider.hamza@zyphuel.com",
+        phone = "+92 321 9876543",
+        vehicleName = "Bowser Beta (Isuzu Forward)",
+        vehicleNumber = "LHR-4512",
+        capacityLiters = 3000,
+        fuelType = "High-Speed Diesel"
+    ),
+    DesktopFleetRider(
+        id = "RIDER-3",
+        name = "Usman Farooq",
+        email = "rider.usman@zyphuel.com",
+        phone = "+92 333 4567890",
+        vehicleName = "Bowser Gamma (FAW J5M Water)",
+        vehicleNumber = "LHR-1122",
+        capacityLiters = 4000,
+        fuelType = "Drinking Water"
+    ),
+    DesktopFleetRider(
+        id = "RIDER-4",
+        name = "Tariq Mehmood",
+        email = "rider.tariq@zyphuel.com",
+        phone = "+92 302 7654321",
+        vehicleName = "Bowser Delta (Forland LPG/Octane)",
+        vehicleNumber = "LHR-9988",
+        capacityLiters = 2500,
+        fuelType = "High Octane / LPG"
+    )
+)
+

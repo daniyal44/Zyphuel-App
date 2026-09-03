@@ -39,8 +39,7 @@ class FirestoreRest(val config: DesktopConfig.Firebase) {
     }
 
     suspend fun listLivePositions(): List<RiderPosition> = withContext(Dispatchers.IO) {
-        // Server live tracking permanently removed
-        emptyList()
+        listAll("live_tracking").mapNotNull { (docId, fields) -> toRiderPosition(docId, fields) }
     }
 
     // ---------------- Writes ----------------
@@ -71,6 +70,39 @@ class FirestoreRest(val config: DesktopConfig.Firebase) {
         }.joinToString("&") { "updateMask.fieldPaths=" + encode(it) }
 
         val url = "$base/orders/$orderId?key=${encode(config.apiKey)}&$masks"
+        send(
+            HttpRequest.newBuilder(URI.create(url))
+                .timeout(Duration.ofSeconds(25))
+                .header("Content-Type", "application/json")
+                .method("PATCH", HttpRequest.BodyPublishers.ofString(body.toString()))
+                .build()
+        )
+    }
+
+    /** Creates or overwrites an entire order document in Firestore. */
+    suspend fun createOrder(order: DesktopOrder): Unit = withContext(Dispatchers.IO) {
+        val fields = JsonObject().apply {
+            add("id", integerValue(order.id.toLong()))
+            add("customerName", stringValue(order.customerName))
+            add("customerPhone", stringValue(order.customerPhone))
+            add("customerEmail", stringValue(order.customerEmail))
+            add("serviceType", stringValue(order.serviceType))
+            add("quantity", integerValue(order.quantity.toLong()))
+            add("totalPrice", doubleValue(order.totalPrice))
+            add("deliveryAddress", stringValue(order.deliveryAddress))
+            add("paymentMethod", stringValue(order.paymentMethod))
+            add("status", stringValue(order.status))
+            add("createdAt", integerValue(order.createdAt))
+            add("etaMinutes", integerValue(order.etaMinutes.toLong()))
+            if (order.riderName != null) add("riderName", stringValue(order.riderName))
+            if (order.riderEmail != null) add("riderEmail", stringValue(order.riderEmail))
+            if (order.destLat != null) add("destLat", doubleValue(order.destLat))
+            if (order.destLng != null) add("destLng", doubleValue(order.destLng))
+            if (order.originLat != null) add("originLat", doubleValue(order.originLat))
+            if (order.originLng != null) add("originLng", doubleValue(order.originLng))
+        }
+        val body = JsonObject().apply { add("fields", fields) }
+        val url = "$base/orders/${order.id}?key=${encode(config.apiKey)}"
         send(
             HttpRequest.newBuilder(URI.create(url))
                 .timeout(Duration.ofSeconds(25))
@@ -151,6 +183,9 @@ class FirestoreRest(val config: DesktopConfig.Firebase) {
     // Firestore transports 64-bit integers as strings.
     private fun integerValue(value: Long) =
         JsonObject().apply { addProperty("integerValue", value.toString()) }
+
+    private fun doubleValue(value: Double) =
+        JsonObject().apply { addProperty("doubleValue", value) }
 
     // ---------------- Field decoding ----------------
     //

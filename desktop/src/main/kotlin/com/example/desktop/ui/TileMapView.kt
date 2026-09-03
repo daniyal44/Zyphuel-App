@@ -2,8 +2,11 @@ package com.example.desktop.ui
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -80,10 +83,19 @@ fun TileMapView(
     val requested = remember { mutableSetOf<String>() }
     var canvasSize by remember { mutableStateOf(IntSize.Zero) }
 
+    var manualZoomOffset by remember { mutableStateOf(0) }
+    var manualCenter by remember { mutableStateOf<LatLng?>(null) }
+
     val allPoints = remember(markers, route) { markers.map { it.position } + route }
 
-    val view = remember(allPoints, canvasSize) {
-        computeViewport(allPoints, canvasSize)
+    // Reset manual overrides when points change significantly (e.g. selected order changes)
+    LaunchedEffect(markers.firstOrNull()?.position) {
+        manualZoomOffset = 0
+        manualCenter = null
+    }
+
+    val view = remember(allPoints, canvasSize, manualZoomOffset, manualCenter) {
+        computeViewport(allPoints, canvasSize, manualZoomOffset, manualCenter)
     }
 
     val visibleTiles = remember(view, canvasSize) { view?.visibleTiles(canvasSize) ?: emptyList() }
@@ -165,6 +177,59 @@ fun TileMapView(
             }
         }
 
+        // Floating interactive map controls (top-right)
+        Column(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(10.dp),
+            verticalArrangement = Arrangement.spacedBy(5.dp)
+        ) {
+            // Zoom in
+            MapControlButton(
+                icon = "➕",
+                tag = "btn_map_zoom_in",
+                onClick = {
+                    if (manualZoomOffset < 5) manualZoomOffset++
+                }
+            )
+            // Zoom out
+            MapControlButton(
+                icon = "➖",
+                tag = "btn_map_zoom_out",
+                onClick = {
+                    if (manualZoomOffset > -5) manualZoomOffset--
+                }
+            )
+            // Reset / Auto-fit
+            MapControlButton(
+                icon = "🎯",
+                tag = "btn_map_recenter",
+                onClick = {
+                    manualZoomOffset = 0
+                    manualCenter = null
+                }
+            )
+            // Focus on Depot
+            MapControlButton(
+                icon = "🏢",
+                tag = "btn_map_focus_depot",
+                onClick = {
+                    manualCenter = LatLng(com.example.desktop.DEPOT_LAT, com.example.desktop.DEPOT_LNG)
+                }
+            )
+            // Focus on Rider if present
+            val riderMarker = markers.firstOrNull { it.label.startsWith("Rider") }
+            if (riderMarker != null) {
+                MapControlButton(
+                    icon = "🏍️",
+                    tag = "btn_map_focus_rider",
+                    onClick = {
+                        manualCenter = riderMarker.position
+                    }
+                )
+            }
+        }
+
         // Legend: Canvas text needs a TextMeasurer, so labels live in real composables.
         Row(
             modifier = Modifier
@@ -207,6 +272,27 @@ fun TileMapView(
         )
     }
 }
+
+@Composable
+private fun MapControlButton(
+    icon: String,
+    tag: String,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .size(32.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color(0xE60F172A))
+            .border(1.dp, Color(0xFF334155), RoundedCornerShape(8.dp))
+            .clickable(onClick = onClick)
+            .padding(2.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(text = icon, fontSize = 12.sp)
+    }
+}
+
 
 // ---------------- Web Mercator plumbing ----------------
 
@@ -261,32 +347,45 @@ private fun worldPx(lat: Double, lng: Double, zoom: Int): Pair<Double, Double> {
     return x to y
 }
 
-/** Picks the highest zoom at which every point still fits, then centres on them. */
-private fun computeViewport(points: List<LatLng>, size: IntSize): Viewport? {
+/** Picks the highest zoom at which every point still fits, then centres on them (with manual offset/center support). */
+private fun computeViewport(
+    points: List<LatLng>,
+    size: IntSize,
+    zoomOffset: Int = 0,
+    customCenter: LatLng? = null
+): Viewport? {
     if (size.width <= 0 || size.height <= 0) return null
     val usable = points.filter { it.lat != 0.0 || it.lng != 0.0 }
     if (usable.isEmpty()) {
-        return viewportCentredOn(LatLng(31.5204, 74.3587), 12, size)
+        val targetCenter = customCenter ?: LatLng(31.5204, 74.3587)
+        val targetZoom = (12 + zoomOffset).coerceIn(MIN_ZOOM, MAX_ZOOM)
+        return viewportCentredOn(targetCenter, targetZoom, size)
     }
 
     val minLat = usable.minOf { it.lat }
     val maxLat = usable.maxOf { it.lat }
     val minLng = usable.minOf { it.lng }
     val maxLng = usable.maxOf { it.lng }
-    val centre = LatLng((minLat + maxLat) / 2.0, (minLng + maxLng) / 2.0)
+    val centre = customCenter ?: LatLng((minLat + maxLat) / 2.0, (minLng + maxLng) / 2.0)
 
-    if (usable.size == 1) return viewportCentredOn(centre, 14, size)
+    if (usable.size == 1) {
+        val targetZoom = (14 + zoomOffset).coerceIn(MIN_ZOOM, MAX_ZOOM)
+        return viewportCentredOn(centre, targetZoom, size)
+    }
 
+    var baseZoom = MIN_ZOOM
     for (zoom in MAX_ZOOM downTo MIN_ZOOM) {
         val (x1, y1) = worldPx(maxLat, minLng, zoom)
         val (x2, y2) = worldPx(minLat, maxLng, zoom)
         val spanX = kotlin.math.abs(x2 - x1)
         val spanY = kotlin.math.abs(y2 - y1)
         if (spanX < size.width * 0.82 && spanY < size.height * 0.82) {
-            return viewportCentredOn(centre, zoom, size)
+            baseZoom = zoom
+            break
         }
     }
-    return viewportCentredOn(centre, MIN_ZOOM, size)
+    val targetZoom = (baseZoom + zoomOffset).coerceIn(MIN_ZOOM, MAX_ZOOM)
+    return viewportCentredOn(centre, targetZoom, size)
 }
 
 private fun viewportCentredOn(centre: LatLng, zoom: Int, size: IntSize): Viewport {
