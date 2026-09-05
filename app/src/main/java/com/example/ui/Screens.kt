@@ -79,6 +79,8 @@ import androidx.compose.ui.viewinterop.AndroidView
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import com.example.R
+import com.example.BuildConfig
+import com.example.ui.components.TermsAndPrivacyDialog
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -1974,6 +1976,9 @@ fun AuthScreen(viewModel: MainViewModel, isRegister: Boolean, isRider: Boolean) 
     
     var termsAccepted by remember { mutableStateOf(false) }
     var declarationAccepted by remember { mutableStateOf(false) }
+    var customerTermsAccepted by remember { mutableStateOf(false) }
+    var showLegalDialog by remember { mutableStateOf(false) }
+    var legalDialogInitialTab by remember { mutableIntStateOf(0) }
 
     var showForgotPasswordDialog by remember { mutableStateOf(false) }
     // (removed: showGoogleAccountPickerDialog state — device-account picker no longer exists; real Google flow only)
@@ -2501,17 +2506,39 @@ fun AuthScreen(viewModel: MainViewModel, isRegister: Boolean, isRider: Boolean) 
                             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.fillMaxWidth().clickable { termsAccepted = !termsAccepted }
+                                    modifier = Modifier.fillMaxWidth()
                                 ) {
                                     Checkbox(
                                         checked = termsAccepted,
                                         onCheckedChange = { termsAccepted = it },
-                                        colors = CheckboxDefaults.colors(checkedColor = ZyphuelBluePrimary)
+                                        colors = CheckboxDefaults.colors(checkedColor = ZyphuelBluePrimary),
+                                        modifier = Modifier.testTag("rider_terms_checkbox")
                                     )
-                                    Text(
-                                        text = "I Accept the Terms and Conditions *",
-                                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium, color = Color.DarkGray)
-                                    )
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text(
+                                            text = "I Accept the ",
+                                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium, color = Color.DarkGray)
+                                        )
+                                        Text(
+                                            text = "Terms & Conditions",
+                                            style = MaterialTheme.typography.bodyMedium.copy(
+                                                fontWeight = FontWeight.Bold,
+                                                color = ZyphuelBluePrimary,
+                                                textDecoration = TextDecoration.Underline
+                                            ),
+                                            modifier = Modifier.clickable {
+                                                legalDialogInitialTab = 0
+                                                showLegalDialog = true
+                                            }
+                                        )
+                                        Text(
+                                            text = " *",
+                                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, color = Color.Red)
+                                        )
+                                    }
                                 }
 
                                 Row(
@@ -2521,7 +2548,8 @@ fun AuthScreen(viewModel: MainViewModel, isRegister: Boolean, isRider: Boolean) 
                                     Checkbox(
                                         checked = declarationAccepted,
                                         onCheckedChange = { declarationAccepted = it },
-                                        colors = CheckboxDefaults.colors(checkedColor = ZyphuelBluePrimary)
+                                        colors = CheckboxDefaults.colors(checkedColor = ZyphuelBluePrimary),
+                                        modifier = Modifier.testTag("rider_declaration_checkbox")
                                     )
                                     Text(
                                         text = "Rider Declaration *: \"I confirm that all information and documents provided are accurate and belong to me.\"",
@@ -2669,6 +2697,57 @@ fun AuthScreen(viewModel: MainViewModel, isRegister: Boolean, isRider: Boolean) 
                                     }
                                 }
                             }
+                        } else if (!isRider) {
+                            item {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)
+                                ) {
+                                    Checkbox(
+                                        checked = customerTermsAccepted,
+                                        onCheckedChange = { customerTermsAccepted = it },
+                                        colors = CheckboxDefaults.colors(checkedColor = ZyphuelBluePrimary),
+                                        modifier = Modifier.testTag("customer_terms_checkbox")
+                                    )
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "I agree to ",
+                                            style = MaterialTheme.typography.bodySmall.copy(color = Color.DarkGray)
+                                        )
+                                        Text(
+                                            text = "Terms & Conditions",
+                                            style = MaterialTheme.typography.bodySmall.copy(
+                                                color = ZyphuelBluePrimary,
+                                                fontWeight = FontWeight.Bold,
+                                                textDecoration = TextDecoration.Underline
+                                            ),
+                                            modifier = Modifier.clickable {
+                                                legalDialogInitialTab = 0
+                                                showLegalDialog = true
+                                            }
+                                        )
+                                        Text(
+                                            text = " & ",
+                                            style = MaterialTheme.typography.bodySmall.copy(color = Color.DarkGray)
+                                        )
+                                        Text(
+                                            text = "Privacy Policy",
+                                            style = MaterialTheme.typography.bodySmall.copy(
+                                                color = ZyphuelBluePrimary,
+                                                fontWeight = FontWeight.Bold,
+                                                textDecoration = TextDecoration.Underline
+                                            ),
+                                            modifier = Modifier.clickable {
+                                                legalDialogInitialTab = 1
+                                                showLegalDialog = true
+                                            }
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
 
@@ -2722,8 +2801,12 @@ fun AuthScreen(viewModel: MainViewModel, isRegister: Boolean, isRider: Boolean) 
                                             }
                                         }
                                     } else {
-                                        viewModel.registerCustomer(email, name, password, phone) {
-                                            viewModel.navigateTo("login_customer")
+                                        if (!customerTermsAccepted) {
+                                            Toast.makeText(context, "Please accept the Terms & Conditions and Privacy Policy 📜", Toast.LENGTH_LONG).show()
+                                        } else {
+                                            viewModel.registerCustomer(email, name, password, phone) {
+                                                viewModel.navigateTo("login_customer")
+                                            }
                                         }
                                     }
                                 } else {
@@ -2986,16 +3069,27 @@ fun AuthScreen(viewModel: MainViewModel, isRegister: Boolean, isRider: Boolean) 
                                                     title = "Zyphuel Fingerprint Login",
                                                     subtitle = "Scan fingerprint or face to sign in as ${if (isRider) "Rider" else "Customer"}",
                                                     description = "Account: $displayEmail",
+                                                    // SECURITY: authenticate ONLY on a verified biometric match.
                                                     onSuccess = { _ -> performBiometricAuth() },
-                                                    onError = { _, errStr ->
-                                                        performBiometricAuth()
+                                                    onError = { code, errStr ->
+                                                        // Cancel / "Use Password" are user-initiated — stay on the login screen silently.
+                                                        val userCancelled = code == androidx.biometric.BiometricPrompt.ERROR_USER_CANCELED ||
+                                                            code == androidx.biometric.BiometricPrompt.ERROR_NEGATIVE_BUTTON ||
+                                                            code == androidx.biometric.BiometricPrompt.ERROR_CANCELED
+                                                        if (!userCancelled) {
+                                                            Toast.makeText(context, errStr.toString(), Toast.LENGTH_LONG).show()
+                                                        }
+                                                        // Never call performBiometricAuth() here: an error/cancel must NOT log the user in.
                                                     },
                                                     onFailed = {
+                                                        // A non-matching scan keeps the system sheet up for retry — just inform the user.
                                                         Toast.makeText(context, "Biometric scan failed. Please retry...", Toast.LENGTH_SHORT).show()
                                                     }
                                                 )
                                             } else {
-                                                performBiometricAuth()
+                                                // No FragmentActivity host => cannot present the system biometric sheet.
+                                                // Do NOT auto-login; fall back to password entry.
+                                                Toast.makeText(context, "Biometric login unavailable on this screen. Please sign in with your password.", Toast.LENGTH_LONG).show()
                                             }
                                         },
                                         modifier = Modifier
@@ -3110,6 +3204,20 @@ fun AuthScreen(viewModel: MainViewModel, isRegister: Boolean, isRider: Boolean) 
         )
     }
 
+    if (showLegalDialog) {
+        TermsAndPrivacyDialog(
+            initialTab = legalDialogInitialTab,
+            onDismissRequest = { showLegalDialog = false },
+            onAccept = {
+                if (isRider) {
+                    termsAccepted = true
+                } else {
+                    customerTermsAccepted = true
+                }
+            }
+        )
+    }
+
     // NOTE: The former device-account picker dialog was removed.
     // Google sign-in now uses ONLY the real, token-verified CredentialManager flow
     // (GoogleAuthManager.signInWithGoogle -> Firebase signInWithCredential). There is
@@ -3135,6 +3243,8 @@ fun DrawerContent(
     val adminEmail = "m.daniyalkhan490@gmail.com"
     val whatsappNumber = "+92 323 0112464"
     var showDeleteAccountDialog by remember { mutableStateOf(false) }
+    var showTermsAndPrivacyDialog by remember { mutableStateOf(false) }
+    var termsAndPrivacyInitialTab by remember { mutableIntStateOf(0) }
     val currentScreenVal by viewModel.currentScreen.collectAsState()
     val scrollState = rememberScrollState()
 
@@ -3408,8 +3518,8 @@ fun DrawerContent(
                 }
             )
             SidebarItem(
-                icon = Icons.Filled.MenuBook,
-                label = "App Tour Guide (8 Steps) 📖",
+                icon = Icons.Filled.Explore,
+                label = "Take a Guided Tour 🧭",
                 modifier = Modifier.testTag("sidebar_app_tour"),
                 onClick = {
                     viewModel.openAppTourGuide()
@@ -3460,6 +3570,19 @@ fun DrawerContent(
                 thickness = 1.dp
             )
 
+            // Terms & Privacy Policy Option (Play Store Compliance)
+            SidebarItem(
+                icon = Icons.Filled.Policy,
+                label = "Terms & Privacy Policy",
+                iconTint = ZyphuelBluePrimary,
+                modifier = Modifier.testTag("sidebar_terms_privacy"),
+                onClick = {
+                    showTermsAndPrivacyDialog = true
+                }
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
             // Delete Account Sidebar Option (Google Play Mandatory Policy - Protected for Super Admin)
             if (currentUser.role != "admin" && !currentUser.email.equals("m.daniyalkhan490@gmail.com", ignoreCase = true)) {
                 SidebarItem(
@@ -3499,11 +3622,18 @@ fun DrawerContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Zyphuel App v2.3.0.1 • Build 2026",
+                    text = "Zyphuel v${BuildConfig.VERSION_NAME} • Build ${BuildConfig.VERSION_CODE}",
                     style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontSize = 11.sp)
                 )
             }
             Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        if (showTermsAndPrivacyDialog) {
+            TermsAndPrivacyDialog(
+                initialTab = termsAndPrivacyInitialTab,
+                onDismissRequest = { showTermsAndPrivacyDialog = false }
+            )
         }
 
         if (showDeleteAccountDialog) {
@@ -3624,7 +3754,6 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
     var showEditLocationDialog by remember { mutableStateOf(false) }
     var showAsoDialog by remember { mutableStateOf(false) }
     var showFcmDialog by remember { mutableStateOf(false) }
-    var tourStep by remember { mutableStateOf<Int?>(null) }
 
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
@@ -3676,6 +3805,7 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+    val spotlight = rememberSpotlightState()
     var isInitialDashboardLoading by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
@@ -3686,6 +3816,77 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
     if (currentUser == null || isInitialDashboardLoading) {
         TeslaHomeSkeleton()
         return
+    }
+
+    // --- INTERACTIVE SPOTLIGHT GUIDED TOUR ---
+    // Steps walk the user through the REAL on-screen features. Steps with an anchorKey highlight
+    // that measured element; null-anchor steps show a centered informational callout. `beforeShow`
+    // runs a side-effect (open/close the nav drawer) so the tour visibly "takes the user to" the menu.
+    val showTour by viewModel.showAppTourGuide.collectAsState()
+    val homeTourSteps = remember {
+        listOf(
+            SpotlightStep(
+                anchorKey = null,
+                title = "Zyphuel mein khush aamdeed! 👋",
+                body = "Aaiye sirf 30 second mein app ka chhota sa tour karte hain — main aapko har feature tak le kar chalta hoon.",
+                icon = Icons.Filled.Celebration
+            ),
+            SpotlightStep(
+                anchorKey = "user_location_active_card",
+                title = "1) Apni Location set karein",
+                body = "Sab se pehle is card par tap kar ke apna delivery address ya GPS pin lagayein — sahi location par hi fuel pohnchega.",
+                icon = Icons.Filled.LocationOn,
+                beforeShow = { drawerState.close() }
+            ),
+            SpotlightStep(
+                anchorKey = "service_petrol",
+                title = "2) Service chunein",
+                body = "In cards se apni zaroorat chunein — Petrol, Diesel, High-Octane, LPG ya Pure Water. Rate live OGRA ke mutabiq hota hai.",
+                icon = Icons.Filled.LocalGasStation
+            ),
+            SpotlightStep(
+                anchorKey = "home_fab",
+                title = "3) Order Now",
+                body = "Ya seedha 'Order Now' dabayein — quantity aur address de kar Cash-on-Delivery order sirf 1 tap mein complete.",
+                icon = Icons.Filled.ShoppingCart
+            ),
+            SpotlightStep(
+                anchorKey = null,
+                title = "4) Aapka Menu",
+                body = "Yeh raha aapka menu — Profile, Security (fingerprint login), Order History aur Support sab yahin milta hai.",
+                icon = Icons.Filled.Menu,
+                dimBackground = false,
+                beforeShow = { drawerState.open() }
+            ),
+            SpotlightStep(
+                anchorKey = null,
+                title = "Bas ho gaya! 🚀",
+                body = "Ab aap taiyaar hain. Fingerprint login enable karna na bhoolein aur apna pehla order abhi place karein!",
+                icon = Icons.Filled.CheckCircle,
+                beforeShow = { drawerState.close() }
+            )
+        )
+    }
+    // Auto-start once the signal is set (new users on first open; or via the sidebar entry).
+    LaunchedEffect(showTour) {
+        if (showTour && !spotlight.isActive) spotlight.start(homeTourSteps)
+    }
+    // Per-step sequencing: run beforeShow, wait for the anchor to be measured, then reveal.
+    LaunchedEffect(spotlight.index, spotlight.isActive) {
+        if (!spotlight.isActive) return@LaunchedEffect
+        val step = spotlight.current ?: return@LaunchedEffect
+        spotlight.revealReady = false
+        step.beforeShow?.invoke()
+        val key = step.anchorKey
+        if (key != null) {
+            var waited = 0
+            while (spotlight.anchors[key] == null && waited < 1400) {
+                kotlinx.coroutines.delay(50)
+                waited += 50
+            }
+            kotlinx.coroutines.delay(60)
+        }
+        spotlight.revealReady = true
     }
 
     ModalNavigationDrawer(
@@ -3728,26 +3929,7 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                         }
                     },
                     navigationIcon = {
-                        val isMenuHighlighted = (tourStep == 2)
-                        val menuBorderModifier = if (isMenuHighlighted) {
-                            val infiniteTransition = rememberInfiniteTransition(label = "menu_pulse")
-                            val pulseAlpha by infiniteTransition.animateFloat(
-                                initialValue = 0.3f,
-                                targetValue = 1.0f,
-                                animationSpec = infiniteRepeatable(
-                                    animation = tween(800, easing = LinearEasing),
-                                    repeatMode = RepeatMode.Reverse
-                                ),
-                                label = "menu_alpha"
-                            )
-                            Modifier.border(2.5.dp, ZyphuelBluePrimary.copy(alpha = pulseAlpha), CircleShape)
-                        } else {
-                            Modifier
-                        }
-                        IconButton(
-                            onClick = { scope.launch { drawerState.open() } },
-                            modifier = menuBorderModifier
-                        ) {
+                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
                             Icon(Icons.Filled.Menu, contentDescription = "Menu", tint = ZyphuelBluePrimary)
                         }
                     },
@@ -3794,7 +3976,7 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                         showOrderDialog = true
                     },
                     containerColor = ZyphuelBluePrimary,
-                    modifier = Modifier.testTag("home_fab")
+                    modifier = Modifier.testTag("home_fab").spotlightAnchor(spotlight, "home_fab")
                 )
             }
         ) { innerPadding ->
@@ -3809,7 +3991,7 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                 // Welcome Card Banner
                 item {
                     Card(
-                        modifier = Modifier.fillMaxWidth().testTag("user_location_active_card"),
+                        modifier = Modifier.fillMaxWidth().testTag("user_location_active_card").spotlightAnchor(spotlight, "user_location_active_card"),
                         shape = RoundedCornerShape(20.dp),
                         colors = CardDefaults.cardColors(containerColor = ZyphuelBlueDark)
                     ) {
@@ -4026,8 +4208,7 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                             pricePerLiter = viewModel.formatUnitPrice(petrolPrice, "L"),
                             badgeText = "Live Rate",
                             accentColor = Color(0xFF059669),
-                            highlighted = (tourStep == 0),
-                            modifier = Modifier.weight(1f).testTag("service_petrol")
+                            modifier = Modifier.weight(1f).testTag("service_petrol").spotlightAnchor(spotlight, "service_petrol")
                         ) {
                             selectedService = "Petrol"
                             showOrderDialog = true
@@ -4039,7 +4220,6 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                             pricePerLiter = viewModel.formatUnitPrice(dieselPrice, "L"),
                             badgeText = "Live Rate",
                             accentColor = Color(0xFF2563EB),
-                            highlighted = (tourStep == 0),
                             modifier = Modifier.weight(1f).testTag("service_diesel")
                         ) {
                             selectedService = "Diesel"
@@ -4060,7 +4240,6 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                             pricePerLiter = viewModel.formatUnitPrice(octanePrice, "L"),
                             badgeText = "97 Octane",
                             accentColor = Color(0xFF7C3AED),
-                            highlighted = (tourStep == 0),
                             modifier = Modifier.weight(1f).testTag("service_high_octane")
                         ) {
                             selectedService = "High-Octane"
@@ -4073,7 +4252,6 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                             pricePerLiter = viewModel.formatUnitPrice(lpgPrice, "Kg"),
                             badgeText = "Eco Energy",
                             accentColor = Color(0xFFEA580C),
-                            highlighted = (tourStep == 0),
                             modifier = Modifier.weight(1f).testTag("service_gas")
                         ) {
                             selectedService = "LPG Gas"
@@ -4090,7 +4268,6 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                         pricePerLiter = viewModel.formatUnitPrice(waterPrice, "Gallon"),
                         badgeText = "100% Pure",
                         accentColor = Color(0xFF0284C7),
-                        highlighted = (tourStep == 0),
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("service_water")
@@ -4149,25 +4326,6 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                                 viewModel.setTrackingOrder(order)
                                 viewModel.navigateTo("tracker")
                             }
-                        }
-                    }
-                } else if (tourStep == 1) {
-                    item {
-                        val user = currentUser
-                        val dummyOrder = OrderEntity(
-                            id = 999,
-                            customerEmail = user?.email ?: "customer@example.com",
-                            customerName = user?.name ?: "Customer",
-                            customerPhone = user?.phoneNumber ?: "03001234567",
-                            serviceType = "High-Octane",
-                            quantity = 15,
-                            totalPrice = 4463.0,
-                            deliveryAddress = "Lahore, Pakistan",
-                            status = "Pending"
-                        )
-                        CustomerOrderCard(order = dummyOrder, viewModel = viewModel, highlighted = true) {
-                            viewModel.setTrackingOrder(dummyOrder)
-                            viewModel.navigateTo("tracker")
                         }
                     }
                 }
@@ -4340,168 +4498,24 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
             }
         }
 
-        // --- ONBOARDING TOUR MODAL OVERLAY ---
-        if (tourStep != null) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.5f))
-                    .clickable(enabled = true, onClick = { /* block clicks */ })
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.BottomCenter)
-                        .navigationBarsPadding()
-                        .padding(16.dp)
-                ) {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .shadow(8.dp, RoundedCornerShape(24.dp))
-                            .testTag("tour_modal_card"),
-                        shape = RoundedCornerShape(24.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White)
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(24.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "GUIDED TOUR • STEP ${tourStep!! + 1} OF 3",
-                                    style = MaterialTheme.typography.labelMedium.copy(
-                                        color = ZyphuelBluePrimary,
-                                        fontWeight = FontWeight.Bold,
-                                        letterSpacing = 1.sp
-                                    )
-                                )
-                                IconButton(
-                                    onClick = { tourStep = null },
-                                    modifier = Modifier.size(24.dp)
-                                ) {
-                                    Icon(Icons.Filled.Close, contentDescription = "Close Tour", tint = Color.Gray, modifier = Modifier.size(16.dp))
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(12.dp))
-
-                            val (tourTitle, tourDesc, tourIcon) = when (tourStep) {
-                                0 -> Triple(
-                                    "Select & Configure Your Services",
-                                    "Take a look at the glowing, pulsing cards on your screen. You can select from Euro V Petrol, Diesel, High-Octane, LPG Gas, or Purified Water gallons. Tap any card to customize quantities with instant transparent pricing.",
-                                    Icons.Filled.LocalGasStation
-                                )
-                                1 -> Triple(
-                                    "Live Delivery Tracking & ETAs",
-                                    "Check out the active delivery card highlighted below! Once you place an order, click 'Track' to open our high-performance live map. See your rider's location, route overlays, dynamic ETAs, and chat with your rider.",
-                                    Icons.Filled.Map
-                                )
-                                else -> Triple(
-                                    "Order History & Itemized Invoices",
-                                    "Look at the highlighted main menu button (☰) in the top left. Tap it to access your 'Order History', view past delivery logs, download itemized invoices, or connect with our support line.",
-                                    Icons.Filled.History
-                                )
-                            }
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                                verticalAlignment = Alignment.Top
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(48.dp)
-                                        .background(ZyphuelBluePrimary.copy(alpha = 0.1f), CircleShape),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = tourIcon,
-                                        contentDescription = null,
-                                        tint = ZyphuelBluePrimary,
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                }
-
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = tourTitle,
-                                        style = MaterialTheme.typography.titleMedium.copy(
-                                            color = ZyphuelBlueDark,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    )
-                                    Spacer(modifier = Modifier.height(6.dp))
-                                    Text(
-                                        text = tourDesc,
-                                        style = MaterialTheme.typography.bodyMedium.copy(
-                                            color = Color.DarkGray,
-                                            lineHeight = 20.sp
-                                        )
-                                    )
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(24.dp))
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                    repeat(3) { idx ->
-                                        Box(
-                                            modifier = Modifier
-                                                .size(if (idx == tourStep) 16.dp else 8.dp, 8.dp)
-                                                .clip(CircleShape)
-                                                .background(if (idx == tourStep) ZyphuelBluePrimary else Color.LightGray)
-                                        )
-                                    }
-                                }
-
-                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    if (tourStep!! > 0) {
-                                        OutlinedButton(
-                                            onClick = { tourStep = tourStep!! - 1 },
-                                            modifier = Modifier.height(36.dp),
-                                            contentPadding = PaddingValues(horizontal = 12.dp),
-                                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Gray),
-                                            border = BorderStroke(1.dp, Color.LightGray)
-                                        ) {
-                                            Text("Back", style = MaterialTheme.typography.labelMedium)
-                                        }
-                                    }
-
-                                    Button(
-                                        onClick = {
-                                            if (tourStep!! < 2) {
-                                                tourStep = tourStep!! + 1
-                                            } else {
-                                                tourStep = null
-                                            }
-                                        },
-                                        modifier = Modifier.height(36.dp).testTag("tour_modal_next_btn"),
-                                        contentPadding = PaddingValues(horizontal = 16.dp),
-                                        colors = ButtonDefaults.buttonColors(containerColor = ZyphuelBluePrimary)
-                                    ) {
-                                        Text(
-                                            text = if (tourStep == 2) "Finish" else "Next",
-                                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold, color = Color.White)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+        // --- INTERACTIVE SPOTLIGHT GUIDED TOUR OVERLAY ---
+        // Dims the screen, cuts a highlight window around the REAL on-screen element for the active
+        // step and floats a callout next to it. Drawn last so it sits on top of the whole home
+        // Scaffold. Both Finish and Skip close the drawer, stop the tour and mark it seen so it
+        // won't auto-start again (still re-launchable from the sidebar "Take a Guided Tour").
+        SpotlightOverlay(
+            state = spotlight,
+            onFinish = {
+                spotlight.stop()
+                scope.launch { drawerState.close() }
+                viewModel.closeAppTourGuide(markAsSeen = true)
+            },
+            onSkip = {
+                spotlight.stop()
+                scope.launch { drawerState.close() }
+                viewModel.closeAppTourGuide(markAsSeen = true)
             }
-        }
+        )
     }
     }
 
@@ -11581,6 +11595,8 @@ fun RiderCompleteProfileScreen(viewModel: MainViewModel) {
     var termsAccepted by remember { mutableStateOf(user.termsAccepted) }
     var declarationAccepted by remember { mutableStateOf(user.declarationAccepted) }
     var isSubmitting by remember { mutableStateOf(false) }
+    var showLegalDialog by remember { mutableStateOf(false) }
+    var legalDialogInitialTab by remember { mutableIntStateOf(0) }
 
     Scaffold(
         topBar = {
@@ -12060,17 +12076,39 @@ fun RiderCompleteProfileScreen(viewModel: MainViewModel) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth().clickable { termsAccepted = !termsAccepted }
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         Checkbox(
                             checked = termsAccepted,
                             onCheckedChange = { termsAccepted = it },
-                            colors = CheckboxDefaults.colors(checkedColor = ZyphuelBluePrimary)
+                            colors = CheckboxDefaults.colors(checkedColor = ZyphuelBluePrimary),
+                            modifier = Modifier.testTag("rider_profile_terms_checkbox")
                         )
-                        Text(
-                            text = "I Accept the Terms and Conditions *",
-                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium, color = Color.DarkGray)
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "I Accept the ",
+                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium, color = Color.DarkGray)
+                            )
+                            Text(
+                                text = "Terms and Conditions",
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = ZyphuelBluePrimary,
+                                    textDecoration = TextDecoration.Underline
+                                ),
+                                modifier = Modifier.clickable {
+                                    legalDialogInitialTab = 0
+                                    showLegalDialog = true
+                                }
+                            )
+                            Text(
+                                text = " *",
+                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, color = Color.Red)
+                            )
+                        }
                     }
 
                     Row(
@@ -12157,6 +12195,14 @@ fun RiderCompleteProfileScreen(viewModel: MainViewModel) {
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }
+    }
+
+    if (showLegalDialog) {
+        TermsAndPrivacyDialog(
+            initialTab = legalDialogInitialTab,
+            onDismissRequest = { showLegalDialog = false },
+            onAccept = { termsAccepted = true }
+        )
     }
 }
 
@@ -15913,296 +15959,65 @@ fun AdminDeclineOrderDialog(
     }
 }
 
+/**
+ * One-time prompt shown after the user's first successful password / Google login on a device that
+ * already has a fingerprint / face enrolled. Enabling turns on quick biometric login so the
+ * fingerprint panel then appears under "Continue with Google" on the next visit. Driven by
+ * [MainViewModel.biometricEnrollPrompt]; rendered globally in MainActivity.
+ */
 @Composable
-fun AppTourGuideDialog(
-    viewModel: MainViewModel,
-    onDismiss: () -> Unit
+fun BiometricEnrollPromptDialog(
+    module: com.example.security.AppModule,
+    onEnable: () -> Unit,
+    onDecline: () -> Unit
 ) {
-    var hasStartedTour by remember { mutableStateOf(false) }
-    var currentStep by remember { mutableIntStateOf(0) }
-
-    val tourSteps = listOf(
-        TourStepItem(
-            title = "Step 1: Choose Fuel or Water ⛽💧",
-            subtitle = "Home Screen ➔ Select Product",
-            description = "App open karte hi Home Screen par Super Petrol, High-Speed Diesel, High Octane, Pure Mineral Water, ya LPG Cylinder card par tap karein ya seedha 'Order Now' button dabayein.",
-            icon = Icons.Filled.LocalGasStation,
-            badge = "STEP 1 OF 8 • SELECT SERVICE"
-        ),
-        TourStepItem(
-            title = "Step 2: Set Quantity & Address 📝📍",
-            subtitle = "Quick Liters Stepper & Simple Address",
-            description = "Quantity stepper ('+' aur '-') se desired liters ya gallons select karein. Delivery address box mein apna Lahore ka ghar ya office address type karein ya GPS pin icon dabayein.",
-            icon = Icons.Filled.LocationOn,
-            badge = "STEP 2 OF 8 • QUANTITY & ADDRESS"
-        ),
-        TourStepItem(
-            title = "Step 3: Check Pricing & Confirm COD 💰⚡",
-            subtitle = "Transparent OGRA Rates • Cash on Delivery",
-            description = "Order summary mein live OGRA rate, item total, aur flat delivery fee check karein. Kisi card ki zaroorat nahi — 'Confirm Order (COD)' dabate hi order 0ms mein place ho jata hai!",
-            icon = Icons.Filled.ShoppingCart,
-            badge = "STEP 3 OF 8 • 1-TAP ORDER"
-        ),
-        TourStepItem(
-            title = "Step 4: Live Delivery Tracker 🚚📦",
-            subtitle = "Real-Time 4-Stage Status Progress",
-            description = "Order confirm hotay hi Live Tracker khul jayega: Pending ➔ Driver Assigned ➔ Fuel Picked Up ➔ Out for Delivery. Har step par live ETA countdown nazar ayega.",
-            icon = Icons.Filled.AccessTime,
-            badge = "STEP 4 OF 8 • LIVE TRACKER"
-        ),
-        TourStepItem(
-            title = "Step 5: Direct Driver Contact 📞💬",
-            subtitle = "Instant Phone Call & In-App Chat",
-            description = "Tracker card par 'Call Driver' dabayein verified bowser rider ko direct phone call milane ke liye, ya 'Chat' dabayein specific dropoff instructions dene ke liye.",
-            icon = Icons.Filled.Phone,
-            badge = "STEP 5 OF 8 • DRIVER CONTACT"
-        ),
-        TourStepItem(
-            title = "Step 6: Download PDF Invoice 📄📥",
-            subtitle = "Itemized Official Receipts & Gmail Alerts",
-            description = "Har order ke card par 'View & Download Tax Invoice' dabayein aur 1-tap se official PDF download karein ya WhatsApp par share karein. Real-time confirmation aapke Gmail par bhi aati hai.",
-            icon = Icons.Filled.ReceiptLong,
-            badge = "STEP 6 OF 8 • PDF INVOICE"
-        ),
-        TourStepItem(
-            title = "Step 7: Sidebar Menu & Re-Ordering 📜🔄",
-            subtitle = "Left Drawer (☰) • Order History",
-            description = "Top left menu (☰) tap karke Order History dekhein, purane orders ko 1-tap se repeat karein, profile update karein, ya kisi bhi waqt ye App Tour dobara open karein.",
-            icon = Icons.Filled.Menu,
-            badge = "STEP 7 OF 8 • SIDEBAR MENU"
-        ),
-        TourStepItem(
-            title = "Step 8: Biometric Quick Login 🛡️👆",
-            subtitle = "Fingerprint / Face Unlock Security",
-            description = "Settings mein Biometric Authentication activate karein taake har baar password type kiye baghair ek touch se app securely login ho sake aur aapke transactions mehfooz rahein.",
-            icon = Icons.Filled.Fingerprint,
-            badge = "STEP 8 OF 8 • BIOMETRIC SECURITY"
-        )
-    )
-
-    androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 4.dp),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+    // `module` distinguishes CUSTOMER / RIDER / ADMIN for the caller's enable path; the copy is shared.
+    AlertDialog(
+        onDismissRequest = onDecline,
+        icon = {
+            Icon(
+                imageVector = Icons.Filled.Fingerprint,
+                contentDescription = null,
+                tint = ZyphuelBluePrimary,
+                modifier = Modifier.size(32.dp)
+            )
+        },
+        title = {
+            Text(
+                text = "Enable Fingerprint Login?",
+                fontWeight = FontWeight.Bold,
+                color = ZyphuelBlueDark
+            )
+        },
+        text = {
+            Text(
+                text = "Agli dafa aap sirf apni fingerprint ya face se turant login kar sakenge — password ki zaroorat nahi.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.DarkGray
+            )
+        },
+        confirmButton = {
+            Button(
+                onClick = onEnable,
+                colors = ButtonDefaults.buttonColors(containerColor = ZyphuelBluePrimary),
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier.testTag("bio_enroll_enable_btn")
             ) {
-                if (!hasStartedTour) {
-                    // Initial Welcome & Options Screen
-                    Box(
-                        modifier = Modifier
-                            .size(72.dp)
-                            .background(ZyphuelBlueSecondary.copy(alpha = 0.15f), CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Explore,
-                            contentDescription = null,
-                            tint = ZyphuelBluePrimary,
-                            modifier = Modifier.size(40.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(14.dp))
-                    Text(
-                        text = "Welcome to Zyphuel! 🚚",
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                        color = ZyphuelBlueDark,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Take a quick 8-step interactive tour to learn how to order doorstep fuel, track deliveries, and use all premium features in Lahore.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.DarkGray,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                        lineHeight = androidx.compose.ui.unit.TextUnit(20f, androidx.compose.ui.unit.TextUnitType.Sp)
-                    )
-                    Spacer(modifier = Modifier.height(20.dp))
-                    Button(
-                        onClick = { hasStartedTour = true },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp)
-                            .testTag("tour_take_tour_btn"),
-                        colors = ButtonDefaults.buttonColors(containerColor = ZyphuelBluePrimary),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Icon(Icons.Filled.PlayArrow, contentDescription = null, tint = Color.White)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Take Tour (8 Steps) 🚀", fontWeight = FontWeight.Bold, color = Color.White)
-                    }
-                    Spacer(modifier = Modifier.height(10.dp))
-                    OutlinedButton(
-                        onClick = onDismiss,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp)
-                            .testTag("tour_skip_initial_btn"),
-                        shape = RoundedCornerShape(12.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFCBD5E1))
-                    ) {
-                        Text("Skip for Now", color = Color.Gray, fontWeight = FontWeight.SemiBold)
-                    }
-                } else {
-                    // Tour Step Screen
-                    val step = tourSteps[currentStep]
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .background(Color(0xFFE0F2FE), RoundedCornerShape(8.dp))
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
-                        ) {
-                            Text(
-                                text = step.badge,
-                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary)
-                            )
-                        }
-                        TextButton(onClick = onDismiss, modifier = Modifier.testTag("tour_skip_step_btn")) {
-                            Text("Skip Tour", color = Color.Gray, style = MaterialTheme.typography.labelMedium)
-                        }
-                    }
-
-                    val animatedProgress by animateFloatAsState(
-                        targetValue = (currentStep + 1) / 8f,
-                        animationSpec = tween(350, easing = FastOutSlowInEasing),
-                        label = "progress_anim"
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-                    LinearProgressIndicator(
-                        progress = { animatedProgress },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(6.dp)
-                            .clip(RoundedCornerShape(3.dp)),
-                        color = ZyphuelBluePrimary,
-                        trackColor = Color(0xFFE2E8F0),
-                    )
-
-                    AnimatedContent(
-                        targetState = currentStep,
-                        transitionSpec = {
-                            if (targetState > initialState) {
-                                (slideInHorizontally(animationSpec = tween(300, easing = FastOutSlowInEasing)) { width -> width } + fadeIn(animationSpec = tween(250))).togetherWith(
-                                    slideOutHorizontally(animationSpec = tween(300, easing = FastOutSlowInEasing)) { width -> -width } + fadeOut(animationSpec = tween(200))
-                                )
-                            } else {
-                                (slideInHorizontally(animationSpec = tween(300, easing = FastOutSlowInEasing)) { width -> -width } + fadeIn(animationSpec = tween(250))).togetherWith(
-                                    slideOutHorizontally(animationSpec = tween(300, easing = FastOutSlowInEasing)) { width -> width } + fadeOut(animationSpec = tween(200))
-                                )
-                            }
-                        },
-                        label = "tour_step_smooth_transition"
-                    ) { stepIdx ->
-                        val currentStepItem = tourSteps[stepIdx]
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Spacer(modifier = Modifier.height(18.dp))
-                            Box(
-                                modifier = Modifier
-                                    .size(64.dp)
-                                    .background(ZyphuelBlueSecondary.copy(alpha = 0.15f), CircleShape),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = currentStepItem.icon,
-                                    contentDescription = null,
-                                    tint = ZyphuelBluePrimary,
-                                    modifier = Modifier.size(34.dp)
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.height(14.dp))
-                            Text(
-                                text = currentStepItem.title,
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                color = ZyphuelBlueDark,
-                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = currentStepItem.subtitle,
-                                style = MaterialTheme.typography.labelMedium.copy(color = ZyphuelBluePrimary, fontWeight = FontWeight.SemiBold),
-                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                            )
-                            Spacer(modifier = Modifier.height(10.dp))
-                            Text(
-                                text = currentStepItem.description,
-                                style = MaterialTheme.typography.bodyMedium.copy(color = Color.DarkGray),
-                                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                                lineHeight = androidx.compose.ui.unit.TextUnit(20f, androidx.compose.ui.unit.TextUnitType.Sp)
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(20.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        if (currentStep > 0) {
-                            OutlinedButton(
-                                onClick = { currentStep-- },
-                                shape = RoundedCornerShape(10.dp),
-                                modifier = Modifier.testTag("tour_back_btn")
-                            ) {
-                                Text("Back", color = ZyphuelBlueDark)
-                            }
-                        } else {
-                            Spacer(modifier = Modifier.width(8.dp))
-                        }
-
-                        if (currentStep < 7) {
-                            Button(
-                                onClick = { currentStep++ },
-                                colors = ButtonDefaults.buttonColors(containerColor = ZyphuelBluePrimary),
-                                shape = RoundedCornerShape(10.dp),
-                                modifier = Modifier.testTag("tour_next_btn")
-                            ) {
-                                Text("Next", color = Color.White, fontWeight = FontWeight.Bold)
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Icon(Icons.Filled.ArrowForward, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.White)
-                            }
-                        } else {
-                            Button(
-                                onClick = onDismiss,
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF16A34A)),
-                                shape = RoundedCornerShape(10.dp),
-                                modifier = Modifier.testTag("tour_finish_btn")
-                            ) {
-                                Text("Get Started! 🏁", color = Color.White, fontWeight = FontWeight.Bold)
-                            }
-                        }
-                    }
-                }
+                Text("Enable", color = Color.White, fontWeight = FontWeight.Bold)
             }
-        }
-    }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDecline,
+                modifier = Modifier.testTag("bio_enroll_decline_btn")
+            ) {
+                Text("Not now", color = Color.Gray)
+            }
+        },
+        containerColor = Color.White
+    )
 }
 
-data class TourStepItem(
-    val title: String,
-    val subtitle: String,
-    val description: String,
-    val icon: androidx.compose.ui.graphics.vector.ImageVector,
-    val badge: String
-)
 
 @Composable
 fun AdminLogItem(log: AuditLogEntity) {

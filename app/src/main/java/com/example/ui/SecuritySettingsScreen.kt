@@ -23,9 +23,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.fragment.app.FragmentActivity
+import com.example.BuildConfig
 import com.example.security.AppModule
 import com.example.security.BiometricSecurityManager
 import com.example.security.SecureStorageManager
+import com.example.ui.components.TermsAndPrivacyDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,6 +52,8 @@ fun SecuritySettingsScreen(
     }
 
     var showPromptDialog by remember { mutableStateOf(false) }
+    var showLegalDialog by remember { mutableStateOf(false) }
+    var legalDialogTab by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(Unit) {
         viewModel.refreshSecurityAndBiometricStates(context)
@@ -232,6 +236,102 @@ fun SecuritySettingsScreen(
                     }
                 }
             }
+
+            // Google Play Legal, Compliance & App Version Card
+            Card(
+                modifier = Modifier.fillMaxWidth().testTag("legal_compliance_card"),
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Legal & App Compliance",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                        )
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = Color(0xFF10B981).copy(alpha = 0.12f),
+                            border = BorderStroke(1.dp, Color(0xFF10B981).copy(alpha = 0.4f))
+                        ) {
+                            Text(
+                                text = "Verified 🛡️",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    color = Color(0xFF059669),
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+                    }
+
+                    Text(
+                        text = "Zyphuel Version: v${BuildConfig.VERSION_NAME} (Build ${BuildConfig.VERSION_CODE})",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = primaryColor,
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+
+                    Text(
+                        text = "Reviewed for Google Play Store Data Safety, OGRA Petroleum safety compliance, and explicit User Account Deletion rights.",
+                        style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = {
+                                legalDialogTab = 0
+                                showLegalDialog = true
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("view_terms_button"),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Icon(Icons.Filled.Description, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Terms", fontSize = 13.sp)
+                        }
+
+                        OutlinedButton(
+                            onClick = {
+                                legalDialogTab = 1
+                                showLegalDialog = true
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("view_privacy_button"),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Icon(Icons.Filled.PrivacyTip, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Privacy", fontSize = 13.sp)
+                        }
+                    }
+                }
+            }
         }
+    }
+
+    if (showLegalDialog) {
+        TermsAndPrivacyDialog(
+            initialTab = legalDialogTab,
+            onDismissRequest = { showLegalDialog = false }
+        )
     }
 }

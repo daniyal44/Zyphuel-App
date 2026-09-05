@@ -1,0 +1,137 @@
+rules_version = '2';
+
+// =============================================================================
+// Zyphuel — Cloud Firestore Security Rules  (project: ai-420)
+// -----------------------------------------------------------------------------
+// STATUS: STAGED / NOT YET DEPLOYABLE AS-IS. Read the prerequisite below first.
+//
+// WHY THE DATABASE IS CURRENTLY EXPOSED
+//   The Android client and the desktop Operations Console both reach Firestore
+//   with only the public Firebase API key. The API key is NOT a secret and does
+//   NOT authenticate anyone — so with the default/open rules, anybody who
+//   extracts the key (it ships inside the APK / web bundle) can read and write
+//   EVERY collection: users, orders, live_tracking, system_config (which holds
+//   the SMTP app password in plaintext) and the app_stats counter.
+//
+// PREREQUISITE BEFORE DEPLOYING THESE RULES  (or they WILL break the app)
+//   These rules require request.auth != null on almost every path. Today:
+//     • Email/password login is LOCAL (Room DB) — those users have NO Firebase
+//       Auth session at all.
+//     • Google Sign-In DOES create a Firebase Auth session.
+//     • The desktop console uses the raw API key with NO auth.
+//   So you must first:
+//     1. Give EVERY client a Firebase Auth session before any Firestore call.
+//        At minimum call FirebaseAuth.signInAnonymously() on launch; better,
+//        migrate email/password login to Firebase Auth so request.auth.uid and
+//        request.auth.token.email are trustworthy.
+//     2. Mark admins with a CUSTOM CLAIM ({ admin: true }) set by a trusted
+//        backend / Cloud Function — never from the client. Client-set "role"
+//        fields (see users/ below) can be forged and must not grant privilege.
+//     3. Give the desktop console an authenticated backend / service account
+//        instead of calling Firestore directly with the API key.
+//     4. Move SMTP/email dispatch server-side so the app password never has to
+//        live in system_config in plaintext.
+//
+// DEPLOY (only after the above):  firebase deploy --only firestore:rules
+// TEST FIRST in the Firebase console → Firestore → Rules → Rules Playground,
+// or with the emulator, so you don't lock the live app out.
+// =============================================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---- Helpers -----------------------------------------------------------
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    // Admin identity comes from a server-set custom claim, NOT a client field.
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.admin == true;
+    }
+    function isOwnerUid(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+    function isOwnerEmail(email) {
+      return isSignedIn() && request.auth.token.email == email;
+    }
+
+    // ---- users/{uid} -------------------------------------------------------
+    // Doc id is the Firebase Auth uid (Google) or a mangled email (local).
+    // A user may read/write only their own profile; only an admin may read
+    // others or change roles. Clients may NEVER set/raise their own role.
+    match /users/{uid} {
+      allow read: if isOwnerUid(uid) || isAdmin();
+
+      // On create/update a normal user can only ever be a 'customer' or 'rider';
+      // promotion to 'admin' (or any role change) is admin-only.
+      allow create: if (isOwnerUid(uid) || isAdmin())
+                    && request.resource.data.role in ['customer', 'rider'];
+      allow update: if isAdmin()
+                    || ( isOwnerUid(uid)
+                         && request.resource.data.role == resource.data.role ); // role immutable by owner
+      allow delete: if isAdmin();
+    }
+
+    // ---- orders/{orderId} --------------------------------------------------
+    // Orders are identified by customerEmail / riderEmail (no uid in schema).
+    // Customer sees/creates their own orders; assigned rider and admin can read
+    // and advance status; the price can never be rewritten after creation.
+    match /orders/{orderId} {
+      allow read: if isAdmin()
+                  || isOwnerEmail(resource.data.customerEmail)
+                  || isOwnerEmail(resource.data.riderEmail);
+
+      allow create: if isSignedIn()
+                    && isOwnerEmail(request.resource.data.customerEmail)
+                    && request.resource.data.status == 'Pending'
+                    && request.resource.data.totalPrice is number
+                    && request.resource.data.totalPrice >= 0;
+
+      // Admin or the assigned rider may update (status/eta/rating), but
+      // totalPrice and customerEmail are immutable post-creation.
+      allow update: if ( isAdmin() || isOwnerEmail(resource.data.riderEmail) || isOwnerEmail(resource.data.customerEmail) )
+                    && request.resource.data.totalPrice == resource.data.totalPrice
+                    && request.resource.data.customerEmail == resource.data.customerEmail;
+
+      allow delete: if isAdmin();
+    }
+
+    // ---- live_tracking/{orderId} (if used for rider GPS) -------------------
+    // Rider publishes their own live location; the order's customer + admin read.
+    match /live_tracking/{orderId} {
+      allow read:  if isAdmin()
+                   || isOwnerEmail(resource.data.customerEmail)
+                   || isOwnerEmail(resource.data.riderEmail);
+      allow write: if isAdmin()
+                   || isOwnerEmail(request.resource.data.riderEmail);
+    }
+
+    // ---- system_config/** --------------------------------------------------
+    // SMTP / email-gateway secrets. Admin-only, full stop. Better still: stop
+    // storing the SMTP app password here and send email from a trusted backend.
+    match /system_config/{doc} {
+      allow read, write: if isAdmin();
+    }
+
+    // ---- mail/{id} — Firebase Trigger-Email extension queue ----------------
+    // Clients must NOT be able to enqueue arbitrary mail (spam / spoofing as
+    // your domain). Only a trusted backend / Cloud Function should write here.
+    match /mail/{id} {
+      allow read, write: if false;
+    }
+
+    // ---- app_stats/{doc} — public install counter --------------------------
+    // Readable by anyone; writes should come from a Cloud Function so the
+    // counter can't be inflated. If you must keep the client-side increment,
+    // change the write rule to `if isSignedIn()` (still forgeable, but gated).
+    match /app_stats/{doc} {
+      allow read:  if true;
+      allow write: if false;
+    }
+
+    // ---- Default: deny everything not explicitly matched above -------------
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

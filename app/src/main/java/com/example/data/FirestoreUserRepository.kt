@@ -113,6 +113,10 @@ class FirestoreUserRepository(private val context: Context) {
         try {
             kotlinx.coroutines.withTimeoutOrNull(2500L) {
                 val docRef = firestore.collection("system_config").document("email_gateway")
+                // SECURITY: appPassword is synced here so all devices share one gateway config, but
+                // Firestore stores it in PLAINTEXT. Until email dispatch moves server-side (Cloud
+                // Function / Firebase Trigger-Email extension), this document MUST be locked so only an
+                // authenticated admin can read/write `system_config` — see /firestore.rules at repo root.
                 val data = mapOf(
                     "host" to config.host,
                     "port" to config.port,
@@ -146,7 +150,7 @@ class FirestoreUserRepository(private val context: Context) {
                 val host = snapshot.getString("host") ?: "smtp.gmail.com"
                 val port = snapshot.getLong("port")?.toInt() ?: 465
                 val senderEmail = snapshot.getString("senderEmail") ?: "m.daniyalkhan490@gmail.com"
-                val appPassword = snapshot.getString("appPassword")?.takeIf { it.isNotBlank() } ?: "pkymsolzualgbgzn"
+                val appPassword = snapshot.getString("appPassword")?.takeIf { it.isNotBlank() } ?: ""
                 val senderName = snapshot.getString("senderName") ?: "Zyphuel Delivery Operations"
                 val webhookUrl = snapshot.getString("webhookUrl") ?: ""
                 val isEnabled = snapshot.getBoolean("isEnabled") ?: true
@@ -184,7 +188,7 @@ class FirestoreUserRepository(private val context: Context) {
                         val host = snapshot.getString("host") ?: "smtp.gmail.com"
                         val port = snapshot.getLong("port")?.toInt() ?: 465
                         val senderEmail = snapshot.getString("senderEmail") ?: "m.daniyalkhan490@gmail.com"
-                        val appPassword = snapshot.getString("appPassword")?.takeIf { it.isNotBlank() } ?: "pkymsolzualgbgzn"
+                        val appPassword = snapshot.getString("appPassword")?.takeIf { it.isNotBlank() } ?: ""
                         val senderName = snapshot.getString("senderName") ?: "Zyphuel Delivery Operations"
                         val webhookUrl = snapshot.getString("webhookUrl") ?: ""
                         val isEnabled = snapshot.getBoolean("isEnabled") ?: true

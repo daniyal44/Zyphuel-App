@@ -453,6 +453,29 @@ The app strictly segments access control across three user roles:
 * **Official Website Domain Migration (`www.zyphuel.com`)**:
   * Completely migrated all website links, OpenGraph metadata, Twitter Cards, Schema.org JSON-LD scripts, sitemaps, and documentation from `https://zyphuel.netlify.app/` to `https://www.zyphuel.com/` (and `www.zyphuel.com`).
 
+## 11.12 Google Play Store Publishing Compliance, Interactive Legal Viewer & Version Lifecycle
+* **Automated Version Lifecycle & Bump Policy (`app/build.gradle.kts`)**:
+  * Incremented release build code to `versionCode = 5` and updated semantic release to `versionName = "2.3.1"`.
+  * Configured dynamic `BuildConfig` integration so all screens and drawers display live versions without hardcoded strings (`v${BuildConfig.VERSION_NAME} (Build ${BuildConfig.VERSION_CODE})`).
+  * Enforced mandatory version bump rule in `AGENTS.md` and `MEMORY.md` on every app update.
+* **Interactive Legal & Privacy Dialog (`TermsAndPrivacyDialog.kt`)**:
+  * Built dual-tab Material 3 dialog with scrollable sections for **Terms & Conditions** and **Privacy Policy**.
+  * Displays prominent location disclosures for Google Maps telematics (`ACCESS_FINE_LOCATION`, `ACCESS_COARSE_LOCATION`, `FOREGROUND_SERVICE_LOCATION`), Oil & Gas Regulatory Authority (OGRA) hazardous delivery protocols, and Account Deletion policy.
+  * Provides an external "Open in Browser" button routing to official web policies (`https://www.zyphuel.com/privacy-policy` and `https://www.zyphuel.com/terms-and-conditions`).
+* **Customer Registration Legal Flow (`AuthScreen`, `Screens.kt`)**:
+  * Added "I agree to Terms & Conditions and Privacy Policy" checkbox with interactive clickable links that open `TermsAndPrivacyDialog`. Blocks account creation until terms are explicitly accepted.
+* **Rider Registration & Profile Compliance (`Screens.kt`)**:
+  * Upgraded rider registration terms row and `RiderCompleteProfileScreen` terms section so tapping "Terms and Conditions" presents the full in-app viewer.
+* **Navigation Drawer & Security Settings Legal Hub**:
+  * Added "Terms & Privacy Policy" option to `CustomerSidebarDrawer` alongside the dynamic version badge `Zyphuel v2.3.1 • Build 5`.
+  * Added "Legal & App Compliance" card to `SecuritySettingsScreen` with verified status badge (`Verified 🛡️`) and direct viewing buttons.
+* **Target SDK 36 Permission Audit (`AndroidManifest.xml`)**:
+  * Added `android:maxSdkVersion="22"` to `GET_ACCOUNTS` to eliminate Play Console legacy account access warnings on Android 14/15/16.
+* **Official Store Compliance Artifacts**:
+  * `PRIVACY_POLICY.md` & `TERMS_AND_CONDITIONS.md` (root markdown references).
+  * `PLAY_STORE_DATA_SAFETY_AND_COMPLIANCE.md` (exact answers for Play Console Data Safety questionnaire).
+  * `web/privacy-policy.html` & `web/terms-and-conditions.html` (production HTML pages ready for web hosting).
+
 ---
 
 ## 12. Database Architecture & Data Models

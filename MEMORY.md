@@ -72,6 +72,21 @@
   - Administrator: `customerOrders` automatically streams `getAllOrdersFlow()`, viewing all users' orders and Admin's own orders on `CustomerOrderHistoryScreen` and Admin Dashboard with `[Admin Order]` badges and customer details.
 * **Semantic Micro-Versioning**: Adopted versioning scheme `v2.3.0.1` (`versionCode = 4`) for minor patch updates, with `v2.3.x.x` reserved for major feature sets.
 
+### Phase 10: Google Play Store Publication Compliance, Interactive Legal Viewers & Automated Version Lifecycle
+* **Automated Version Lifecycle & Bump Rule**: Enforced strict policy in `AGENTS.md` to advance `versionCode` (incremented to `5`) and `versionName` (`2.3.1`) in `app/build.gradle.kts` on every code iteration.
+* **Interactive In-App Legal Viewer (`TermsAndPrivacyDialog.kt`)**: Built dual-tab Jetpack Compose dialog presenting complete **Terms & Conditions** and **Privacy Policy**, with dynamic version badge (`v2.3.1 Build 5`), section headers, bullet points, and web browser redirection button.
+* **Customer Registration Compliance**: Integrated mandatory "I agree to Terms & Conditions & Privacy Policy" checkbox with interactive clickable legal links on `AuthScreen`.
+* **Rider Registration & Profile Compliance**: Connected Terms checkboxes on `AuthScreen` and `RiderCompleteProfileScreen` to open the full legal modal on tap.
+* **Sidebar Drawer & Profile Integration**: Added "Terms & Privacy Policy" option and live version badge `Zyphuel v2.3.1 • Build 5` to `CustomerSidebarDrawer`.
+* **Security Settings Legal Card**: Added a dedicated "Legal & Play Store Compliance" card in `SecuritySettingsScreen` with verified safety status badge (`Verified 🛡️`) and direct viewing buttons.
+* **Target SDK 36 Permission Audit**: Added `android:maxSdkVersion="22"` to `GET_ACCOUNTS` in `AndroidManifest.xml` to prevent Play Console policy warnings on modern Android (API 23–36).
+* **Full Production Legal Documents & Web Copy**:
+  - `PRIVACY_POLICY.md` (root)
+  - `TERMS_AND_CONDITIONS.md` (root)
+  - `PLAY_STORE_DATA_SAFETY_AND_COMPLIANCE.md` (root)
+  - `web/privacy-policy.html` (web-ready)
+  - `web/terms-and-conditions.html` (web-ready)
+
 ---
 
 ## 🗄️ Database Entity Schema Reference

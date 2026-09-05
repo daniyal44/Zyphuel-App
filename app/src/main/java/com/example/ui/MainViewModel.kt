@@ -545,6 +545,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _isAdminBioEnabled = MutableStateFlow(false)
     val isAdminBioEnabled: StateFlow<Boolean> = _isAdminBioEnabled.asStateFlow()
 
+    // Post-login "Enable fingerprint login?" auto-offer. Non-null = show the prompt for that module.
+    private val _biometricEnrollPrompt = MutableStateFlow<AppModule?>(null)
+    val biometricEnrollPrompt: StateFlow<AppModule?> = _biometricEnrollPrompt.asStateFlow()
+    // Set true right before a biometric login calls completeLogin, so it does not re-offer enrollment.
+    private var suppressBiometricOffer = false
+
     private val _customerLastAuthTime = MutableStateFlow(0L)
     val customerLastAuthTime: StateFlow<Long> = _customerLastAuthTime.asStateFlow()
 
@@ -635,6 +641,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             SecureStorageManager.saveSecureCredentials(context, module, user.email, "BIO_TOKEN_${System.currentTimeMillis()}")
             SecureStorageManager.updateLastAuthTime(context, module)
 
+            suppressBiometricOffer = true
             completeLogin(user)
             repository.auditLogDao.insertLog(
                 AuditLogEntity(
@@ -1231,6 +1238,29 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val token = "SEC_TOKEN_${module.name}_${user.email}_${System.currentTimeMillis()}"
         SecureStorageManager.saveSecureCredentials(getApplication(), module, user.email, token)
         refreshSecurityAndBiometricStates(getApplication())
+
+        // Auto-offer biometric enrollment after a normal (password / Google) login — but not after a
+        // biometric login (suppressed), not if already enabled, and not if the user previously declined.
+        if (!suppressBiometricOffer) {
+            val ctx: Context = getApplication()
+            val cap = BiometricSecurityManager.checkBiometricCapability(ctx)
+            val alreadyEnabled = SecureStorageManager.isBiometricEnabled(ctx, module)
+            val declined = sessionPrefs.getBoolean("bio_offer_declined_${module.name}", false)
+            if (cap == BiometricCapabilityStatus.SUPPORTED && !alreadyEnabled && !declined) {
+                _biometricEnrollPrompt.value = module
+            }
+        }
+        suppressBiometricOffer = false
+    }
+
+    /** Dismisses the post-login "Enable fingerprint login?" prompt. If [decline] is true, the choice is
+     * remembered so the prompt is not shown again for that module. */
+    fun dismissBiometricEnrollPrompt(decline: Boolean) {
+        val module = _biometricEnrollPrompt.value
+        if (decline && module != null) {
+            sessionPrefs.edit().putBoolean("bio_offer_declined_${module.name}", true).apply()
+        }
+        _biometricEnrollPrompt.value = null
     }
 
     /**
