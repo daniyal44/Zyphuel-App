@@ -104,7 +104,7 @@ object RealtimeEmailEngine {
             host = rawConfig.host.ifBlank { "smtp.gmail.com" },
             port = if (rawConfig.port > 0) rawConfig.port else 465,
             senderEmail = rawConfig.senderEmail.ifBlank { "m.daniyalkhan490@gmail.com" },
-            appPassword = rawConfig.appPassword.replace(" ", "").trim().ifBlank { "pkymsolzualgbgzn" },
+            appPassword = rawConfig.appPassword.replace(" ", "").trim(),
             senderName = rawConfig.senderName.ifBlank { "Zyphuel Delivery Operations" }
         )
 
@@ -220,7 +220,7 @@ object RealtimeEmailEngine {
         val port = if (config.port > 0) config.port else 465
         val senderEmail = config.senderEmail.ifBlank { "m.daniyalkhan490@gmail.com" }
         val senderName = config.senderName.ifBlank { "Zyphuel Delivery Operations" }
-        val appPassword = config.appPassword.replace(" ", "").trim().ifBlank { "pkymsolzualgbgzn" }
+        val appPassword = config.appPassword.replace(" ", "").trim()
 
         var socket: Socket? = null
         var reader: BufferedReader? = null

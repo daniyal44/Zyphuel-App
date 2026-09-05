@@ -17,6 +17,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModelProvider
+import com.example.security.BiometricSecurityManager
 import com.example.ui.*
 import com.example.ui.theme.MyApplicationTheme
 import com.example.util.DebugLogger
@@ -167,12 +168,34 @@ class MainActivity : FragmentActivity() {
                                 )
                             }
 
-                            // Global 8-Step Interactive App Tour Guide for New & Returning Users
-                            val showTourGuide by viewModel.showAppTourGuide.collectAsState()
-                            if (showTourGuide) {
-                                AppTourGuideDialog(
-                                    viewModel = viewModel,
-                                    onDismiss = { viewModel.closeAppTourGuide(markAsSeen = true) }
+                            // Global Biometric Enrollment Auto-Offer — shown once after a normal
+                            // (password / Google) first login on a device that has an enrolled fingerprint.
+                            // The interactive spotlight tour itself is driven inside CustomerHomeScreen
+                            // (it needs the on-screen element bounds), triggered by viewModel.showAppTourGuide.
+                            val bioEnrollModule by viewModel.biometricEnrollPrompt.collectAsState()
+                            bioEnrollModule?.let { module ->
+                                BiometricEnrollPromptDialog(
+                                    module = module,
+                                    onEnable = {
+                                        BiometricSecurityManager.showBiometricPrompt(
+                                            activity = this@MainActivity,
+                                            title = "Enable Fingerprint Login",
+                                            subtitle = "Confirm your identity",
+                                            description = "Scan your fingerprint to turn on quick biometric login for next time.",
+                                            negativeButtonText = "Cancel",
+                                            onSuccess = {
+                                                viewModel.currentUser.value?.let { user ->
+                                                    viewModel.enableBiometricForModule(this@MainActivity, module, user)
+                                                }
+                                                viewModel.dismissBiometricEnrollPrompt(decline = false)
+                                            },
+                                            // Cancel / hardware error: dismiss without remembering, so it may offer again next login.
+                                            onError = { _, _ -> viewModel.dismissBiometricEnrollPrompt(decline = false) },
+                                            // A non-matching scan keeps the system sheet up for retry — do nothing here.
+                                            onFailed = { }
+                                        )
+                                    },
+                                    onDecline = { viewModel.dismissBiometricEnrollPrompt(decline = true) }
                                 )
                             }
 
