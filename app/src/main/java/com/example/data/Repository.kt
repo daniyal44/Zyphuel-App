@@ -29,10 +29,31 @@ class AppRepository(context: Context) {
     val auditLogDao = db.auditLogDao()
     val notificationDao = db.notificationDao()
     val markedLocationDao = db.markedLocationDao()
+    val vehicleDao = db.vehicleDao()
+    val categoryRepository = com.example.data.category.CategoryRepository(context)
     val firestoreOrderRepository = FirestoreOrderRepository(context)
     val firestoreUserRepository = FirestoreUserRepository(context)
     val authRepository = AuthRepository(context)
     val liveTrackingRepository = LiveTrackingRepository(context)
+
+    fun getVehiclesForUserFlow(email: String): Flow<List<com.example.data.vehicle.VehicleEntity>> =
+        vehicleDao.getVehiclesForUserFlow(email)
+
+    suspend fun saveVehicle(vehicle: com.example.data.vehicle.VehicleEntity): Long {
+        if (vehicle.isDefault) {
+            vehicleDao.clearDefaultVehicles(vehicle.userEmail)
+        }
+        return vehicleDao.insertVehicle(vehicle)
+    }
+
+    suspend fun deleteVehicle(id: Int) {
+        vehicleDao.deleteVehicle(id)
+    }
+
+    suspend fun setDefaultVehicle(email: String, id: Int) {
+        vehicleDao.clearDefaultVehicles(email)
+        vehicleDao.setDefaultVehicle(id)
+    }
 
     fun getMarkedLocationsForUserFlow(email: String): Flow<List<MarkedLocationEntity>> =
         markedLocationDao.getMarkedLocationsForUserFlow(email)

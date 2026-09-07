@@ -1,0 +1,1198 @@
+package com.example.ui
+
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.animation.*
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.data.category.*
+import com.example.data.vehicle.VehicleEntity
+import com.example.util.CoverageStatus
+import com.example.util.LocationCoverageManager
+
+val ZyphuelBluePrimary = Color(0xFF0284C7)
+val ZyphuelBlueDark = Color(0xFF0369A1)
+val ZyphuelBlueSecondary = Color(0xFF0EA5E9)
+
+/**
+ * Maps category icon string names to Material icons safely.
+ */
+object CategoryIconHelper {
+    fun getIcon(name: String): ImageVector {
+        return when (name) {
+            "LocalGasStation" -> Icons.Filled.LocalGasStation
+            "Build" -> Icons.Filled.Build
+            "CarCrash" -> Icons.Filled.CarCrash
+            "CleaningServices" -> Icons.Filled.CleaningServices
+            "TireRepair" -> Icons.Filled.TireRepair
+            "BatteryChargingFull" -> Icons.Filled.BatteryChargingFull
+            "WaterDrop" -> Icons.Filled.WaterDrop
+            "ElectricCar" -> Icons.Filled.ElectricCar
+            "InvertColors" -> Icons.Filled.InvertColors
+            "Business" -> Icons.Filled.Business
+            else -> Icons.Filled.MiscellaneousServices
+        }
+    }
+
+    fun getCategoryColor(id: String): Color {
+        return when (id) {
+            "fuel_energy" -> Color(0xFF059669)       // Emerald Green
+            "auto_repair" -> Color(0xFF2563EB)       // Royal Blue
+            "roadside_assistance" -> Color(0xFFDC2626)// Emergency Red
+            "auto_detailing" -> Color(0xFF7C3AED)    // Detailing Violet
+            "tyres_wheels" -> Color(0xFFD97706)      // Amber Orange
+            "battery_services" -> Color(0xFF0284C7)  // Electric Cyan
+            "lubricants_fluids" -> Color(0xFF0D9488) // Teal
+            "ev_services" -> Color(0xFF10B981)       // EV Mint Green
+            "water_delivery" -> Color(0xFF0369A1)    // Ocean Blue
+            "fleet_business" -> Color(0xFF475569)    // Enterprise Slate
+            else -> ZyphuelBluePrimary
+        }
+    }
+}
+
+/**
+ * 1. GLOBAL SERVICE SEARCH BAR
+ * Fast, typo-tolerant, category-aware, and indexed.
+ */
+@Composable
+fun ServiceSearchBar(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    onClearQuery: () -> Unit,
+    searchResults: List<ServiceSearchResult>,
+    onSelectResult: (Subcategory, Category) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var isFocused by remember { mutableStateOf(false) }
+
+    Column(modifier = modifier.fillMaxWidth()) {
+        OutlinedTextField(
+            value = query,
+            onValueChange = onQueryChange,
+            placeholder = {
+                Text(
+                    "What do you need today? (e.g. oil, puncture, battery...)",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Gray,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            },
+            leadingIcon = {
+                Icon(Icons.Filled.Search, contentDescription = "Search", tint = ZyphuelBluePrimary)
+            },
+            trailingIcon = {
+                if (query.isNotBlank()) {
+                    IconButton(onClick = onClearQuery) {
+                        Icon(Icons.Filled.Close, contentDescription = "Clear", tint = Color.Gray)
+                    }
+                }
+            },
+            singleLine = true,
+            shape = RoundedCornerShape(16.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White,
+                focusedBorderColor = ZyphuelBluePrimary,
+                unfocusedBorderColor = Color(0xFFE2E8F0)
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .shadow(elevation = 2.dp, shape = RoundedCornerShape(16.dp))
+                .testTag("global_service_search_bar")
+        )
+
+        // Dropdown Search Results Overlay
+        AnimatedVisibility(visible = query.isNotBlank() && searchResults.isNotEmpty()) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 6.dp)
+                    .heightIn(max = 280.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+            ) {
+                LazyColumn(
+                    modifier = Modifier.padding(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    item {
+                        Text(
+                            text = "Found ${searchResults.size} matching services:",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.Gray,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
+                    items(searchResults) { result ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .clickable { onSelectResult(result.subcategory, result.parentCategory) }
+                                .padding(horizontal = 8.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .background(CategoryIconHelper.getCategoryColor(result.parentCategory.id).copy(alpha = 0.12f), CircleShape),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = CategoryIconHelper.getIcon(result.parentCategory.iconName),
+                                        contentDescription = null,
+                                        tint = CategoryIconHelper.getCategoryColor(result.parentCategory.id),
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Column {
+                                    Text(
+                                        text = result.subcategory.name,
+                                        fontWeight = FontWeight.Bold,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = ZyphuelBlueDark
+                                    )
+                                    Text(
+                                        text = "${result.parentCategory.name} • ${result.subcategory.estimatedDuration}",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = Color.Gray
+                                    )
+                                }
+                            }
+                            Column(horizontalAlignment = Alignment.End) {
+                                if (result.subcategory.basePrice > 0) {
+                                    Text(
+                                        text = "Rs. ${String.format(java.util.Locale.US, "%,.0f", result.subcategory.basePrice)}",
+                                        fontWeight = FontWeight.Bold,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = ZyphuelBluePrimary
+                                    )
+                                }
+                                Text(
+                                    text = "Book >",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Color(0xFF059669),
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                        Divider(color = Color(0xFFF1F5F9))
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 2. QUICK ACTIONS PILL BAR
+ */
+@Composable
+fun QuickActionsBar(
+    onActionClick: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val actions = listOf(
+        Triple("Order Fuel", Icons.Filled.LocalGasStation, "fuel_energy"),
+        Triple("Auto Repair", Icons.Filled.Build, "auto_repair"),
+        Triple("Roadside SOS", Icons.Filled.CarCrash, "roadside_assistance"),
+        Triple("Tyre Help", Icons.Filled.TireRepair, "tyres_wheels"),
+        Triple("Battery Help", Icons.Filled.BatteryChargingFull, "battery_services")
+    )
+
+    Column(modifier = modifier.fillMaxWidth()) {
+        Text(
+            text = "Quick Actions",
+            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark),
+            modifier = Modifier.padding(bottom = 6.dp)
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            actions.forEach { (label, icon, categoryId) ->
+                Surface(
+                    onClick = { onActionClick(categoryId) },
+                    shape = RoundedCornerShape(20.dp),
+                    color = Color.White,
+                    border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                    modifier = Modifier.testTag("quick_action_${categoryId}")
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        val tint = CategoryIconHelper.getCategoryColor(categoryId)
+                        Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(16.dp))
+                        Text(
+                            label,
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontWeight = FontWeight.SemiBold,
+                                color = ZyphuelBlueDark
+                            )
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 3. SAVED VEHICLES STRIP (MY VEHICLES)
+ */
+@Composable
+fun SavedVehiclesBar(
+    selectedVehicle: VehicleEntity?,
+    onOpenMyVehicles: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable { onOpenMyVehicles() }
+            .testTag("my_vehicles_bar_card"),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                val icon = when {
+                    selectedVehicle == null -> Icons.Filled.AddCircleOutline
+                    selectedVehicle.vehicleType.contains("Bike", ignoreCase = true) -> Icons.Filled.TwoWheeler
+                    selectedVehicle.isEv -> Icons.Filled.ElectricCar
+                    else -> Icons.Filled.DirectionsCar
+                }
+                Box(
+                    modifier = Modifier
+                        .size(34.dp)
+                        .background(ZyphuelBlueSecondary.copy(alpha = 0.15f), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(icon, contentDescription = null, tint = ZyphuelBluePrimary, modifier = Modifier.size(18.dp))
+                }
+                Spacer(modifier = Modifier.width(10.dp))
+                Column {
+                    if (selectedVehicle != null) {
+                        Text(
+                            text = "${selectedVehicle.nickname} (${selectedVehicle.registrationNumber})",
+                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark)
+                        )
+                        Text(
+                            text = "${selectedVehicle.make} ${selectedVehicle.model} • ${selectedVehicle.fuelType}",
+                            style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray)
+                        )
+                    } else {
+                        Text(
+                            text = "Add Your Vehicle Profile",
+                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark)
+                        )
+                        Text(
+                            text = "Save your bike or car for 1-tap personalized service",
+                            style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray)
+                        )
+                    }
+                }
+            }
+
+            Surface(
+                color = ZyphuelBluePrimary.copy(alpha = 0.1f),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text(
+                    text = if (selectedVehicle != null) "Switch" else "+ Add",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = ZyphuelBluePrimary
+                    ),
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                )
+            }
+        }
+    }
+}
+
+/**
+ * 4. THE 10 MAIN CATEGORIES GRID
+ */
+@Composable
+fun CategoryGridSection(
+    categories: List<Category>,
+    onCategoryClick: (Category) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 10.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Services Marketplace",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = ZyphuelBlueDark
+                )
+            )
+            Text(
+                text = "${categories.size} Categories",
+                style = MaterialTheme.typography.labelSmall.copy(
+                    color = Color.Gray,
+                    fontWeight = FontWeight.SemiBold
+                )
+            )
+        }
+
+        // Clean, structured 2-column layout
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            val chunked = categories.chunked(2)
+            chunked.forEach { rowCategories ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    rowCategories.forEach { category ->
+                        CategoryCard(
+                            category = category,
+                            onClick = { onCategoryClick(category) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    if (rowCategories.size == 1) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun CategoryCard(
+    category: Category,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val accentColor = CategoryIconHelper.getCategoryColor(category.id)
+
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .testTag("category_card_${category.id}"),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(42.dp)
+                        .background(accentColor.copy(alpha = 0.12f), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = CategoryIconHelper.getIcon(category.iconName),
+                        contentDescription = category.name,
+                        tint = accentColor,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+
+                Surface(
+                    color = Color(category.availabilityStatus.colorHex).copy(alpha = 0.12f),
+                    shape = RoundedCornerShape(6.dp)
+                ) {
+                    Text(
+                        text = category.availabilityStatus.label,
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = Color(category.availabilityStatus.colorHex),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 10.sp
+                        ),
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
+            }
+
+            Column {
+                Text(
+                    text = category.name,
+                    style = MaterialTheme.typography.titleSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = ZyphuelBlueDark
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = category.shortDescription,
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = Color.Gray,
+                        lineHeight = 14.sp
+                    ),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "${category.subcategories.size} Services",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = accentColor,
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+                Icon(
+                    imageVector = Icons.Filled.ArrowForward,
+                    contentDescription = null,
+                    tint = Color.LightGray,
+                    modifier = Modifier.size(14.dp)
+                )
+            }
+        }
+    }
+}
+
+/**
+ * 5. COMPREHENSIVE CATEGORY DETAIL & BOOKING MODAL
+ * Supports all 10 categories, fuel dynamic pricing, roadside SOS priorities, and real ETA.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CategoryDetailModal(
+    category: Category,
+    viewModel: MainViewModel,
+    onDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+    val selectedVehicle by viewModel.selectedVehicle.collectAsState()
+    val deviceLat by viewModel.deviceLatitude.collectAsState()
+    val deviceLng by viewModel.deviceLongitude.collectAsState()
+    val liveLocationAddr by viewModel.liveLocationCoordinates.collectAsState()
+
+    val coverage = remember(deviceLat, deviceLng, category.id) {
+        LocationCoverageManager.checkCoverage(
+            deviceLat,
+            deviceLng,
+            isEmergency = category.id == "roadside_assistance"
+        )
+    }
+
+    var selectedSubcategory by remember { mutableStateOf<Subcategory?>(null) }
+    var orderNotes by remember { mutableStateOf("") }
+    var orderQuantity by remember { mutableIntStateOf(1) }
+    var showMyVehicles by remember { mutableStateOf(false) }
+
+    // Filter subcategories by selected vehicle if applicable
+    var vehicleFilter by remember { mutableStateOf<VehicleType?>(null) }
+
+    val filteredSubcategories = remember(category.subcategories, vehicleFilter) {
+        if (vehicleFilter == null) category.subcategories
+        else category.subcategories.filter { !it.requiresVehicle || it.supportedVehicleTypes.contains(vehicleFilter) }
+    }
+
+    // Group subcategories by serviceGroup
+    val grouped = remember(filteredSubcategories) {
+        filteredSubcategories.groupBy { it.serviceGroup ?: "SERVICES" }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    val color = CategoryIconHelper.getCategoryColor(category.id)
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .background(color.copy(alpha = 0.15f), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = CategoryIconHelper.getIcon(category.iconName),
+                            contentDescription = null,
+                            tint = color,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(category.name, fontWeight = FontWeight.Bold, fontSize = 17.sp, color = ZyphuelBlueDark)
+                        Text(category.shortDescription, style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                    }
+                }
+                IconButton(onClick = onDismiss) {
+                    Icon(Icons.Filled.Close, contentDescription = "Close", tint = Color.Gray)
+                }
+            }
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 520.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Live Location & ETA Status Card
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (category.id == "roadside_assistance") Color(0xFFFEF2F2) else Color(0xFFF0FDF4)
+                    ),
+                    border = BorderStroke(
+                        1.dp,
+                        if (category.id == "roadside_assistance") Color(0xFFFCA5A5) else Color(0xFF86EFAC)
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                            Icon(
+                                imageVector = if (category.id == "roadside_assistance") Icons.Filled.Warning else Icons.Filled.NearMe,
+                                contentDescription = null,
+                                tint = if (category.id == "roadside_assistance") Color(0xFFDC2626) else Color(0xFF16A34A),
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                when (coverage) {
+                                    is CoverageStatus.Covered -> {
+                                        Text(
+                                            text = "⚡ Live ETA: ${coverage.etaMinutes} mins (${coverage.zoneName})",
+                                            fontWeight = FontWeight.Bold,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = if (category.id == "roadside_assistance") Color(0xFF991B1B) else Color(0xFF14532D)
+                                        )
+                                        Text(
+                                            text = "${coverage.distanceKm} km from depot • $liveLocationAddr",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = Color.Gray,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+                                    is CoverageStatus.OutOfZone -> {
+                                        Text(
+                                            text = "Service Area Limited",
+                                            fontWeight = FontWeight.Bold,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = Color(0xFFDC2626)
+                                        )
+                                        Text(
+                                            text = coverage.message,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = Color.Gray
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        if (category.id == "roadside_assistance") {
+                            IconButton(
+                                onClick = {
+                                    val dialIntent = Intent(Intent.ACTION_DIAL).apply {
+                                        data = Uri.parse("tel:+923001234567")
+                                    }
+                                    context.startActivity(dialIntent)
+                                },
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .background(Color(0xFFDC2626), CircleShape)
+                            ) {
+                                Icon(Icons.Filled.Call, contentDescription = "Emergency Call", tint = Color.White, modifier = Modifier.size(16.dp))
+                            }
+                        }
+                    }
+                }
+
+                // Selected Vehicle Pill
+                Surface(
+                    onClick = { showMyVehicles = true },
+                    shape = RoundedCornerShape(10.dp),
+                    color = Color(0xFFF8FAFC),
+                    border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Filled.DirectionsCar, contentDescription = null, tint = ZyphuelBluePrimary, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = selectedVehicle?.let { "${it.nickname} (${it.registrationNumber})" } ?: "Assign a Vehicle (Optional)",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = ZyphuelBlueDark
+                            )
+                        }
+                        Text("Change", style = MaterialTheme.typography.labelSmall, color = ZyphuelBluePrimary, fontWeight = FontWeight.Bold)
+                    }
+                }
+
+                // Vehicle Type Filter for Auto Repair & Detailing
+                if (category.id == "auto_repair") {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        FilterChip(
+                            selected = vehicleFilter == null,
+                            onClick = { vehicleFilter = null },
+                            label = { Text("All Vehicles") }
+                        )
+                        VehicleType.entries.forEach { vType ->
+                            FilterChip(
+                                selected = vehicleFilter == vType,
+                                onClick = { vehicleFilter = if (vehicleFilter == vType) null else vType },
+                                label = { Text(vType.shortCode) }
+                            )
+                        }
+                    }
+                }
+
+                // Subcategories Grouped List
+                grouped.forEach { (groupName, subList) ->
+                    Text(
+                        text = groupName,
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = ZyphuelBluePrimary
+                        ),
+                        modifier = Modifier.padding(top = 6.dp)
+                    )
+
+                    subList.forEach { subcat ->
+                        val isChosen = selectedSubcategory?.id == subcat.id
+
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { selectedSubcategory = if (isChosen) null else subcat },
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (isChosen) Color(0xFFEFF6FF) else Color.White
+                            ),
+                            border = BorderStroke(
+                                width = if (isChosen) 2.dp else 1.dp,
+                                color = if (isChosen) ZyphuelBluePrimary else Color(0xFFE2E8F0)
+                            )
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                                        RadioButton(
+                                            selected = isChosen,
+                                            onClick = { selectedSubcategory = if (isChosen) null else subcat },
+                                            colors = RadioButtonDefaults.colors(selectedColor = ZyphuelBluePrimary)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Column {
+                                            Text(
+                                                text = subcat.name,
+                                                fontWeight = FontWeight.Bold,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = ZyphuelBlueDark
+                                            )
+                                            Text(
+                                                text = subcat.description,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = Color.Gray
+                                            )
+                                        }
+                                    }
+
+                                    Column(horizontalAlignment = Alignment.End) {
+                                        if (subcat.basePrice > 0) {
+                                            Text(
+                                                text = "Rs. ${String.format(java.util.Locale.US, "%,.2f", subcat.basePrice)}",
+                                                fontWeight = FontWeight.Bold,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = ZyphuelBlueDark
+                                            )
+                                            Text(
+                                                text = "per ${subcat.unit}",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = Color.Gray
+                                            )
+                                        } else {
+                                            Text(
+                                                text = "Custom",
+                                                fontWeight = FontWeight.Bold,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = ZyphuelBluePrimary
+                                            )
+                                        }
+                                    }
+                                }
+
+                                if (subcat.operationalRestrictions != null) {
+                                    Surface(
+                                        color = Color(0xFFFFFBEB),
+                                        shape = RoundedCornerShape(6.dp),
+                                        border = BorderStroke(1.dp, Color(0xFFFDE68A))
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(6.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Icon(Icons.Filled.Shield, contentDescription = null, tint = Color(0xFFD97706), modifier = Modifier.size(14.dp))
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                            Text(
+                                                text = subcat.operationalRestrictions,
+                                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, color = Color(0xFF92400E))
+                                            )
+                                        }
+                                    }
+                                }
+
+                                if (subcat.badgeText != null) {
+                                    Surface(
+                                        color = if (subcat.isEmergency) Color(0xFFFEE2E2) else Color(0xFFECFDF5),
+                                        shape = RoundedCornerShape(6.dp)
+                                    ) {
+                                        Text(
+                                            text = subcat.badgeText,
+                                            color = if (subcat.isEmergency) Color(0xFFDC2626) else Color(0xFF059669),
+                                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, fontSize = 10.sp),
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Selected Booking Options (Notes & Quantity)
+                if (selectedSubcategory != null) {
+                    Divider(color = Color(0xFFE2E8F0), modifier = Modifier.padding(vertical = 4.dp))
+
+                    Text(
+                        "Booking Details",
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleSmall,
+                        color = ZyphuelBlueDark
+                    )
+
+                    // Quantity Counter if applicable
+                    if (selectedSubcategory!!.unit in listOf("L", "Kg", "Bottle", "Can", "Pack")) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Quantity (${selectedSubcategory!!.unit}):", style = MaterialTheme.typography.bodyMedium)
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                IconButton(
+                                    onClick = { if (orderQuantity > 1) orderQuantity-- },
+                                    modifier = Modifier.size(32.dp).background(Color(0xFFE2E8F0), CircleShape)
+                                ) {
+                                    Icon(Icons.Filled.Remove, contentDescription = "Minus", modifier = Modifier.size(16.dp))
+                                }
+                                Text(" $orderQuantity ", fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp))
+                                IconButton(
+                                    onClick = { orderQuantity++ },
+                                    modifier = Modifier.size(32.dp).background(Color(0xFFE2E8F0), CircleShape)
+                                ) {
+                                    Icon(Icons.Filled.Add, contentDescription = "Plus", modifier = Modifier.size(16.dp))
+                                }
+                            }
+                        }
+                    }
+
+                    OutlinedTextField(
+                        value = orderNotes,
+                        onValueChange = { orderNotes = it },
+                        label = { Text("Special instructions / Landmark") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp),
+                        singleLine = true
+                    )
+
+                    val itemCost = selectedSubcategory!!.basePrice * orderQuantity
+                    val totalEst = itemCost + category.pricingConfig.deliveryFee + (if (selectedSubcategory!!.isEmergency) category.pricingConfig.emergencySurcharge else 0.0)
+
+                    Surface(
+                        color = Color(0xFFF8FAFC),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text("Service Charge:", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                                Text("Rs. ${String.format(java.util.Locale.US, "%,.2f", itemCost)}", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+                            }
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text("Doorstep / Dispatch Fee:", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                                Text("Rs. ${String.format(java.util.Locale.US, "%,.2f", category.pricingConfig.deliveryFee)}", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+                            }
+                            if (selectedSubcategory!!.isEmergency) {
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                    Text("Emergency Priority Surcharge:", style = MaterialTheme.typography.bodySmall, color = Color(0xFFDC2626))
+                                    Text("Rs. ${String.format(java.util.Locale.US, "%,.2f", category.pricingConfig.emergencySurcharge)}", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = Color(0xFFDC2626))
+                                }
+                            }
+                            Divider(color = Color(0xFFE2E8F0))
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text("Grand Total (COD):", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
+                                Text(
+                                    "Rs. ${String.format(java.util.Locale.US, "%,.2f", totalEst)}",
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = ZyphuelBluePrimary
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val sub = selectedSubcategory ?: return@Button
+                    viewModel.bookCategoryService(
+                        subcategory = sub,
+                        parentCategory = category,
+                        vehicle = selectedVehicle,
+                        notes = orderNotes,
+                        deliveryAddress = liveLocationAddr,
+                        quantity = orderQuantity,
+                        isEmergency = sub.isEmergency,
+                        onSuccess = { onDismiss() }
+                    )
+                },
+                enabled = selectedSubcategory != null,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (category.id == "roadside_assistance") Color(0xFFDC2626) else ZyphuelBluePrimary
+                ),
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier.testTag("modal_book_service_btn")
+            ) {
+                Text(
+                    text = if (category.id == "roadside_assistance") "Request Emergency SOS 🚨" else "Confirm & Book Now",
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
+        }
+    )
+
+    if (showMyVehicles) {
+        MyVehiclesDialog(viewModel = viewModel) {
+            showMyVehicles = false
+        }
+    }
+}
+
+/**
+ * 6. ADMIN CATEGORY & SERVICE MANAGEMENT TAB
+ * Allows operations admins to toggle categories, subcategories, pricing, availability, and inspect operational zones.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AdminCategoryManagementTab(
+    viewModel: MainViewModel,
+    modifier: Modifier = Modifier
+) {
+    val categories by viewModel.categories.collectAsState()
+    var expandedCatId by remember { mutableStateOf<String?>(null) }
+    var editingFeeCatId by remember { mutableStateOf<String?>(null) }
+    var feeInput by remember { mutableStateOf("") }
+
+    LazyColumn(
+        modifier = modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFEFF6FF)),
+                border = BorderStroke(1.dp, Color(0xFFBFDBFE))
+            ) {
+                Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Filled.Tune, contentDescription = null, tint = ZyphuelBluePrimary, modifier = Modifier.size(24.dp))
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text("Category & Service Operations Control", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall, color = ZyphuelBlueDark)
+                        Text("Manage availability, pricing, and service activation without republishing the app.", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                    }
+                }
+            }
+        }
+
+        items(categories) { cat ->
+            val isExpanded = expandedCatId == cat.id
+            val accentColor = CategoryIconHelper.getCategoryColor(cat.id)
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                border = BorderStroke(1.dp, if (cat.isActive) Color(0xFFE2E8F0) else Color(0xFFFECACA)),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .background(accentColor.copy(alpha = 0.12f), CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = CategoryIconHelper.getIcon(cat.iconName),
+                                    contentDescription = null,
+                                    tint = accentColor,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column {
+                                Text(
+                                    cat.name,
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = ZyphuelBlueDark
+                                )
+                                Text(
+                                    "${cat.subcategories.size} Subcategories • ${cat.estimatedResponseTime}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Color.Gray
+                                )
+                            }
+                        }
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Switch(
+                                checked = cat.isActive,
+                                onCheckedChange = { viewModel.toggleCategoryActive(cat.id, it) },
+                                colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Color(0xFF10B981))
+                            )
+                        }
+                    }
+
+                    // Status & Fee Row
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Availability selector chips
+                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            CategoryAvailability.entries.take(3).forEach { avail ->
+                                val isSelected = cat.availabilityStatus == avail
+                                Surface(
+                                    onClick = { viewModel.updateCategoryAvailability(cat.id, avail) },
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = if (isSelected) Color(avail.colorHex).copy(alpha = 0.15f) else Color(0xFFF1F5F9),
+                                    border = if (isSelected) BorderStroke(1.dp, Color(avail.colorHex)) else null
+                                ) {
+                                    Text(
+                                        text = avail.label,
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontSize = 9.sp,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                            color = if (isSelected) Color(avail.colorHex) else Color.Gray
+                                        ),
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        // Fee info
+                        Text(
+                            text = "Fee: Rs. ${String.format(java.util.Locale.US, "%.0f", cat.pricingConfig.deliveryFee)}",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = ZyphuelBluePrimary
+                        )
+                    }
+
+                    // Toggle Subcategories Expand
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { expandedCatId = if (isExpanded) null else cat.id }
+                            .padding(vertical = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = if (isExpanded) "Hide Subcategories ▲" else "Configure Subcategories (${cat.subcategories.size}) ▼",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = ZyphuelBluePrimary
+                            )
+                        )
+                        Text(
+                            text = "Coverage: ${cat.locationCoverage.firstOrNull() ?: "Lahore"}",
+                            style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontSize = 10.sp)
+                        )
+                    }
+
+                    if (isExpanded) {
+                        Divider(color = Color(0xFFE2E8F0))
+
+                        // Edit fee section
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            OutlinedTextField(
+                                value = if (editingFeeCatId == cat.id) feeInput else cat.pricingConfig.deliveryFee.toInt().toString(),
+                                onValueChange = {
+                                    editingFeeCatId = cat.id
+                                    feeInput = it
+                                },
+                                label = { Text("Delivery/Service Fee (PKR)") },
+                                modifier = Modifier.weight(1f),
+                                singleLine = true
+                            )
+                            Button(
+                                onClick = {
+                                    val newFee = feeInput.toDoubleOrNull() ?: cat.pricingConfig.deliveryFee
+                                    viewModel.updateCategoryPricing(cat.id, newFee)
+                                    editingFeeCatId = null
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = ZyphuelBluePrimary)
+                            ) {
+                                Text("Update Fee")
+                            }
+                        }
+
+                        // Subcategory list with individual toggles
+                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            cat.subcategories.forEach { sub ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .background(Color(0xFFF8FAFC), RoundedCornerShape(8.dp))
+                                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            sub.name,
+                                            fontWeight = FontWeight.Bold,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = ZyphuelBlueDark
+                                        )
+                                        Text(
+                                            "Rs. ${String.format(java.util.Locale.US, "%,.2f", sub.basePrice)} / ${sub.unit} • ${sub.estimatedDuration}",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = Color.Gray
+                                        )
+                                    }
+                                    Switch(
+                                        checked = sub.isActive,
+                                        onCheckedChange = { viewModel.toggleSubcategoryActive(cat.id, sub.id, it) },
+                                        modifier = Modifier.height(24.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

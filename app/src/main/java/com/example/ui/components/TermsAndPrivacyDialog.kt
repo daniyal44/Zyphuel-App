@@ -150,7 +150,7 @@ fun TermsAndPrivacyDialog(
                             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
                             LegalSectionTitle("1. Acceptance & Service Scope")
-                            LegalParagraph("By accessing or using Zyphuel, you agree to these Terms. Zyphuel operates an on-demand logistics dispatch network in Lahore, Pakistan connecting customers with certified delivery couriers for Super Petrol, High-Speed Diesel, Pure Mineral Drinking Water, and LPG Gas Cylinders.")
+                            LegalParagraph("By accessing or using Zyphuel, you agree to these Terms. Zyphuel operates an on-demand logistics dispatch network in Lahore, Pakistan connecting customers with certified delivery couriers and roadside technicians across 10 primary categories: Fuel & Energy, Auto Repair, 24/7 Roadside Assistance, Detailing, Tyres & Wheels, Battery Services, Lubricants & Fluids, EV Services, Water Delivery, and Fleet Operations.")
 
                             LegalSectionTitle("2. Safety & Hazardous Materials (OGRA Compliance)")
                             LegalParagraph("Petroleum and LPG are volatile and flammable materials. In compliance with Oil & Gas Regulatory Authority (OGRA) guidelines:")
@@ -165,7 +165,7 @@ fun TermsAndPrivacyDialog(
                             LegalParagraph("Orders may be cancelled free of charge prior to driver dispatch. Report any quality or calibration concerns via in-app Support within 2 hours of delivery.")
 
                             LegalSectionTitle("5. Account Deletion")
-                            LegalParagraph("You may permanently delete your account and personal data at any time via Profile Settings > Delete Account or online at https://www.zyphuel.com/request-deletion.")
+                            LegalParagraph("You may permanently delete your account, saved vehicle profiles, and personal data at any time via Profile Settings > Delete Account or online at https://www.zyphuel.com/request-deletion.")
                         }
                     } else {
                         Column(
@@ -207,6 +207,7 @@ fun TermsAndPrivacyDialog(
 
                             LegalSectionTitle("1. Data Collected")
                             LegalBulletPoint("Account Identifiers: Full Name, Email, Phone Number, Delivery Addresses.")
+                            LegalBulletPoint("Saved Vehicle Profiles: Make, model, year, license plate, and fuel type to personalize roadside dispatch.")
                             LegalBulletPoint("Rider Credentials: CNIC/ID, Driving License, Vehicle Plate, Emergency Contacts for fleet safety.")
                             LegalBulletPoint("Order Records: Products purchased, invoice summaries, selected payment method (no raw card CVVs stored).")
 

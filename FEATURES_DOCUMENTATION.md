@@ -1,5 +1,5 @@
 # 🚀 Zyphuel App Features & Technical Documentation
-**App Version:** `v2.3.2 (Build 6)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** `2026`
+**App Version:** `v2.4.0 (Build 7)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** `2026`
 
 Welcome to the complete architectural and functional guide for the **Zyphuel** Android application. This document outlines every single feature, function, database entity, and user flow from start to finish.
 
@@ -579,4 +579,61 @@ The console features a top-level tabbed navigation bar allowing dispatchers to s
 4. Enforce strict server-side Firestore Security Rules and Cloud Functions for order price calculation.
 5. Add `location.isMock` checks to `LocationService.kt` to block GPS spoofing apps.
 6. Set `android:exported="false"` for internal activities in `AndroidManifest.xml`.
+
+---
+
+## 16. Modern 10-Category Marketplace Architecture & Fleet Logistics (v2.4.0)
+
+### 16.1 The 10 Primary Categories & Dynamic Subcategories
+Zyphuel v2.4.0 introduces a comprehensive 10-category on-demand automotive and mobility marketplace on the Customer Home Screen (`CategoryGridSection`), complete with rich iconography, real-time pricing, vehicle compatibility filters, and estimated delivery/service durations:
+
+| Category ID | Title | Description | Subcategories Included | Compatible Vehicles |
+| :--- | :--- | :--- | :--- | :--- |
+| `fuel_energy` | **Fuel & Energy** | Instant on-demand fuel delivery and energy essentials | Super Petrol, High-Speed Diesel (HSD), Emergency Fuel Canister (5L/10L), Generator Refueling, LPG Gas Cylinder | Bike, Car, Van, Heavy Truck, Generator, Fleet |
+| `auto_repair` | **Auto Repair & Care** | Certified mobile mechanics & on-site repairs | Mobile Diagnostic Scan (OBD-II), On-Demand Mobile Mechanic, Brake Pad Inspection & Replacement, Engine Spark Plug & Tune-up, AC Gas Top-up & Leak Test | Car, Van, Heavy Truck, Fleet |
+| `roadside_assist` | **Roadside Assistance** | 24/7 emergency roadside recovery & dispatch | Flatbed Towing (Emergency), Heavy Towing / Winch Recovery, Key Lockout & Auto Access, Accident Breakdown Assistance | Bike, Car, Van, Heavy Truck, Fleet |
+| `detailing` | **Auto Care & Detailing** | Doorstep eco-friendly vehicle washing & detailing | Waterless Eco Exterior Wash, Full Interior Deep Vacuum & Clean, Comprehensive Mobile Detailing, Paint Protection & Ceramic Sealant | Bike, Car, Van, Heavy Truck, Fleet |
+| `tyres_wheels` | **Tyres & Wheels** | On-demand puncture fix, tyre replacement & air | Doorstep Puncture Repair (Tubeless), Spare Tyre Change Assistance, Tyre Pressure Check & Digital Inflation, New Tyre Delivery & Mobile Fitting | Bike, Car, Van, Heavy Truck, Fleet |
+| `battery` | **Battery Services** | Emergency jumpstart, testing & doorstep installation | Emergency Jumpstart (12V / 24V), Battery Voltage & Alternator Health Test, New Battery Delivery & On-Site Installation | Bike, Car, Van, Heavy Truck, Generator, Fleet |
+| `lubricants` | **Lubricants & Fluids** | Premium engine oils & automotive fluid top-ups | Full Synthetic Engine Oil Change, Radiator Coolant Flush & Top-up, Brake Fluid Flush & Bleed, Transmission & Gear Fluid Top-up | Bike, Car, Van, Heavy Truck, Generator, Fleet |
+| `ev_services` | **EV Services** | Electric vehicle roadside charging & infrastructure | Emergency Mobile EV Rescue Charge (5-10 kWh), Home EV Charger Installation Consultation, EV Battery Diagnostic & Health Check | Car, Van, Fleet |
+| `water_delivery` | **Water Delivery** | Pure mineral drinking water & bulk commercial tankers | 5-Gallon Drinking Water Bottle Refill, Commercial Tanker Water Supply (1000 - 3000 Gallons), Swimming Pool & Construction Refill | Bike, Car, Van, Heavy Truck, Generator, Fleet |
+| `fleet` | **Fleet & Business** | Specialized corporate and commercial fleet support | Bulk Fleet Fueling Program, Commercial Fleet Preventive Maintenance, Dedicated Generator Fueling Contract | Van, Heavy Truck, Fleet |
+
+### 16.2 Saved Vehicle Profiles ("My Vehicles")
+* **Persistence & Schema (`VehicleEntity` & `VehicleDao`)**:
+  - Saved vehicle profiles are stored locally in Room database version 12 (`vehicles` table) with fields `id`, `userId`, `make`, `model`, `year`, `licensePlate`, `fuelType`, `vehicleType`, `createdAt`, and `isDefault`.
+  - The DAO supports reactive queries (`getVehiclesForUser(userId): Flow<List<VehicleEntity>>`), single active selection (`getDefaultVehicle`), upserts (`insertVehicle`), and secure profile deletion (`deleteVehicle`).
+* **UI Integration & Compatibility Matching (`MyVehiclesDialog` & `SavedVehiclesBar`)**:
+  - Displayed on the Customer Home dashboard directly above the category grid as a horizontal scrollable vehicle chip selector with an `"Add Vehicle +"` button.
+  - Selecting an active vehicle instantly tailors the category modal to display only services compatible with that vehicle's type (e.g. hiding car-only towing from motorcycle selections).
+
+### 16.3 Global Typo-Tolerant Search Engine ("What do you need today?")
+* **Levenshtein Fuzzy Matching (`CategoryRepository.searchCategoriesAndServices`)**:
+  - Embedded directly into the Customer Home screen search bar (`ServiceSearchBar`).
+  - Matches queries against category titles, descriptions, subcategory names, service tags, and keywords.
+  - Implements dynamic edit-distance tolerances (distance $\le 2$ for terms $>4$ chars) so typos such as `"puncure"`, `"deisel"`, or `"batry"` resolve seamlessly to the correct services.
+  - Tapping a search result instantly opens the relevant category modal and pre-highlights the selected service.
+
+### 16.4 GPS Service Availability & Distance/ETA Calculations (`LocationCoverageManager`)
+* **Accurate Haversine Distance Engine**:
+  - Evaluates user coordinates against the central depot hub in Lahore (31.4380° N, 74.3050° E).
+  - Automatically identifies local coverage zones: Lahore Central, Gulberg & Model Town, DHA & Cantt, Johar Town & Wapda Town, Bahria Town & Southern Lahore.
+  - Computes realistic ETAs without artificial/mock values:
+    $$\text{ETA (min)} = \text{basePrepTime} + \left(\text{distanceKm} \times 1.3 \times \frac{60}{\text{averageSpeedKmH}}\right)$$
+  - Flags locations exceeding the 45 km operational radius as out-of-zone, informing the user with clear distance feedback while preventing unsupported dispatch.
+
+### 16.5 Integrated Order Pipeline & Booking Bridge (`bookCategoryService`)
+* **Unified Lifecycle Progression**:
+  - Category and subcategory service bookings are converted directly into standard `OrderEntity` records and committed to Room DB and Cloud Firestore.
+  - Automatically attaches the customer's active vehicle details (Make, Model, License Plate) and requested subcategory notes to the order destination address and notes payload.
+  - Instantly invokes `RealtimeEmailEngine` to deliver authenticated triple-party confirmation emails to Customer, Assigned Rider, and Super Admin.
+  - Seamlessly navigates to `TrackerScreen` with live 4-step delivery progress tracking.
+
+### 16.6 Super Admin Category Management Tab (`AdminCategoryManagementTab`)
+* **Operational Control Console (Admin Tab 8)**:
+  - Accessible exclusively to administrators via Tab 8 in the `AdminDashboardScreen`.
+  - Enables real-time toggling of individual category availability (Active / Inactive) with instant persistence to `SharedPreferences` and reactive UI propagation.
+  - Allows administrators to override service base pricing on-the-fly and flag categories with High-Demand / Emergency Roadside Priority banners during emergencies or extreme weather conditions.
+
 

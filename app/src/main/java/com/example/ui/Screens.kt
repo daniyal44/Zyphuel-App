@@ -3744,6 +3744,14 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
         orders.filter { it.status in listOf("Completed", "Cancelled") }
     }
 
+    val categories by viewModel.categories.collectAsState()
+    val searchQuery by viewModel.serviceSearchQuery.collectAsState()
+    val searchResults by viewModel.serviceSearchResults.collectAsState()
+    val selectedVehicle by viewModel.selectedVehicle.collectAsState()
+
+    var selectedCategoryForModal by remember { mutableStateOf<com.example.data.category.Category?>(null) }
+    var showMyVehiclesDialog by remember { mutableStateOf(false) }
+
     var showOrderDialog by remember { mutableStateOf(false) }
     var selectedService by remember { mutableStateOf("") }
     var showPasswordDialog by remember { mutableStateOf(false) }
@@ -4196,84 +4204,51 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                     }
                 }
 
+                // Primary Action: Global Service Search Bar
                 item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        ServiceCard(
-                            title = "Petrol",
-                            icon = Icons.Filled.LocalGasStation,
-                            subLabel = "Super Euro-V • Min 5L",
-                            pricePerLiter = viewModel.formatUnitPrice(petrolPrice, "L"),
-                            badgeText = "Live Rate",
-                            accentColor = Color(0xFF059669),
-                            modifier = Modifier.weight(1f).testTag("service_petrol").spotlightAnchor(spotlight, "service_petrol")
-                        ) {
-                            selectedService = "Petrol"
-                            showOrderDialog = true
+                    ServiceSearchBar(
+                        query = searchQuery,
+                        onQueryChange = { viewModel.searchServices(it) },
+                        onClearQuery = { viewModel.clearServiceSearch() },
+                        searchResults = searchResults,
+                        onSelectResult = { subcat, parentCat ->
+                            selectedCategoryForModal = parentCat
                         }
-                        ServiceCard(
-                            title = "Diesel",
-                            icon = Icons.Filled.DirectionsCar,
-                            subLabel = "Euro-V High Speed • Min 5L",
-                            pricePerLiter = viewModel.formatUnitPrice(dieselPrice, "L"),
-                            badgeText = "Live Rate",
-                            accentColor = Color(0xFF2563EB),
-                            modifier = Modifier.weight(1f).testTag("service_diesel")
-                        ) {
-                            selectedService = "Diesel"
-                            showOrderDialog = true
-                        }
-                    }
+                    )
                 }
 
+                // Quick Action Bar
                 item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        ServiceCard(
-                            title = "High-Octane",
-                            icon = Icons.Filled.Speed,
-                            subLabel = "HOBC 97 Premium • Min 5L",
-                            pricePerLiter = viewModel.formatUnitPrice(octanePrice, "L"),
-                            badgeText = "97 Octane",
-                            accentColor = Color(0xFF7C3AED),
-                            modifier = Modifier.weight(1f).testTag("service_high_octane")
-                        ) {
-                            selectedService = "High-Octane"
-                            showOrderDialog = true
+                    QuickActionsBar(
+                        onActionClick = { catId ->
+                            val cat = categories.firstOrNull { it.id == catId }
+                            if (cat != null) {
+                                selectedCategoryForModal = cat
+                            } else {
+                                selectedService = ""
+                                showOrderDialog = true
+                            }
                         }
-                        ServiceCard(
-                            title = "LPG Gas",
-                            icon = Icons.Filled.Fireplace,
-                            subLabel = "Liquefied Gas • Min 5 Kg",
-                            pricePerLiter = viewModel.formatUnitPrice(lpgPrice, "Kg"),
-                            badgeText = "Eco Energy",
-                            accentColor = Color(0xFFEA580C),
-                            modifier = Modifier.weight(1f).testTag("service_gas")
-                        ) {
-                            selectedService = "LPG Gas"
-                            showOrderDialog = true
-                        }
-                    }
+                    )
                 }
 
+                // Saved Vehicles Strip (My Vehicles)
                 item {
-                    ServiceCard(
-                        title = "Pure Water",
-                        icon = Icons.Filled.WaterDrop,
-                        subLabel = "Purified Mineral • Min 1 Gallon",
-                        pricePerLiter = viewModel.formatUnitPrice(waterPrice, "Gallon"),
-                        badgeText = "100% Pure",
-                        accentColor = Color(0xFF0284C7),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("service_water")
-                    ) {
-                        selectedService = "Water"
-                        showOrderDialog = true
+                    SavedVehiclesBar(
+                        selectedVehicle = selectedVehicle,
+                        onOpenMyVehicles = { showMyVehiclesDialog = true }
+                    )
+                }
+
+                // 10-Category Dynamic Marketplace Grid
+                item {
+                    Box(modifier = Modifier.spotlightAnchor(spotlight, "service_petrol")) {
+                        CategoryGridSection(
+                            categories = categories,
+                            onCategoryClick = { category ->
+                                selectedCategoryForModal = category
+                            }
+                        )
                     }
                 }
 
@@ -4520,6 +4495,21 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
     }
 
     // --- DIALOGS CONTROLLERS ---
+
+    if (selectedCategoryForModal != null) {
+        CategoryDetailModal(
+            category = selectedCategoryForModal!!,
+            viewModel = viewModel,
+            onDismiss = { selectedCategoryForModal = null }
+        )
+    }
+
+    if (showMyVehiclesDialog) {
+        MyVehiclesDialog(
+            viewModel = viewModel,
+            onDismiss = { showMyVehiclesDialog = false }
+        )
+    }
 
     if (showOrderDialog) {
         OrderDialog(
@@ -13272,6 +13262,9 @@ fun AdminDashboardScreen(viewModel: MainViewModel) {
                 Tab(selected = activeTab == 7, onClick = { activeTab = 7 }) {
                     Text("Audit Logs", modifier = Modifier.padding(12.dp), fontWeight = FontWeight.Bold)
                 }
+                Tab(selected = activeTab == 8, onClick = { activeTab = 8 }) {
+                    Text("Categories", modifier = Modifier.padding(12.dp), fontWeight = FontWeight.Bold)
+                }
             }
 
             // Tab content body
@@ -14000,6 +13993,9 @@ fun AdminDashboardScreen(viewModel: MainViewModel) {
                                 }
                             }
                         }
+                    }
+                    8 -> { // Category & Services Management
+                        AdminCategoryManagementTab(viewModel = viewModel)
                     }
                 }
             }

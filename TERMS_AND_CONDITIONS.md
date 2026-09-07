@@ -1,8 +1,8 @@
 # Terms and Conditions of Service (Zyphuel)
 
-**Effective Date:** September 5, 2026  
-**Last Updated:** September 5, 2026  
-**Application Version:** 2.3.1 (Build 5)  
+**Effective Date:** September 7, 2026  
+**Last Updated:** September 7, 2026  
+**Application Version:** 2.4.0 (Build 7)  
 **Package Name:** `com.aistudio.zyphuel.appv2`  
 **Official Website:** [https://www.zyphuel.com/](https://www.zyphuel.com/)  
 
@@ -14,13 +14,19 @@ By downloading, installing, registering an account, or placing an order on the *
 ---
 
 ## 2. Service Description & Geographical Coverage
-Zyphuel provides an on-demand marketplace and logistics coordination platform connecting customers with authorized delivery riders and bowser vehicles for the doorstep delivery of:
-* **Super Petrol (RON 92 / RON 95)**
-* **High-Speed Diesel (HSD)**
-* **Pure Drinking Water (5 Gallon / Commercial Jerrycans)**
-* **LPG Gas Cylinders (Domestic & Commercial)**
+Zyphuel provides an on-demand marketplace and logistics coordination platform connecting customers with authorized delivery riders, bowser vehicles, and certified roadside technicians for the doorstep and on-road delivery of 10 primary service categories:
+* **1. Fuel & Energy**: Super Petrol, High-Speed Diesel, Emergency Canister Fuel, Generator Refueling, LPG Cylinders.
+* **2. Auto Repair & Care**: On-demand Mobile Mechanics, Diagnostic Scanning, Brake Service, AC Gas Refill, Engine Tune-ups.
+* **3. Roadside Assistance**: Emergency Flatbed Towing, Winching, Vehicle Lockout, Accident Breakdown Recovery.
+* **4. Auto Care & Detailing**: Waterless Eco Wash, Interior Vacuuming, Ceramic Wax, Mobile Detailing.
+* **5. Tyres & Wheels**: Puncture Repair, Spare Tyre Installation, Air Inflation, New Tyre Replacement.
+* **6. Battery Services**: Emergency Jumpstart, Battery Voltage Diagnostic, New Battery Delivery & Installation.
+* **7. Lubricants & Fluids**: Engine Oil Changes, Coolant Flushes, Transmission & Brake Fluid Refills.
+* **8. EV Services**: Mobile EV Rescue Charging (Level 2/DC Fast), Home Charger Setup Consultation, EV Diagnostics.
+* **9. Water Delivery**: 5-Gallon Drinking Water Bottles, Bulk Water Tankers, Commercial Water Supply.
+* **10. Fleet & Business**: B2B Fuel Supplies, Commercial Fleet Scheduled Maintenance, Generator Diesel Contracts.
 
-**Geographical Coverage:** Services are currently operated within the municipal limits of **Lahore, Punjab, Pakistan** (including Gulberg, DHA, Bahria Town, Model Town, Johar Town, Cantt, and surrounding zones).
+**Geographical Coverage:** Services are currently operated within the municipal limits of **Lahore, Punjab, Pakistan** (including Gulberg, DHA, Bahria Town, Model Town, Johar Town, Cantt, Wapda Town, and surrounding zones within a 45 km radius of the central hub). Out-of-zone requests are automatically assessed via GPS coverage telemetry.
 
 ---
 

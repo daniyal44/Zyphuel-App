@@ -247,13 +247,14 @@ interface MarkedLocationDao {
 
 // --- App Database definition ---
 
-@Database(entities = [UserEntity::class, OrderEntity::class, AuditLogEntity::class, NotificationEntity::class, MarkedLocationEntity::class], version = 11, exportSchema = false)
+@Database(entities = [UserEntity::class, OrderEntity::class, AuditLogEntity::class, NotificationEntity::class, MarkedLocationEntity::class, com.example.data.vehicle.VehicleEntity::class], version = 12, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun orderDao(): OrderDao
     abstract fun auditLogDao(): AuditLogDao
     abstract fun notificationDao(): NotificationDao
     abstract fun markedLocationDao(): MarkedLocationDao
+    abstract fun vehicleDao(): com.example.data.vehicle.VehicleDao
 
     companion object {
         @Volatile
