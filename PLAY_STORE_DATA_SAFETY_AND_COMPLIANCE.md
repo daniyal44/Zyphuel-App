@@ -2,7 +2,7 @@
 
 **Application:** Zyphuel Doorstep Fuel & Drinking Water  
 **Package Name:** `com.aistudio.zyphuel.appv2`  
-**Current Version:** 2.3.1 (Build 5)  
+**Current Version:** 2.4.1 (Build 8)  
 **Target SDK:** 36 (Android 16) | **Min SDK:** 24 (Android 7.0)  
 
 ---
@@ -80,5 +80,8 @@ Enter this URL in **Store presence > Store settings > Privacy Policy**:
 ---
 
 ## 4. App Version History Log
+* **v2.4.1 (Build 8)**: Production release with 10-category marketplace architecture, Saved Vehicle Profiles ("My Vehicles"), Typo-Tolerant Search, and Real GPS Coverage Engine.
+* **v2.4.0 (Build 7)**: Initial rollout of 10 primary categories, vehicle compatibility models, and Admin category control console.
+* **v2.3.2 (Build 6)**: Performance optimizations and database stabilization.
 * **v2.3.1 (Build 5)**: Added Google Play Store Terms & Privacy in-app modal, tightened `GET_ACCOUNTS` maxSdkVersion=22, live version badge in Settings, complete account deletion workflow.
 * **v2.3.0 (Build 4)**: Live Google Maps telematics, clean order dialog, email gateway, multi-role security.
