@@ -2,7 +2,7 @@
 
 **Effective Date:** September 7, 2026  
 **Last Updated:** September 7, 2026  
-**Application Version:** 2.4.0 (Build 7)  
+**Application Version:** 2.4.1 (Build 8)  
 **Package Name:** `com.aistudio.zyphuel.appv2`  
 **Official Website:** [https://www.zyphuel.com/](https://www.zyphuel.com/)  
 
