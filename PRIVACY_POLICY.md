@@ -1,8 +1,8 @@
 # Privacy Policy for Zyphuel
 
-**Effective Date:** September 5, 2026  
-**Last Updated:** September 5, 2026  
-**Application Version:** 2.3.1 (Build 5)  
+**Effective Date:** September 7, 2026  
+**Last Updated:** September 7, 2026  
+**Application Version:** 2.4.0 (Build 7)  
 **Package Name:** `com.aistudio.zyphuel.appv2`  
 **Official Website:** [https://www.zyphuel.com/](https://www.zyphuel.com/)  
 **Contact Email:** compliance@zyphuel.com | support@zyphuel.com  
@@ -10,7 +10,7 @@
 ---
 
 ## 1. Introduction
-Welcome to **Zyphuel** ("we", "our", or "us"). Zyphuel is Pakistan's premier doorstep energy and drinking water delivery mobile platform, operating in Lahore, Pakistan. We are committed to protecting the privacy, confidentiality, and security of our customers, riders (couriers), and administrative personnel.
+Welcome to **Zyphuel** ("we", "our", or "us"). Zyphuel is Pakistan's premier on-demand mobility, fuel delivery, vehicle service, and roadside assistance platform, operating in Lahore, Pakistan. We are committed to protecting the privacy, confidentiality, and security of our customers, service technicians, riders, and administrative personnel.
 
 This Privacy Policy explains how we collect, use, disclose, and safeguard your personal information when you access or use the Zyphuel Android application and our online services. By installing, creating an account on, or using Zyphuel, you consent to the practices described in this Privacy Policy.
 
@@ -19,17 +19,18 @@ This Privacy Policy explains how we collect, use, disclose, and safeguard your p
 ## 2. Information We Collect
 
 ### A. Location Information (Prominent Disclosure)
-Zyphuel requires access to device location services to fulfill on-demand doorstep deliveries:
+Zyphuel requires access to device location services to fulfill on-demand doorstep deliveries and emergency roadside dispatch:
 * **Precise GPS Location (`ACCESS_FINE_LOCATION`) & Approximate Location (`ACCESS_COARSE_LOCATION`)**:
-  - **For Customers**: Collected when you search for nearby delivery zones, mark drop-off locations on the map, or place orders for Super Petrol, High-Speed Diesel, Pure Water, or LPG Cylinders.
-  - **For Riders**: Collected during active delivery shifts to calculate optimal driving routes, deliver orders to precise customer pins, and trigger geofenced customer notifications (e.g., "Rider is 1 km away").
+  - **For Customers**: Collected when you search for nearby service coverage, mark drop-off locations, or place orders for Fuel Delivery, Roadside Assistance, Towing, Mobile Mechanic, Tyre Repair, or Water Delivery.
+  - **For Riders & Field Technicians**: Collected during active service shifts to calculate optimal driving routes, navigate to customer breakdown coordinates, and trigger geofenced customer notifications (e.g., "Technician is 1 km away").
 * **Foreground Service Location (`FOREGROUND_SERVICE_LOCATION`)**:
-  - Used by delivery riders via `RiderLocationForegroundService` exclusively while active on delivery assignments to provide live real-time telematic tracking to the customer and dispatch console. A persistent notification is displayed whenever this service is operating.
-  - **We DO NOT collect continuous background location without an active delivery assignment.**
+  - Used by delivery riders and roadside technicians via `RiderLocationForegroundService` exclusively while active on dispatch assignments to provide live telematic tracking to the customer and dispatch console. A persistent notification is displayed whenever this service is operating.
+  - **We DO NOT collect continuous background location without an active delivery or assistance assignment.**
 
-### B. Personal Identifiable Information (PII)
+### B. Personal Identifiable Information (PII) & Vehicle Data
 * **Customer Accounts**: Full Name, Email Address, Phone Number, Delivery Addresses, and Account Password (cryptographically hashed using SHA-256 with salting).
-* **Rider / Driver Profiles**: Full Name, Phone Number, Father's Name, Date of Birth, National Identity Card (CNIC / Passport number), CNIC Issue/Expiry dates, Residential Address, Vehicle Type & Plate Registration Number, and Driving License ID.
+* **Saved Vehicle Profiles ("My Vehicles")**: Make, Model, Manufacturing Year, License Plate Number, Vehicle Category (Car, Bike, Van, Heavy Truck, Generator, Fleet), and Fuel Type (Petrol, Diesel, Electric, Hybrid). This information is saved locally in encrypted SQLite Room database and associated with the customer's account to streamline service matching and dispatch suitable tools/technicians.
+* **Rider & Field Technician Profiles**: Full Name, Phone Number, Father's Name, Date of Birth, National Identity Card (CNIC / Passport number), CNIC Issue/Expiry dates, Residential Address, Vehicle Type & Plate Registration Number, and Driving License ID.
 * **Emergency Contacts**: For delivery fleet safety, riders provide an emergency contact name, relationship, and contact number.
 
 ### C. Financial & Transaction Data

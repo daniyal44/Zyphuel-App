@@ -1141,11 +1141,128 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun observeRiderLocation(orderId: Int): Flow<com.example.data.RiderLiveLocation?> =
         repository.liveTrackingRepository.observeLocation(orderId)
 
+    // --- 10-Category Enterprise Marketplace & Search Architecture ---
+    val categories: StateFlow<List<com.example.data.category.Category>> = repository.categoryRepository.categories
+
+    private val _serviceSearchQuery = MutableStateFlow("")
+    val serviceSearchQuery: StateFlow<String> = _serviceSearchQuery.asStateFlow()
+
+    private val _serviceSearchResults = MutableStateFlow<List<com.example.data.category.ServiceSearchResult>>(emptyList())
+    val serviceSearchResults: StateFlow<List<com.example.data.category.ServiceSearchResult>> = _serviceSearchResults.asStateFlow()
+
+    fun searchServices(query: String) {
+        _serviceSearchQuery.value = query
+        val selectedVehType = _selectedVehicle.value?.let { com.example.data.category.VehicleType.fromString(it.vehicleType) }
+        _serviceSearchResults.value = repository.categoryRepository.searchServices(query, selectedVehType)
+    }
+
+    fun clearServiceSearch() {
+        _serviceSearchQuery.value = ""
+        _serviceSearchResults.value = emptyList()
+    }
+
+    // --- Customer Vehicle Profiles (My Vehicles) States & Operations ---
+    val customerVehicles: StateFlow<List<com.example.data.vehicle.VehicleEntity>> = _currentUser.flatMapLatest { user ->
+        if (user != null) {
+            repository.getVehiclesForUserFlow(user.email)
+        } else {
+            flowOf(emptyList())
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    private val _selectedVehicle = MutableStateFlow<com.example.data.vehicle.VehicleEntity?>(null)
+    val selectedVehicle: StateFlow<com.example.data.vehicle.VehicleEntity?> = _selectedVehicle.asStateFlow()
+
+    fun selectVehicle(vehicle: com.example.data.vehicle.VehicleEntity?) {
+        _selectedVehicle.value = vehicle
+    }
+
+    fun saveVehicle(
+        nickname: String,
+        vehicleType: String,
+        make: String,
+        model: String,
+        year: Int,
+        registrationNumber: String,
+        fuelType: String,
+        isEv: Boolean = false,
+        preferredServices: String = "",
+        isDefault: Boolean = false
+    ) {
+        val email = _currentUser.value?.email ?: return
+        viewModelScope.launch(Dispatchers.IO) {
+            val vehicle = com.example.data.vehicle.VehicleEntity(
+                userEmail = email,
+                nickname = nickname.ifBlank { "$make $model" },
+                vehicleType = vehicleType,
+                make = make.trim(),
+                model = model.trim(),
+                year = year,
+                registrationNumber = registrationNumber.trim().uppercase(),
+                fuelType = fuelType,
+                isEv = isEv,
+                preferredServices = preferredServices,
+                isDefault = isDefault
+            )
+            repository.saveVehicle(vehicle)
+            if (isDefault || _selectedVehicle.value == null) {
+                _selectedVehicle.value = vehicle
+            }
+            _uiMessage.value = "Vehicle '${vehicle.nickname}' saved successfully!"
+        }
+    }
+
+    fun deleteVehicle(vehicleId: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.deleteVehicle(vehicleId)
+            if (_selectedVehicle.value?.id == vehicleId) {
+                _selectedVehicle.value = null
+            }
+            _uiMessage.value = "Vehicle removed."
+        }
+    }
+
+    fun setDefaultVehicle(vehicleId: Int) {
+        val email = _currentUser.value?.email ?: return
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.setDefaultVehicle(email, vehicleId)
+            val updated = customerVehicles.value.firstOrNull { it.id == vehicleId }
+            _selectedVehicle.value = updated
+            _uiMessage.value = "Default vehicle updated."
+        }
+    }
+
+    // --- Admin Category Controls ---
+    fun toggleCategoryActive(categoryId: String, isActive: Boolean) {
+        repository.categoryRepository.toggleCategoryActive(categoryId, isActive)
+    }
+
+    fun toggleSubcategoryActive(categoryId: String, subcategoryId: String, isActive: Boolean) {
+        repository.categoryRepository.toggleSubcategoryActive(categoryId, subcategoryId, isActive)
+    }
+
+    fun updateCategoryAvailability(categoryId: String, availability: com.example.data.category.CategoryAvailability) {
+        repository.categoryRepository.updateCategoryAvailability(categoryId, availability)
+    }
+
+    fun updateCategoryPricing(categoryId: String, deliveryFee: Double) {
+        repository.categoryRepository.updateCategoryPricing(categoryId, deliveryFee)
+    }
+
     // --- Cross-device order sync (Firestore -> Room) ---
     // Mirrors the remote "orders" collection into local Room so that orders/status
     // placed on one device appear on another. All UI reads Room, so this makes the
     // whole app cross-device without touching individual screens.
     init {
+        // Sync initial prices to Category repository
+        repository.categoryRepository.syncLiveFuelPrices(
+            _petrolPrice.value,
+            _dieselPrice.value,
+            _highOctanePrice.value,
+            _lpgGasPrice.value,
+            _waterPrice.value
+        )
+
         viewModelScope.launch {
             _currentUser.flatMapLatest { user ->
                 when {
@@ -2260,6 +2377,41 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /**
+     * Unified service booking for all 10 categories (Fuel, Auto Repair, Roadside SOS, Detailing, etc.).
+     * Leverages real GPS coverage check and binds seamlessly to Room, Firestore, and rider dispatch.
+     */
+    fun bookCategoryService(
+        subcategory: com.example.data.category.Subcategory,
+        parentCategory: com.example.data.category.Category,
+        vehicle: com.example.data.vehicle.VehicleEntity? = null,
+        notes: String = "",
+        deliveryAddress: String = "",
+        quantity: Int = 1,
+        isEmergency: Boolean = false,
+        onSuccess: () -> Unit = {}
+    ) {
+        val vehSuffix = if (vehicle != null) " [${vehicle.make} ${vehicle.model} (${vehicle.registrationNumber})]" else ""
+        val notesSuffix = if (notes.isNotBlank()) " (Note: $notes)" else ""
+        val fullServiceType = "${parentCategory.name} - ${subcategory.name}$vehSuffix$notesSuffix"
+
+        val itemTotal = subcategory.basePrice * quantity
+        val baseFee = parentCategory.pricingConfig.deliveryFee
+        val emergencyFee = if (isEmergency || subcategory.isEmergency) parentCategory.pricingConfig.emergencySurcharge else 0.0
+        val grandTotal = (itemTotal + baseFee + emergencyFee).coerceAtLeast(300.0)
+
+        val targetAddr = if (deliveryAddress.isNotBlank()) deliveryAddress else _liveLocationCoordinates.value
+
+        placeOrder(
+            serviceType = fullServiceType,
+            quantity = quantity,
+            totalPrice = grandTotal,
+            deliveryAddress = targetAddr,
+            paymentMethod = "Cash on Delivery",
+            onSuccess = onSuccess
+        )
+    }
+
 
 
 
@@ -3170,6 +3322,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             _highOctanePrice.value = octane
             _lpgGasPrice.value = lpg
             _waterPrice.value = water
+
+            // Sync live rates into the Category architecture
+            repository.categoryRepository.syncLiveFuelPrices(petrol, diesel, octane, lpg, water)
 
             // Save to SharedPreferences
             sharedPrefs.edit()
