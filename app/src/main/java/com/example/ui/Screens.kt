@@ -3814,6 +3814,8 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val spotlight = rememberSpotlightState()
+    // Hoisted so the guided tour can scroll below-fold features into view before highlighting them.
+    val homeListState = rememberLazyListState()
     var isInitialDashboardLoading by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
@@ -3831,37 +3833,81 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
     // that measured element; null-anchor steps show a centered informational callout. `beforeShow`
     // runs a side-effect (open/close the nav drawer) so the tour visibly "takes the user to" the menu.
     val showTour by viewModel.showAppTourGuide.collectAsState()
+    // Scrolls a below-fold feature into view (and closes the drawer) so its anchor can be measured
+    // before the spotlight tries to highlight it. Item indices match the LazyColumn item{} order.
+    val revealItem: suspend (Int) -> Unit = { itemIndex ->
+        drawerState.close()
+        runCatching { homeListState.animateScrollToItem(itemIndex) }
+    }
     val homeTourSteps = remember {
         listOf(
             SpotlightStep(
                 anchorKey = null,
                 title = "Zyphuel mein khush aamdeed! 👋",
-                body = "Aaiye sirf 30 second mein app ka chhota sa tour karte hain — main aapko har feature tak le kar chalta hoon.",
-                icon = Icons.Filled.Celebration
+                body = "Aaiye 1 minute mein app ki har cheez ka tour karte hain — main aapko khud har feature tak le kar chalta hoon. Chaliye shuru karein!",
+                icon = Icons.Filled.Celebration,
+                beforeShow = { revealItem(0) }
             ),
             SpotlightStep(
                 anchorKey = "user_location_active_card",
                 title = "1) Apni Location set karein",
-                body = "Sab se pehle is card par tap kar ke apna delivery address ya GPS pin lagayein — sahi location par hi fuel pohnchega.",
+                body = "Sab se pehle apna delivery address dein — 'Auto Detect GPS' se live pin lagayein ya location icon se manually set karein. Sahi location par hi delivery pohnchegi.",
                 icon = Icons.Filled.LocationOn,
-                beforeShow = { drawerState.close() }
+                beforeShow = { revealItem(0) }
+            ),
+            SpotlightStep(
+                anchorKey = "home_search_bar",
+                title = "2) Kuch bhi search karein",
+                body = "Yahan type karein — oil, puncture, battery, fuel — kuch bhi. Search typo bhi samajh leta hai aur seedha us service par le jaata hai.",
+                icon = Icons.Filled.Search,
+                beforeShow = { revealItem(1) }
+            ),
+            SpotlightStep(
+                anchorKey = "home_quick_actions",
+                title = "3) Quick Actions",
+                body = "Sab se zyada istemaal hone wali cheezein ek tap par — Fuel, Auto Repair, Roadside SOS, Tyre aur Battery help. Foran madad ke liye behtareen.",
+                icon = Icons.Filled.Bolt,
+                beforeShow = { revealItem(2) }
+            ),
+            SpotlightStep(
+                anchorKey = "home_saved_vehicles",
+                title = "4) Apni Gaari save karein",
+                body = "Apni bike ya car ka profile add karein — phir har order personalized ho jaata hai aur 1-tap mein sahi service milti hai.",
+                icon = Icons.Filled.DirectionsCar,
+                beforeShow = { revealItem(3) }
             ),
             SpotlightStep(
                 anchorKey = "service_petrol",
-                title = "2) Service chunein",
-                body = "In cards se apni zaroorat chunein — Petrol, Diesel, High-Octane, LPG ya Pure Water. Rate live OGRA ke mutabiq hota hai.",
-                icon = Icons.Filled.LocalGasStation
+                title = "5) Services Marketplace",
+                body = "10 categories — Fuel, Repair, Tyres, Battery, Water aur bohat kuch. Kisi bhi card par tap kar ke us ki tamam services aur live rate dekhein.",
+                icon = Icons.Filled.GridView,
+                beforeShow = { revealItem(4) }
+            ),
+            SpotlightStep(
+                anchorKey = "home_order_history",
+                title = "6) Aapka Dashboard",
+                body = "Yahan aapke total kharche, mukammal deliveries aur poori order history milti hai. 'View Full History' se tafseel dekhein.",
+                icon = Icons.Filled.History,
+                beforeShow = { revealItem(7) }
+            ),
+            SpotlightStep(
+                anchorKey = "home_notifications",
+                title = "7) Notifications",
+                body = "Order status, rider updates aur offers ki tamam khabrein is ghanti par milti hain. Red badge naye alerts dikhata hai.",
+                icon = Icons.Filled.Notifications,
+                beforeShow = { revealItem(0) }
             ),
             SpotlightStep(
                 anchorKey = "home_fab",
-                title = "3) Order Now",
-                body = "Ya seedha 'Order Now' dabayein — quantity aur address de kar Cash-on-Delivery order sirf 1 tap mein complete.",
-                icon = Icons.Filled.ShoppingCart
+                title = "8) Order Now",
+                body = "Jaldi mein hain? Seedha 'Order Now' dabayein — quantity aur address de kar Cash-on-Delivery order sirf 1 tap mein mukammal.",
+                icon = Icons.Filled.ShoppingCart,
+                beforeShow = { revealItem(0) }
             ),
             SpotlightStep(
                 anchorKey = null,
-                title = "4) Aapka Menu",
-                body = "Yeh raha aapka menu — Profile, Security (fingerprint login), Order History aur Support sab yahin milta hai.",
+                title = "9) Aapka Menu",
+                body = "Yeh raha aapka menu — Profile Settings, Security (fingerprint login), Order History, Support aur FAQ sab yahin milta hai.",
                 icon = Icons.Filled.Menu,
                 dimBackground = false,
                 beforeShow = { drawerState.open() }
@@ -3869,7 +3915,7 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
             SpotlightStep(
                 anchorKey = null,
                 title = "Bas ho gaya! 🚀",
-                body = "Ab aap taiyaar hain. Fingerprint login enable karna na bhoolein aur apna pehla order abhi place karein!",
+                body = "Ab aap taiyaar hain! Fingerprint login enable karna na bhoolein aur apna pehla order abhi place karein. Yeh tour aap kabhi bhi menu se dobara chala sakte hain.",
                 icon = Icons.Filled.CheckCircle,
                 beforeShow = { drawerState.close() }
             )
@@ -3945,7 +3991,7 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                         val notifications by viewModel.notifications.collectAsState()
                         var showNotificationsDialog by remember { mutableStateOf(false) }
 
-                        Box(modifier = Modifier.padding(end = 8.dp)) {
+                        Box(modifier = Modifier.padding(end = 8.dp).spotlightAnchor(spotlight, "home_notifications")) {
                             IconButton(onClick = { showNotificationsDialog = true }) {
                                 Icon(Icons.Filled.Notifications, contentDescription = "Notifications", tint = ZyphuelBluePrimary)
                             }
@@ -3989,6 +4035,7 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
             }
         ) { innerPadding ->
             LazyColumn(
+                state = homeListState,
                 modifier = Modifier
                     .fillMaxSize()
                     .background(ZyphuelLightBackground)
@@ -4213,13 +4260,15 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                         searchResults = searchResults,
                         onSelectResult = { subcat, parentCat ->
                             selectedCategoryForModal = parentCat
-                        }
+                        },
+                        modifier = Modifier.spotlightAnchor(spotlight, "home_search_bar")
                     )
                 }
 
                 // Quick Action Bar
                 item {
                     QuickActionsBar(
+                        modifier = Modifier.spotlightAnchor(spotlight, "home_quick_actions"),
                         onActionClick = { catId ->
                             val cat = categories.firstOrNull { it.id == catId }
                             if (cat != null) {
@@ -4236,7 +4285,8 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                 item {
                     SavedVehiclesBar(
                         selectedVehicle = selectedVehicle,
-                        onOpenMyVehicles = { showMyVehiclesDialog = true }
+                        onOpenMyVehicles = { showMyVehiclesDialog = true },
+                        modifier = Modifier.spotlightAnchor(spotlight, "home_saved_vehicles")
                     )
                 }
 
@@ -4318,7 +4368,7 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
 
                 item {
                     Card(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().spotlightAnchor(spotlight, "home_order_history"),
                         colors = CardDefaults.cardColors(containerColor = Color.White),
                         shape = RoundedCornerShape(16.dp),
                         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
