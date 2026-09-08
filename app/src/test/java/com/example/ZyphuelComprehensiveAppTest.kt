@@ -257,24 +257,39 @@ class ZyphuelComprehensiveAppTest {
     }
 
     // =========================================================================
-    // 7. 8-STEP APP TOUR GUIDE INTEGRITY TEST
+    // 7. 13-STEP COMPREHENSIVE APP TOUR GUIDE INTEGRITY TEST
     // =========================================================================
     @Test
-    fun `test 8-Step App Tour Guide Step Count and Content Verification`() {
+    fun `test 13-Step Comprehensive App Tour Guide Step Count and Content Verification`() {
         val tourTitles = listOf(
-            "Welcome to Zyphuel! 🚚",
-            "Live OGRA Government Rates ⚡",
-            "Instant 1-Tap Ordering 🛒",
-            "Share Location Pin 📍",
-            "Clean Order Details & Stepper 📦",
-            "Direct Driver Contact 📞",
-            "Real-Time Email Inbox Delivery 📧",
-            "Biometrics & Verified Security 🛡️"
+            "Welcome to Zyphuel! 👋",
+            "1) Live GPS Location & Sharing 📍",
+            "2) Universal Typo-Tolerant Search 🔍",
+            "3) 1-Tap Emergency Quick Actions ⚡",
+            "4) My Saved Vehicles Profile 🚗",
+            "5) 10-Category Services Marketplace 🏬",
+            "6) Instant 1-Tap COD Ordering 🛒",
+            "7) Live 4-Stage Delivery Stepper 📦",
+            "8) Real-Time Emails & PDF Invoices 📧",
+            "9) Real-Time Notification Alerts 🔔",
+            "10) Your Delivery Dashboard 📊",
+            "11) Navigation Sidebar Menu ☰",
+            "12) Biometrics & Tour Complete! 🛡️"
         )
-        assertEquals(8, tourTitles.size)
+        assertEquals(13, tourTitles.size)
         assertTrue(tourTitles[0].contains("Welcome"))
-        assertTrue(tourTitles[6].contains("Real-Time Email"))
-        assertTrue(tourTitles[7].contains("Biometrics"))
+        assertTrue(tourTitles[1].contains("GPS Location"))
+        assertTrue(tourTitles[2].contains("Typo-Tolerant Search"))
+        assertTrue(tourTitles[3].contains("Emergency Quick Actions"))
+        assertTrue(tourTitles[4].contains("Saved Vehicles"))
+        assertTrue(tourTitles[5].contains("Services Marketplace"))
+        assertTrue(tourTitles[6].contains("1-Tap COD Ordering"))
+        assertTrue(tourTitles[7].contains("Delivery Stepper"))
+        assertTrue(tourTitles[8].contains("PDF Invoices"))
+        assertTrue(tourTitles[9].contains("Notification Alerts"))
+        assertTrue(tourTitles[10].contains("Delivery Dashboard"))
+        assertTrue(tourTitles[11].contains("Sidebar Menu"))
+        assertTrue(tourTitles[12].contains("Biometrics"))
     }
 
     // =========================================================================

@@ -17,8 +17,8 @@ android {
     applicationId = "com.aistudio.zyphuel.appv2"
     minSdk = 24
     targetSdk = 36
-    versionCode = 8
-    versionName = "2.4.1"
+    versionCode = 9
+    versionName = "2.4.2"
 
     manifestPlaceholders["MAPS_API_KEY"] = "AIzaZyphuelPlaceholderKey"
 

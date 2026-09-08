@@ -95,6 +95,13 @@
 * **Admin Category Control Tab**: Added Tab 8 in `AdminDashboardScreen` with instant live category availability toggles and pricing overrides.
 * **Version Advancement**: Updated `versionCode = 8` and `versionName = "2.4.1"` in `app/build.gradle.kts`.
 
+### Phase 12: Comprehensive 13-Step Interactive App Tour Overhaul & Modern Compose UI Polish (v2.4.2 Build 9)
+* **Comprehensive 13-Step Tour Architecture (`SpotlightOverlay` & `homeTourSteps`)**: Upgraded the on-screen guided tour from an 8/11-step basic walkthrough to a comprehensive 13-stage tour covering 100% of app features (Welcome Overview, Live GPS Pinpoint & Sharing, Universal Typo-Tolerant Search, Emergency SOS Quick Actions, Saved Vehicles Profile, 10-Category Marketplace, 1-Tap COD Ordering, Live 4-Stage Delivery Stepper, Automated Gmail Receipts & PDF Invoices, Notification Alerts, Delivery Dashboard, Sidebar Menu, and Biometric Security).
+* **Tesla & Apple Caliber Compose Polish (`SpotlightTour.kt`)**: Added top linear animated progress bar, category badge pills (`Surface`), actionable "💡 Pro Tip:" cards, smooth horizontal `AnimatedContent` slide & fade transitions between steps, and interactive clickable progress indicator dots (`state.jumpTo(targetIndex)`).
+* **Help Center & Sidebar Integration**: Re-launchable anytime from both the Navigation Drawer (`Take a Guided Tour 🧭`) and the Help Center / Support Dialog (`Take Guided App Tour (13 Steps) 🧭`).
+* **Test Suite Verification**: Updated `ZyphuelComprehensiveAppTest.kt` with 13-step integrity verification.
+* **Version Advancement**: Advanced `versionCode = 9` and `versionName = "2.4.2"` in `app/build.gradle.kts`.
+
 ---
 
 ## 🗄️ Database Entity Schema Reference

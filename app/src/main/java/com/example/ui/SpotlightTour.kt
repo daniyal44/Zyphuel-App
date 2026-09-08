@@ -1,16 +1,26 @@
 package com.example.ui
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateIntOffsetAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -31,19 +41,22 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -78,7 +91,10 @@ data class SpotlightStep(
     /** Anchor key registered via [Modifier.spotlightAnchor]; null renders a centered informational callout. */
     val anchorKey: String?,
     val title: String,
+    val subtitle: String? = null,
     val body: String,
+    val tip: String? = null,
+    val badge: String? = null,
     val icon: ImageVector? = null,
     /** Full dark scrim when true; a lighter scrim when false (e.g. to keep an opened drawer visible). */
     val dimBackground: Boolean = true,
@@ -123,6 +139,13 @@ class SpotlightState {
     fun back() {
         if (index > 0) {
             index -= 1
+            revealReady = false
+        }
+    }
+
+    fun jumpTo(targetIndex: Int) {
+        if (targetIndex in steps.indices && targetIndex != index) {
+            index = targetIndex
             revealReady = false
         }
     }
@@ -173,14 +196,13 @@ fun SpotlightOverlay(
         val cornerPx = with(density) { 16.dp.toPx() }
         val ringStrokePx = with(density) { 3.dp.toPx() }
 
-        val rawAnchor: Rect? = step.anchorKey?.let { state.anchors[it] }
-        val hasCutout = state.revealReady && rawAnchor != null && !rawAnchor.isEmpty
-        val target: Rect? = if (hasCutout && rawAnchor != null) {
+        val anchor: Rect? = step.anchorKey?.let { state.anchors[it] }
+        val target: Rect? = if (state.revealReady && anchor != null && !anchor.isEmpty) {
             Rect(
-                left = (rawAnchor.left - padPx).coerceAtLeast(0f),
-                top = (rawAnchor.top - padPx).coerceAtLeast(0f),
-                right = (rawAnchor.right + padPx).coerceAtMost(wPx),
-                bottom = (rawAnchor.bottom + padPx).coerceAtMost(hPx)
+                left = (anchor.left - padPx).coerceAtLeast(0f),
+                top = (anchor.top - padPx).coerceAtLeast(0f),
+                right = (anchor.right + padPx).coerceAtMost(wPx),
+                bottom = (anchor.bottom + padPx).coerceAtMost(hPx)
             )
         } else null
 
@@ -225,7 +247,7 @@ fun SpotlightOverlay(
         }
 
         // ---- Callout placement ----
-        val calloutWidthDp = if (maxWidth - 32.dp <= 360.dp) maxWidth - 32.dp else 360.dp
+        val calloutWidthDp = if (maxWidth - 32.dp <= 380.dp) maxWidth - 32.dp else 380.dp
         val calloutWidthPx = with(density) { calloutWidthDp.toPx() }
         var calloutHeightPx by remember { mutableIntStateOf(0) }
 
@@ -254,113 +276,223 @@ fun SpotlightOverlay(
                 .offset { animatedOffset }
                 .onSizeChanged { calloutHeightPx = it.height }
                 .testTag("spotlight_callout"),
-            shape = RoundedCornerShape(20.dp),
+            shape = RoundedCornerShape(22.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
+            elevation = CardDefaults.cardElevation(defaultElevation = 14.dp),
+            border = BorderStroke(1.dp, Color(0xFFE2E8F0))
         ) {
-            Column(modifier = Modifier.padding(20.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "STEP ${state.index + 1} OF ${state.count}",
-                        style = MaterialTheme.typography.labelMedium.copy(
-                            color = ZyphuelBluePrimary,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 1.sp
-                        )
-                    )
-                    TextButton(
-                        onClick = onSkip,
-                        modifier = Modifier.testTag("spotlight_skip_btn"),
-                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 0.dp)
+            Column {
+                // Top Linear Animated Progress Bar
+                val targetProgress = if (state.count > 0) (state.index + 1).toFloat() / state.count else 0f
+                val animatedProgress by animateFloatAsState(
+                    targetValue = targetProgress,
+                    animationSpec = tween(350, easing = FastOutSlowInEasing),
+                    label = "spotlight_progress"
+                )
+                LinearProgressIndicator(
+                    progress = { animatedProgress },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(4.dp),
+                    color = ZyphuelBluePrimary,
+                    trackColor = Color(0xFFF1F5F9)
+                )
+
+                Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)) {
+                    // Header Row: Category Badge + Progress Text + Skip Button
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Skip", style = MaterialTheme.typography.labelMedium.copy(color = Color.Gray))
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                Row(verticalAlignment = Alignment.Top) {
-                    if (step.icon != null) {
-                        Box(
-                            modifier = Modifier
-                                .size(44.dp)
-                                .background(ZyphuelBluePrimary.copy(alpha = 0.12f), CircleShape),
-                            contentAlignment = Alignment.Center
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Icon(
-                                imageVector = step.icon,
-                                contentDescription = null,
-                                tint = ZyphuelBluePrimary,
-                                modifier = Modifier.size(22.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(14.dp))
-                    }
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = step.title,
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                color = ZyphuelBlueDark,
-                                fontWeight = FontWeight.Bold
-                            )
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = step.body,
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                color = Color.DarkGray,
-                                lineHeight = 20.sp
-                            )
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Progress dots
-                    Row(horizontalArrangement = Arrangement.spacedBy(5.dp), verticalAlignment = Alignment.CenterVertically) {
-                        repeat(state.count) { i ->
-                            Box(
-                                modifier = Modifier
-                                    .size(width = if (i == state.index) 18.dp else 7.dp, height = 7.dp)
-                                    .background(
-                                        if (i == state.index) ZyphuelBluePrimary else Color.LightGray,
-                                        CircleShape
-                                    )
-                            )
-                        }
-                    }
-
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        if (state.index > 0) {
-                            OutlinedButton(
-                                onClick = { state.back() },
-                                modifier = Modifier.height(38.dp).testTag("spotlight_back_btn"),
-                                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 14.dp),
-                                colors = ButtonDefaults.outlinedButtonColors(contentColor = ZyphuelBluePrimary)
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = ZyphuelBluePrimary.copy(alpha = 0.12f)
                             ) {
-                                Text("Back", style = MaterialTheme.typography.labelMedium)
+                                Text(
+                                    text = step.badge ?: "STEP ${state.index + 1} OF ${state.count}",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        color = ZyphuelBluePrimary,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 10.sp,
+                                        letterSpacing = 0.8.sp
+                                    ),
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                )
+                            }
+                            Text(
+                                text = "Step ${state.index + 1}/${state.count}",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    color = Color.Gray,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            )
+                        }
+
+                        TextButton(
+                            onClick = onSkip,
+                            modifier = Modifier.testTag("spotlight_skip_btn"),
+                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 6.dp, vertical = 0.dp)
+                        ) {
+                            Text("Skip Tour ✕", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontWeight = FontWeight.SemiBold))
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Animated Step Content (Icon + Title + Subtitle + Body + Pro Tip)
+                    AnimatedContent(
+                        targetState = state.index,
+                        transitionSpec = {
+                            if (targetState > initialState) {
+                                (slideInHorizontally(animationSpec = tween(280, easing = FastOutSlowInEasing)) { width -> width / 3 } + fadeIn(animationSpec = tween(220)))
+                                    .togetherWith(
+                                        slideOutHorizontally(animationSpec = tween(280, easing = FastOutSlowInEasing)) { width -> -width / 3 } + fadeOut(animationSpec = tween(180))
+                                    )
+                            } else {
+                                (slideInHorizontally(animationSpec = tween(280, easing = FastOutSlowInEasing)) { width -> -width / 3 } + fadeIn(animationSpec = tween(220)))
+                                    .togetherWith(
+                                        slideOutHorizontally(animationSpec = tween(280, easing = FastOutSlowInEasing)) { width -> width / 3 } + fadeOut(animationSpec = tween(180))
+                                    )
+                            }
+                        },
+                        label = "spotlight_step_content_anim"
+                    ) { currentIdx ->
+                        val item = state.steps.getOrNull(currentIdx) ?: return@AnimatedContent
+                        Column {
+                            Row(verticalAlignment = Alignment.Top) {
+                                if (item.icon != null) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(46.dp)
+                                            .background(ZyphuelBluePrimary.copy(alpha = 0.12f), CircleShape),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = item.icon,
+                                            contentDescription = null,
+                                            tint = ZyphuelBluePrimary,
+                                            modifier = Modifier.size(24.dp)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                }
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = item.title,
+                                        style = MaterialTheme.typography.titleMedium.copy(
+                                            color = ZyphuelBlueDark,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    )
+                                    if (!item.subtitle.isNullOrBlank()) {
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(
+                                            text = item.subtitle,
+                                            style = MaterialTheme.typography.labelMedium.copy(
+                                                color = ZyphuelBluePrimary,
+                                                fontWeight = FontWeight.SemiBold
+                                            )
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    Text(
+                                        text = item.body,
+                                        style = MaterialTheme.typography.bodyMedium.copy(
+                                            color = Color(0xFF334155),
+                                            lineHeight = 20.sp
+                                        )
+                                    )
+                                }
+                            }
+
+                            if (!item.tip.isNullOrBlank()) {
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Surface(
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = Color(0xFFF8FAFC),
+                                    border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Text(
+                                            text = "💡",
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                        Text(
+                                            text = item.tip,
+                                            style = MaterialTheme.typography.bodySmall.copy(
+                                                color = Color(0xFF475569),
+                                                fontWeight = FontWeight.Normal,
+                                                lineHeight = 16.sp
+                                            )
+                                        )
+                                    }
+                                }
                             }
                         }
-                        Button(
-                            onClick = { if (state.isLast) onFinish() else state.next() },
-                            modifier = Modifier.height(38.dp).testTag("spotlight_next_btn"),
-                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 18.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = ZyphuelBluePrimary)
+                    }
+
+                    Spacer(modifier = Modifier.height(18.dp))
+
+                    // Bottom Navigation Bar: Clickable Jump Dots + Back Button + Next / Finish Button
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Interactive Step Dots
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = if (state.isLast) "Done" else "Next",
-                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold, color = Color.White)
-                            )
+                            repeat(state.count) { i ->
+                                val isCurrent = (i == state.index)
+                                Box(
+                                    modifier = Modifier
+                                        .height(7.dp)
+                                        .width(if (isCurrent) 18.dp else 6.dp)
+                                        .clip(CircleShape)
+                                        .background(if (isCurrent) ZyphuelBluePrimary else Color(0xFFCBD5E1))
+                                        .clickable { state.jumpTo(i) }
+                                        .testTag("spotlight_step_dot_$i")
+                                )
+                            }
+                        }
+
+                        // Navigation Buttons
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            if (state.index > 0) {
+                                OutlinedButton(
+                                    onClick = { state.back() },
+                                    modifier = Modifier.height(38.dp).testTag("spotlight_back_btn"),
+                                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp),
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = ZyphuelBluePrimary),
+                                    shape = RoundedCornerShape(10.dp)
+                                ) {
+                                    Text("Back", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                                }
+                            }
+                            Button(
+                                onClick = { if (state.isLast) onFinish() else state.next() },
+                                modifier = Modifier.height(38.dp).testTag("spotlight_next_btn"),
+                                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = ZyphuelBluePrimary),
+                                shape = RoundedCornerShape(10.dp)
+                            ) {
+                                Text(
+                                    text = if (state.isLast) "Start Exploring 🚀" else "Next ➔",
+                                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold, color = Color.White)
+                                )
+                            }
                         }
                     }
                 }
