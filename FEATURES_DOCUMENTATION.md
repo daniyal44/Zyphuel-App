@@ -1,5 +1,5 @@
 # 🚀 Zyphuel App Features & Technical Documentation
-**App Version:** `v2.4.1 (Build 8)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** `2026`
+**App Version:** `v2.4.2 (Build 9)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** `2026`
 
 Welcome to the complete architectural and functional guide for the **Zyphuel** Android application. This document outlines every single feature, function, database entity, and user flow from start to finish.
 
@@ -90,10 +90,23 @@ The app strictly segments access control across three user roles:
   * **Cloud HTTPS Webhook Relay (Google Apps Script / Webhook Backup over Port 443)**: Serverless HTTPS relay backup over Port 443, ensuring guaranteed email delivery even when mobile cellular operators (Zong, Jazz, Ufone) block raw SMTP ports. Handles 302 redirects with dual-method (`doPost` & `doGet`) execution.
   * **Admin Live SMTP Settings, Cloud Sync & Diagnostic Dispatch Tool (`Screens.kt` Tab 6)**: Admin console tab equipped with live credentials configuration, "Save & Sync to Cloud" button, one-click "Copy Free Apps Script Relay Code" tool, 1-minute Google App Password guide, and a live "🧪 Send Test Email" button providing instant round-trip diagnostic feedback.
   * **Transparent Diagnostic Alerts**: Automatically notifies administrators on-screen if email delivery is attempted without an active Google App Password or Webhook URL configured.
-* **8-Step Interactive App Tour Guide (`AppTourGuideDialog`)**:
-  * **Interactive Onboarding Modal**: First-time users are greeted with a full 8-step interactive tour explaining Doorstep Fuel & Essentials, Live OGRA Rates, 1-Tap COD Ordering, Share Location, Order Details & 4-Step Stepper, Direct Driver Communication, Real-Time Emails, and Biometric Security.
-  * **Flexible Navigation**: Features initial **"Take Tour (8 Steps) 🚀"** and **"Skip for Now"** options, with visual step indicators (`Step X of 8`), linear progress bar, Back/Next controls, and persistent storage so returning users are not re-prompted.
-  * **Always Accessible**: Users can re-launch the full 8-step guide anytime via the Navigation Drawer (`App Tour Guide (8 Steps) 📖`).
+* **13-Step Comprehensive Interactive App Tour Guide (`SpotlightOverlay` & `homeTourSteps`)**:
+  * **All-Feature Guided Walkthrough**: Interactive coach-mark spotlight tour with precision on-screen element cutouts and rich informational callouts across 13 core stages:
+    1. Welcome to Zyphuel & Doorstep Energy Overview
+    2. Live GPS Pinpoint & Instant Location Sharing (`user_location_active_card`)
+    3. Universal Typo-Tolerant Search Across 10 Categories (`home_search_bar`)
+    4. 1-Tap Emergency Roadside & Essential SOS Shortcuts (`home_quick_actions`)
+    5. My Saved Vehicles Profile & Specs Optimization (`home_saved_vehicles`)
+    6. 10-Category Services Marketplace & Live OGRA Rates (`service_petrol`)
+    7. Instant 1-Tap COD Ordering (`home_fab`)
+    8. Live 4-Stage Delivery Progress Stepper & Direct Driver Contact
+    9. Real-Time Automated Gmail Receipts & Downloadable PDF Invoices
+    10. Real-Time Notification Bell & Dispatch Alerts (`home_notifications`)
+    11. Delivery Dashboard, Total Spend & Order History Insights (`home_order_history`)
+    12. Comprehensive Sidebar Navigation Drawer (`drawerState.open()`)
+    13. Biometric Security (Fingerprint/Face Unlock) & Tour Wrap-up
+  * **Tesla & Apple Caliber Compose UI**: Animated linear progress bar, category pills (e.g. `GPS & LIVE LOCATION`, `1-TAP COD ORDERING`), actionable "💡 Pro Tip:" cards, smooth horizontal `AnimatedContent` slide/fade transitions, and interactive clickable progress indicator dots allowing users to jump directly to any step.
+  * **Always Accessible**: Re-launchable anytime from both the Navigation Drawer (`Take a Guided Tour 🧭`) and Help Center (`Take Guided App Tour (13 Steps) 🧭`).
 * **Admin Order Accept, Self-Delivery & Full Lifecycle Controls (`adminAcceptOrder`, `changeOrderStatus` & `adminDeclineOrder`)**:
   * **Admin Action Buttons on `AdminOrderCard`**: Context-sensitive interactive action buttons directly on each admin order card (`Accept` for Pending, `Start Delivery 🚚` for Assigned, `Mark Delivered ✅` for Delivering/Arrived, and `Decline ❌` for cancellation).
   * **Instant Acceptance with Intelligent Self-Delivery Fallback (`adminAcceptOrder`)**: Approves pending orders. If an active verified rider is online, automatically assigns them; if no rider is available, seamlessly assigns the Administrator themselves (`Admin Direct Delivery`) with the Admin's email (`m.daniyalkhan490@gmail.com`). Updates Room DB & Firestore and dispatches real-time confirmation emails.
@@ -399,18 +412,29 @@ The app strictly segments access control across three user roles:
   * **Firestore REST Client (`FirestoreRest.kt`, `DesktopConfig.kt`)**: Zero-dependency REST-based Cloud Firestore streaming client connecting with Firebase project credentials without requiring full Android SDK dependencies.
   * **One-Click Launch Scripts**: `RUN-DESKTOP.bat` and `RUN-DESKTOP-DEBUG.bat` for seamless local execution on Windows/macOS/Linux.
 
-## 11.10 Practical App Tour, Downloadable PDF Invoices & Delivery Fee Standardization
-* **Revamped Practical Step-by-Step App Tour Guide (`AppTourGuideDialog` in `Screens.kt`)**:
-  * Replaced generic marketing slides with concrete, actionable step-by-step guidance on how to use the app in practice:
-    1. **Service Selection**: Tap Super Petrol, High-Speed Diesel, High Octane, Pure Mineral Water, or LPG Cylinder cards on Home Screen.
-    2. **Quantity & Simple Address**: Configure liters/gallons with `+`/`-` stepper and enter delivery address directly with GPS location option.
-    3. **Pricing & 1-Tap COD**: Transparent live OGRA prices, standardized delivery fee, and instant COD confirmation.
-    4. **Live Order Tracker**: 4-stage visual status progress (Pending ➔ Assigned ➔ Out for Delivery ➔ Delivered) with live ETA countdown.
-    5. **Driver Contact**: 1-tap direct phone dialer and in-app live chat for dropoff instructions.
-    6. **Tax Invoices**: 1-tap PDF invoice download and real-time Gmail inbox receipt dispatch.
-    7. **Sidebar Menu**: Access order history, repeat previous orders with 1-tap, and relaunch the App Tour anytime.
-    8. **Biometric Security**: Quick fingerprint and face unlock configuration for instant secure logins.
-  * Motion polish: Fluid `AnimatedContent` slide/fade transitions and animated progress indicator (`FastOutSlowInEasing`).
+## 11.10 Comprehensive 13-Step Interactive App Tour, Downloadable PDF Invoices & Delivery Fee Standardization
+* **Revamped Comprehensive 13-Step Interactive App Tour Guide (`SpotlightOverlay` & `SpotlightTour.kt`)**:
+  * Precision on-screen element spotlight cutouts and rich callouts guiding users through 100% of real app features:
+    1. **Welcome to Zyphuel**: Overview of Lahore doorstep energy delivery (Petrol, Diesel, Octane, LPG, Mineral Water) at official OGRA rates.
+    2. **Live GPS Pinpoint & Location Sharing (`user_location_active_card`)**: Auto-detecting live GPS coordinates and 1-tap WhatsApp/Maps link sharing.
+    3. **Universal Typo-Tolerant Search (`home_search_bar`)**: Instant search across all 10 categories, fuel types, and fluids, even with typos.
+    4. **1-Tap Emergency Quick Actions (`home_quick_actions`)**: Instant SOS roadside assistance for urgent fuel, puncture, jumpstart, and mechanic.
+    5. **My Saved Vehicles Profile (`home_saved_vehicles`)**: Vehicle profiles for personalized fuel tank capacities and recommended engine oils.
+    6. **10-Category Services Marketplace (`service_petrol`)**: Complete marketplace with live transparent OGRA rates.
+    7. **Instant 1-Tap COD Ordering (`home_fab`)**: Liters stepper, price breakdown, and risk-free Cash-on-Delivery confirmation.
+    8. **Live 4-Stage Delivery Stepper & Driver Contact**: Real-time status milestones (Pending ➔ Assigned ➔ Out for Delivery ➔ Completed) with direct Phone dialer and live WhatsApp chat.
+    9. **Automated Gmail Receipts & Downloadable PDF Invoices**: Itemized tax invoices with QR codes saved directly to device storage.
+    10. **Real-Time Notification Bell (`home_notifications`)**: Live updates on dispatch assignments, rider arrival, and promo deals.
+    11. **Delivery Dashboard & Insights (`home_order_history`)**: Total rupees spent, completed deliveries count, and 1-tap repeat orders.
+    12. **Navigation Sidebar Menu (`drawerState.open()`)**: Access to Profile Settings, Security, Saved Locations, and 24/7 Help Center.
+    13. **Biometric Security & Finish**: Biometric fingerprint/face unlock configuration for instant, secure logins.
+  * Motion & Interaction Polish:
+    * Top animated linear progress bar (`FastOutSlowInEasing`) with completion percentage.
+    * Category badge pills (`GPS & LIVE LOCATION`, `EMERGENCY SOS`, `1-TAP COD ORDERING`, etc.).
+    * Actionable "💡 Pro Tip:" cards for every step.
+    * Fluid `AnimatedContent` slide/fade horizontal transitions between steps.
+    * Interactive clickable progress dots/pills allowing users to jump directly to any step (`jumpTo`).
+    * Re-launchable from both Navigation Drawer (`Take a Guided Tour 🧭`) and Help Center (`Take Guided App Tour (13 Steps) 🧭`).
 * **Official Order Invoice Generation & PDF Download (`InvoiceGenerator.kt`, `InvoiceDialog`)**:
   * **Interactive Invoice Modal (`InvoiceDialog`)**: Detailed preview showing company header, customer details, assigned rider info, itemized rate and quantity table, delivery fee, and total COD payable.
   * **Native Android PDF Download (`printOrSavePdf`)**: Leverages Android `PrintManager` and `WebView` to allow users to "Save as PDF" to phone storage or print directly without requiring risky storage permissions.

@@ -3843,80 +3843,133 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
         listOf(
             SpotlightStep(
                 anchorKey = null,
-                title = "Zyphuel mein khush aamdeed! 👋",
-                body = "Aaiye 1 minute mein app ki har cheez ka tour karte hain — main aapko khud har feature tak le kar chalta hoon. Chaliye shuru karein!",
+                title = "Welcome to Zyphuel! 👋",
+                subtitle = "Lahore's Instant Doorstep Energy & Services",
+                body = "Zyphuel brings pure fuel (Super Petrol, High-Speed Diesel, High Octane), pure drinking water, LPG cylinders, and auto workshop mechanics directly to your doorstep in Lahore at 100% official OGRA rates. Chaliye, har feature ka mukammal live tour karte hain!",
+                tip = "Aap yeh tour kisi bhi waqt sidebar drawer menu se dobara open kar sakte hain.",
+                badge = "WELCOME TO ZYPHUEL",
                 icon = Icons.Filled.Celebration,
                 beforeShow = { revealItem(0) }
             ),
             SpotlightStep(
                 anchorKey = "user_location_active_card",
-                title = "1) Apni Location set karein",
-                body = "Sab se pehle apna delivery address dein — 'Auto Detect GPS' se live pin lagayein ya location icon se manually set karein. Sahi location par hi delivery pohnchegi.",
+                title = "1) Live GPS Location & Sharing 📍",
+                subtitle = "Accurate Doorstep Pin & Quick Maps Link",
+                body = "Sab se pehle apna delivery address set karein. 'Auto Detect GPS' se live satellite coordinates lock karein ya location icon se address customize karein. 'Share Location' button se live Google Maps link kisi ko bhi share karein.",
+                tip = "Hamesha accurate GPS pin set karein taake delivery rider bina delay seedha aap tak pohnche.",
+                badge = "GPS & LIVE LOCATION",
                 icon = Icons.Filled.LocationOn,
                 beforeShow = { revealItem(0) }
             ),
             SpotlightStep(
                 anchorKey = "home_search_bar",
-                title = "2) Kuch bhi search karein",
-                body = "Yahan type karein — oil, puncture, battery, fuel — kuch bhi. Search typo bhi samajh leta hai aur seedha us service par le jaata hai.",
+                title = "2) Universal Typo-Tolerant Search 🔍",
+                subtitle = "Find Any Fuel, Fluid or Repair Service in Seconds",
+                body = "Search bar mein kuch bhi type karein — 'petrol', 'mobil oil', 'battery', 'tyre puncture', 'car wash'. Agar spelling mein ghalti bhi ho (maslan 'patrol' ya 'bettery'), hamara smart search foran sahi category dhund leta hai.",
+                tip = "Search results par tap karke aap direct us service ke live rate aur details dekh sakte hain.",
+                badge = "SMART SEARCH",
                 icon = Icons.Filled.Search,
                 beforeShow = { revealItem(1) }
             ),
             SpotlightStep(
                 anchorKey = "home_quick_actions",
-                title = "3) Quick Actions",
-                body = "Sab se zyada istemaal hone wali cheezein ek tap par — Fuel, Auto Repair, Roadside SOS, Tyre aur Battery help. Foran madad ke liye behtareen.",
+                title = "3) 1-Tap Emergency Quick Actions ⚡",
+                subtitle = "Urgent Fuel Top-Up, SOS, Tyre & Battery Rescue",
+                body = "Sarak par ya ghar par emergency? Quick Actions bar se foran Doorstep Fuel, Auto Repair, Roadside SOS, Flat Tyre Puncture aur Battery Jumpstart sirf 1 tap par mangwayein.",
+                tip = "Raat ke waqt ya emergency breakdown par 'Roadside SOS' instant response trigger karta hai.",
+                badge = "EMERGENCY SOS",
                 icon = Icons.Filled.Bolt,
                 beforeShow = { revealItem(2) }
             ),
             SpotlightStep(
                 anchorKey = "home_saved_vehicles",
-                title = "4) Apni Gaari save karein",
-                body = "Apni bike ya car ka profile add karein — phir har order personalized ho jaata hai aur 1-tap mein sahi service milti hai.",
+                title = "4) My Saved Vehicles Profile 🚗",
+                subtitle = "Personalized Fuel Tanks, Oil Specs & Fast Ordering",
+                body = "Apni bike ya car ka profile (Make, Model, Engine) save karein. App aapki gaari ke mutabiq fuel capacity aur recommended engine oil auto-calculate kar leta hai taake har order personalized rahe.",
+                tip = "Multiple gaariyan add kar sakte hain — order karte waqt sirf gaari select karein.",
+                badge = "VEHICLE GARAGE",
                 icon = Icons.Filled.DirectionsCar,
                 beforeShow = { revealItem(3) }
             ),
             SpotlightStep(
                 anchorKey = "service_petrol",
-                title = "5) Services Marketplace",
-                body = "10 categories — Fuel, Repair, Tyres, Battery, Water aur bohat kuch. Kisi bhi card par tap kar ke us ki tamam services aur live rate dekhein.",
+                title = "5) 10-Category Services Marketplace 🏬",
+                subtitle = "Transparent OGRA Rates • Fuel, Water, Gas & Auto Care",
+                body = "10 mukammal categories — Petrol, Diesel, High Octane, Pure Drinking Water (Rs. 50/gallon), LPG Gas Cylinders, Car Wash, Engine Oil, Battery, Tyres, aur AC Repair. Sab live rates transparent hain.",
+                tip = "Kisi bhi card par tap karein aur uski sub-services aur official rates check karein.",
+                badge = "SERVICES MARKETPLACE",
                 icon = Icons.Filled.GridView,
                 beforeShow = { revealItem(4) }
             ),
             SpotlightStep(
-                anchorKey = "home_order_history",
-                title = "6) Aapka Dashboard",
-                body = "Yahan aapke total kharche, mukammal deliveries aur poori order history milti hai. 'View Full History' se tafseel dekhein.",
-                icon = Icons.Filled.History,
-                beforeShow = { revealItem(7) }
-            ),
-            SpotlightStep(
-                anchorKey = "home_notifications",
-                title = "7) Notifications",
-                body = "Order status, rider updates aur offers ki tamam khabrein is ghanti par milti hain. Red badge naye alerts dikhata hai.",
-                icon = Icons.Filled.Notifications,
-                beforeShow = { revealItem(0) }
-            ),
-            SpotlightStep(
                 anchorKey = "home_fab",
-                title = "8) Order Now",
-                body = "Jaldi mein hain? Seedha 'Order Now' dabayein — quantity aur address de kar Cash-on-Delivery order sirf 1 tap mein mukammal.",
+                title = "6) Instant 1-Tap COD Ordering 🛒",
+                subtitle = "No Credit Card Required • 100% Risk-Free Checkout",
+                body = "Jaldi mein hain? 'Order Now' button dabayein! Quantity (Liters/Gallons) choose karein, total amount dekhein aur 1 tap mein Cash on Delivery order confirm karein. Zero advance payment, zero friction!",
+                tip = "30 Liters se baray orders par high-volume bulk bowser support aur WhatsApp hotline milti hai.",
+                badge = "1-TAP COD ORDERING",
                 icon = Icons.Filled.ShoppingCart,
                 beforeShow = { revealItem(0) }
             ),
             SpotlightStep(
                 anchorKey = null,
-                title = "9) Aapka Menu",
-                body = "Yeh raha aapka menu — Profile Settings, Security (fingerprint login), Order History, Support aur FAQ sab yahin milta hai.",
+                title = "7) Live 4-Stage Delivery Stepper 📦",
+                subtitle = "Real-Time Status Milestones & Direct Rider Contact",
+                body = "Order confirm hotay hi live tracking stepper activate ho jata hai: Order Placed ➔ Rider Assigned ➔ Out for Delivery ➔ Completed. Driver profile se direct Phone Call dial karein ya live WhatsApp chat karein.",
+                tip = "Driver ke aane par OTP ya inspection verify karein aur tasalli ke baad COD ada karein.",
+                badge = "LIVE ORDER TRACKING",
+                icon = Icons.Filled.LocalShipping,
+                beforeShow = { revealItem(0) }
+            ),
+            SpotlightStep(
+                anchorKey = null,
+                title = "8) Real-Time Emails & PDF Invoices 📧",
+                subtitle = "Automated Gmail Receipts & Downloadable Tax Invoices",
+                body = "Har order par aapko instant official confirmation email milti hai jisme itemized breakdown aur total bill hota hai. Order details se aap official OGRA-compliant PDF tax invoice bhi 1 click mein download kar sakte hain.",
+                tip = "Downloaded PDF invoices aapke device ke Downloads folder mein permanent save hoti hain.",
+                badge = "INVOICES & EMAILS",
+                icon = Icons.Filled.Email,
+                beforeShow = { revealItem(0) }
+            ),
+            SpotlightStep(
+                anchorKey = "home_notifications",
+                title = "9) Real-Time Notification Alerts 🔔",
+                subtitle = "Dispatch Updates, Driver Arrival & Promo Deals",
+                body = "Yeh notification bell aapko har ahem update deti hai — rider dispatch alerts, status changes aur special fuel discount offers. Unread count badge se koi alert miss nahi hota.",
+                tip = "Bell icon par tap karke aap apni notification history dekh aur clear kar sakte hain.",
+                badge = "NOTIFICATIONS & ALERTS",
+                icon = Icons.Filled.Notifications,
+                beforeShow = { revealItem(0) }
+            ),
+            SpotlightStep(
+                anchorKey = "home_order_history",
+                title = "10) Your Delivery Dashboard 📊",
+                subtitle = "Track Total Spent, Completed Orders & 1-Tap Re-Order",
+                body = "Aapka personal dashboard jahan aapka total kharcha, completed deliveries ka count, aur mukammal past orders show hotay hain. 'View Full History' se purane order ko 1-tap se repeat karein.",
+                tip = "Filter chips (Delivered / Cancelled) se kisi bhi puranay order ko foran talash karein.",
+                badge = "ORDER DASHBOARD",
+                icon = Icons.Filled.History,
+                beforeShow = { revealItem(6) }
+            ),
+            SpotlightStep(
+                anchorKey = null,
+                title = "11) Navigation Sidebar Menu ☰",
+                subtitle = "Profile, Security, Help Center & Legal Policies",
+                body = "Top left menu (☰) se aap Profile Settings, Security, Saved Locations, Terms & Conditions, Privacy Policy aur 24/7 Help Center access kar sakte hain.",
+                tip = "Koi bhi sawal ho toh 'Live Support & Help Center' se WhatsApp aur Phone helpline par rabta karein.",
+                badge = "SIDEBAR NAVIGATION",
                 icon = Icons.Filled.Menu,
                 dimBackground = false,
                 beforeShow = { drawerState.open() }
             ),
             SpotlightStep(
                 anchorKey = null,
-                title = "Bas ho gaya! 🚀",
-                body = "Ab aap taiyaar hain! Fingerprint login enable karna na bhoolein aur apna pehla order abhi place karein. Yeh tour aap kabhi bhi menu se dobara chala sakte hain.",
-                icon = Icons.Filled.CheckCircle,
+                title = "12) Biometrics & Tour Complete! 🛡️",
+                subtitle = "Fingerprint Login & You're Ready to Order!",
+                body = "Mubarak ho! Aapne Zyphuel ka mukammal tour complete kar liya hai. Apne account ko mehfooz rakhne ke liye settings se Fingerprint / Biometric login zaroor on karein. Happy Ordering!",
+                tip = "Yeh tour aap kabhi bhi sidebar menu se 'Take a Guided Tour 🧭' tap karke dobara chala sakte hain.",
+                badge = "BIOMETRICS & READY",
+                icon = Icons.Filled.Fingerprint,
                 beforeShow = { drawerState.close() }
             )
         )
@@ -10089,6 +10142,30 @@ fun SupportDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
                         question = "4. Can I cancel or modify my delivery order?",
                         answer = "Yes, you can cancel an order from your active tracking card before a rider is dispatched or by contacting WhatsApp support."
                     )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Interactive Guided App Tour trigger button
+                    OutlinedButton(
+                        onClick = {
+                            onDismiss()
+                            viewModel.openAppTourGuide()
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(44.dp)
+                            .testTag("help_center_start_tour_btn"),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = ZyphuelBluePrimary),
+                        border = BorderStroke(1.5.dp, ZyphuelBluePrimary)
+                    ) {
+                        Icon(Icons.Filled.Explore, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            "Take Guided App Tour (13 Steps) 🧭",
+                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
+                        )
+                    }
 
                     Spacer(modifier = Modifier.height(8.dp))
                 }
