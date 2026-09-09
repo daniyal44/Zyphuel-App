@@ -3423,8 +3423,8 @@ fun DrawerContent(
                     Text(
                         text = "Zyphuel is an early-stage startup operating in Lahore, not a large corporation.",
                         style = MaterialTheme.typography.labelSmall.copy(
-                            color = Color(0xFF1E40AF),
-                            fontWeight = FontWeight.SemiBold,
+                            color = Color.Black,
+                            fontWeight = FontWeight.Bold,
                             fontSize = 11.sp,
                             lineHeight = 15.sp
                         )
@@ -3464,7 +3464,7 @@ fun DrawerContent(
                                 text = "CATEGORIES & SERVICES",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontWeight = FontWeight.Bold,
-                                    color = ZyphuelBlueDark,
+                                    color = Color.Black,
                                     letterSpacing = 0.5.sp
                                 )
                             )
@@ -3472,7 +3472,7 @@ fun DrawerContent(
                         Icon(
                             imageVector = if (categoriesFolded) Icons.Filled.ExpandMore else Icons.Filled.ExpandLess,
                             contentDescription = if (categoriesFolded) "Expand Categories" else "Collapse Categories",
-                            tint = Color.Gray,
+                            tint = Color.Black,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -3494,8 +3494,8 @@ fun DrawerContent(
                                 Text("⛽", fontSize = 16.sp)
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Column {
-                                    Text("Petrol (2 Types)", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark))
-                                    Text("Regular Petrol • High-Octane", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontSize = 10.sp))
+                                    Text("Petrol (2 Types)", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.Black))
+                                    Text("Regular Petrol • High-Octane", style = MaterialTheme.typography.labelSmall.copy(color = Color(0xFF334155), fontSize = 10.sp, fontWeight = FontWeight.Medium))
                                 }
                             }
 
@@ -3511,8 +3511,8 @@ fun DrawerContent(
                                 Text("🛢️", fontSize = 16.sp)
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Column {
-                                    Text("Diesel (2 Types)", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark))
-                                    Text("Regular Diesel • Generator Diesel", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontSize = 10.sp))
+                                    Text("Diesel (2 Types)", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.Black))
+                                    Text("Regular Diesel • Generator Diesel", style = MaterialTheme.typography.labelSmall.copy(color = Color(0xFF334155), fontSize = 10.sp, fontWeight = FontWeight.Medium))
                                 }
                             }
 
@@ -3528,8 +3528,8 @@ fun DrawerContent(
                                 Text("🔥", fontSize = 16.sp)
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Column {
-                                    Text("Gas (Cylinder)", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark))
-                                    Text("Gas Cylinder 11.8kg Sealed", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontSize = 10.sp))
+                                    Text("Gas (Cylinder)", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.Black))
+                                    Text("Gas Cylinder 11.8kg Sealed", style = MaterialTheme.typography.labelSmall.copy(color = Color(0xFF334155), fontSize = 10.sp, fontWeight = FontWeight.Medium))
                                 }
                             }
 
@@ -3545,8 +3545,8 @@ fun DrawerContent(
                                 Text("🔋", fontSize = 16.sp)
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Column {
-                                    Text("Roadside Assistance", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark))
-                                    Text("SOS Quick Jumpstart • Battery", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontSize = 10.sp))
+                                    Text("Roadside Assistance", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.Black))
+                                    Text("SOS Quick Jumpstart • Battery", style = MaterialTheme.typography.labelSmall.copy(color = Color(0xFF334155), fontSize = 10.sp, fontWeight = FontWeight.Medium))
                                 }
                             }
 
@@ -3562,8 +3562,8 @@ fun DrawerContent(
                                 Text("🚗", fontSize = 16.sp)
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Column {
-                                    Text("Auto Repair & Detailing", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark))
-                                    Text("Doorstep Maintenance & Wash", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontSize = 10.sp))
+                                    Text("Auto Repair & Detailing", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.Black))
+                                    Text("Doorstep Maintenance & Wash", style = MaterialTheme.typography.labelSmall.copy(color = Color(0xFF334155), fontSize = 10.sp, fontWeight = FontWeight.Medium))
                                 }
                             }
                         }
@@ -3578,7 +3578,7 @@ fun DrawerContent(
                 text = "ACCOUNT & SETTINGS",
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontWeight = FontWeight.Bold,
-                    color = Color.Gray,
+                    color = Color.Black,
                     letterSpacing = 1.sp
                 ),
                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
@@ -3619,7 +3619,7 @@ fun DrawerContent(
                 text = "ORDERS & DELIVERIES",
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontWeight = FontWeight.Bold,
-                    color = Color.Gray,
+                    color = Color.Black,
                     letterSpacing = 1.sp
                 ),
                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
@@ -3667,7 +3667,7 @@ fun DrawerContent(
                 text = "HELP & SUPPORT",
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontWeight = FontWeight.Bold,
-                    color = Color.Gray,
+                    color = Color.Black,
                     letterSpacing = 1.sp
                 ),
                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
@@ -3715,7 +3715,7 @@ fun DrawerContent(
                     text = "ADMIN CONTROLS",
                     style = MaterialTheme.typography.labelSmall.copy(
                         fontWeight = FontWeight.Bold,
-                        color = Color.Gray,
+                        color = Color.Black,
                         letterSpacing = 1.sp
                     ),
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
@@ -3870,7 +3870,7 @@ fun SidebarItem(
                 text = label,
                 style = MaterialTheme.typography.bodyMedium.copy(
                     fontWeight = FontWeight.SemiBold,
-                    color = if (iconTint == Color(0xFFDC2626)) Color(0xFFDC2626) else Color(0xFF1E293B)
+                    color = if (iconTint == Color(0xFFDC2626)) Color(0xFFDC2626) else Color.Black
                 ),
                 modifier = Modifier.weight(1f)
             )
