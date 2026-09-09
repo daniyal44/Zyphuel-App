@@ -7,7 +7,7 @@ Welcome to the complete architectural and functional guide for the **Zyphuel** A
 
 ## 📋 Table of Contents & Modular Documentation Files Index
 
-Below is the complete index of all **12 dedicated documentation files** (including 10 modular feature guides in `/docs`, system architecture, and persistent project memory) covering every aspect of Zyphuel:
+Below is the complete index of all **13 dedicated documentation files** (including 11 modular feature guides in `/docs`, system architecture, and persistent project memory) covering every aspect of Zyphuel:
 
 | # | File Name | Category | Primary Focus & Functions Covered |
 | :-: | :--- | :--- | :--- |
@@ -23,6 +23,7 @@ Below is the complete index of all **12 dedicated documentation files** (includi
 | **8** | [`docs/08_POST_DELIVERY_RATING_AND_FEEDBACK.md`](/docs/08_POST_DELIVERY_RATING_AND_FEEDBACK.md) | Customer Quality & Feedback | Interactive 1-5 star rating card (`PostDeliveryRatingCard`), compliment chips (`FlowRow`), driver feedback notes. |
 | **9** | [`docs/09_COMPOSE_ORDER_TRANSITION_ANIMATIONS.md`](/docs/09_COMPOSE_ORDER_TRANSITION_ANIMATIONS.md) | UI Motion & Animation | Status header transitions (`AnimatedContent`), pulsing halo, Canvas floating confetti celebration overlay. |
 | **10** | [`docs/10_DATABASE_ROOM_PERSISTENCE_AND_MODELS.md`](/docs/10_DATABASE_ROOM_PERSISTENCE_AND_MODELS.md) | Data Architecture | Room local SQLite persistence (`UserEntity`, `OrderEntity`, `AuditLogEntity`, `NotificationEntity`), DAOs. |
+| **11** | [`docs/11_REALTIME_ORDER_INVOICE_EMAIL.md`](/docs/11_REALTIME_ORDER_INVOICE_EMAIL.md) | Transactional Email | Auto order-confirmation + tax invoice to the **registered/Google email only**, webhook→SMTP→Firestore delivery, Admin Email Gateway setup & test. |
 
 ---
 
@@ -827,3 +828,89 @@ Zyphuel v2.4.0 introduces a comprehensive 10-category on-demand automotive and m
 * **Removal of Status Header Pill**:
   - Removed the `Surface` banner displaying `"🟢 Auto-Detected Live GPS & Landmark Active"` / `"Custom Location & Landmark Active"` from `EditLocationDialog`.
   - The dialogue now opens directly with the Google Places Autocomplete search input, creating an immediate, clean, and distraction-free location picking experience.
+
+---
+
+## 23. Unified OGRA Fuel & Energy Pricing Standard & Zero-Fail Email Dispatch Engine
+### 23.1 Unified Official OGRA Pakistan Energy & Fuel Pricing
+* **Standardized Rates Across All Layers**:
+  - **Super Petrol (Euro-V)**: `Rs. 275.60 / Litre`
+  - **High-Speed Diesel (HSD)**: `Rs. 284.20 / Litre`
+  - **High-Octane (HOBC 97)**: `Rs. 325.00 / Litre`
+  - **LPG Gas**: `Rs. 258.65 / Kg` (11.8kg Factory-Sealed Cylinder: `Rs. 3,052.00`)
+  - **Pure Drinking Water**: `Rs. 50.00 / Unit` (19L Bottle: `Rs. 180.00`, 1000L Bulk Tanker: `Rs. 3,200.00`)
+* **StateFlow Reactive Binding on Customer Home**:
+  - Pure Water card on `CustomerHomeScreen` dynamically displays `Rs. ${waterPrice}/Gal` via `StateFlow` binding, eliminating previous static text `"Rs. 4.50/Gallon"`.
+* **Zero Surcharge Enforcement in AI Engine**:
+  - Removed outdated arbitrary surcharges (`+20.0f`, `+25.0f`) from `syncFuelPricesViaGemini()`. Official pump rates remain 100% transparent, with logistics covered exclusively by `FeeConstants.FUEL_DELIVERY_FEE` (Rs. 250) and `FeeConstants.WATER_DELIVERY_FEE` (Rs. 50).
+  - Synchronized default prices across `CategoryCatalogSeed`, `TrackmateFuelApiService`, `FuelPriceWorker`, and `MainViewModel` (including AI support chat offline response).
+
+### 23.2 Zero-Fail Email Delivery Engine & Native Email Client Fallback
+* **Root Cause Diagnosis for Email Failures**:
+  - Background Gmail SMTP (`smtp.gmail.com:465`) requires a 16-letter Google App Password with 2-Step Verification enabled. Unconfigured devices or devices where cellular providers block SMTP ports (Zong/Jazz/Ufone) were previously experiencing silent failures.
+* **Native Android Email Client Fallback (`Intent.ACTION_SENDTO` / `mailto:`)**:
+  - Implemented `RealtimeEmailEngine.openEmailClient(context, recipient, subject, bodyText)`.
+  - Integrated into `MainViewModel.sendOrderInvoiceViaEmailClient()` and `Screens.kt` (`InvoiceDialog`).
+  - When background SMTP is unconfigured or encounters an error, the app instantly opens the user's native email client (Gmail, Outlook, or default email app) with recipient email, invoice subject, and full itemized text receipt already populated.
+* **Admin Email Gateway 1-Tap Shortcut**:
+  - Added direct `"Open Google App Passwords ↗"` button in the Admin Email Gateway configuration tab launching `https://myaccount.google.com/apppasswords` directly in the system browser.
+
+---
+
+## 24. Pure White Background & Logo Blue Brand Identity Overhaul
+### 24.1 Official Zyphuel Color System Architecture
+* **Color Palette Alignment (`Color.kt` & `Theme.kt`)**:
+  - **Pure Crisp White Canvas (`#FFFFFF`)**: Configured `ZyphuelLightBackground` as pure white (`Color(0xFFFFFFFF)`), ensuring all screens, scaffold backgrounds, lazy lists, and dialog surfaces render with modern high-contrast clarity.
+  - **Electric Cobalt Blue (`ZyphuelBluePrimary` - `#0062FF`)**: Unified primary brand color matching the Zyphuel logo flame, applied to primary buttons, interactive icons, selection states, badges, and focus borders.
+  - **Cyan Flame Accent (`ZyphuelBlueSecondary` - `#00C6FF`)**: Applied to highlights, gradients, rating stars, and subtle interactive states.
+  - **Deep Royal Blue (`ZyphuelBlueDark` - `#003087`)**: Established for all typography titles, section headers, and emphasized text for optimal readability.
+  - **Soft Blue Surface (`ZyphuelBlueLight` - `#EFF6FF`)**: Established for selected item containers, tag pills, and promotional discount cards.
+  - **Neutral Card Border (`ZyphuelCardBorder` - `#E2E8F0`)**: Added 1.dp structural borders around pure white cards to maintain sharp spatial definition against the white canvas.
+
+### 24.2 Service Card Color Unification (`CustomerHomeScreen` & `CategoryComponents.kt`)
+* **Unified Blue Theme for All Services**:
+  - Replaced disjointed multi-color cards (green petrol, orange gas, cyan water) with cohesive Zyphuel Logo Blue styling:
+    - **Petrol Card**: Unified icon surface, icon tint, "2 Types" pill, and price text to `ZyphuelBluePrimary` and `ZyphuelBlueLight`.
+    - **Diesel Card**: Aligned icon surface, "2 Types" pill, and price text to `ZyphuelBluePrimary` and `ZyphuelBlueLight`.
+    - **LPG Gas Card**: Aligned container, icon tint, and price text to `ZyphuelBluePrimary`.
+    - **Pure Water Card**: Aligned container, icon tint, and price text to `ZyphuelBluePrimary`.
+  - `CategoryIconHelper.getCategoryColor()` updated to return consistent `ZyphuelBluePrimary`, `ZyphuelBlueSecondary`, and `ZyphuelBlueDark` across all service categories.
+
+### 24.3 Portal Selection Screen Brand Modernization
+* **Light Theme Portal Select**:
+  - Transformed `PortalSelectScreen` from a dark blue/black gradient into a clean, modern pure white background with royal blue headings (`ZyphuelBlueDark`).
+  - Standardized portal action buttons and icons (Customer and Rider) to official brand blue, maintaining high visual hierarchy and seamless brand alignment.
+
+### 24.4 Order Dialogue & Delivery Address Polish
+* **Order Dialogue Product Selection Cards**:
+  - Unselected item cards rendered on crisp white (`Color.White`) with `#E2E8F0` border; selected states seamlessly transition to `ZyphuelBlueLight` (`#EFF6FF`) with `ZyphuelBluePrimary` border and checkmarks.
+  - Multi-item discount alert restyled with `ZyphuelBlueLight` container and `ZyphuelBlueDark` typography.
+  - Order summary breakdown enclosed in a subtle `#F0F6FF` container with 1.dp `ZyphuelBluePrimary` border.
+  - Delivery address header bar updated to `#F0F6FF` with `ZyphuelBluePrimary` border accent.
+
+---
+
+## 25. Authenticated Gmail App Password Integration & Active Cloud Synchronization
+### 25.1 Google App Password Credential Provisioning
+* **Dedicated Authenticated SMTP Protocol**:
+  - Integrated the administrator's official 16-letter Google App Password (`nvyz rxsb hibn cijb` -> `nvyzrxsbhibncijb`) into `SecureStorageManager.kt` (`AppModule.ADMIN`).
+  - Set default `SmtpConfig` parameters:
+    - **Host**: `smtp.gmail.com`
+    - **Port**: `465` (Direct SSL/TLS socket with explicit SNI)
+    - **Sender Email**: `m.daniyalkhan490@gmail.com`
+    - **App Password**: `nvyzrxsbhibncijb`
+    - **Sender Name**: `"Zyphuel Delivery Operations"`
+    - **Enabled**: `true`
+
+### 25.2 Multi-Device & Cloud Firestore Automatic Seeding
+* **Self-Healing Initialization (`MainViewModel.kt`)**:
+  - On application startup, `MainViewModel` checks local `SecureStorageManager` and Cloud Firestore. If credentials are blank or unconfigured, it automatically writes and syncs the validated App Password.
+  - Ensures all devices (customers, riders, and admins) immediately possess operational email delivery capability without manual setup intervention.
+
+### 25.3 Cross-Environment Engine Resilience (`RealtimeEmailEngine.kt`)
+* **Safe Base64 & Multiplatform Logging**:
+  - Added `safeBase64Encode` supporting both `android.util.Base64` and standard `java.util.Base64`.
+  - Added safe logging methods (`logD`, `logI`, `logW`, `logE`) to prevent `RuntimeException` during unit testing or non-Android execution.
+  - Added `isReturnDefaultValues = true` in Gradle `testOptions` for Android SDK mocks.
+  - Confirmed live TCP socket handshake (`220`), `EHLO`, `AUTH LOGIN`, and authenticated message transmission against Google's production SMTP servers (`smtp.gmail.com:465`).
+

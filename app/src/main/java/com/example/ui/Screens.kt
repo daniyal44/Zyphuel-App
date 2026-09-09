@@ -943,15 +943,7 @@ fun PortalSelectScreen(viewModel: MainViewModel) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        ZyphuelBlueDark,
-                        ZyphuelBluePrimary,
-                        Color(0xFF0F172A)
-                    )
-                )
-            )
+            .background(Color.White)
             .statusBarsPadding()
             .navigationBarsPadding()
             .padding(24.dp),
@@ -971,14 +963,14 @@ fun PortalSelectScreen(viewModel: MainViewModel) {
                 text = "Welcome to Zyphuel",
                 style = MaterialTheme.typography.headlineMedium.copy(
                     fontWeight = FontWeight.ExtraBold,
-                    color = Color.White
+                    color = ZyphuelBlueDark
                 )
             )
             Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = "Select your portal to login and continue",
                 style = MaterialTheme.typography.bodyLarge.copy(
-                    color = Color.White.copy(alpha = 0.85f)
+                    color = Color.Gray
                 )
             )
 
@@ -992,7 +984,8 @@ fun PortalSelectScreen(viewModel: MainViewModel) {
                     .testTag("portal_select_customer_btn"),
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
                     Row(
@@ -1063,7 +1056,8 @@ fun PortalSelectScreen(viewModel: MainViewModel) {
                     .testTag("portal_select_rider_btn"),
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
                     Row(
@@ -1074,13 +1068,13 @@ fun PortalSelectScreen(viewModel: MainViewModel) {
                             modifier = Modifier
                                 .size(52.dp)
                                 .clip(CircleShape)
-                                .background(Color(0xFF10B981).copy(alpha = 0.12f)),
+                                .background(ZyphuelBluePrimary.copy(alpha = 0.12f)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.TwoWheeler,
                                 contentDescription = "Rider Portal",
-                                tint = Color(0xFF10B981),
+                                tint = ZyphuelBluePrimary,
                                 modifier = Modifier.size(28.dp)
                             )
                         }
@@ -1104,14 +1098,14 @@ fun PortalSelectScreen(viewModel: MainViewModel) {
                         Icon(
                             imageVector = Icons.Filled.ChevronRight,
                             contentDescription = null,
-                            tint = Color(0xFF10B981)
+                            tint = ZyphuelBluePrimary
                         )
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
                     Button(
                         onClick = { viewModel.navigateTo("login_rider") },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981)),
+                        colors = ButtonDefaults.buttonColors(containerColor = ZyphuelBluePrimary),
                         shape = RoundedCornerShape(10.dp),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -4325,7 +4319,8 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(12.dp))
-                                    .background(Color(0xFFF8FAFC))
+                                    .background(Color(0xFFF0F6FF))
+                                    .border(1.dp, ZyphuelBluePrimary.copy(alpha = 0.15f), RoundedCornerShape(12.dp))
                                     .clickable { showEditLocationDialog = true }
                                     .padding(horizontal = 12.dp, vertical = 10.dp),
                                 verticalAlignment = Alignment.CenterVertically,
@@ -4567,21 +4562,21 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                                 ) {
                                     Surface(
                                         shape = RoundedCornerShape(12.dp),
-                                        color = Color(0xFF059669).copy(alpha = 0.12f),
+                                        color = ZyphuelBluePrimary.copy(alpha = 0.12f),
                                         modifier = Modifier.size(46.dp)
                                     ) {
                                         Box(contentAlignment = Alignment.Center) {
-                                            Icon(Icons.Filled.LocalGasStation, contentDescription = null, tint = Color(0xFF059669), modifier = Modifier.size(24.dp))
+                                            Icon(Icons.Filled.LocalGasStation, contentDescription = null, tint = ZyphuelBluePrimary, modifier = Modifier.size(24.dp))
                                         }
                                     }
                                     Column {
                                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                             Text("Petrol", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark))
                                             Surface(
-                                                color = Color(0xFFDCFCE7),
+                                                color = ZyphuelBlueLight,
                                                 shape = RoundedCornerShape(6.dp)
                                             ) {
-                                                Text("2 Types", color = Color(0xFF16A34A), fontWeight = FontWeight.Bold, fontSize = 10.sp, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                                                Text("2 Types", color = ZyphuelBluePrimary, fontWeight = FontWeight.Bold, fontSize = 10.sp, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
                                             }
                                         }
                                         Text(
@@ -4593,7 +4588,7 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                                 Column(horizontalAlignment = Alignment.End) {
                                     Text(
                                         text = "Rs. ${String.format(java.util.Locale.US, "%.2f", petrolPrice)}/L",
-                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFF059669))
+                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary)
                                     )
                                     Text("OGRA Rate", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontSize = 10.sp))
                                 }
@@ -4628,21 +4623,21 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                                 ) {
                                     Surface(
                                         shape = RoundedCornerShape(12.dp),
-                                        color = Color(0xFF2563EB).copy(alpha = 0.12f),
+                                        color = ZyphuelBluePrimary.copy(alpha = 0.12f),
                                         modifier = Modifier.size(46.dp)
                                     ) {
                                         Box(contentAlignment = Alignment.Center) {
-                                            Icon(Icons.Filled.DirectionsCar, contentDescription = null, tint = Color(0xFF2563EB), modifier = Modifier.size(24.dp))
+                                            Icon(Icons.Filled.DirectionsCar, contentDescription = null, tint = ZyphuelBluePrimary, modifier = Modifier.size(24.dp))
                                         }
                                     }
                                     Column {
                                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                             Text("Diesel", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark))
                                             Surface(
-                                                color = Color(0xFFDBEAFE),
+                                                color = ZyphuelBlueLight,
                                                 shape = RoundedCornerShape(6.dp)
                                             ) {
-                                                Text("2 Types", color = Color(0xFF1D4ED8), fontWeight = FontWeight.Bold, fontSize = 10.sp, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                                                Text("2 Types", color = ZyphuelBluePrimary, fontWeight = FontWeight.Bold, fontSize = 10.sp, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
                                             }
                                         }
                                         Text(
@@ -4654,7 +4649,7 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                                 Column(horizontalAlignment = Alignment.End) {
                                     Text(
                                         text = "Rs. ${String.format(java.util.Locale.US, "%.2f", dieselPrice)}/L",
-                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFF2563EB))
+                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary)
                                     )
                                     Text("OGRA Rate", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontSize = 10.sp))
                                 }
@@ -4689,11 +4684,11 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                                 ) {
                                     Surface(
                                         shape = RoundedCornerShape(12.dp),
-                                        color = Color(0xFFEA580C).copy(alpha = 0.12f),
+                                        color = ZyphuelBluePrimary.copy(alpha = 0.12f),
                                         modifier = Modifier.size(46.dp)
                                     ) {
                                         Box(contentAlignment = Alignment.Center) {
-                                            Icon(Icons.Filled.PropaneTank, contentDescription = null, tint = Color(0xFFEA580C), modifier = Modifier.size(24.dp))
+                                            Icon(Icons.Filled.PropaneTank, contentDescription = null, tint = ZyphuelBluePrimary, modifier = Modifier.size(24.dp))
                                         }
                                     }
                                     Column {
@@ -4707,7 +4702,7 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                                 Column(horizontalAlignment = Alignment.End) {
                                     Text(
                                         text = "Rs. ${String.format(java.util.Locale.US, "%.2f", lpgPrice)}/Kg",
-                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFFEA580C))
+                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary)
                                     )
                                     Text("Standard Rate", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontSize = 10.sp))
                                 }
@@ -4742,11 +4737,11 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                                 ) {
                                     Surface(
                                         shape = RoundedCornerShape(12.dp),
-                                        color = Color(0xFF0284C7).copy(alpha = 0.12f),
+                                        color = ZyphuelBluePrimary.copy(alpha = 0.12f),
                                         modifier = Modifier.size(46.dp)
                                     ) {
                                         Box(contentAlignment = Alignment.Center) {
-                                            Icon(Icons.Filled.WaterDrop, contentDescription = null, tint = Color(0xFF0284C7), modifier = Modifier.size(24.dp))
+                                            Icon(Icons.Filled.WaterDrop, contentDescription = null, tint = ZyphuelBluePrimary, modifier = Modifier.size(24.dp))
                                         }
                                     }
                                     Column {
@@ -4759,8 +4754,8 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                                 }
                                 Column(horizontalAlignment = Alignment.End) {
                                     Text(
-                                        text = "Rs. 4.50/Gallon",
-                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFF0284C7))
+                                        text = "Rs. ${String.format(java.util.Locale.US, "%.2f", waterPrice)}/Gal",
+                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary)
                                     )
                                     Text("Doorstep Delivery", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontSize = 10.sp))
                                 }
@@ -8056,8 +8051,8 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                 if (isMultiItemOrder) {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFECFDF5)),
-                        border = BorderStroke(1.dp, Color(0xFF6EE7B7)),
+                        colors = CardDefaults.cardColors(containerColor = ZyphuelBlueLight),
+                        border = BorderStroke(1.dp, ZyphuelBluePrimary),
                         shape = RoundedCornerShape(10.dp)
                     ) {
                         Row(
@@ -8067,7 +8062,7 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                             Icon(
                                 imageVector = Icons.Filled.LocalOffer,
                                 contentDescription = "Delivery Discount",
-                                tint = Color(0xFF059669),
+                                tint = ZyphuelBluePrimary,
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
@@ -8075,12 +8070,12 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                                 Text(
                                     "🎉 Multi-Item Delivery Discount Applied!",
                                     fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF065F46),
+                                    color = ZyphuelBlueDark,
                                     style = MaterialTheme.typography.bodySmall
                                 )
                                 Text(
                                     "You save ${viewModel.formatPrice(multiItemDeliveryDiscount)} (50% off delivery) for combining $selectedTypesCount items in one order!",
-                                    color = Color(0xFF047857),
+                                    color = ZyphuelBluePrimary,
                                     style = MaterialTheme.typography.labelSmall
                                 )
                             }
@@ -8095,7 +8090,7 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
 
                 // 1. Petrol
                 Card(
-                    colors = CardDefaults.cardColors(containerColor = if (petrolSelected) Color(0xFFEFF6FF) else Color(0xFFF8FAFC)),
+                    colors = CardDefaults.cardColors(containerColor = if (petrolSelected) ZyphuelBlueLight else Color.White),
                     border = BorderStroke(1.dp, if (petrolSelected) ZyphuelBluePrimary else Color(0xFFE2E8F0)),
                     shape = RoundedCornerShape(10.dp),
                     modifier = Modifier.fillMaxWidth()
@@ -8138,7 +8133,7 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
 
                 // 2. Diesel
                 Card(
-                    colors = CardDefaults.cardColors(containerColor = if (dieselSelected) Color(0xFFEFF6FF) else Color(0xFFF8FAFC)),
+                    colors = CardDefaults.cardColors(containerColor = if (dieselSelected) ZyphuelBlueLight else Color.White),
                     border = BorderStroke(1.dp, if (dieselSelected) ZyphuelBluePrimary else Color(0xFFE2E8F0)),
                     shape = RoundedCornerShape(10.dp),
                     modifier = Modifier.fillMaxWidth()
@@ -8181,7 +8176,7 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
 
                 // 3. High-Octane
                 Card(
-                    colors = CardDefaults.cardColors(containerColor = if (octaneSelected) Color(0xFFEFF6FF) else Color(0xFFF8FAFC)),
+                    colors = CardDefaults.cardColors(containerColor = if (octaneSelected) ZyphuelBlueLight else Color.White),
                     border = BorderStroke(1.dp, if (octaneSelected) ZyphuelBluePrimary else Color(0xFFE2E8F0)),
                     shape = RoundedCornerShape(10.dp),
                     modifier = Modifier.fillMaxWidth()
@@ -8224,7 +8219,7 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
 
                 // 4. Gas
                 Card(
-                    colors = CardDefaults.cardColors(containerColor = if (lpgSelected) Color(0xFFEFF6FF) else Color(0xFFF8FAFC)),
+                    colors = CardDefaults.cardColors(containerColor = if (lpgSelected) ZyphuelBlueLight else Color.White),
                     border = BorderStroke(1.dp, if (lpgSelected) ZyphuelBluePrimary else Color(0xFFE2E8F0)),
                     shape = RoundedCornerShape(10.dp),
                     modifier = Modifier.fillMaxWidth()
@@ -8267,7 +8262,7 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
 
                 // 5. Water
                 Card(
-                    colors = CardDefaults.cardColors(containerColor = if (waterSelected) Color(0xFFEFF6FF) else Color(0xFFF8FAFC)),
+                    colors = CardDefaults.cardColors(containerColor = if (waterSelected) ZyphuelBlueLight else Color.White),
                     border = BorderStroke(1.dp, if (waterSelected) ZyphuelBluePrimary else Color(0xFFE2E8F0)),
                     shape = RoundedCornerShape(10.dp),
                     modifier = Modifier.fillMaxWidth()
@@ -8354,7 +8349,9 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color(0xFFF8FAFC), RoundedCornerShape(12.dp))
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFFF0F6FF))
+                        .border(1.dp, ZyphuelBluePrimary.copy(alpha = 0.15f), RoundedCornerShape(12.dp))
                         .padding(12.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
@@ -8416,7 +8413,7 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                             Text("-${viewModel.formatPrice(200.0)}", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, color = Color(0xFF16A34A)))
                         }
                     }
-                    Divider(color = Color(0xFFE2E8F0), thickness = 1.dp, modifier = Modifier.padding(vertical = 4.dp))
+                    HorizontalDivider(color = Color(0xFFE2E8F0), thickness = 1.dp, modifier = Modifier.padding(vertical = 4.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -8625,12 +8622,28 @@ fun InvoiceDialog(
                     Text("Official Tax Invoice • Verified Transaction", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFF16A34A)))
                 }
 
-                // Action 1: Send Invoice to Registered Email (Real-Time Dispatch)
+                // Action 1: Send Invoice to Registered Email (Real-Time Dispatch & Native Fallback)
                 Button(
                     onClick = {
-                        if (viewModel != null) {
-                            viewModel.sendOrderInvoiceEmail(order)
-                            Toast.makeText(context, "📧 Tax Invoice dispatched to ${order.customerEmail}!", Toast.LENGTH_LONG).show()
+                        val smtpReady = viewModel?.smtpConfig?.value?.appPassword?.isNotBlank() == true
+                        if (viewModel != null && smtpReady) {
+                            viewModel.sendOrderInvoiceEmail(order) { success, _ ->
+                                if (success) {
+                                    Toast.makeText(context, "📧 Tax Invoice dispatched to ${order.customerEmail}!", Toast.LENGTH_LONG).show()
+                                } else {
+                                    // Fallback seamlessly to native email client
+                                    val opened = viewModel.sendOrderInvoiceViaEmailClient(context, order)
+                                    if (!opened) {
+                                        com.example.util.InvoiceGenerator.shareInvoice(context, order)
+                                    }
+                                }
+                            }
+                        } else if (viewModel != null) {
+                            // Direct 1-tap dispatch via device Gmail/Email client
+                            val opened = viewModel.sendOrderInvoiceViaEmailClient(context, order)
+                            if (!opened) {
+                                com.example.util.InvoiceGenerator.shareInvoice(context, order)
+                            }
                         } else {
                             com.example.util.InvoiceGenerator.shareInvoice(context, order)
                         }
@@ -8642,7 +8655,7 @@ fun InvoiceDialog(
                 ) {
                     Icon(Icons.Filled.Email, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("📧 Send Invoice to Registered Email", fontWeight = FontWeight.Bold)
+                    Text("📧 Send Invoice via Email / Gmail", fontWeight = FontWeight.Bold)
                 }
 
                 // Action 2: Download PDF
@@ -14836,6 +14849,26 @@ fun AdminDashboardScreen(viewModel: MainViewModel) {
                                                 Text("3. Search 'App Passwords' or visit myaccount.google.com/apppasswords", style = MaterialTheme.typography.bodySmall)
                                                 Text("4. Enter App name 'Zyphuel App' and click Generate.", style = MaterialTheme.typography.bodySmall)
                                                 Text("5. Copy the 16-character password into the field above and tap 'Save & Sync to Cloud'.", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
+                                                
+                                                Button(
+                                                    onClick = {
+                                                        try {
+                                                            val browserIntent = android.content.Intent(
+                                                                android.content.Intent.ACTION_VIEW,
+                                                                android.net.Uri.parse("https://myaccount.google.com/apppasswords")
+                                                            )
+                                                            currentContext.startActivity(browserIntent)
+                                                        } catch (e: Exception) {
+                                                            android.widget.Toast.makeText(currentContext, "Open myaccount.google.com/apppasswords in browser", android.widget.Toast.LENGTH_SHORT).show()
+                                                        }
+                                                    },
+                                                    colors = ButtonDefaults.buttonColors(containerColor = ZyphuelBluePrimary),
+                                                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp)
+                                                ) {
+                                                    Icon(Icons.Filled.OpenInBrowser, contentDescription = null, modifier = Modifier.size(16.dp))
+                                                    Spacer(modifier = Modifier.width(6.dp))
+                                                    Text("Open Google App Passwords ↗", style = MaterialTheme.typography.labelMedium)
+                                                }
                                                 
                                                 HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = Color(0xFFE2E8F0))
                                                 Text("🌐 Alternative: Free Serverless Google Apps Script Relay:", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium, color = ZyphuelBlueDark)

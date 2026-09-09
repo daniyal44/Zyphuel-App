@@ -87,10 +87,10 @@ object TrackmateFuelApiService {
             }
         }
 
-        val petrol = foundPetrol ?: 320.73f
-        val diesel = foundDiesel ?: 375.04f
-        val octane = foundOctane ?: 340.00f
-        val lpg = foundLpg ?: 241.43f
+        val petrol = foundPetrol ?: 275.60f
+        val diesel = foundDiesel ?: 284.20f
+        val octane = foundOctane ?: 325.00f
+        val lpg = foundLpg ?: 258.65f
 
         FuelPriceFetchResult(
             petrol = petrol,

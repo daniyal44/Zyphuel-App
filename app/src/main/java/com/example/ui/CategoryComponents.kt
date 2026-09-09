@@ -66,17 +66,17 @@ object CategoryIconHelper {
 
     fun getCategoryColor(id: String): Color {
         return when (id) {
-            "fuel_energy" -> Color(0xFF059669)       // Emerald Green
-            "gas_cylinder" -> Color(0xFFEA580C)      // Flame Orange
-            "auto_repair" -> Color(0xFF2563EB)       // Royal Blue
-            "roadside_assistance" -> Color(0xFFDC2626)// Emergency Red
-            "auto_detailing" -> Color(0xFF7C3AED)    // Detailing Violet
-            "tyres_wheels" -> Color(0xFFD97706)      // Amber Orange
-            "battery_services" -> Color(0xFF0284C7)  // Electric Cyan
-            "lubricants_fluids" -> Color(0xFF0D9488) // Teal
-            "ev_services" -> Color(0xFF10B981)       // EV Mint Green
-            "water_delivery" -> Color(0xFF0369A1)    // Ocean Blue
-            "fleet_business" -> Color(0xFF475569)    // Enterprise Slate
+            "fuel_energy" -> ZyphuelBluePrimary       // Electric Cobalt Blue (Logo Primary)
+            "gas_cylinder" -> ZyphuelBlueSecondary    // Cyan Flame Accent (Logo Highlight)
+            "water_delivery" -> Color(0xFF0284C7)     // Ocean Blue
+            "auto_repair" -> ZyphuelBlueDark          // Deep Royal Blue
+            "roadside_assistance" -> ZyphuelBluePrimary
+            "auto_detailing" -> ZyphuelBluePrimary
+            "tyres_wheels" -> ZyphuelBluePrimary
+            "battery_services" -> ZyphuelBlueSecondary
+            "lubricants_fluids" -> ZyphuelBlueDark
+            "ev_services" -> ZyphuelBlueSecondary
+            "fleet_business" -> ZyphuelBlueDark
             else -> ZyphuelBluePrimary
         }
     }

@@ -14,13 +14,24 @@ The Notification & Communication Engine delivers real-time notifications across 
 * `notifyReachedLocation(orderId)` (`MainViewModel.kt`): Dispatches push notification when driver reaches destination.
 * `ZyphuelFcmService.kt`: Receives background FCM payloads, creates local system notification triggers, and persists notification history to Room DB (`NotificationEntity`).
 * `dispatchRealtimeEmail(recipientEmail, subject, content)` (`MainViewModel.kt`): Generates instant automated email receipts for new orders, driver assignments, and admin customer registrations.
+* `sendOrderInvoiceEmail(order, isCompletedReceipt)` (`MainViewModel.kt`): Automatically emails the official order confirmation + tax invoice to the customer's **registered email only**, plus an `[Admin Copy]`. **See the dedicated guide → [`11_REALTIME_ORDER_INVOICE_EMAIL.md`](/docs/11_REALTIME_ORDER_INVOICE_EMAIL.md).**
+* `sendTestEmail(targetEmail)` (`MainViewModel.kt`): Admin "Send Test Email" — the single source of truth for verifying real inbox delivery.
 * **WhatsApp Hotline Deep-Link**: Direct button linking to official support line (`+92 323 0112464`).
+
+### 📮 Email Delivery Channel Order (`RealtimeEmailEngine.sendRealtimeEmailDetailed`)
+First success wins, attempted in this order:
+1. **HTTPS Webhook Relay** (Google Apps Script, port 443) — preferred when a webhook URL is configured; no app-side secret, immune to blocked SMTP ports.
+2. **Authenticated Direct SMTP** (TLS 465 / STARTTLS 587).
+3. **Cloud Firestore `mail` collection** (Firebase Trigger Email extension fallback).
+
+> ⚠️ If order-placed emails are "not arriving", it is almost always a **blocked SMTP port or dead app password**, not a code bug — configure the webhook (Channel 1). Full detail, setup steps, and known issues live in [`11_REALTIME_ORDER_INVOICE_EMAIL.md`](/docs/11_REALTIME_ORDER_INVOICE_EMAIL.md).
 
 ---
 
 ## 🔔 Notification Types & Triggers
 | Trigger Event | Channel / Method | Notification Title |
 | :--- | :--- | :--- |
+| **Order Placed / Confirmed** | System Push + FCM + **Email Tax Invoice** | `Order Placed Successfully! 📝` |
 | **Order Out for Delivery** | System Push + FCM + Email | `Out for Delivery 🛵` |
 | **Driver Within 1km** | System Push + Local Notification | `Arriving Soon 📍` |
 | **Driver Reached Location** | High-Priority System Push + FCM | `Driver Reached Location! 📍` |
@@ -32,6 +43,8 @@ The Notification & Communication Engine delivers real-time notifications across 
 ## 📁 Source Locations
 * **FCM Service**: `app/src/main/java/com/example/notifications/ZyphuelFcmService.kt`
 * **ViewModel Helpers**: `app/src/main/java/com/example/ui/MainViewModel.kt`
+* **Email Delivery Engine**: `app/src/main/java/com/example/util/RealtimeEmailEngine.kt` (webhook → SMTP → Firestore channels)
+* **Email Gateway Config Store**: `app/src/main/java/com/example/security/SecureStorageManager.kt` (`getSmtpConfig` / `saveSmtpConfig`)
 * **In-App Notification Screen**: `app/src/main/java/com/example/ui/Screens.kt` (`NotificationCenterScreen`)
 * **Data Model**: `app/src/main/java/com/example/data/Models.kt` (`NotificationEntity`)
 

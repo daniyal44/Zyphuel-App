@@ -130,13 +130,13 @@ object CategoryCatalogSeed {
                 backendServiceMapping = "fuel_delivery_v1",
                 subcategories = listOf(
                     // Petrol (2 subcategories)
-                    Subcategory("petrol_regular", "fuel_energy", "Regular Petrol", "Euro-V standard motor gasoline for daily commuting", "PETROL", true, 272.82, "L", "Direct Dispatch", badgeText = "OGRA Live"),
-                    Subcategory("petrol_octane", "fuel_energy", "High-Octane Petrol", "HOBC 97-Octane for luxury, turbo & performance vehicles", "PETROL", true, 340.00, "L", "Direct Dispatch", badgeText = "97 Octane"),
+                    Subcategory("petrol_regular", "fuel_energy", "Regular Petrol", "Euro-V standard motor gasoline for daily commuting", "PETROL", true, 275.60, "L", "Direct Dispatch", badgeText = "OGRA Live"),
+                    Subcategory("petrol_octane", "fuel_energy", "High-Octane Petrol", "HOBC 97-Octane for luxury, turbo & performance vehicles", "PETROL", true, 325.00, "L", "Direct Dispatch", badgeText = "97 Octane"),
                     // Diesel (2 subcategories)
-                    Subcategory("diesel_regular", "fuel_energy", "Regular Diesel", "High-Speed Diesel for commercial & heavy vehicles", "DIESEL", true, 280.50, "L", "Direct Dispatch", badgeText = "OGRA Live"),
-                    Subcategory("diesel_generator", "fuel_energy", "Generator Diesel", "Bulk & backup diesel delivery for home and commercial generators", "DIESEL", true, 280.50, "L", "Scheduled Dispatch", requiresVehicle = false),
+                    Subcategory("diesel_regular", "fuel_energy", "Regular Diesel", "High-Speed Diesel for commercial & heavy vehicles", "DIESEL", true, 284.20, "L", "Direct Dispatch", badgeText = "OGRA Live"),
+                    Subcategory("diesel_generator", "fuel_energy", "Generator Diesel", "Bulk & backup diesel delivery for home and commercial generators", "DIESEL", true, 284.20, "L", "Scheduled Dispatch", requiresVehicle = false),
                     // Gas (Only 1 Single Option)
-                    Subcategory("lpg_sealed_cylinder", "fuel_energy", "Gas Cylinder", "Certified factory-sealed 11.8kg cylinder with safety seal inspection", "GAS", true, 241.43, "Kg", "Direct Dispatch", requiresVehicle = false, operationalRestrictions = "Strictly OGRA & Civil Defence verified cylinders only.")
+                    Subcategory("lpg_sealed_cylinder", "fuel_energy", "Gas Cylinder", "Certified factory-sealed 11.8kg cylinder with safety seal inspection", "GAS", true, 258.65, "Kg", "Direct Dispatch", requiresVehicle = false, operationalRestrictions = "Strictly OGRA & Civil Defence verified cylinders only.")
                 )
             ),
 
