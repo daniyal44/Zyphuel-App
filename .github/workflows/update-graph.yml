@@ -1,0 +1,36 @@
+name: Update GitHub Activity Graph
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '.github/assets/repo-activity-chart.svg'
+      - 'README.md'
+
+permissions:
+  contents: write
+
+jobs:
+  generate-graph:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Generate Commit Activity SVG Graph
+        run: node scripts/generate_github_graph.js
+
+      - name: Commit and push updated graph
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add .github/assets/repo-activity-chart.svg
+          git diff --quiet && git diff --staged --quiet || (git commit -m "chore(graph): auto-update github commit velocity graph [skip ci]" && git push)
