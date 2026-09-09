@@ -60,7 +60,7 @@
     <!-- Tile 1: Total Commits -->
     <rect x="0" y="0" width="200" height="56" rx="8" fill="url(#cardGrad)" stroke="#1e293b" stroke-width="1" />
     <text x="16" y="22" fill="#64748b" font-family="system-ui, sans-serif" font-size="10.5" font-weight="600" letter-spacing="0.5">TOTAL COMMITS</text>
-    <text x="16" y="44" fill="#f8fafc" font-family="monospace" font-size="20" font-weight="700">38</text>
+    <text x="16" y="44" fill="#f8fafc" font-family="monospace" font-size="20" font-weight="700">39</text>
 
     <!-- Tile 2: Active Months -->
     <rect x="215" y="0" width="200" height="56" rx="8" fill="url(#cardGrad)" stroke="#1e293b" stroke-width="1" />
@@ -69,8 +69,8 @@
 
     <!-- Tile 3: Latest Commit Message -->
     <rect x="430" y="0" width="410" height="56" rx="8" fill="url(#cardGrad)" stroke="#1e293b" stroke-width="1" />
-    <text x="16" y="22" fill="#64748b" font-family="system-ui, sans-serif" font-size="10.5" font-weight="600" letter-spacing="0.5" transform="translate(430, 0)">LATEST REVISION [ef40d91]</text>
-    <text x="16" y="43" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12" font-weight="500" transform="translate(430, 0)">feat: implement realtime order invoice...</text>
+    <text x="16" y="22" fill="#64748b" font-family="system-ui, sans-serif" font-size="10.5" font-weight="600" letter-spacing="0.5" transform="translate(430, 0)">LATEST REVISION [1e27c2b]</text>
+    <text x="16" y="43" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12" font-weight="500" transform="translate(430, 0)">feat: sync release v2.6.2 (build 26), ...</text>
   </g>
 
   <!-- CHART CONTAINER 1: Engineering Velocity Curve -->
@@ -84,8 +84,8 @@
     <line x1="50" y1="270" x2="590" y2="270" stroke="rgba(255,255,255,0.03)" />
 
     <!-- Area & Line Curve -->
-    <path d="M 50.0 287.7 C 58.2 286.4, 82.7 281.6, 99.1 280.3 C 115.5 279.1, 131.8 280.3, 148.2 280.3 C 164.5 280.3, 180.9 279.1, 197.3 280.3 C 213.6 281.6, 230.0 303.6, 246.4 287.7 C 262.7 271.8, 279.1 188.7, 295.5 185.0 C 311.8 181.3, 328.2 248.6, 344.5 265.7 C 360.9 282.8, 377.3 285.2, 393.6 287.7 C 410.0 290.1, 426.4 281.6, 442.7 280.3 C 459.1 279.1, 475.5 280.3, 491.8 280.3 C 508.2 280.3, 524.5 282.8, 540.9 280.3 C 557.3 277.9, 581.8 268.1, 590.0 265.7 L 590.0 295.0 L 50.0 295.0 Z" fill="url(#areaGrad)" />
-    <path d="M 50.0 287.7 C 58.2 286.4, 82.7 281.6, 99.1 280.3 C 115.5 279.1, 131.8 280.3, 148.2 280.3 C 164.5 280.3, 180.9 279.1, 197.3 280.3 C 213.6 281.6, 230.0 303.6, 246.4 287.7 C 262.7 271.8, 279.1 188.7, 295.5 185.0 C 311.8 181.3, 328.2 248.6, 344.5 265.7 C 360.9 282.8, 377.3 285.2, 393.6 287.7 C 410.0 290.1, 426.4 281.6, 442.7 280.3 C 459.1 279.1, 475.5 280.3, 491.8 280.3 C 508.2 280.3, 524.5 282.8, 540.9 280.3 C 557.3 277.9, 581.8 268.1, 590.0 265.7" stroke="#38bdf8" stroke-width="2.5" fill="none" />
+    <path d="M 50.0 287.7 C 58.2 286.4, 82.7 281.6, 99.1 280.3 C 115.5 279.1, 131.8 280.3, 148.2 280.3 C 164.5 280.3, 180.9 279.1, 197.3 280.3 C 213.6 281.6, 230.0 303.6, 246.4 287.7 C 262.7 271.8, 279.1 188.7, 295.5 185.0 C 311.8 181.3, 328.2 248.6, 344.5 265.7 C 360.9 282.8, 377.3 285.2, 393.6 287.7 C 410.0 290.1, 426.4 281.6, 442.7 280.3 C 459.1 279.1, 475.5 280.3, 491.8 280.3 C 508.2 280.3, 524.5 284.0, 540.9 280.3 C 557.3 276.7, 581.8 262.0, 590.0 258.3 L 590.0 295.0 L 50.0 295.0 Z" fill="url(#areaGrad)" />
+    <path d="M 50.0 287.7 C 58.2 286.4, 82.7 281.6, 99.1 280.3 C 115.5 279.1, 131.8 280.3, 148.2 280.3 C 164.5 280.3, 180.9 279.1, 197.3 280.3 C 213.6 281.6, 230.0 303.6, 246.4 287.7 C 262.7 271.8, 279.1 188.7, 295.5 185.0 C 311.8 181.3, 328.2 248.6, 344.5 265.7 C 360.9 282.8, 377.3 285.2, 393.6 287.7 C 410.0 290.1, 426.4 281.6, 442.7 280.3 C 459.1 279.1, 475.5 280.3, 491.8 280.3 C 508.2 280.3, 524.5 284.0, 540.9 280.3 C 557.3 276.7, 581.8 262.0, 590.0 258.3" stroke="#38bdf8" stroke-width="2.5" fill="none" />
 
     <!-- Nodes & Labels -->
     
@@ -123,7 +123,7 @@
     
         <text x="540.9" y="313" fill="#64748b" font-family="system-ui, -apple-system, sans-serif" font-size="10" text-anchor="middle">Sep 08</text>
       
-      <circle cx="590.0" cy="265.7" r="3.5" fill="#38bdf8" stroke="#0b1329" stroke-width="2" />
+      <circle cx="590.0" cy="258.3" r="3.5" fill="#38bdf8" stroke="#0b1329" stroke-width="2" />
     
         <text x="590.0" y="313" fill="#64748b" font-family="system-ui, -apple-system, sans-serif" font-size="10" text-anchor="middle">Sep 09</text>
       
@@ -160,13 +160,13 @@
     
       <text x="50" y="378" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="12" font-weight="600">Aug '26</text>
       <rect x="120" y="365" width="260" height="16" rx="4" fill="rgba(255,255,255,0.04)" />
-      <rect x="120" y="365" width="61" height="16" rx="4" fill="url(#cyanGrad)" />
-      <text x="191" y="377" fill="#38bdf8" font-family="monospace" font-size="11" font-weight="700">8 commits</text>
+      <rect x="120" y="365" width="59" height="16" rx="4" fill="url(#cyanGrad)" />
+      <text x="189" y="377" fill="#38bdf8" font-family="monospace" font-size="11" font-weight="700">8 commits</text>
     
       <text x="50" y="410" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="12" font-weight="600">Sep '26</text>
       <rect x="120" y="397" width="260" height="16" rx="4" fill="rgba(255,255,255,0.04)" />
       <rect x="120" y="397" width="230" height="16" rx="4" fill="url(#cyanGrad)" />
-      <text x="360" y="409" fill="#38bdf8" font-family="monospace" font-size="11" font-weight="700">30 commits</text>
+      <text x="360" y="409" fill="#38bdf8" font-family="monospace" font-size="11" font-weight="700">31 commits</text>
     
 
     <!-- Weekly Matrix Title -->
@@ -310,7 +310,7 @@
       
         <rect x="797" y="450" width="13" height="13" rx="2.5" fill="#0369a1" />
       
-        <rect x="797" y="468" width="13" height="13" rx="2.5" fill="#0ea5e9" />
+        <rect x="797" y="468" width="13" height="13" rx="2.5" fill="#10b981" />
       
 
     <!-- Heatmap Legend -->
