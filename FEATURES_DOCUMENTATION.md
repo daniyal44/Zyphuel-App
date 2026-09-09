@@ -1,5 +1,5 @@
 # 🚀 Zyphuel App Features & Technical Documentation
-**App Version:** `v2.5.3 (Build 17)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** `2026`
+**App Version:** `v2.6.2 (Build 26)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** `2026`
 
 Welcome to the complete architectural and functional guide for the **Zyphuel** Android application. This document outlines every single feature, function, database entity, and user flow from start to finish.
 
@@ -913,4 +913,24 @@ Zyphuel v2.4.0 introduces a comprehensive 10-category on-demand automotive and m
   - Added safe logging methods (`logD`, `logI`, `logW`, `logE`) to prevent `RuntimeException` during unit testing or non-Android execution.
   - Added `isReturnDefaultValues = true` in Gradle `testOptions` for Android SDK mocks.
   - Confirmed live TCP socket handshake (`220`), `EHLO`, `AUTH LOGIN`, and authenticated message transmission against Google's production SMTP servers (`smtp.gmail.com:465`).
+
+---
+
+## 26. Automated GitHub Engineering Velocity & Activity Telemetry (v2.6.2)
+### 26.1 Real-Time Git Velocity Chart Generator (`scripts/generate_github_graph.js`)
+* **Local Git History Analysis**:
+  - Automatically parses git commit metadata, commit timestamps, and author messages directly from git log.
+  - Aggregates daily velocity curves, 4-month sprint volumes, and 10-week contribution heatmaps.
+  - Generates high-definition dark-themed SVG vector asset at `.github/assets/repo-activity-chart.svg`.
+* **Continuous Integration (`.github/workflows/update-graph.yml`)**:
+  - Triggered on every commit pushed to `main` branch.
+  - Automatically executes graph generator script in GitHub Actions Ubuntu runner.
+  - Auto-commits and pushes updated velocity chart with `[skip ci]` flag to maintain continuous repository synchronization.
+
+### 26.2 Platform & Repository Synchronization
+* **Public Repository Alignment**:
+  - Synchronized `README.md` to official version `v2.6.2 (Build 26)`.
+  - Added live badges for active commits, version tags, and build status.
+  - Embedded the vector engineering activity dashboard directly into repository overview.
+
 

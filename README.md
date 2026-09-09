@@ -1,10 +1,25 @@
-# 🚚 Zyphuel Platform (Android v2.3.0.1 • Release 2026)
+# 🚚 Zyphuel Platform (Android v2.6.2 • Release 2026)
 
 <div align="center">
   <img src="company .png" width="140" height="140" alt="Zyphuel MDK Logo" />
   <h3>Pakistan's Premier On-Demand Energy & Clean Water Ecosystem</h3>
-  <p><b>Version 2.3.0.1 (Build 4) • Target SDK 36 • Android 15/16 Ready • Jetpack Compose Material 3 • Room DB • Real-Time Dual Notifications</b></p>
+  <p><b>Version 2.6.2 (Build 26) • Target SDK 36 • Android 15/16 Ready • Jetpack Compose Material 3 • Room DB • Real-Time Dual Notifications</b></p>
+
+  <p>
+    <a href="https://github.com/daniyal44/Zyphuel-App"><img src="https://img.shields.io/badge/App%20Version-v2.6.2%20(Build%2026)-0284c7?style=for-the-badge&logo=android" alt="App Version v2.6.2" /></a>
+    <a href="https://github.com/daniyal44/Zyphuel-App/commits/main"><img src="https://img.shields.io/github/commit-activity/m/daniyal44/Zyphuel-App?style=for-the-badge&color=0284c7&label=Monthly%20Changes" alt="Monthly Commits" /></a>
+    <a href="https://github.com/daniyal44/Zyphuel-App/commits/main"><img src="https://img.shields.io/github/last-commit/daniyal44/Zyphuel-App?style=for-the-badge&color=10b981" alt="Last Commit" /></a>
+    <a href="https://developer.android.com"><img src="https://img.shields.io/badge/Target%20SDK-36-emerald?style=for-the-badge" alt="Target SDK 36" /></a>
+  </p>
 </div>
+
+---
+
+### 📊 Real-Time Engineering Velocity & Activity Dashboard (Auto-Updates on Push)
+
+<p align="center">
+  <img src="./.github/assets/repo-activity-chart.svg" alt="Zyphuel App Engineering Velocity & Git Activity Chart" width="100%" />
+</p>
 
 ---
 
@@ -13,18 +28,19 @@ Zyphuel is Pakistan's premier on-demand doorstep delivery platform for **Super P
 
 ---
 
-## 🚀 Key Features (v2.3.0.1 Latest)
+## 🚀 Key Features (v2.6.2 Latest)
 
+* **Real-Time Automated Order Invoice Email Gateway (`RealtimeEmailEngine.kt`)**: Instant HTML invoice email dispatch to customer inbox upon order placement with order details, volumetric items, unit prices, delivery fee, and total payable amount.
+* **High-Contrast Pure Black Typography**: WCAG AAA compliant text styling across Profile Settings, Drawer navigation, category cards, and modal dialogs ensuring effortless readability in all lighting conditions.
+* **10-Category Marketplace Navigation (`CategoryComponents.kt` & `CategoryModels.kt`)**: High-speed categorized catalog covering Super Euro-V Petrol, High-Speed Diesel, High-Octane 97, LPG Gas Cylinders, Mineral Water, and Automotive Essentials with direct quantity selectors.
+* **13-Step Interactive Spotlight Tour Guide (`AppTourGuideDialog.kt`)**: Immersive onboarding walkthrough featuring animated spotlight step overlays, practical tips, and direct feature introductions.
 * **Customer Order History Isolation & Admin Master Visibility (`CustomerOrderHistoryScreen`)**: Regular customers strictly view only their own orders with case-insensitive email matching. When logged in as Administrator, `customerOrders` automatically streams `getAllOrdersFlow()`, showing all users' orders and Admin orders with custom badges and full customer identifiers.
-* **Practical Step-by-Step App Tour Guide (`AppTourGuideDialog`)**: Actionable onboarding walkthrough with smooth `AnimatedContent` slide/fade transitions guiding users step-by-step through real app usage: selecting fuel/water, setting quantities, direct address entry, 1-tap COD ordering, live progress stepper, driver contact, and PDF invoice downloads. Re-launchable anytime from the Drawer.
-* **Official Order Tax Invoice Generation & PDF Download (`InvoiceGenerator.kt`)**: Generates official itemized tax invoices with complete customer, driver, and fare breakdowns. Features native Android `PrintManager` integration for 1-tap "Save as PDF" to phone storage, direct printing, and social sharing via WhatsApp and Email across Tracker, History, and Admin screens.
+* **Official Order Tax Invoice Generation & PDF Download (`InvoiceGenerator.kt`)**: Generates official itemized tax invoices with complete customer, driver, and fare breakdowns. Features native Android `PrintManager` integration for 1-tap "Save as PDF" to phone storage, direct printing, and social sharing via WhatsApp and Email.
 * **Standardized Delivery Fee Engine (`FeeConstants.kt`)**: Fixed delivery charge for Fuel (Petrol, Diesel, High-Octane) and LPG is permanently set to **Rs. 250.00** (Water: Rs. 50.00) ensuring 100% mathematical consistency across OrderDialog, TrackerScreen, FareBreakdown, and Invoices.
-* **Streamlined Direct Address Input**: Removed redundant saved address chips in `OrderDialog` for a clean, clutter-free checkout experience.
-* **Admin Order Controls & Self-Delivery Lifecycle (`adminAcceptOrder` & `changeOrderStatus`)**: Admin Dashboard order cards equipped with direct "Accept Order" (with automatic self-delivery assignment if no rider is online), "Start Delivery 🚚" (out for delivery), "Mark Delivered ✅" (completed), and "Decline Order" (with structured cancellation reasons). Master Supervisory Authority allows Admins to manage and complete any order.
-* **Real-Time Triple-Party Gmail Order Dispatch Gateway (`RealtimeEmailEngine.kt`)**: Multi-channel transactional email dispatch engine supporting direct TLS/SSL Port 465, RFC 3207 STARTTLS Port 587, and serverless Google Apps Script HTTPS relay over Port 443. Cross-device credentials sync via Cloud Firestore (`system_config/email_gateway`) guarantees 100% direct inbox delivery for Customers, Riders, and Admins.
-* **Verified Admin Blue Tick & Permanent Super Admin Guard**: Root Administrator account (`m.daniyalkhan490@gmail.com`) is permanently protected from deletion, resets, or removal across local Room DB and Cloud Firestore, displaying the official **Blue Tick Verified Badge** across Drawer, Profile, and Admin headers.
+* **Admin Order Controls & Self-Delivery Lifecycle (`adminAcceptOrder` & `changeOrderStatus`)**: Admin Dashboard order cards equipped with direct "Accept Order" (with automatic self-delivery assignment if no rider is online), "Start Delivery 🚚", "Mark Delivered ✅", and "Decline Order".
+* **Triple-Party Gmail Order Dispatch Gateway**: Multi-channel transactional email dispatch supporting direct TLS/SSL Port 465, RFC 3207 STARTTLS Port 587, and serverless Google Apps Script HTTPS relay over Port 443 with Cloud Firestore configuration synchronization.
+* **Verified Admin Blue Tick & Permanent Super Admin Guard**: Root Administrator account (`m.daniyalkhan490@gmail.com`) is permanently protected from deletion, resets, or removal across local Room DB and Cloud Firestore, displaying the official **Blue Tick Verified Badge**.
 * **Universal Biometric Authentication**: Hardware-backed AndroidX `BiometricPrompt` authentication available for **both Google Sign-In and Manual Email logins**, configurable directly from Profile and Security Settings.
-* **Instant Multi-Product Ordering**: Seamless multi-item selection with automatic bundled delivery discounts and clean Cash on Delivery (COD) checkout.
 * **Google Play Policy Compliant**: Full support for In-App and Sidebar Account Deletion (`deleteCurrentAccount`), encrypted AES-256 session tokens, SHA-256 password hashing, and OGRA safety compliance.
 
 ---
@@ -56,9 +72,8 @@ $env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-25.0.4.7-hotspot"; & "C:
 ---
 
 ## 📁 Key Documentation References
-* [`FEATURES_DOCUMENTATION.md`](file:///d:/Games/New%20folder-web/Claude/FEATURES_DOCUMENTATION.md): Comprehensive feature inventory & component specifications (v2.3.0).
+* [`FEATURES_DOCUMENTATION.md`](file:///d:/Games/New%20folder-web/Claude/FEATURES_DOCUMENTATION.md): Comprehensive feature inventory & component specifications (v2.6.2).
 * [`ARCHITECTURE.md`](file:///d:/Games/New%20folder-web/Claude/ARCHITECTURE.md): System architecture, layered diagram, and data flow constraints.
 * [`PLAY_STORE_ASO_BLUEPRINT.md`](file:///d:/Games/New%20folder-web/Claude/PLAY_STORE_ASO_BLUEPRINT.md): App Store Optimization, keywords, and release assets guide.
 * [`bugs.md`](file:///d:/Games/New%20folder-web/Claude/bugs.md): Master bug resolution and verification ledger.
 * [`MEMORY.md`](file:///d:/Games/New%20folder-web/Claude/MEMORY.md): Persistent implementation memory and evolution phases.
-
