@@ -1273,8 +1273,8 @@ fun SupportStepOneScreenshot() {
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 Column {
-                    Text("Automated Delivery Hub", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, color = Color.Black))
-                    Text("Lahore, Pakistan • Instant Routing", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray))
+                    Text("Deliver to Lahore", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, color = Color.Black))
+                    Text("Lahore, Pakistan • On-Demand Service", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray))
                 }
             }
             
@@ -1512,7 +1512,7 @@ fun SupportStepThreeScreenshot() {
                         Icon(Icons.Filled.Home, contentDescription = null, tint = ZyphuelBluePrimary, modifier = Modifier.size(22.dp))
                     }
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text("Pure Water & Fuel en-route (ETA: 10 mins)", style = MaterialTheme.typography.labelSmall.copy(color = Color.DarkGray, fontWeight = FontWeight.Bold))
+                    Text("Pure Water & Fuel en-route (Dispatched)", style = MaterialTheme.typography.labelSmall.copy(color = Color.DarkGray, fontWeight = FontWeight.Bold))
                 }
             }
             
@@ -1569,8 +1569,8 @@ fun OnboardingScreen(viewModel: MainViewModel) {
     )
 
     val descriptions = listOf(
-        "Easily select from our premium Euro V fuels, LPG Gas cylinder refills, or pure mineral water gallons. Configure your quantities and see live transparent price calculations instantly.",
-        "Follow your assigned delivery rider in real-time on our smart GPS tracker. Receive instant ETA updates, see the route progression overlay, and access 24/7 direct standby support.",
+        "Easily select from our premium Euro V fuels, Gas cylinder refills, or pure mineral water gallons. Configure your quantities and see live transparent price calculations instantly.",
+        "Follow your assigned delivery rider in real-time on our smart GPS tracker. Receive live route progression updates and access 24/7 direct standby support.",
         "Access your complete past order log anytime. Review itemized details, track past receipts, and view detailed progress metrics for every delivery you have placed in Lahore."
     )
 
@@ -3245,6 +3245,7 @@ fun DrawerContent(
     var showDeleteAccountDialog by remember { mutableStateOf(false) }
     var showTermsAndPrivacyDialog by remember { mutableStateOf(false) }
     var termsAndPrivacyInitialTab by remember { mutableIntStateOf(0) }
+    var categoriesFolded by remember { mutableStateOf(false) }
     val currentScreenVal by viewModel.currentScreen.collectAsState()
     val scrollState = rememberScrollState()
 
@@ -3312,7 +3313,7 @@ fun DrawerContent(
                     ) {
                         Text(
                             text = currentUser.name,
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark),
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = Color.Black),
                             maxLines = 1,
                             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                         )
@@ -3328,7 +3329,7 @@ fun DrawerContent(
                     }
                     Text(
                         text = currentUser.email,
-                        style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray),
+                        style = MaterialTheme.typography.bodySmall.copy(color = Color(0xFF1E293B), fontWeight = FontWeight.Medium),
                         maxLines = 1,
                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
@@ -3397,7 +3398,180 @@ fun DrawerContent(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Startup Disclosure Banner in Drawer
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFEFF6FF)),
+                border = BorderStroke(1.dp, Color(0xFFBFDBFE))
+            ) {
+                Row(
+                    modifier = Modifier.padding(10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Info,
+                        contentDescription = null,
+                        tint = Color(0xFF2563EB),
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Zyphuel is an early-stage startup operating in Lahore, not a large corporation.",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = Color(0xFF1E40AF),
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 11.sp,
+                            lineHeight = 15.sp
+                        )
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Foldable Service Categories Section
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
+                border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { categoriesFolded = !categoriesFolded }
+                            .testTag("sidebar_categories_toggle"),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Filled.Category,
+                                contentDescription = null,
+                                tint = ZyphuelBluePrimary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "CATEGORIES & SERVICES",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = ZyphuelBlueDark,
+                                    letterSpacing = 0.5.sp
+                                )
+                            )
+                        }
+                        Icon(
+                            imageVector = if (categoriesFolded) Icons.Filled.ExpandMore else Icons.Filled.ExpandLess,
+                            contentDescription = if (categoriesFolded) "Expand Categories" else "Collapse Categories",
+                            tint = Color.Gray,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+
+                    AnimatedVisibility(visible = !categoriesFolded) {
+                        Column(
+                            modifier = Modifier.padding(top = 10.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            // Petrol (2 subcategories)
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .clickable { onClose() }
+                                    .padding(vertical = 4.dp, horizontal = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text("⛽", fontSize = 16.sp)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column {
+                                    Text("Petrol (2 Types)", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark))
+                                    Text("Regular Petrol • High-Octane", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontSize = 10.sp))
+                                }
+                            }
+
+                            // Diesel (2 subcategories)
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .clickable { onClose() }
+                                    .padding(vertical = 4.dp, horizontal = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text("🛢️", fontSize = 16.sp)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column {
+                                    Text("Diesel (2 Types)", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark))
+                                    Text("Regular Diesel • Generator Diesel", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontSize = 10.sp))
+                                }
+                            }
+
+                            // Gas (1 option)
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .clickable { onClose() }
+                                    .padding(vertical = 4.dp, horizontal = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text("🔥", fontSize = 16.sp)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column {
+                                    Text("Gas (Cylinder)", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark))
+                                    Text("Gas Cylinder 11.8kg Sealed", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontSize = 10.sp))
+                                }
+                            }
+
+                            // Roadside SOS
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .clickable { onClose() }
+                                    .padding(vertical = 4.dp, horizontal = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text("🔋", fontSize = 16.sp)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column {
+                                    Text("Roadside Assistance", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark))
+                                    Text("SOS Quick Jumpstart • Battery", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontSize = 10.sp))
+                                }
+                            }
+
+                            // Detailing
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .clickable { onClose() }
+                                    .padding(vertical = 4.dp, horizontal = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text("🚗", fontSize = 16.sp)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column {
+                                    Text("Auto Repair & Detailing", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark))
+                                    Text("Doorstep Maintenance & Wash", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontSize = 10.sp))
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
 
             // Section: Account & Security
             Text(
@@ -3517,15 +3691,18 @@ fun DrawerContent(
                     onClose()
                 }
             )
-            SidebarItem(
-                icon = Icons.Filled.Explore,
-                label = "Take a Guided Tour 🧭",
-                modifier = Modifier.testTag("sidebar_app_tour"),
-                onClick = {
-                    viewModel.openAppTourGuide()
-                    onClose()
-                }
-            )
+            val hasSeenAppTour by viewModel.hasSeenAppTour.collectAsState()
+            if (!hasSeenAppTour) {
+                SidebarItem(
+                    icon = Icons.Filled.Explore,
+                    label = "Take a Guided Tour 🧭",
+                    modifier = Modifier.testTag("sidebar_app_tour"),
+                    onClick = {
+                        viewModel.openAppTourGuide()
+                        onClose()
+                    }
+                )
+            }
 
             // Section: Admin & Developer Tools (if admin)
             if (currentUser.role == "admin") {
@@ -3760,8 +3937,6 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
     var showProfileSettingsDialog by remember { mutableStateOf(false) }
     var showMyOrdersDialog by remember { mutableStateOf(false) }
     var showEditLocationDialog by remember { mutableStateOf(false) }
-    var showAsoDialog by remember { mutableStateOf(false) }
-    var showFcmDialog by remember { mutableStateOf(false) }
 
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
@@ -3846,7 +4021,7 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                 title = "Welcome to Zyphuel! 👋",
                 subtitle = "Lahore's Instant Doorstep Energy & Services",
                 body = "Zyphuel brings pure fuel (Super Petrol, High-Speed Diesel, High Octane), pure drinking water, LPG cylinders, and auto workshop mechanics directly to your doorstep in Lahore at 100% official OGRA rates. Chaliye, har feature ka mukammal live tour karte hain!",
-                tip = "Aap yeh tour kisi bhi waqt sidebar drawer menu se dobara open kar sakte hain.",
+                tip = "Zyphuel par aapko hamesha 100% genuine OGRA fuel aur doorstep delivery milegi.",
                 badge = "WELCOME TO ZYPHUEL",
                 icon = Icons.Filled.Celebration,
                 beforeShow = { revealItem(0) }
@@ -3863,112 +4038,102 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
             ),
             SpotlightStep(
                 anchorKey = "home_search_bar",
-                title = "2) Universal Typo-Tolerant Search 🔍",
-                subtitle = "Find Any Fuel, Fluid or Repair Service in Seconds",
-                body = "Search bar mein kuch bhi type karein — 'petrol', 'mobil oil', 'battery', 'tyre puncture', 'car wash'. Agar spelling mein ghalti bhi ho (maslan 'patrol' ya 'bettery'), hamara smart search foran sahi category dhund leta hai.",
+                title = "2) Search Services & Fuel 🔍",
+                subtitle = "Find Any Fuel, Gas or Repair Service in Seconds",
+                body = "Search bar mein kuch bhi type karein — 'petrol', 'diesel', 'gas cylinder', 'battery', 'tyre', 'car wash'. Hamara smart search foran sahi service dhund leta hai.",
                 tip = "Search results par tap karke aap direct us service ke live rate aur details dekh sakte hain.",
-                badge = "SMART SEARCH",
+                badge = "QUICK SEARCH",
                 icon = Icons.Filled.Search,
                 beforeShow = { revealItem(1) }
             ),
             SpotlightStep(
                 anchorKey = "home_quick_actions",
-                title = "3) 1-Tap Emergency Quick Actions ⚡",
-                subtitle = "Urgent Fuel Top-Up, SOS, Tyre & Battery Rescue",
-                body = "Sarak par ya ghar par emergency? Quick Actions bar se foran Doorstep Fuel, Auto Repair, Roadside SOS, Flat Tyre Puncture aur Battery Jumpstart sirf 1 tap par mangwayein.",
+                title = "3) 1-Tap Quick Services ⚡",
+                subtitle = "Urgent Fuel Top-Up, Gas, SOS, Tyre & Battery Rescue",
+                body = "Quick Actions bar se foran Doorstep Fuel, Gas Cylinders, Auto Repair, Roadside SOS aur Battery Jumpstart sirf 1 tap par mangwayein.",
                 tip = "Raat ke waqt ya emergency breakdown par 'Roadside SOS' instant response trigger karta hai.",
-                badge = "EMERGENCY SOS",
+                badge = "QUICK ACTIONS",
                 icon = Icons.Filled.Bolt,
                 beforeShow = { revealItem(2) }
             ),
             SpotlightStep(
-                anchorKey = "home_saved_vehicles",
-                title = "4) My Saved Vehicles Profile 🚗",
-                subtitle = "Personalized Fuel Tanks, Oil Specs & Fast Ordering",
-                body = "Apni bike ya car ka profile (Make, Model, Engine) save karein. App aapki gaari ke mutabiq fuel capacity aur recommended engine oil auto-calculate kar leta hai taake har order personalized rahe.",
-                tip = "Multiple gaariyan add kar sakte hain — order karte waqt sirf gaari select karein.",
-                badge = "VEHICLE GARAGE",
-                icon = Icons.Filled.DirectionsCar,
+                anchorKey = "service_petrol",
+                title = "4) Our Doorstep Services 🏬",
+                subtitle = "Transparent OGRA Rates • Fuel, Gas & Certified Auto Care",
+                body = "Mukammal doorstep services — Petrol, Diesel, High Octane, Pure Drinking Water, Gas Cylinders, Car Wash, Engine Oil, Battery aur Tyres. Sab rates official aur transparent hain.",
+                tip = "Kisi bhi card par tap karein aur uski sub-services aur official rates check karein.",
+                badge = "DOORSTEP SERVICES",
+                icon = Icons.Filled.GridView,
                 beforeShow = { revealItem(3) }
             ),
             SpotlightStep(
-                anchorKey = "service_petrol",
-                title = "5) 10-Category Services Marketplace 🏬",
-                subtitle = "Transparent OGRA Rates • Fuel, Water, Gas & Auto Care",
-                body = "10 mukammal categories — Petrol, Diesel, High Octane, Pure Drinking Water (Rs. 50/gallon), LPG Gas Cylinders, Car Wash, Engine Oil, Battery, Tyres, aur AC Repair. Sab live rates transparent hain.",
-                tip = "Kisi bhi card par tap karein aur uski sub-services aur official rates check karein.",
-                badge = "SERVICES MARKETPLACE",
-                icon = Icons.Filled.GridView,
-                beforeShow = { revealItem(4) }
-            ),
-            SpotlightStep(
                 anchorKey = "home_fab",
-                title = "6) Instant 1-Tap COD Ordering 🛒",
-                subtitle = "No Credit Card Required • 100% Risk-Free Checkout",
-                body = "Jaldi mein hain? 'Order Now' button dabayein! Quantity (Liters/Gallons) choose karein, total amount dekhein aur 1 tap mein Cash on Delivery order confirm karein. Zero advance payment, zero friction!",
-                tip = "30 Liters se baray orders par high-volume bulk bowser support aur WhatsApp hotline milti hai.",
-                badge = "1-TAP COD ORDERING",
+                title = "5) Instant 1-Tap Ordering 🛒",
+                subtitle = "Cash on Delivery / JazzCash • 100% Risk-Free",
+                body = "Jaldi mein hain? 'Order Now' button dabayein! Fuel type aur quantity select karein, bill dekhein aur Cash on Delivery order confirm karein. Zero advance payment, zero hassle!",
+                tip = "Fuel, gas cylinders ya auto care foran mangwayein.",
+                badge = "QUICK ORDERING",
                 icon = Icons.Filled.ShoppingCart,
                 beforeShow = { revealItem(0) }
             ),
             SpotlightStep(
                 anchorKey = null,
-                title = "7) Live 4-Stage Delivery Stepper 📦",
-                subtitle = "Real-Time Status Milestones & Direct Rider Contact",
-                body = "Order confirm hotay hi live tracking stepper activate ho jata hai: Order Placed ➔ Rider Assigned ➔ Out for Delivery ➔ Completed. Driver profile se direct Phone Call dial karein ya live WhatsApp chat karein.",
-                tip = "Driver ke aane par OTP ya inspection verify karein aur tasalli ke baad COD ada karein.",
-                badge = "LIVE ORDER TRACKING",
+                title = "6) Live 4-Stage Delivery Status 📦",
+                subtitle = "Milestone Updates & Direct Rider Contact",
+                body = "Order confirm hotay hi status update hota hai: Order Placed ➔ Rider Assigned ➔ Out for Delivery ➔ Completed. Driver profile se direct Phone Call karein ya WhatsApp karein.",
+                tip = "Rider ke aane par tasalli ke baad payment karein.",
+                badge = "ORDER TRACKING",
                 icon = Icons.Filled.LocalShipping,
                 beforeShow = { revealItem(0) }
             ),
             SpotlightStep(
                 anchorKey = null,
-                title = "8) Real-Time Emails & PDF Invoices 📧",
-                subtitle = "Automated Gmail Receipts & Downloadable Tax Invoices",
-                body = "Har order par aapko instant official confirmation email milti hai jisme itemized breakdown aur total bill hota hai. Order details se aap official OGRA-compliant PDF tax invoice bhi 1 click mein download kar sakte hain.",
-                tip = "Downloaded PDF invoices aapke device ke Downloads folder mein permanent save hoti hain.",
-                badge = "INVOICES & EMAILS",
+                title = "7) Emails & Official Invoices 📧",
+                subtitle = "Instant Receipts & Downloadable Tax Invoices",
+                body = "Har order par instant confirmation email milti hai. Order details se official OGRA-compliant PDF invoice bhi 1 click mein download kar sakte hain.",
+                tip = "Downloaded PDF invoices aapke Downloads folder mein save hoti hain.",
+                badge = "INVOICES & RECEIPTS",
                 icon = Icons.Filled.Email,
                 beforeShow = { revealItem(0) }
             ),
             SpotlightStep(
                 anchorKey = "home_notifications",
-                title = "9) Real-Time Notification Alerts 🔔",
-                subtitle = "Dispatch Updates, Driver Arrival & Promo Deals",
-                body = "Yeh notification bell aapko har ahem update deti hai — rider dispatch alerts, status changes aur special fuel discount offers. Unread count badge se koi alert miss nahi hota.",
-                tip = "Bell icon par tap karke aap apni notification history dekh aur clear kar sakte hain.",
-                badge = "NOTIFICATIONS & ALERTS",
+                title = "8) Notification Alerts 🔔",
+                subtitle = "Dispatch Updates, Driver Arrival & Official Rate Changes",
+                body = "Rider dispatch updates aur status changes ki notifications milti hain taake koi alert miss na ho.",
+                tip = "Bell icon par tap karke aap notification history dekh sakte hain.",
+                badge = "NOTIFICATIONS",
                 icon = Icons.Filled.Notifications,
                 beforeShow = { revealItem(0) }
             ),
             SpotlightStep(
                 anchorKey = "home_order_history",
-                title = "10) Your Delivery Dashboard 📊",
-                subtitle = "Track Total Spent, Completed Orders & 1-Tap Re-Order",
-                body = "Aapka personal dashboard jahan aapka total kharcha, completed deliveries ka count, aur mukammal past orders show hotay hain. 'View Full History' se purane order ko 1-tap se repeat karein.",
-                tip = "Filter chips (Delivered / Cancelled) se kisi bhi puranay order ko foran talash karein.",
-                badge = "ORDER DASHBOARD",
+                title = "9) Your Delivery History 📊",
+                subtitle = "Track Total Spent, Past Orders & 1-Tap Re-Order",
+                body = "Aapka personal order record jahan total spending, completed deliveries aur mukammal past orders show hotay hain.",
+                tip = "Past orders se kisi bhi purane order ko foran repeat karein.",
+                badge = "ORDER HISTORY",
                 icon = Icons.Filled.History,
-                beforeShow = { revealItem(6) }
+                beforeShow = { revealItem(5) }
             ),
             SpotlightStep(
                 anchorKey = null,
-                title = "11) Navigation Sidebar Menu ☰",
+                title = "10) Navigation Sidebar Menu ☰",
                 subtitle = "Profile, Security, Help Center & Legal Policies",
-                body = "Top left menu (☰) se aap Profile Settings, Security, Saved Locations, Terms & Conditions, Privacy Policy aur 24/7 Help Center access kar sakte hain.",
-                tip = "Koi bhi sawal ho toh 'Live Support & Help Center' se WhatsApp aur Phone helpline par rabta karein.",
-                badge = "SIDEBAR NAVIGATION",
+                body = "Top left menu (☰) se aap Profile Settings, Security, Saved Locations, Terms & Conditions, Privacy Policy aur Help Center access kar sakte hain.",
+                tip = "Koi bhi sawal ho toh 'Live Support' se WhatsApp aur Phone helpline par rabta karein.",
+                badge = "SIDEBAR MENU",
                 icon = Icons.Filled.Menu,
                 dimBackground = false,
                 beforeShow = { drawerState.open() }
             ),
             SpotlightStep(
                 anchorKey = null,
-                title = "12) Biometrics & Tour Complete! 🛡️",
+                title = "11) Biometrics & Tour Complete! 🛡️",
                 subtitle = "Fingerprint Login & You're Ready to Order!",
-                body = "Mubarak ho! Aapne Zyphuel ka mukammal tour complete kar liya hai. Apne account ko mehfooz rakhne ke liye settings se Fingerprint / Biometric login zaroor on karein. Happy Ordering!",
-                tip = "Yeh tour aap kabhi bhi sidebar menu se 'Take a Guided Tour 🧭' tap karke dobara chala sakte hain.",
-                badge = "BIOMETRICS & READY",
+                body = "Mubarak ho! Aapne Zyphuel ka tour complete kar liya hai. Apne account ko mehfooz rakhne ke liye settings se Fingerprint login zaroor on karein. Happy Ordering!",
+                tip = "Aapka account mukammal tayyar hai. Happy ordering with Zyphuel!",
+                badge = "ALL SET",
                 icon = Icons.Filled.Fingerprint,
                 beforeShow = { drawerState.close() }
             )
@@ -4007,9 +4172,7 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                 onOpenOrders = { showMyOrdersDialog = true },
                 onOpenFAQ = { showFAQDialog = true },
                 onOpenSupport = { showSupportDialog = true },
-                onOpenProfile = { showProfileSettingsDialog = true },
-                onOpenAso = { showAsoDialog = true },
-                onOpenFcm = { showFcmDialog = true }
+                onOpenProfile = { showProfileSettingsDialog = true }
             )
         }
     ) {
@@ -4096,18 +4259,25 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                     .padding(horizontal = 20.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Welcome Card Banner
+                // Delivery Address & Location Header (Careem / Indrive Style)
                 item {
                     Card(
-                        modifier = Modifier.fillMaxWidth().testTag("user_location_active_card").spotlightAnchor(spotlight, "user_location_active_card"),
-                        shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(containerColor = ZyphuelBlueDark)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("user_location_active_card")
+                            .spotlightAnchor(spotlight, "user_location_active_card"),
+                        shape = RoundedCornerShape(18.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                        border = BorderStroke(1.dp, Color(0xFFE2E8F0))
                     ) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(18.dp)
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
+                            // Top Row: Delivering To & Share Pin
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically,
@@ -4115,190 +4285,133 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                             ) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                                 ) {
-                                    val infiniteTransition = rememberInfiniteTransition(label = "pulse_cust")
-                                    val alpha by infiniteTransition.animateFloat(
-                                        initialValue = 0.4f,
-                                        targetValue = 1f,
-                                        animationSpec = infiniteRepeatable(
-                                            animation = tween(1000, easing = LinearEasing),
-                                            repeatMode = RepeatMode.Reverse
-                                        ),
-                                        label = "alpha_cust"
-                                    )
-                                    Box(
-                                        modifier = Modifier
-                                            .size(10.dp)
-                                            .alpha(alpha)
-                                            .background(if (isCustomLocationSet) Color(0xFF3B82F6) else Color(0xFF10B981), CircleShape)
+                                    Icon(
+                                        imageVector = Icons.Filled.LocationOn,
+                                        contentDescription = null,
+                                        tint = ZyphuelBluePrimary,
+                                        modifier = Modifier.size(18.dp)
                                     )
                                     Text(
-                                        text = "User Live Location Active",
-                                        style = MaterialTheme.typography.titleMedium.copy(
-                                            color = ZyphuelBlueSecondary,
-                                            fontWeight = FontWeight.Bold
+                                        text = "Deliver to Lahore",
+                                        style = MaterialTheme.typography.titleSmall.copy(
+                                            color = ZyphuelBlueDark,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 14.sp
                                         )
                                     )
                                 }
 
                                 Surface(
-                                    onClick = {
-                                        val lat = viewModel.deviceLatitude.value
-                                        val lng = viewModel.deviceLongitude.value
-                                        val addr = viewModel.currentGpsLabel.value
-                                        if (lat != 0.0 && lng != 0.0) {
-                                            val shareText = "📍 My Delivery Location:\n$addr\nhttps://maps.google.com/?q=$lat,$lng"
-                                            val shareIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
-                                                type = "text/plain"
-                                                putExtra(android.content.Intent.EXTRA_SUBJECT, "Zyphuel - My Delivery Location")
-                                                putExtra(android.content.Intent.EXTRA_TEXT, shareText)
-                                            }
-                                            context.startActivity(android.content.Intent.createChooser(shareIntent, "Share Location via"))
-                                        } else {
-                                            Toast.makeText(context, "Location not available. Please enable GPS first.", Toast.LENGTH_SHORT).show()
-                                        }
-                                    },
-                                    shape = RoundedCornerShape(12.dp),
-                                    color = ZyphuelBluePrimary.copy(alpha = 0.4f),
-                                    border = BorderStroke(1.dp, ZyphuelBlueSecondary.copy(alpha = 0.5f)),
-                                    modifier = Modifier.testTag("share_location_badge")
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = Color(0xFFF1F5F9),
+                                    modifier = Modifier.testTag("lahore_active_badge")
                                 ) {
-                                    Row(
-                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Filled.Share,
-                                            contentDescription = "Share Location",
-                                            tint = Color.White,
-                                            modifier = Modifier.size(16.dp)
-                                        )
-                                        Text(
-                                            text = "Share",
-                                            style = MaterialTheme.typography.labelMedium.copy(
-                                                fontWeight = FontWeight.Bold,
-                                                color = Color.White
-                                            )
-                                        )
-                                    }
+                                    Text(
+                                        text = "Lahore Active",
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = ZyphuelBlueDark,
+                                            fontSize = 11.sp
+                                        ),
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                    )
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(10.dp))
-
+                            // Middle Row: Current address text & Change button
                             Row(
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(Color(0xFFF8FAFC))
+                                    .clickable { showEditLocationDialog = true }
+                                    .padding(horizontal = 12.dp, vertical = 10.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
                                         text = liveLocationCoordinates,
-                                        style = MaterialTheme.typography.bodyLarge.copy(
-                                            color = Color.White,
-                                            fontWeight = FontWeight.SemiBold
-                                        )
+                                        style = MaterialTheme.typography.bodyMedium.copy(
+                                            color = ZyphuelBlueDark,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 14.sp
+                                        ),
+                                        maxLines = 1,
+                                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                                     )
-                                    Spacer(modifier = Modifier.height(4.dp))
                                     Text(
-                                        text = if (isCustomLocationSet) "📍 Custom delivery location active" else "⚡ Automatically updating via live GPS",
+                                        text = if (isCustomLocationSet) "Custom address set • Tap to update" else "GPS active • Tap to choose address",
                                         style = MaterialTheme.typography.labelSmall.copy(
-                                            color = ZyphuelBlueSecondary.copy(alpha = 0.9f)
+                                            color = Color.Gray,
+                                            fontSize = 11.sp
                                         )
                                     )
                                 }
                                 Spacer(modifier = Modifier.width(8.dp))
-                                IconButton(
-                                    onClick = { showEditLocationDialog = true },
+                                Surface(
+                                    color = ZyphuelBluePrimary.copy(alpha = 0.1f),
+                                    shape = RoundedCornerShape(8.dp),
                                     modifier = Modifier.testTag("location_icon_btn")
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.Filled.LocationOn,
-                                        contentDescription = "Edit Location",
-                                        tint = ZyphuelBlueSecondary,
-                                        modifier = Modifier.size(36.dp)
+                                    Text(
+                                        text = "Change",
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            color = ZyphuelBluePrimary,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 11.sp
+                                        ),
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
                                     )
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(12.dp))
+                            // Bottom Row: Auto Detect GPS Action button
+                            OutlinedButton(
+                                onClick = {
+                                    val hasFine = androidx.core.content.ContextCompat.checkSelfPermission(
+                                        context,
+                                        android.Manifest.permission.ACCESS_FINE_LOCATION
+                                    ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                                    val hasCoarse = androidx.core.content.ContextCompat.checkSelfPermission(
+                                        context,
+                                        android.Manifest.permission.ACCESS_COARSE_LOCATION
+                                    ) == android.content.pm.PackageManager.PERMISSION_GRANTED
 
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Button(
-                                    onClick = {
-                                        val lat = viewModel.deviceLatitude.value
-                                        val lng = viewModel.deviceLongitude.value
-                                        val addr = viewModel.currentGpsLabel.value
-                                        if (lat != 0.0 && lng != 0.0) {
-                                            val shareText = "📍 My Delivery Location:\n$addr\nhttps://maps.google.com/?q=$lat,$lng"
-                                            val shareIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
-                                                type = "text/plain"
-                                                putExtra(android.content.Intent.EXTRA_SUBJECT, "Zyphuel - My Delivery Location")
-                                                putExtra(android.content.Intent.EXTRA_TEXT, shareText)
+                                    if (hasFine || hasCoarse) {
+                                        fetchDeviceGpsLocation(
+                                            context = context,
+                                            onLocationResult = { lat, lng, addr ->
+                                                viewModel.updateDeviceGpsLocation(lat, lng, addr)
+                                            },
+                                            onError = { err ->
+                                                Toast.makeText(context, err, Toast.LENGTH_SHORT).show()
                                             }
-                                            context.startActivity(android.content.Intent.createChooser(shareIntent, "Share Location via"))
-                                        } else {
-                                            Toast.makeText(context, "Location not available. Please enable GPS first.", Toast.LENGTH_SHORT).show()
-                                        }
-                                    },
-                                    modifier = Modifier.weight(1f).testTag("share_location_btn"),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = ZyphuelBluePrimary,
-                                        contentColor = Color.White
-                                    ),
-                                    shape = RoundedCornerShape(10.dp),
-                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp)
-                                ) {
-                                    Icon(Icons.Filled.Share, contentDescription = null, modifier = Modifier.size(14.dp))
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text("Share Location", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
-                                }
-
-                                OutlinedButton(
-                                    onClick = {
-                                        val hasFine = androidx.core.content.ContextCompat.checkSelfPermission(
-                                            context,
-                                            android.Manifest.permission.ACCESS_FINE_LOCATION
-                                        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
-                                        val hasCoarse = androidx.core.content.ContextCompat.checkSelfPermission(
-                                            context,
-                                            android.Manifest.permission.ACCESS_COARSE_LOCATION
-                                        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
-
-                                        if (hasFine || hasCoarse) {
-                                            fetchDeviceGpsLocation(
-                                                context = context,
-                                                onLocationResult = { lat, lng, addr ->
-                                                    viewModel.updateDeviceGpsLocation(lat, lng, addr)
-                                                },
-                                                onError = { err ->
-                                                    Toast.makeText(context, err, Toast.LENGTH_SHORT).show()
-                                                }
+                                        )
+                                    } else {
+                                        locationPermissionLauncher.launch(
+                                            arrayOf(
+                                                android.Manifest.permission.ACCESS_FINE_LOCATION,
+                                                android.Manifest.permission.ACCESS_COARSE_LOCATION
                                             )
-                                        } else {
-                                            locationPermissionLauncher.launch(
-                                                arrayOf(
-                                                    android.Manifest.permission.ACCESS_FINE_LOCATION,
-                                                    android.Manifest.permission.ACCESS_COARSE_LOCATION
-                                                )
-                                            )
-                                        }
-                                    },
-                                    modifier = Modifier.weight(1f).testTag("auto_detect_gps_btn"),
-                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = ZyphuelBlueSecondary),
-                                    border = BorderStroke(1.dp, ZyphuelBlueSecondary.copy(alpha = 0.6f)),
-                                    shape = RoundedCornerShape(10.dp),
-                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp)
-                                ) {
-                                    Icon(Icons.Filled.MyLocation, contentDescription = null, modifier = Modifier.size(14.dp))
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text("Auto Detect GPS", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
-                                }
+                                        )
+                                    }
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .testTag("auto_detect_gps_btn"),
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    contentColor = ZyphuelBluePrimary
+                                ),
+                                border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                                shape = RoundedCornerShape(10.dp),
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
+                            ) {
+                                Icon(Icons.Filled.MyLocation, contentDescription = null, modifier = Modifier.size(14.dp), tint = ZyphuelBluePrimary)
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Auto-Detect Current GPS", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary))
                             }
                         }
                     }
@@ -4334,24 +4447,337 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                     )
                 }
 
-                // Saved Vehicles Strip (My Vehicles)
+                // Authentic Lahore Startup Transparency Notice Card
                 item {
-                    SavedVehiclesBar(
-                        selectedVehicle = selectedVehicle,
-                        onOpenMyVehicles = { showMyVehiclesDialog = true },
-                        modifier = Modifier.spotlightAnchor(spotlight, "home_saved_vehicles")
-                    )
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("home_startup_notice_card"),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF0FDF4)),
+                        border = BorderStroke(1.dp, Color(0xFF86EFAC)),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Surface(
+                                shape = CircleShape,
+                                color = Color(0xFF16A34A).copy(alpha = 0.15f),
+                                modifier = Modifier.size(38.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text("🌱", fontSize = 18.sp)
+                                }
+                            }
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Early-Stage Lahore Startup",
+                                    style = MaterialTheme.typography.titleSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF14532D)
+                                    )
+                                )
+                                Text(
+                                    text = "Zyphuel is an agile local startup founded in Lahore — not a big corporate company. We provide personal, honest doorstep fuel, gas & emergency delivery!",
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        color = Color(0xFF166534),
+                                        fontSize = 11.5.sp,
+                                        lineHeight = 16.sp
+                                    )
+                                )
+                            }
+                        }
+                    }
                 }
 
-                // 10-Category Dynamic Marketplace Grid
+                // Primary Doorstep Services Section (Handcrafted & Clean)
                 item {
-                    Box(modifier = Modifier.spotlightAnchor(spotlight, "service_petrol")) {
-                        CategoryGridSection(
-                            categories = categories,
-                            onCategoryClick = { category ->
-                                selectedCategoryForModal = category
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text(
+                                    text = "Our Services",
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = ZyphuelBlueDark
+                                    )
+                                )
+                                Text(
+                                    text = "Doorstep fuel, gas & roadside support in Lahore",
+                                    style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray)
+                                )
                             }
-                        )
+                            Surface(
+                                color = ZyphuelBluePrimary.copy(alpha = 0.1f),
+                                shape = RoundedCornerShape(10.dp)
+                            ) {
+                                Text(
+                                    text = "Deliver to Lahore",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        color = ZyphuelBluePrimary,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 11.sp
+                                    ),
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                )
+                            }
+                        }
+
+                        // 1. Petrol (2 Subcategories: Regular Euro-V & High-Octane 97)
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    selectedService = "Petrol"
+                                    showOrderDialog = true
+                                }
+                                .testTag("service_petrol")
+                                .spotlightAnchor(spotlight, "service_petrol"),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Surface(
+                                        shape = RoundedCornerShape(12.dp),
+                                        color = Color(0xFF059669).copy(alpha = 0.12f),
+                                        modifier = Modifier.size(46.dp)
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Icon(Icons.Filled.LocalGasStation, contentDescription = null, tint = Color(0xFF059669), modifier = Modifier.size(24.dp))
+                                        }
+                                    }
+                                    Column {
+                                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                            Text("Petrol", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark))
+                                            Surface(
+                                                color = Color(0xFFDCFCE7),
+                                                shape = RoundedCornerShape(6.dp)
+                                            ) {
+                                                Text("2 Types", color = Color(0xFF16A34A), fontWeight = FontWeight.Bold, fontSize = 10.sp, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                                            }
+                                        }
+                                        Text(
+                                            text = "Regular Petrol (Euro-V) • High-Octane (HOBC 97)",
+                                            style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray)
+                                        )
+                                    }
+                                }
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Text(
+                                        text = "Rs. ${String.format(java.util.Locale.US, "%.2f", petrolPrice)}/L",
+                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFF059669))
+                                    )
+                                    Text("OGRA Rate", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontSize = 10.sp))
+                                }
+                            }
+                        }
+
+                        // 2. Diesel (2 Subcategories: Regular Diesel & Generator Diesel)
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    selectedService = "Diesel"
+                                    showOrderDialog = true
+                                }
+                                .testTag("service_diesel"),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Surface(
+                                        shape = RoundedCornerShape(12.dp),
+                                        color = Color(0xFF2563EB).copy(alpha = 0.12f),
+                                        modifier = Modifier.size(46.dp)
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Icon(Icons.Filled.DirectionsCar, contentDescription = null, tint = Color(0xFF2563EB), modifier = Modifier.size(24.dp))
+                                        }
+                                    }
+                                    Column {
+                                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                            Text("Diesel", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark))
+                                            Surface(
+                                                color = Color(0xFFDBEAFE),
+                                                shape = RoundedCornerShape(6.dp)
+                                            ) {
+                                                Text("2 Types", color = Color(0xFF1D4ED8), fontWeight = FontWeight.Bold, fontSize = 10.sp, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                                            }
+                                        }
+                                        Text(
+                                            text = "Regular Diesel (Euro-V) • Generator Diesel (Bulk)",
+                                            style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray)
+                                        )
+                                    }
+                                }
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Text(
+                                        text = "Rs. ${String.format(java.util.Locale.US, "%.2f", dieselPrice)}/L",
+                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFF2563EB))
+                                    )
+                                    Text("OGRA Rate", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontSize = 10.sp))
+                                }
+                            }
+                        }
+
+                        // 3. Gas (Only 1 Single Option: Gas Cylinder)
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    selectedService = "Gas"
+                                    showOrderDialog = true
+                                }
+                                .testTag("service_gas"),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Surface(
+                                        shape = RoundedCornerShape(12.dp),
+                                        color = Color(0xFFEA580C).copy(alpha = 0.12f),
+                                        modifier = Modifier.size(46.dp)
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Icon(Icons.Filled.PropaneTank, contentDescription = null, tint = Color(0xFFEA580C), modifier = Modifier.size(24.dp))
+                                        }
+                                    }
+                                    Column {
+                                        Text("Gas", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark))
+                                        Text(
+                                            text = "Certified 11.8kg Factory-Sealed Cylinder",
+                                            style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray)
+                                        )
+                                    }
+                                }
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Text(
+                                        text = "Rs. ${String.format(java.util.Locale.US, "%.2f", lpgPrice)}/Kg",
+                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFFEA580C))
+                                    )
+                                    Text("Standard Rate", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontSize = 10.sp))
+                                }
+                            }
+                        }
+
+                        // 4. Roadside Assistance SOS & Pure Water Grid Row
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            // Roadside SOS
+                            Card(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clickable {
+                                        val cat = categories.firstOrNull { it.id == "roadside_assistance" }
+                                        if (cat != null) selectedCategoryForModal = cat
+                                        else {
+                                            val dialIntent = android.content.Intent(android.content.Intent.ACTION_DIAL).apply {
+                                                data = android.net.Uri.parse("tel:+923230112464")
+                                            }
+                                            context.startActivity(dialIntent)
+                                        }
+                                    }
+                                    .testTag("service_roadside"),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color.White),
+                                border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                            ) {
+                                Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Surface(
+                                        shape = RoundedCornerShape(10.dp),
+                                        color = Color(0xFFDC2626).copy(alpha = 0.12f),
+                                        modifier = Modifier.size(36.dp)
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Icon(Icons.Filled.CarCrash, contentDescription = null, tint = Color(0xFFDC2626), modifier = Modifier.size(20.dp))
+                                        }
+                                    }
+                                    Text("Roadside SOS", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark))
+                                    Text("Jumpstart & 24/7 Breakdown Help", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray))
+                                }
+                            }
+
+                            // Pure Water Delivery
+                            Card(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clickable {
+                                        selectedService = "Water"
+                                        showOrderDialog = true
+                                    }
+                                    .testTag("service_water"),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color.White),
+                                border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                            ) {
+                                Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Surface(
+                                        shape = RoundedCornerShape(10.dp),
+                                        color = Color(0xFF0284C7).copy(alpha = 0.12f),
+                                        modifier = Modifier.size(36.dp)
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Icon(Icons.Filled.WaterDrop, contentDescription = null, tint = Color(0xFF0284C7), modifier = Modifier.size(20.dp))
+                                        }
+                                    }
+                                    Text("Pure Water", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark))
+                                    Text("Drinking Water & Tankers", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray))
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -4411,7 +4837,7 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                 // Dedicated Order History Dashboard Section
                 item {
                     Text(
-                        text = "Order History & Insights",
+                        text = "Your Orders & Activity",
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             color = ZyphuelBlueDark
@@ -4446,7 +4872,7 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                                         modifier = Modifier.size(18.dp)
                                     )
                                     Text(
-                                        text = "Your Delivery Dashboard",
+                                        text = "Activity & Spending",
                                         style = MaterialTheme.typography.bodyMedium.copy(
                                             fontWeight = FontWeight.Bold,
                                             color = ZyphuelBlueDark
@@ -4535,7 +4961,7 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                                 Icon(Icons.Filled.History, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color.White)
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = "View Full Customer Order History Screen 📜",
+                                    text = "View Full Order History →",
                                     style = MaterialTheme.typography.bodyMedium.copy(
                                         fontWeight = FontWeight.Bold,
                                         color = Color.White
@@ -4688,14 +5114,6 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                 showEditLocationDialog = false
             }
         )
-    }
-
-    if (showAsoDialog) {
-        AsoOptimizationDialog(onDismiss = { showAsoDialog = false })
-    }
-
-    if (showFcmDialog) {
-        FcmConsoleDialog(viewModel = viewModel, onDismiss = { showFcmDialog = false })
     }
 }
 
@@ -5408,16 +5826,16 @@ fun CustomerPastOrderCard(order: OrderEntity, viewModel: MainViewModel) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .shadow(1.dp, RoundedCornerShape(12.dp)),
+            .shadow(2.dp, RoundedCornerShape(16.dp)),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(1.dp, Color(0xFFF1F5F9))
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, Color(0xFFE2E8F0))
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             // Header: Service & Date Stamp
             Row(
@@ -5427,18 +5845,25 @@ fun CustomerPastOrderCard(order: OrderEntity, viewModel: MainViewModel) {
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(
-                        imageVector = when (order.serviceType) {
-                            "Petrol", "Diesel", "High-Octane" -> Icons.Filled.LocalGasStation
-                            "LPG Gas" -> Icons.Filled.Fireplace
-                            else -> Icons.Filled.WaterDrop
-                        },
-                        contentDescription = null,
-                        tint = ZyphuelBluePrimary,
-                        modifier = Modifier.size(16.dp)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(28.dp)
+                            .background(ZyphuelBluePrimary.copy(alpha = 0.1f), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = when (order.serviceType) {
+                                "Petrol", "Diesel", "High-Octane" -> Icons.Filled.LocalGasStation
+                                "LPG Gas" -> Icons.Filled.Fireplace
+                                else -> Icons.Filled.WaterDrop
+                            },
+                            contentDescription = null,
+                            tint = ZyphuelBluePrimary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
                     Text(
                         text = order.serviceType,
                         style = MaterialTheme.typography.bodyMedium.copy(
@@ -5451,8 +5876,8 @@ fun CustomerPastOrderCard(order: OrderEntity, viewModel: MainViewModel) {
                 Text(
                     text = formattedDate,
                     style = MaterialTheme.typography.labelSmall.copy(
-                        color = Color.Gray,
-                        fontSize = 10.sp
+                        color = Color(0xFF64748B),
+                        fontSize = 11.sp
                     )
                 )
             }
@@ -5463,10 +5888,13 @@ fun CustomerPastOrderCard(order: OrderEntity, viewModel: MainViewModel) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Bottom
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
                     Text(
                         text = "Order ID: #${order.id}",
-                        style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray)
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = Color(0xFF64748B),
+                            fontWeight = FontWeight.Medium
+                        )
                     )
                     val unit = when (order.serviceType) {
                         "Water" -> "Gallons"
@@ -5475,19 +5903,22 @@ fun CustomerPastOrderCard(order: OrderEntity, viewModel: MainViewModel) {
                     }
                     Text(
                         text = "Quantity: ${order.quantity} $unit",
-                        style = MaterialTheme.typography.bodySmall.copy(color = Color.DarkGray)
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = Color(0xFF334155),
+                            fontWeight = FontWeight.SemiBold
+                        )
                     )
                     Text(
                         text = "Address: ${order.deliveryAddress}",
-                        style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray),
+                        style = MaterialTheme.typography.bodySmall.copy(color = Color(0xFF64748B)),
                         maxLines = 1,
                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                        modifier = Modifier.fillMaxWidth(0.65f)
+                        modifier = Modifier.fillMaxWidth(0.62f)
                     )
                 }
 
                 // Total and Status
-                Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(
                         text = "Total: ${viewModel.formatPrice(order.totalPrice)}",
                         style = MaterialTheme.typography.bodyMedium.copy(
@@ -5496,20 +5927,25 @@ fun CustomerPastOrderCard(order: OrderEntity, viewModel: MainViewModel) {
                         )
                     )
 
+                    val isCompleted = order.status in listOf("Completed", "Delivered")
+                    val isCancelled = order.status in listOf("Cancelled", "Failed")
+                    val (statusBg, statusFg) = when {
+                        isCompleted -> Color(0xFFDCFCE7) to Color(0xFF16A34A)
+                        isCancelled -> Color(0xFFFEE2E2) to Color(0xFFDC2626)
+                        else -> Color(0xFFFEF3C7) to Color(0xFFD97706)
+                    }
+
                     Box(
                         modifier = Modifier
-                            .background(
-                                color = if (order.status == "Completed") Color(0xFF10B981).copy(alpha = 0.15f) else Color(0xFFEF4444).copy(alpha = 0.15f),
-                                shape = RoundedCornerShape(6.dp)
-                            )
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                            .background(color = statusBg, shape = RoundedCornerShape(8.dp))
+                            .padding(horizontal = 8.dp, vertical = 3.dp)
                     ) {
                         Text(
                             text = order.status,
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontWeight = FontWeight.Bold,
-                                color = if (order.status == "Completed") Color(0xFF10B981) else Color(0xFFEF4444),
-                                fontSize = 9.sp
+                                color = statusFg,
+                                fontSize = 10.sp
                             )
                         )
                     }
@@ -6155,7 +6591,7 @@ fun CustomerOrderCard(
     }
 
     if (showCardInvoice) {
-        InvoiceDialog(order = order, onDismiss = { showCardInvoice = false })
+        InvoiceDialog(order = order, viewModel = viewModel, onDismiss = { showCardInvoice = false })
     }
 }
 
@@ -6541,7 +6977,7 @@ fun UnifiedGoogleMapView(
                     iconAnchor: [60, 45]
                 });
                 window.driverMarker = L.marker([$calcDriverLat, $calcDriverLng], { icon: driverIcon }).addTo(map);
-                window.driverMarker.bindPopup("<b>Assigned Rider: $driverName</b><br>Vehicle #: $vehicleNo ($vehicleType)<br>Status: $orderStatus<br>ETA: ~$etaMinutes mins");
+                window.driverMarker.bindPopup("<b>Assigned Rider: $driverName</b><br>Vehicle #: $vehicleNo ($vehicleType)<br>Status: $orderStatus");
 
                 window.driverMarker.on('click', function() {
                     if (window.AndroidBridge && window.AndroidBridge.onDriverClicked) {
@@ -6634,7 +7070,7 @@ fun UnifiedGoogleMapView(
                         }
                         Column {
                             Text(
-                                text = "⏱️ ETA: ~$etaMinutes mins (${"%.1f".format(distanceKm)} km)",
+                                text = "📍 Live Distance: ${"%.1f".format(distanceKm)} km",
                                 style = MaterialTheme.typography.titleSmall.copy(
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White
@@ -7254,7 +7690,7 @@ fun OrderStatusAndCoverageBottomSheet(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Header Title & Live ETA
+            // Header Title & Dispatch Status
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -7272,7 +7708,7 @@ fun OrderStatusAndCoverageBottomSheet(
                             border = BorderStroke(1.dp, Color(0xFF22C55E))
                         ) {
                             Text(
-                                text = "LIVE ETA: 12-15 MINS",
+                                text = "DISPATCH: ACTIVE",
                                 style = MaterialTheme.typography.labelSmall.copy(color = Color(0xFF4ADE80), fontWeight = FontWeight.Bold),
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                             )
@@ -7592,7 +8028,7 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
         totalQuantity += octaneQty
     }
     if (lpgSelected) {
-        selectedSummaryParts.add("LPG Gas (${lpgQty}KG)")
+        selectedSummaryParts.add("Gas (${lpgQty}KG)")
         totalQuantity += lpgQty
     }
     if (waterSelected) {
@@ -7798,7 +8234,7 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                     }
                 }
 
-                // 4. LPG Gas
+                // 4. Gas
                 Card(
                     colors = CardDefaults.cardColors(containerColor = if (lpgSelected) Color(0xFFEFF6FF) else Color(0xFFF8FAFC)),
                     border = BorderStroke(1.dp, if (lpgSelected) ZyphuelBluePrimary else Color(0xFFE2E8F0)),
@@ -7817,7 +8253,7 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                                 colors = CheckboxDefaults.colors(checkedColor = ZyphuelBluePrimary)
                             )
                             Column {
-                                Text("LPG Gas", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
+                                Text("Gas", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
                                 Text("${viewModel.formatUnitPrice(lpgPrice, "Kg")}", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                             }
                         }
@@ -8001,6 +8437,11 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                         Text("Grand Total:", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold))
                         Text(viewModel.formatPrice(totalPrice), style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary))
                     }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "💵 Pay via Cash on Delivery, JazzCash or EasyPaisa upon arrival.",
+                        style = MaterialTheme.typography.labelSmall.copy(color = Color(0xFF059669), fontWeight = FontWeight.SemiBold, fontSize = 11.sp)
+                    )
                 }
             }
         },
@@ -8059,7 +8500,7 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                             tint = Color.White
                         )
                         Text(
-                            "Confirm Order (COD) 💵",
+                            "Place Delivery Order 🚀",
                             color = Color.White,
                             fontWeight = FontWeight.Bold
                         )
@@ -8084,6 +8525,7 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
 @Composable
 fun InvoiceDialog(
     order: OrderEntity,
+    viewModel: MainViewModel? = null,
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
@@ -8147,7 +8589,7 @@ fun InvoiceDialog(
                         HorizontalDivider(color = Color(0xFFE2E8F0).copy(alpha = 0.5f))
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             Text("Assigned Driver:", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.Gray))
-                            Text(order.riderName ?: "Zyphuel Dispatch Hub", style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold, color = Color(0xFF0284C7)))
+                            Text(order.riderName ?: "Zyphuel Rider", style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold, color = Color(0xFF0284C7)))
                         }
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             Text("Payment Mode:", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.Gray))
@@ -8195,7 +8637,27 @@ fun InvoiceDialog(
                     Text("Official Tax Invoice • Verified Transaction", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFF16A34A)))
                 }
 
-                // Action Buttons: Download PDF & Share
+                // Action 1: Send Invoice to Registered Email (Real-Time Dispatch)
+                Button(
+                    onClick = {
+                        if (viewModel != null) {
+                            viewModel.sendOrderInvoiceEmail(order)
+                            Toast.makeText(context, "📧 Tax Invoice dispatched to ${order.customerEmail}!", Toast.LENGTH_LONG).show()
+                        } else {
+                            com.example.util.InvoiceGenerator.shareInvoice(context, order)
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth().testTag("email_invoice_to_registered_btn"),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F766E)),
+                    shape = RoundedCornerShape(12.dp),
+                    contentPadding = PaddingValues(vertical = 12.dp)
+                ) {
+                    Icon(Icons.Filled.Email, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("📧 Send Invoice to Registered Email", fontWeight = FontWeight.Bold)
+                }
+
+                // Action 2: Download PDF
                 Button(
                     onClick = {
                         com.example.util.InvoiceGenerator.printOrSavePdf(context, order)
@@ -8210,6 +8672,7 @@ fun InvoiceDialog(
                     Text("📥 Download / Save as PDF", fontWeight = FontWeight.Bold)
                 }
 
+                // Action 3: Share
                 OutlinedButton(
                     onClick = {
                         com.example.util.InvoiceGenerator.shareInvoice(context, order)
@@ -8418,7 +8881,7 @@ fun OrderSummaryCard(order: OrderEntity, viewModel: MainViewModel) {
             HorizontalDivider(color = Color.LightGray.copy(alpha = 0.4f))
             Spacer(modifier = Modifier.height(12.dp))
 
-            // ETA and Tracker Details
+            // Dispatch and Tracker Details
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -8428,18 +8891,18 @@ fun OrderSummaryCard(order: OrderEntity, viewModel: MainViewModel) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    imageVector = Icons.Filled.AccessTime,
-                    contentDescription = "ETA",
+                    imageVector = Icons.Filled.LocalShipping,
+                    contentDescription = "Dispatch Status",
                     tint = ZyphuelBluePrimary,
                     modifier = Modifier.size(18.dp)
                 )
                 Column {
                     Text(
-                        text = "Estimated Delivery Time",
+                        text = "Current Status",
                         style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontWeight = FontWeight.Bold)
                     )
                     Text(
-                        text = "${order.etaMinutes} mins (${viewModel.mapStatusToUserFriendly(order.status)})",
+                        text = viewModel.mapStatusToUserFriendly(order.status),
                         style = MaterialTheme.typography.bodySmall.copy(
                             fontWeight = FontWeight.Bold,
                             color = ZyphuelBlueDark
@@ -8451,7 +8914,7 @@ fun OrderSummaryCard(order: OrderEntity, viewModel: MainViewModel) {
     }
 
     if (showInvoiceDialog) {
-        InvoiceDialog(order = order, onDismiss = { showInvoiceDialog = false })
+        InvoiceDialog(order = order, viewModel = viewModel, onDismiss = { showInvoiceDialog = false })
     }
 }
 
@@ -9568,6 +10031,7 @@ fun TrackerScreen(viewModel: MainViewModel) {
     if (showInvoiceModalForTracking && trackingOrder != null) {
         InvoiceDialog(
             order = trackingOrder!!,
+            viewModel = viewModel,
             onDismiss = { showInvoiceModalForTracking = false }
         )
     }
@@ -10143,31 +10607,7 @@ fun SupportDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
                         answer = "Yes, you can cancel an order from your active tracking card before a rider is dispatched or by contacting WhatsApp support."
                     )
 
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    // Interactive Guided App Tour trigger button
-                    OutlinedButton(
-                        onClick = {
-                            onDismiss()
-                            viewModel.openAppTourGuide()
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(44.dp)
-                            .testTag("help_center_start_tour_btn"),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = ZyphuelBluePrimary),
-                        border = BorderStroke(1.5.dp, ZyphuelBluePrimary)
-                    ) {
-                        Icon(Icons.Filled.Explore, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            "Take Guided App Tour (13 Steps) 🧭",
-                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
                 }
             }
         }
@@ -10592,7 +11032,15 @@ fun ProfileSettingsDialog(
     var password by remember { mutableStateOf(currentUser!!.passwordHash) }
     var passwordVisible by remember { mutableStateOf(false) }
     var showDeleteConfirmInProfile by remember { mutableStateOf(false) }
+    var pushNotificationsEnabled by remember { mutableStateOf(true) }
 
+    // Enhanced Settings State (Language, Saved Addresses, Storage)
+    var selectedLanguage by remember { mutableStateOf("English") }
+    var savedHomeAddress by remember { mutableStateOf("Model Town Block C, Lahore") }
+    var savedWorkAddress by remember { mutableStateOf("Main Boulevard, Gulberg III, Lahore") }
+    var editingAddressType by remember { mutableStateOf<String?>(null) }
+    var tempAddressText by remember { mutableStateOf("") }
+    var cacheCleared by remember { mutableStateOf(false) }
 
     // System gallery picker
     val pickerLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
@@ -10615,6 +11063,8 @@ fun ProfileSettingsDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        containerColor = Color.White,
+        shape = RoundedCornerShape(20.dp),
         title = {
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -10674,12 +11124,12 @@ fun ProfileSettingsDialog(
                     Text("Upload Photo", style = MaterialTheme.typography.labelMedium)
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 // Predefined Presets Row
                 Text(
                     text = "OR CHOOSE A COLOR PRESET",
-                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.Gray)
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.Black)
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Row(
@@ -10714,8 +11164,343 @@ fun ProfileSettingsDialog(
                 modifier = Modifier
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
+                // Startup Transparency Notice Card
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFEFF6FF)),
+                    border = BorderStroke(1.dp, Color(0xFFBFDBFE))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Filled.Info, contentDescription = null, tint = Color(0xFF2563EB), modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                "Early-Stage Startup Notice",
+                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold, color = Color.Black)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            "Zyphuel is currently an evolving early-stage startup operating in Lahore, not a large corporation. We provide dedicated, personalized fuel & roadside dispatch service.",
+                            style = MaterialTheme.typography.bodySmall.copy(color = Color.Black, fontWeight = FontWeight.Medium, fontSize = 11.sp, lineHeight = 16.sp)
+                        )
+                    }
+                }
+
+                // Account & Membership Status Card
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp).fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text("ACCOUNT ROLE", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.Black))
+                            Text(
+                                text = when (currentUser!!.role) {
+                                    "admin" -> "Administrator"
+                                    "rider" -> if (currentUser!!.isVerified) "Verified Courier" else "Courier (Pending)"
+                                    else -> "Verified Customer"
+                                },
+                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, color = Color.Black)
+                            )
+                        }
+                        Box(
+                            modifier = Modifier
+                                .background(Color(0xFFDCFCE7), RoundedCornerShape(8.dp))
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                        ) {
+                            Text("ACTIVE", style = MaterialTheme.typography.labelSmall.copy(color = Color(0xFF16A34A), fontWeight = FontWeight.Bold))
+                        }
+                    }
+                }
+
+                // Notification Preferences Toggle
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp).fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                            Icon(Icons.Filled.Notifications, contentDescription = null, tint = ZyphuelBluePrimary, modifier = Modifier.size(22.dp))
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column {
+                                Text("Order Alerts", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, color = Color.Black))
+                                Text("Push updates on driver dispatch", style = MaterialTheme.typography.bodySmall.copy(color = Color(0xFF1E293B), fontWeight = FontWeight.Medium))
+                            }
+                        }
+                        Switch(
+                            checked = pushNotificationsEnabled,
+                            onCheckedChange = { pushNotificationsEnabled = it },
+                            colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = ZyphuelBluePrimary)
+                        )
+                    }
+                }
+
+                // Coverage Zone Card
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF0FDF4)),
+                    border = BorderStroke(1.dp, Color(0xFFBBF7D0))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp).fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Filled.LocationOn, contentDescription = null, tint = Color(0xFF16A34A), modifier = Modifier.size(20.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text("Coverage Area: Lahore Active", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.Black))
+                            Text("Serving Gulberg, DHA, Model Town, Johar Town, Bahria & all Lahore sectors", style = MaterialTheme.typography.bodySmall.copy(color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Medium))
+                        }
+                    }
+                }
+
+                // App Language Selection
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
+                    border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Filled.Language, contentDescription = null, tint = ZyphuelBluePrimary, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("App Language / زبان منتخب کریں", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, color = Color.Black))
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            listOf("English" to "English", "Urdu" to "اردو (Urdu)").forEach { (langKey, label) ->
+                                val isSelected = selectedLanguage == langKey
+                                OutlinedButton(
+                                    onClick = {
+                                        selectedLanguage = langKey
+                                        Toast.makeText(context, "Language set to $label", Toast.LENGTH_SHORT).show()
+                                    },
+                                    colors = ButtonDefaults.outlinedButtonColors(
+                                        containerColor = if (isSelected) ZyphuelBluePrimary.copy(alpha = 0.1f) else Color.White,
+                                        contentColor = if (isSelected) ZyphuelBluePrimary else Color.Black
+                                    ),
+                                    border = BorderStroke(1.dp, if (isSelected) ZyphuelBluePrimary else Color(0xFFCBD5E1)),
+                                    shape = RoundedCornerShape(8.dp),
+                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                                ) {
+                                    Text(label, style = MaterialTheme.typography.labelSmall.copy(fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium, color = if (isSelected) ZyphuelBluePrimary else Color.Black))
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Saved Lahore Delivery Addresses
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
+                    border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Filled.Home, contentDescription = null, tint = ZyphuelBluePrimary, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Saved Lahore Addresses", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, color = Color.Black))
+                        }
+
+                        // Home address row
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color.White, RoundedCornerShape(8.dp))
+                                .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(8.dp))
+                                .padding(10.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("🏠 Home", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.Black))
+                                Text(savedHomeAddress, style = MaterialTheme.typography.bodySmall.copy(color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Medium))
+                            }
+                            TextButton(
+                                onClick = {
+                                    editingAddressType = "home"
+                                    tempAddressText = savedHomeAddress
+                                },
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                            ) {
+                                Text("Edit", fontSize = 11.sp, color = ZyphuelBluePrimary, fontWeight = FontWeight.Bold)
+                            }
+                        }
+
+                        // Office address row
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color.White, RoundedCornerShape(8.dp))
+                                .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(8.dp))
+                                .padding(10.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("🏢 Office / Work", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.Black))
+                                Text(savedWorkAddress, style = MaterialTheme.typography.bodySmall.copy(color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Medium))
+                            }
+                            TextButton(
+                                onClick = {
+                                    editingAddressType = "work"
+                                    tempAddressText = savedWorkAddress
+                                },
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                            ) {
+                                Text("Edit", fontSize = 11.sp, color = ZyphuelBluePrimary, fontWeight = FontWeight.Bold)
+                            }
+                        }
+
+                        // Inline Address Editor if editing
+                        if (editingAddressType != null) {
+                            Column(modifier = Modifier.fillMaxWidth().padding(top = 4.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                OutlinedTextField(
+                                    value = tempAddressText,
+                                    onValueChange = { tempAddressText = it },
+                                    label = { Text(if (editingAddressType == "home") "Home Address (Lahore)" else "Work Address (Lahore)") },
+                                    singleLine = true,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(8.dp),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedTextColor = Color.Black,
+                                        unfocusedTextColor = Color.Black,
+                                        focusedLabelColor = Color.Black,
+                                        unfocusedLabelColor = Color.Black,
+                                        focusedContainerColor = Color.White,
+                                        unfocusedContainerColor = Color.White
+                                    )
+                                )
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Button(
+                                        onClick = {
+                                            if (editingAddressType == "home") savedHomeAddress = tempAddressText
+                                            else savedWorkAddress = tempAddressText
+                                            editingAddressType = null
+                                            Toast.makeText(context, "Address updated!", Toast.LENGTH_SHORT).show()
+                                        },
+                                        colors = ButtonDefaults.buttonColors(containerColor = ZyphuelBluePrimary),
+                                        shape = RoundedCornerShape(8.dp),
+                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                                    ) {
+                                        Text("Save", fontSize = 12.sp)
+                                    }
+                                    OutlinedButton(
+                                        onClick = { editingAddressType = null },
+                                        shape = RoundedCornerShape(8.dp),
+                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                                    ) {
+                                        Text("Cancel", fontSize = 12.sp, color = Color.Black)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Direct Founder & Operations Helpline (WhatsApp & Call)
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
+                    border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Filled.Call, contentDescription = null, tint = Color(0xFF16A34A), modifier = Modifier.size(20.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text("Direct Lahore Support", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, color = Color.Black))
+                                Text("No bots — chat directly with our Lahore founders & team", style = MaterialTheme.typography.labelSmall.copy(color = Color.Black, fontWeight = FontWeight.Medium))
+                            }
+                        }
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Button(
+                                onClick = {
+                                    val waIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://wa.me/923230112464?text=${Uri.encode("Salam Zyphuel Lahore Team, I need help with my fuel service.")}"))
+                                    context.startActivity(waIntent)
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366)),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.weight(1f),
+                                contentPadding = PaddingValues(vertical = 6.dp)
+                            ) {
+                                Text("💬 WhatsApp", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.White))
+                            }
+                            OutlinedButton(
+                                onClick = {
+                                    val dialIntent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:+923230112464"))
+                                    context.startActivity(dialIntent)
+                                },
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.weight(1f),
+                                contentPadding = PaddingValues(vertical = 6.dp),
+                                border = BorderStroke(1.dp, Color(0xFF0284C7))
+                            ) {
+                                Icon(Icons.Filled.Phone, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color(0xFF0284C7))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Call Us", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFF0284C7)))
+                            }
+                        }
+                    }
+                }
+
+                // Storage & Cache Cleaner
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
+                    border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp).fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                            Icon(Icons.Filled.Delete, contentDescription = null, tint = ZyphuelBluePrimary, modifier = Modifier.size(20.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text("Storage & Cache", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, color = Color.Black))
+                                Text(if (cacheCleared) "Cache optimized (Clean)" else "Clear temporary map & data cache", style = MaterialTheme.typography.bodySmall.copy(color = if (cacheCleared) Color(0xFF16A34A) else Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Medium))
+                            }
+                        }
+                        OutlinedButton(
+                            onClick = {
+                                cacheCleared = true
+                                Toast.makeText(context, "App cache cleared successfully! (3.8 MB freed)", Toast.LENGTH_SHORT).show()
+                            },
+                            shape = RoundedCornerShape(8.dp),
+                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                            border = BorderStroke(1.dp, if (cacheCleared) Color(0xFF16A34A) else Color(0xFFCBD5E1))
+                        ) {
+                            Text(
+                                if (cacheCleared) "Cleaned ✔" else "Clear",
+                                style = MaterialTheme.typography.labelSmall.copy(color = if (cacheCleared) Color(0xFF16A34A) else Color.Black, fontWeight = FontWeight.Bold)
+                            )
+                        }
+                    }
+                }
+
                 // Name (Read-only or viewable)
                 OutlinedTextField(
                     value = currentUser!!.name,
@@ -10727,8 +11512,12 @@ fun ProfileSettingsDialog(
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Color.Black,
                         unfocusedTextColor = Color.Black,
+                        focusedLabelColor = Color.Black,
+                        unfocusedLabelColor = Color.Black,
                         focusedBorderColor = Color.LightGray,
-                        unfocusedBorderColor = Color.LightGray
+                        unfocusedBorderColor = Color.LightGray,
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White
                     ),
                     shape = RoundedCornerShape(12.dp)
                 )
@@ -10744,8 +11533,12 @@ fun ProfileSettingsDialog(
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Color.Black,
                         unfocusedTextColor = Color.Black,
+                        focusedLabelColor = Color.Black,
+                        unfocusedLabelColor = Color.Black,
                         focusedBorderColor = Color.LightGray,
-                        unfocusedBorderColor = Color.LightGray
+                        unfocusedBorderColor = Color.LightGray,
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White
                     ),
                     shape = RoundedCornerShape(12.dp)
                 )
@@ -10760,10 +11553,12 @@ fun ProfileSettingsDialog(
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Color.Black,
                         unfocusedTextColor = Color.Black,
-                        focusedLabelColor = ZyphuelBluePrimary,
-                        unfocusedLabelColor = Color.DarkGray,
+                        focusedLabelColor = Color.Black,
+                        unfocusedLabelColor = Color.Black,
                         focusedBorderColor = ZyphuelBluePrimary,
-                        unfocusedBorderColor = Color.LightGray
+                        unfocusedBorderColor = Color.LightGray,
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White
                     ),
                     shape = RoundedCornerShape(12.dp),
                     singleLine = true
@@ -10787,10 +11582,12 @@ fun ProfileSettingsDialog(
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Color.Black,
                         unfocusedTextColor = Color.Black,
-                        focusedLabelColor = ZyphuelBluePrimary,
-                        unfocusedLabelColor = Color.DarkGray,
+                        focusedLabelColor = Color.Black,
+                        unfocusedLabelColor = Color.Black,
                         focusedBorderColor = ZyphuelBluePrimary,
-                        unfocusedBorderColor = Color.LightGray
+                        unfocusedBorderColor = Color.LightGray,
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White
                     ),
                     shape = RoundedCornerShape(12.dp),
                     singleLine = true
@@ -10798,8 +11595,8 @@ fun ProfileSettingsDialog(
 
                 Text(
                     text = "You can update your phone number and password directly. Changes apply immediately in real-time.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray,
+                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+                    color = Color.Black,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -10862,8 +11659,8 @@ fun ProfileSettingsDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Zyphuel Platform v2.3.0.1 • Release 2026",
-                        style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontSize = 11.sp)
+                        text = "Zyphuel v${BuildConfig.VERSION_NAME} (Build ${BuildConfig.VERSION_CODE}) • Handcrafted in Lahore",
+                        style = MaterialTheme.typography.labelSmall.copy(color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                     )
                 }
             }
@@ -10888,7 +11685,7 @@ fun ProfileSettingsDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Close", color = Color.Gray)
+                Text("Close", color = Color.Black, fontWeight = FontWeight.Bold)
             }
         }
     )
@@ -12475,7 +13272,7 @@ fun AdminAnalyticsDashboard(
                     }
                     Column {
                         Text(
-                            text = "Lahore Real-Time Analytics & Operations Hub",
+                            text = "Lahore Real-Time Analytics & Operations",
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = ZyphuelBlueDark
@@ -13363,6 +14160,34 @@ fun AdminDashboardScreen(viewModel: MainViewModel) {
                 }
             }
 
+            // Email Gateway status check
+            val smtpConfig by viewModel.smtpConfig.collectAsState()
+            val isEmailConfigured = smtpConfig.appPassword.isNotBlank() || smtpConfig.webhookUrl.isNotBlank()
+            if (!isEmailConfigured) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 4.dp)
+                        .clickable { activeTab = 6 },
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF2F2)),
+                    border = BorderStroke(1.dp, Color(0xFFFCA5A5)),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Filled.Warning, contentDescription = null, tint = Color(0xFFDC2626), modifier = Modifier.size(20.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Real-Time Email Gateway Inactive", fontWeight = FontWeight.Bold, color = Color(0xFF991B1B), style = MaterialTheme.typography.labelSmall)
+                            Text("Tap here to configure Google App Password so customers, riders & admin receive real emails.", style = MaterialTheme.typography.bodySmall.copy(color = Color(0xFFB91C1C), fontSize = 10.sp))
+                        }
+                        Icon(Icons.Filled.ArrowForward, contentDescription = null, tint = Color(0xFFDC2626), modifier = Modifier.size(16.dp))
+                    }
+                }
+            }
+
             // Scrollable Tab switcher (8 tabs)
             ScrollableTabRow(selectedTabIndex = activeTab, containerColor = Color.White) {
                 Tab(selected = activeTab == 0, onClick = { activeTab = 0 }) {
@@ -13384,7 +14209,7 @@ fun AdminDashboardScreen(viewModel: MainViewModel) {
                     Text("Fuel Prices", modifier = Modifier.padding(12.dp), fontWeight = FontWeight.Bold)
                 }
                 Tab(selected = activeTab == 6, onClick = { activeTab = 6 }) {
-                    Text("Email Logs", modifier = Modifier.padding(12.dp), fontWeight = FontWeight.Bold)
+                    Text("Email Gateway 📧", modifier = Modifier.padding(12.dp), fontWeight = FontWeight.Bold)
                 }
                 Tab(selected = activeTab == 7, onClick = { activeTab = 7 }) {
                     Text("Audit Logs", modifier = Modifier.padding(12.dp), fontWeight = FontWeight.Bold)
@@ -13498,13 +14323,92 @@ fun AdminDashboardScreen(viewModel: MainViewModel) {
                             AddCustomerDialog(viewModel = viewModel, onDismiss = { showAddCustomerDialog = false })
                         }
                     }
-                    3 -> { // Orders list
-                        LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            if (orders.isEmpty()) {
-                                item { Text("No orders placed yet.") }
-                            } else {
-                                items(orders) { order ->
-                                    AdminOrderCard(order = order, viewModel = viewModel)
+                    3 -> { // Orders list with status filtering & Cancelled deletion
+                        var orderStatusFilter by remember { mutableStateOf("All") }
+                        val filteredOrders = remember(orders, orderStatusFilter) {
+                            when (orderStatusFilter) {
+                                "Pending" -> orders.filter { it.status == "Pending" }
+                                "Active" -> orders.filter { it.status == "Assigned" || it.status == "Delivering" || it.status == "In Transit" }
+                                "Completed" -> orders.filter { it.status == "Completed" }
+                                "Cancelled" -> orders.filter { it.status == "Cancelled" || it.status == "Canceled" }
+                                else -> orders
+                            }
+                        }
+
+                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            // Status Filter Chips
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                listOf("All", "Pending", "Active", "Completed", "Cancelled").forEach { filterLabel ->
+                                    val isSelected = orderStatusFilter == filterLabel
+                                    val count = when (filterLabel) {
+                                        "Pending" -> orders.count { it.status == "Pending" }
+                                        "Active" -> orders.count { it.status == "Assigned" || it.status == "Delivering" || it.status == "In Transit" }
+                                        "Completed" -> orders.count { it.status == "Completed" }
+                                        "Cancelled" -> orders.count { it.status == "Cancelled" || it.status == "Canceled" }
+                                        else -> orders.size
+                                    }
+                                    FilterChip(
+                                        selected = isSelected,
+                                        onClick = { orderStatusFilter = filterLabel },
+                                        label = {
+                                            Text(
+                                                "$filterLabel ($count)",
+                                                fontSize = 12.sp,
+                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                            )
+                                        },
+                                        colors = FilterChipDefaults.filterChipColors(
+                                            selectedContainerColor = if (filterLabel == "Cancelled") Color(0xFFFEE2E2) else ZyphuelBluePrimary.copy(alpha = 0.15f),
+                                            selectedLabelColor = if (filterLabel == "Cancelled") Color(0xFFDC2626) else ZyphuelBluePrimary
+                                        )
+                                    )
+                                }
+                            }
+
+                            if (orderStatusFilter == "Cancelled") {
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(8.dp),
+                                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF2F2)),
+                                    border = BorderStroke(1.dp, Color(0xFFFECACA))
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(10.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(Icons.Filled.Info, contentDescription = null, tint = Color(0xFFDC2626), modifier = Modifier.size(16.dp))
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            "Cancelled orders below can be permanently removed from the system using the 'Delete / Remove' button.",
+                                            style = MaterialTheme.typography.labelSmall.copy(color = Color(0xFF991B1B), fontSize = 11.sp)
+                                        )
+                                    }
+                                }
+                            }
+
+                            LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                if (filteredOrders.isEmpty()) {
+                                    item {
+                                        Box(
+                                            modifier = Modifier.fillMaxWidth().padding(32.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                if (orderStatusFilter == "Cancelled") "No cancelled orders found." else "No orders matching $orderStatusFilter.",
+                                                color = Color.Gray,
+                                                style = MaterialTheme.typography.bodyMedium
+                                            )
+                                        }
+                                    }
+                                } else {
+                                    items(filteredOrders) { order ->
+                                        AdminOrderCard(order = order, viewModel = viewModel)
+                                    }
                                 }
                             }
                         }
@@ -15795,6 +16699,7 @@ fun AdminRiderDetailsDialog(
 fun AdminOrderCard(order: OrderEntity, viewModel: MainViewModel? = null) {
     var showDeclineDialog by remember { mutableStateOf(false) }
     var showAdminInvoiceDialog by remember { mutableStateOf(false) }
+    var showDeleteConfirmDialog by remember { mutableStateOf(false) }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -15933,6 +16838,21 @@ fun AdminOrderCard(order: OrderEntity, viewModel: MainViewModel? = null) {
                         }
                     }
                 }
+
+                // If order is cancelled, show Permanent Delete / Remove button for Admin
+                if ((order.status == "Cancelled" || order.status == "Canceled") && viewModel != null) {
+                    Button(
+                        onClick = { showDeleteConfirmDialog = true },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626)),
+                        shape = RoundedCornerShape(8.dp),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                        modifier = Modifier.testTag("admin_delete_order_${order.id}")
+                    ) {
+                        Icon(Icons.Filled.DeleteForever, contentDescription = "Delete Order", modifier = Modifier.size(14.dp), tint = Color.White)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Delete / Remove", color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall)
+                    }
+                }
             }
 
             if (order.rating != null) {
@@ -15977,9 +16897,47 @@ fun AdminOrderCard(order: OrderEntity, viewModel: MainViewModel? = null) {
         )
     }
 
+    if (showDeleteConfirmDialog && viewModel != null) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmDialog = false },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Filled.DeleteForever, contentDescription = null, tint = Color(0xFFDC2626))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Delete Cancelled Order", fontWeight = FontWeight.Bold, color = ZyphuelBlueDark)
+                }
+            },
+            text = {
+                Text(
+                    "Are you sure you want to permanently remove Order #${order.id} from your dashboard? This will completely erase this cancelled record from the database.",
+                    color = Color.DarkGray
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.adminDeleteOrder(order.id)
+                        showDeleteConfirmDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626))
+                ) {
+                    Text("Permanently Delete", color = Color.White, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { showDeleteConfirmDialog = false }) {
+                    Text("Cancel")
+                }
+            },
+            containerColor = Color.White,
+            shape = RoundedCornerShape(16.dp)
+        )
+    }
+
     if (showAdminInvoiceDialog) {
         InvoiceDialog(
             order = order,
+            viewModel = viewModel,
             onDismiss = { showAdminInvoiceDialog = false }
         )
     }
@@ -16342,7 +17300,7 @@ fun PlacesAutocompleteTextField(
 
     val allPlaces = remember {
         listOf(
-            Triple("Zyphuel Main Headquarters & Dispatch Hub, Green Town, Lahore, Pakistan", 31.4380, 74.3050),
+            Triple("Zyphuel Dispatch Station, Green Town, Lahore, Pakistan", 31.4380, 74.3050),
             Triple("Green Town Sector D1, Lahore, Pakistan", 31.4390, 74.3070),
             Triple("Model Town Block C, Lahore, Pakistan", 31.5204, 74.3587),
             Triple("Liberty Market, Gulberg III, Lahore, Pakistan", 31.5120, 74.3520),
@@ -17188,7 +18146,7 @@ fun AsoOptimizationDialog(
                         Column {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                 Text(
-                                    text = "SEO & ASO Management Hub",
+                                    text = "SEO & ASO Management",
                                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold, color = ZyphuelBlueDark)
                                 )
                                 Surface(

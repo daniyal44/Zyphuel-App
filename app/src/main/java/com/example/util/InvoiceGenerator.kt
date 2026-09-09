@@ -52,7 +52,7 @@ object InvoiceGenerator {
             if (isAdminFulfillment) {
                 appendLine("🏢 FULFILLMENT & DISPATCH:")
                 appendLine("• Mode:    Zyphuel Central Admin Operations")
-                appendLine("• Hub:     Lahore Operations Headquarters")
+                appendLine("• Dispatch: Lahore, Pakistan")
             } else {
                 appendLine("🚚 DISPATCH & RIDER:")
                 appendLine("• Driver:  ${order.riderName}")

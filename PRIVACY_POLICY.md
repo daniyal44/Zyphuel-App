@@ -1,16 +1,22 @@
 # Privacy Policy for Zyphuel
 
-**Effective Date:** September 7, 2026  
-**Last Updated:** September 7, 2026  
-**Application Version:** 2.4.1 (Build 8)  
+**Effective Date:** September 9, 2026  
+**Last Updated:** September 9, 2026  
+**Application Version:** 2.5.0 (Build 14)  
 **Package Name:** `com.aistudio.zyphuel.appv2`  
 **Official Website:** [https://www.zyphuel.com/](https://www.zyphuel.com/)  
 **Contact Email:** compliance@zyphuel.com | support@zyphuel.com  
 
 ---
 
+> [!IMPORTANT]
+> **⚠️ CRITICAL STARTUP STATUS & OPERATIONAL SCALE DISCLOSURE:**  
+> **Zyphuel is an independent, early-stage technology and doorstep energy logistics STARTUP founded and based in Lahore, Punjab, Pakistan. Zyphuel is NOT a large corporate conglomerate, multinational entity, or established oil marketing company (OMC). All services, dispatches, customer care, and operations are managed by our dedicated local founding and dispatch team. We are actively developing our services on a startup scale across Lahore.**
+
+---
+
 ## 1. Introduction
-Welcome to **Zyphuel** ("we", "our", or "us"). Zyphuel is Pakistan's premier on-demand mobility, fuel delivery, vehicle service, and roadside assistance platform, operating in Lahore, Pakistan. We are committed to protecting the privacy, confidentiality, and security of our customers, service technicians, riders, and administrative personnel.
+Welcome to **Zyphuel** ("we", "our", or "us"). Zyphuel is an early-stage on-demand fuel delivery, vehicle service, and roadside assistance startup operating in Lahore, Pakistan. We are committed to protecting the privacy, confidentiality, and security of our customers, service technicians, riders, and administrative personnel.
 
 This Privacy Policy explains how we collect, use, disclose, and safeguard your personal information when you access or use the Zyphuel Android application and our online services. By installing, creating an account on, or using Zyphuel, you consent to the practices described in this Privacy Policy.
 

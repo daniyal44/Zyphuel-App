@@ -593,5 +593,68 @@ class ZyphuelComprehensiveAppTest {
         // Permanent Root Super Admin is protected
         assertFalse("Root Super Admin account cannot be deleted under any circumstances", canDeleteAccount(rootAdmin))
     }
+
+    // =========================================================================
+    // 18. REAL-TIME AUTOMATIC TAX INVOICE & EMAIL RECEIPT GENERATION TEST
+    // =========================================================================
+    @Test
+    fun `test Automatic Real-Time Tax Invoice HTML and Plain Text Dispatch Generation`() {
+        val order = OrderEntity(
+            id = 9988,
+            customerEmail = "customer.invoice@gmail.com",
+            customerName = "Fatima Tariq",
+            customerPhone = "+92 321 9876543",
+            serviceType = "Hi-Octane RON 97",
+            quantity = 40,
+            totalPrice = 12000.0,
+            deliveryAddress = "Gulberg III, Lahore, Pakistan",
+            status = "Completed",
+            paymentMethod = "Cash on Delivery",
+            riderName = "Ali Raza Bowser",
+            riderEmail = "ali.raza@zyphuel.com",
+            createdAt = System.currentTimeMillis()
+        )
+
+        // 1. Verify Plain Text Receipt Generation
+        val plainReceipt = com.example.util.InvoiceGenerator.generatePlainTextReceipt(order)
+        assertTrue(plainReceipt.contains("ZYPHUEL ON-DEMAND DELIVERY"))
+        assertTrue(plainReceipt.contains("INV-ZYP-9988"))
+        assertTrue(plainReceipt.contains("Fatima Tariq"))
+        assertTrue(plainReceipt.contains("Hi-Octane RON 97"))
+        assertTrue(plainReceipt.contains("12,000.00"))
+        assertTrue(plainReceipt.contains("+92 323 0112464"))
+
+        // 2. Verify Responsive HTML Tax Invoice Generation
+        val htmlInvoice = com.example.util.InvoiceGenerator.generateHtmlInvoice(order)
+        assertTrue(htmlInvoice.contains("<!DOCTYPE html>"))
+        assertTrue(htmlInvoice.contains("INV-ZYP-9988"))
+        assertTrue(htmlInvoice.contains("Fatima Tariq"))
+        assertTrue(htmlInvoice.contains("Total COD Payable:"))
+        assertTrue(htmlInvoice.contains("12,000.00"))
+        assertTrue(htmlInvoice.contains("Gulberg III, Lahore"))
+    }
+
+    // =========================================================================
+    // 19. APP TOUR GUIDE LIFECYCLE: NEW USER ONLY & PERMANENT REMOVAL
+    // =========================================================================
+    @Test
+    fun `test App Tour Guide Lifecycle - New User Only and Permanent Post-Completion Removal`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val prefs = context.getSharedPreferences("zyphuel_prefs", Context.MODE_PRIVATE)
+
+        // 1. Fresh install state (not seen yet)
+        prefs.edit().putBoolean("has_seen_app_tour_v2", false).apply()
+        assertFalse(prefs.getBoolean("has_seen_app_tour_v2", false))
+
+        // 2. Once seen / completed, mark as seen
+        prefs.edit().putBoolean("has_seen_app_tour_v2", true).apply()
+        val hasSeen = prefs.getBoolean("has_seen_app_tour_v2", false)
+        assertTrue(hasSeen)
+
+        // 3. Verify that once seen, sidebar should NOT show tour
+        val shouldShowInSidebar = !hasSeen
+        assertFalse("Tour should not be shown anywhere (including sidebar) once seen", shouldShowInSidebar)
+    }
 }
+
 

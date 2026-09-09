@@ -1,5 +1,5 @@
 # 🚀 Zyphuel App Features & Technical Documentation
-**App Version:** `v2.4.2 (Build 9)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** `2026`
+**App Version:** `v2.5.3 (Build 17)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** `2026`
 
 Welcome to the complete architectural and functional guide for the **Zyphuel** Android application. This document outlines every single feature, function, database entity, and user flow from start to finish.
 
@@ -58,6 +58,63 @@ The app strictly segments access control across three user roles:
 ---
 
 ## 3. Customer Portal Features
+* **Phase 14 Customer Home UI & Visual Card Overhaul (v2.4.4 Build 11)**:
+  * **Gradient Delivery Location Active Card (`user_location_active_card`)**: Refactored with a deep navy-to-ocean blue linear gradient (`#0F172A` -> `#0F2B48` -> `#0369A1`), 20.dp rounded corners, pulsing green/blue live telematics indicator dot, glassmorphic top-right Share button badge, crisp white address typography, high-contrast primary `[ 🛰️ Auto Detect GPS ]` button (`#0284C7`), and clean `[ 📍 Change Pin ]` button (`location_icon_btn`). Removed redundant bottom Share button and low-contrast outlines.
+  * **Pill-Shaped Service Search Bar (`ServiceSearchBar`)**: Refactored to `RoundedCornerShape(24.dp)` pill with subtle shadow elevation, dedicated circular search icon container, crisp placeholder typography, and instant 1-tap query clearing.
+  * **Refined Quick Actions Bar (`QuickActionsBar`)**: Upgraded to 24.dp pill shape with circular icon badges in brand blue, enhanced contrast, and zero label clipping for roadside assistance and emergency services.
+  * **Saved Vehicles Profile Card (`SavedVehiclesBar`)**: Refactored to 16.dp rounded card with subtle border and elevated vehicle management button.
+  * **De-Cluttered Marketplace Category Cards (`CategoryCard`)**: Removed repetitive `"Available Now"` green badge clutter from all cards. Badges are reserved exclusively for emergency/SOS services. Expanded card title layout to `minLines = 2, maxLines = 2` with 18.sp line height to completely eliminate text truncation (e.g. "Roadside Assistance" and "Auto Care & Detailing" now display cleanly with zero ellipses).
+  * **Polished Order History Dashboard**: Replaced internal debug string `"View Full Customer Order History Screen 📜"` with professional `"View Full Order History →"`.
+* **Phase 15 Pure Mobile Focus & Desktop Application Decommissioning (v2.4.6 Build 13)**:
+  * **Complete Desktop Purge**: Permanently decommissioned and deleted all desktop modules, scripts, and runtime binaries (`desktop/`, `RUN-DESKTOP.bat`, `RUN-DESKTOP-DEBUG.bat`, `RUN-MOBILE-PREVIEW.bat`, `mobile-preview/`) to eliminate unnecessary system overhead and streamline maintenance.
+  * **Pure Mobile Architecture**: Repository now concentrates 100% of resources exclusively on the native Android mobile application (`com.aistudio.zyphuel.appv2`), maintaining clean Gradle tasks and subproject isolation.
+* **Phase 16 Early-Stage Lahore Startup Experience & Human-Centric Overhaul (v2.5.0 Build 14)**:
+  * **Authentic Startup Tone & Legal Disclosures**: Eliminated all generic "corporate AI conglomerate" aesthetics and buzzwords. Prominently integrated clear, bold disclosures across legal policies (`PRIVACY_POLICY.md`, `TERMS_AND_CONDITIONS.md`), in-app dialogs (`TermsAndPrivacyDialog.kt`), Customer Home Screen, Navigation Drawer, and Profile Settings stating that Zyphuel is an evolving, early-stage local startup operating in Lahore, Pakistan run by a small passionate team.
+  * **Location Standard ("Deliver to Lahore")**: Permanently eliminated references to "Lahore Hub", "Automated Delivery Hub", and "Green Town Central Hub" in favor of authentic Lahore dispatch phrasing: `"Deliver to Lahore"`, `"Zyphuel Station, Green Town, Lahore"`, and `"Coverage Area: Lahore Active"`.
+  * **Customer Home De-Cluttering**:
+    * Removed 10-category marketplace grid (`CategoryGridSection`).
+    * Removed "Change Pin / Share Pin" button gimmicks from the location header in favor of a clean, persistent Lahore delivery address indicator.
+    * Removed vehicle profile bar (`SavedVehiclesBar`).
+    * Completely removed Fuel Add-ons section.
+  * **Streamlined Fuel Offerings**:
+    * **Petrol**: Exactly 2 core subcategories: Regular Euro-V Petrol and High-Octane 97.
+    * **Diesel**: Exactly 2 core subcategories: Regular Euro-V Diesel and Generator Diesel.
+    * **Gas**: Dedicated single option: Sealed Gas Cylinder (11.8kg), renamed strictly to "Gas" (refill duplicates removed).
+  * **Permanent Elimination of Live ETA Badges**: Expunged all simulated ETA countdowns, minute badges, and robotic time tickers across tracking overlays, invoice generators, and order cards in favor of real dispatch/delivery status.
+  * **Admin Dashboard Cancelled Order Permanent Deletion**:
+    * Added order status filter chips (`All`, `Pending`, `Active`, `Completed`, `Cancelled`) to the Admin orders management tab.
+    * Equipped cancelled orders with a prominent red "Delete / Remove" button (`admin_delete_order_${order.id}`) backed by an AlertDialog confirmation that permanently deletes the cancelled record from Room DB (`orderDao.deleteOrderById`) and Cloud Firestore (`firestoreOrderRepository.deleteOrder`).
+  * **Revamped Light-Themed Profile Settings Dialog (`ProfileSettingsDialog`)**:
+    * Clean, human-crafted white container palette (`Color.White`, `#F8FAFC`, `#E2E8F0`).
+    * **App Language Preferences**: Interactive toggle between English and اردو (Urdu).
+    * **Saved Lahore Delivery Addresses**: Configurable Home and Office address presets with inline real-time editing.
+    * **Direct Founder & Operations Helpline**: One-tap WhatsApp chat (`+92 323 0112464`) and direct telephone dialer.
+    * **Storage & App Cache Cleaner**: Interactive button to clear temporary cached map tiles and app data with instant user feedback.
+    * **Active Lahore Coverage Indicator**: Live coverage zones across Gulberg, DHA, Model Town, Johar Town, Bahria Town, and all Lahore sectors.
+  * **Foldable Sidebar Drawer Categories**: Category section in `DrawerContent` supports animated collapse/expand (`categoriesFolded`) with streamlined Petrol, Diesel, and Gas services.
+  * **Real-Time Email Gateway & Diagnostics (`AdminDashboardScreen` Tab 6)**:
+    * **Multi-Channel Email Engine (`RealtimeEmailEngine.kt`)**: Implements 3 production delivery channels: (1) Authenticated Direct SMTP over TLS/SSL (`smtp.gmail.com:465`), (2) HTTPS Webhook Relay over port 443 (Google Apps Script), and (3) Cloud Firestore `mail` collection trigger.
+    * **Admin Gateway Inactive Alert Banner**: Prominently warns Admin when Google App Password or Webhook is unconfigured, allowing 1-tap navigation directly to Tab 6 (`"Email Gateway 📧"`).
+    * **Cloud Firestore Automatic Sync (`system_config/email_gateway`)**: Once credentials or Webhook URL are saved by Admin in Tab 6, they automatically sync via Cloud Firestore to all customer and rider devices in real-time, instantly activating real-time transactional emails across all devices without per-device setup.
+    * **Interactive Live Test Dispatch (`sendTestEmail`)**: Includes in-app test dispatch allowing Admin to verify Gmail inbox delivery and view detailed channel feedback before going live.
+  * **Featured 7 Categories Default Showcase**: By default, the home screen presents exactly 7 high-demand primary categories:
+    1. **Fuel & Energy (`fuel_energy`)**: Showcased in a full-width Hero Showcase Card with live OGRA certified rates ticker for Petrol and Diesel, anti-adulteration badge, and instant 1-tap booking.
+    2. **Auto Repair & Care (`auto_repair`)**: Certified diagnostics, maintenance, brake service, and oil service.
+    3. **Roadside Assistance & SOS (`roadside_assistance`)**: 24/7 urgent roadside rescue, flat-tyre, battery jump, and emergency fuel.
+    4. **Auto Detailing & Spa (`auto_detailing`)**: Waterless wash, interior steam, ceramic coating, and deep cleaning.
+    5. **Tyres & Wheels Service (`tyres_wheels`)**: Puncture repair, mobile tyre fitting, air pressure calibration.
+    6. **Battery Services (`battery_services`)**: Battery testing, jumpstart, and new AGM/lead-acid battery installation.
+    7. **Water Delivery (`water_delivery`)**: Drinking water cans, RO mineral bottles, and bulk commercial tankers.
+  * **Seamless 1-Tap Expansion to All 10 Categories**: An interactive toggle (`"View All 10 Categories (+3 More: EV, Lubricants, Fleet) ▾"`) smoothly expands via `AnimatedVisibility` to reveal the remaining 3 categories:
+    8. **Lubricants & Fluids (`lubricants_fluids`)**: High-performance engine oils, coolants, and brake fluids.
+    9. **EV Services & Tech (`ev_services`)**: Mobile EV fast charging, charger installation, and battery diagnostics.
+    10. **Fleet & Enterprise (`fleet_business`)**: B2B bulk fuel distribution, scheduled fleet maintenance, and enterprise reporting.
+  * **Category Filter Chips**: Quick filtering between `Featured (7)`, `All (10)`, `Emergency & Fuel`, and `Care & Maintenance`.
+* **Dynamic OGRA Rates & Fuel Volume Controls (`fuel_energy`)**:
+  * **Live Rate Synchronization**: Fuel rates in `CategoryDetailModal` synchronize directly with `MainViewModel` StateFlows (`petrolPrice`, `dieselPrice`, `highOctanePrice`, `lpgGasPrice`), dynamically recalculating unit prices for Euro-V Petrol, High-Octane 97, Diesel, Generator Diesel, Fleet Diesel, and LPG cylinders.
+  * **Official OGRA Certification Banner**: Displays "Official OGRA Notified Rates • Euro-V Standard • 100% Calibrated Digital Flow-Meter • Anti-Adulteration Security Seal".
+  * **Quick Volume Preset Chips**: Instant selection for Petrol/Diesel (`5L`, `10L`, `20L`, `30L`, `40L`, `Full (50L)`) and LPG (`11.8 Kg`, `23.6 Kg`, `45.4 Kg`).
+  * **Accurate COD Pricing Breakdown**: Automatically computes item subtotal, OGRA-compliant delivery fee, and COD grand total, passing `unitPriceOverride` to `MainViewModel.bookCategoryService` so receipts and database records store accurate dynamic amounts.
 * **Fuel & Water Order Placement**: Select fuel type (Super Petrol, High-Speed Diesel, Pure Water @ Rs. 50/gallon), enter volume in Liters/Gallons, select delivery location.
 * **Instant Resilient Order Placement (`MainViewModel.placeOrder`)**:
   * **Auto Customer Session Sync**: If no active user session exists, automatically initializes a default customer session to ensure order placement never fails.
@@ -660,4 +717,35 @@ Zyphuel v2.4.0 introduces a comprehensive 10-category on-demand automotive and m
   - Enables real-time toggling of individual category availability (Active / Inactive) with instant persistence to `SharedPreferences` and reactive UI propagation.
   - Allows administrators to override service base pricing on-the-fly and flag categories with High-Demand / Emergency Roadside Priority banners during emergencies or extreme weather conditions.
 
+---
 
+## 17. Automated Real-Time Order Tax Invoices & Registered Email Delivery Engine
+### 17.1 Automatic Real-Time Tax Invoice Generation & Dispatch (`MainViewModel.sendOrderInvoiceEmail`)
+* **Immediate Customer Inbox Delivery on Order Creation (`placeOrder`)**:
+  - Whenever an order is submitted by a customer or administrator, `MainViewModel.placeOrder` immediately invokes `sendOrderInvoiceEmail(order, isCompletedReceipt = false)`.
+  - Generates both an itemized, responsive HTML Tax Invoice (`InvoiceGenerator.generateHtmlInvoice(order)`) with official branding, item summary, doorstep delivery fee, and COD total, alongside a structured plain-text receipt (`InvoiceGenerator.generatePlainTextReceipt(order)`).
+  - Automatically dispatches directly to the customer's registered email (`order.customerEmail`) and archives an administrative audit copy to `m.daniyalkhan490@gmail.com`.
+  - Transmitted through `RealtimeEmailEngine` via Authenticated Direct SMTP (Port 465 SSL with SNI), Google Apps Script Cloud HTTPS Webhook, and Cloud Firestore `mail` collection fallback.
+
+### 17.2 Automatic Final Paid Tax Invoice upon Order Completion (`changeOrderStatus`)
+* **Delivery Completion Receipt**:
+  - When an order transitions to `"Completed"` or `"Delivered"` (triggered by rider or administrator in `changeOrderStatus`), `sendOrderInvoiceEmail(completedOrder, isCompletedReceipt = true)` is automatically triggered.
+  - Dispatches subject `"🧾 Final Paid Tax Invoice & Delivery Receipt - Order #ID | Zyphuel"` to the customer's registered email with full payment confirmation, delivery timestamp, and dispatch details.
+
+### 17.3 On-Demand Invoice Email Dispatch from `InvoiceDialog`
+* **Interactive Modal Button (`email_invoice_to_registered_btn`)**:
+  - `InvoiceDialog` is accessible from all primary order views: `CustomerPastOrderCard` (Past Orders), `OrderSummaryCard` (Tracker screen), `TrackerScreen` (Active Tracking), and `AdminOrderCard` (Admin Console).
+  - Features an action button: `[ 📧 Send Invoice to Registered Email ]` (`email_invoice_to_registered_btn`).
+  - Tapping this button directly invokes `viewModel.sendOrderInvoiceEmail(order)` and presents an instant confirmation toast (`"📧 Tax Invoice dispatched to <email>!"`), providing immediate on-demand re-dispatching at any time.
+
+---
+
+## 18. App Tour Guide Lifecycle Policy (New User & Fresh Install Exclusive)
+### 18.1 Single-Run Initial Onboarding
+* **Restricted Strictly to New Users / Fresh Install**:
+  - The interactive spotlight tour (`homeTourSteps`) is designed exclusively as an initial walkthrough for fresh app installations and newly registered customer accounts.
+  - State is tracked persistently via `SharedPreferences` key `has_seen_app_tour_v2` and exposed reactively through `MainViewModel.hasSeenAppTour`.
+* **Permanent Removal Post-Completion / Skip**:
+  - The moment a user finishes or skips the tour, `closeAppTourGuide(markAsSeen = true)` permanently flags `hasSeenAppTour = true`.
+  - **Sidebar Navigation Drawer**: `Take a Guided Tour 🧭` is strictly guarded by `if (!hasSeenAppTour)`. Once seen or for any existing user, it is permanently removed from the sidebar.
+  - **Help Center & Secondary Screens**: Completely purged the tour trigger from `HelpCenterScreen`, ensuring the guided tour does not linger or reappear in any menu or dialog across the app.

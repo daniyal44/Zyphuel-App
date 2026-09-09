@@ -125,33 +125,18 @@ object CategoryCatalogSeed {
                 serviceType = CategoryServiceType.ON_DEMAND_DELIVERY,
                 supportedVehicleTypes = listOf(VehicleType.BIKE, VehicleType.CAR, VehicleType.SUV, VehicleType.VAN, VehicleType.COMMERCIAL),
                 locationCoverage = listOf("All Lahore Operational Zones", "Gulberg", "DHA", "Model Town", "Johar Town", "Bahria Town"),
-                estimatedResponseTime = "15-25 mins",
+                estimatedResponseTime = "Direct Dispatch",
                 pricingConfig = PricingConfig(deliveryFee = 250.0, isDynamicFuelRate = true, unitLabel = "L"),
                 backendServiceMapping = "fuel_delivery_v1",
                 subcategories = listOf(
-                    // Petrol
-                    Subcategory("petrol_regular", "fuel_energy", "Regular Petrol", "Euro-V standard motor gasoline for daily commuting", "PETROL", true, 272.82, "L", "15-20 mins", badgeText = "OGRA Live"),
-                    Subcategory("petrol_premium", "fuel_energy", "Premium Petrol", "High-efficiency fuel formulated for engine longevity", "PETROL", true, 278.50, "L", "15-20 mins", badgeText = "Euro-V"),
-                    Subcategory("petrol_octane", "fuel_energy", "High-Octane Petrol", "HOBC 97-Octane for luxury, turbo & performance vehicles", "PETROL", true, 340.00, "L", "15-20 mins", badgeText = "97 Octane"),
-                    Subcategory("petrol_emergency", "fuel_energy", "Emergency Petrol", "Rapid delivery 5L pack when stranded on the road", "PETROL", true, 272.82, "L", "10-15 mins", isEmergency = true, badgeText = "SOS Priority"),
-                    // Diesel
-                    Subcategory("diesel_regular", "fuel_energy", "Regular Diesel", "High-Speed Diesel for commercial & heavy vehicles", "DIESEL", true, 280.50, "L", "15-20 mins", badgeText = "OGRA Live"),
-                    Subcategory("diesel_premium", "fuel_energy", "Premium/Euro-V Diesel", "Ultra-low sulphur Euro-V diesel for modern diesel engines", "DIESEL", true, 288.00, "L", "15-20 mins", badgeText = "Euro-V"),
-                    Subcategory("diesel_generator", "fuel_energy", "Generator Diesel", "Bulk & backup diesel delivery for home and commercial generators", "DIESEL", true, 280.50, "L", "20-30 mins", requiresVehicle = false),
-                    Subcategory("diesel_fleet", "fuel_energy", "Fleet Diesel", "Scheduled high-volume fueling for enterprise vehicle fleets", "DIESEL", true, 280.50, "L", "30-45 mins"),
-                    Subcategory("diesel_emergency", "fuel_energy", "Emergency Diesel", "Urgent on-road diesel canister delivery for empty tanks", "DIESEL", true, 280.50, "L", "10-15 mins", isEmergency = true, badgeText = "SOS Priority"),
-                    // LPG / Gas
-                    Subcategory("lpg_sealed_cylinder", "fuel_energy", "Sealed LPG Cylinder", "Certified factory-sealed 11.8kg cylinder with safety seal inspection", "LPG / GAS", true, 241.43, "Kg", "25-35 mins", requiresVehicle = false, operationalRestrictions = "Strictly OGRA & Civil Defence verified cylinders only."),
-                    Subcategory("lpg_refill_exchange", "fuel_energy", "LPG Refill / Exchange", "Authorized empty cylinder swap with hydro-tested sealed replacement", "LPG / GAS", true, 241.43, "Kg", "25-35 mins", requiresVehicle = false, operationalRestrictions = "Only authorized legal cylinder exchanges where operationally supported."),
-                    Subcategory("lpg_emergency", "fuel_energy", "Emergency LPG", "Urgent replacement cylinder for critical home or hospital backup", "LPG / GAS", true, 241.43, "Kg", "15-20 mins", requiresVehicle = false, isEmergency = true, operationalRestrictions = "Immediate delivery under strict safety handling protocols."),
-                    Subcategory("lpg_commercial", "fuel_energy", "Commercial LPG", "45.4kg commercial cylinder delivery for restaurants & hotels", "LPG / GAS", true, 241.43, "Kg", "30-45 mins", requiresVehicle = false, operationalRestrictions = "Commercial license verification required at handover."),
-                    // Fuel Add-ons
-                    Subcategory("addon_engine_oil", "fuel_energy", "Engine Oil Top-up", "Synthetic or mineral engine lubricant top-up (1L / 4L bottle)", "FUEL ADD-ONS", true, 1800.0, "Bottle", "15 mins"),
-                    Subcategory("addon_lubricants", "fuel_energy", "Lubricants", "High-performance gear & axle friction modifiers", "FUEL ADD-ONS", true, 1200.0, "Can", "15 mins"),
-                    Subcategory("addon_coolant", "fuel_energy", "Coolant", "Anti-freeze & heat-dissipation radiator coolant fluid", "FUEL ADD-ONS", true, 850.0, "Bottle", "15 mins"),
-                    Subcategory("addon_brake_fluid", "fuel_energy", "Brake Fluid", "DOT-3 / DOT-4 high-boiling point hydraulic brake fluid", "FUEL ADD-ONS", true, 650.0, "Bottle", "15 mins"),
-                    Subcategory("addon_transmission_fluid", "fuel_energy", "Transmission Fluid", "Automatic & manual transmission fluid (ATF / MTF)", "FUEL ADD-ONS", true, 2200.0, "Bottle", "15 mins"),
-                    Subcategory("addon_other_fluids", "fuel_energy", "Other Approved Fluids", "Windshield washer fluid, battery deionized water & power steering fluid", "FUEL ADD-ONS", true, 450.0, "Bottle", "15 mins")
+                    // Petrol (2 subcategories)
+                    Subcategory("petrol_regular", "fuel_energy", "Regular Petrol", "Euro-V standard motor gasoline for daily commuting", "PETROL", true, 272.82, "L", "Direct Dispatch", badgeText = "OGRA Live"),
+                    Subcategory("petrol_octane", "fuel_energy", "High-Octane Petrol", "HOBC 97-Octane for luxury, turbo & performance vehicles", "PETROL", true, 340.00, "L", "Direct Dispatch", badgeText = "97 Octane"),
+                    // Diesel (2 subcategories)
+                    Subcategory("diesel_regular", "fuel_energy", "Regular Diesel", "High-Speed Diesel for commercial & heavy vehicles", "DIESEL", true, 280.50, "L", "Direct Dispatch", badgeText = "OGRA Live"),
+                    Subcategory("diesel_generator", "fuel_energy", "Generator Diesel", "Bulk & backup diesel delivery for home and commercial generators", "DIESEL", true, 280.50, "L", "Scheduled Dispatch", requiresVehicle = false),
+                    // Gas (Only 1 Single Option)
+                    Subcategory("lpg_sealed_cylinder", "fuel_energy", "Gas Cylinder", "Certified factory-sealed 11.8kg cylinder with safety seal inspection", "GAS", true, 241.43, "Kg", "Direct Dispatch", requiresVehicle = false, operationalRestrictions = "Strictly OGRA & Civil Defence verified cylinders only.")
                 )
             ),
 
@@ -349,7 +334,7 @@ object CategoryCatalogSeed {
                 pricingConfig = PricingConfig(deliveryFee = 250.0, unitLabel = "Service"),
                 backendServiceMapping = "battery_v1",
                 subcategories = listOf(
-                    Subcategory("bat_jump_start", "battery_services", "Battery Jump Start", "Rapid mobile booster pack jump start at your location", "SERVICE", true, 1000.0, "Jump", "15 mins", isEmergency = true, badgeText = "15-min ETA"),
+                    Subcategory("bat_jump_start", "battery_services", "Battery Jump Start", "Rapid mobile booster pack jump start at your location", "SERVICE", true, 1000.0, "Jump", "15 mins", isEmergency = true, badgeText = "SOS Quick Jump"),
                     Subcategory("bat_testing", "battery_services", "Battery Testing", "State of health (SOH), cranking voltage & alternator load test", "SERVICE", true, 500.0, "Test", "15 mins"),
                     Subcategory("bat_replacement", "battery_services", "Battery Replacement", "Doorstep delivery, terminal cleanup, installation & old battery scrap adjustment", "REPLACEMENT", true, 1000.0, "Installation", "30 mins", badgeText = "Doorstep Install"),
                     Subcategory("bat_delivery", "battery_services", "Battery Delivery", "Instant delivery of brand new sealed maintenance-free battery", "DELIVERY", true, 500.0, "Delivery", "30 mins"),

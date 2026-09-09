@@ -1,10 +1,16 @@
 # Terms and Conditions of Service (Zyphuel)
 
-**Effective Date:** September 7, 2026  
-**Last Updated:** September 7, 2026  
-**Application Version:** 2.4.1 (Build 8)  
+**Effective Date:** September 9, 2026  
+**Last Updated:** September 9, 2026  
+**Application Version:** 2.5.0 (Build 14)  
 **Package Name:** `com.aistudio.zyphuel.appv2`  
 **Official Website:** [https://www.zyphuel.com/](https://www.zyphuel.com/)  
+
+---
+
+> [!IMPORTANT]
+> **⚠️ CRITICAL STARTUP STATUS & SCALE NOTICE:**  
+> **Zyphuel is an early-stage local startup enterprise based in Lahore, Pakistan, founded and operated by an independent small team. Users expressly acknowledge and understand that Zyphuel operates as a growing local startup and NOT as a large corporate conglomerate, multinational entity, or established oil marketing company (OMC). All services, logistics, and dispatches are handled with personalized attention by our dedicated local team.**
 
 ---
 

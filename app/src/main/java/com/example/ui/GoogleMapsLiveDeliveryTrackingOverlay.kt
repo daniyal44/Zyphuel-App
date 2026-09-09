@@ -62,7 +62,7 @@ fun GoogleMapsLiveDeliveryTrackingOverlay(
 
     // Resolve depot origin (captured on the order, else Zyphuel Green Town hub constant)
     val depotLat = order?.originLat ?: 31.4380
-    val depotLng = order?.originLng ?: 74.3050 // Zyphuel Green Town Central Hub Depot
+    val depotLng = order?.originLng ?: 74.3050 // Zyphuel Green Town Station, Lahore
     val depotLatLng = remember(depotLat, depotLng) { LatLng(depotLat, depotLng) }
 
     // Resolve customer destination: real captured coords -> address keyword guess -> default
@@ -262,7 +262,7 @@ fun GoogleMapsLiveDeliveryTrackingOverlay(
                     }
                 }
 
-                // ETA Badge
+                // Delivery Status Badge
                 Surface(
                     color = Color(0xFF0284C7),
                     shape = RoundedCornerShape(10.dp)
@@ -272,7 +272,7 @@ fun GoogleMapsLiveDeliveryTrackingOverlay(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = "ETA: ~$etaMinutes MINS",
+                            text = "STATUS: EN ROUTE",
                             style = MaterialTheme.typography.labelSmall.copy(
                                 color = Color.White,
                                 fontWeight = FontWeight.ExtraBold
@@ -320,11 +320,11 @@ fun GoogleMapsLiveDeliveryTrackingOverlay(
                         uiSettings = uiSettings,
                         properties = mapProperties
                     ) {
-                        // 1. Origin Depot Marker (Green Town Hub)
+                        // 1. Origin Depot Marker (Green Town Station)
                         Marker(
                             state = MarkerState(position = depotLatLng),
                             title = "Zyphuel Dispatch Depot",
-                            snippet = "Green Town Central Hub, Lahore",
+                            snippet = "Zyphuel Station, Green Town, Lahore",
                             icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
                         )
 
@@ -340,7 +340,7 @@ fun GoogleMapsLiveDeliveryTrackingOverlay(
                         Marker(
                             state = MarkerState(position = displayedPosition),
                             title = "$driverName ($vehiclePlate)",
-                            snippet = if (hasLiveFix) "Speed: $currentSpeedKmh km/h • ETA: $etaMinutes mins" else "Status: ${order?.status ?: "Pending"} • ETA: $etaMinutes mins",
+                            snippet = if (hasLiveFix) "Speed: $currentSpeedKmh km/h • Status: In Transit" else "Status: ${order?.status ?: "Pending"}",
                             rotation = displayedBearing,
                             flat = true,
                             icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
@@ -400,7 +400,7 @@ fun GoogleMapsLiveDeliveryTrackingOverlay(
                                 hasLiveFix -> "Live GPS Streaming • Rider En Route"
                                 order?.status == "Delivering" || order?.status == "In Transit" -> "Driver Dispatched • En Route"
                                 order?.status == "Assigned" -> "Rider Assigned • Preparing Dispatch"
-                                else -> "Bowser Stationed at Green Town Hub"
+                                else -> "Bowser Stationed at Green Town, Lahore"
                             },
                             style = MaterialTheme.typography.labelSmall.copy(
                                 color = Color.White,
@@ -799,7 +799,7 @@ private fun FallbackRadarMapView(
                 strokeWidth = 4f
             )
 
-            // 3. Depot point (Green Town Central Hub) & Customer Destination
+            // 3. Depot point (Green Town Station) & Customer Destination
             val depotOffset = Offset(width * 0.20f, height * 0.72f)
             val customerOffset = Offset(width * 0.80f, height * 0.28f)
             val mid1 = Offset(width * 0.38f, height * 0.60f)

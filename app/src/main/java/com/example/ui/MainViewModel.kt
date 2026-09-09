@@ -244,7 +244,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val sampleOrderId = 1042
         postLocalSystemNotification(
             title = "🚚 Zyphuel Live Delivery Update",
-            message = "Fuel Bowser #ZB-902 is en route to your vehicle with 10L Super Petrol. Live ETA: 4 mins.",
+            message = "Fuel Bowser #ZB-902 is en route to your vehicle with 10L Super Petrol. Track live on map.",
             orderId = sampleOrderId
         )
         _uiMessage.value = "🔔 Real-time delivery notification sent! Check your status bar."
@@ -380,17 +380,24 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // --- 8-Step Interactive App Tour Guide State ---
+    // --- Interactive App Tour Guide State (Strictly for App Install / New User Onboarding) ---
     private val _showAppTourGuide = MutableStateFlow(false)
     val showAppTourGuide: StateFlow<Boolean> = _showAppTourGuide.asStateFlow()
 
+    private val _hasSeenAppTour = MutableStateFlow(true)
+    val hasSeenAppTour: StateFlow<Boolean> = _hasSeenAppTour.asStateFlow()
+
     fun openAppTourGuide() {
-        _showAppTourGuide.value = true
+        // Only allow opening if user has not yet completed the initial tour
+        if (!_hasSeenAppTour.value) {
+            _showAppTourGuide.value = true
+        }
     }
 
     fun closeAppTourGuide(markAsSeen: Boolean = true) {
         _showAppTourGuide.value = false
         if (markAsSeen) {
+            _hasSeenAppTour.value = true
             try {
                 val prefs = getApplication<Application>().getSharedPreferences("zyphuel_prefs", Context.MODE_PRIVATE)
                 prefs.edit().putBoolean("has_seen_app_tour_v2", true).apply()
@@ -404,11 +411,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         try {
             val prefs = getApplication<Application>().getSharedPreferences("zyphuel_prefs", Context.MODE_PRIVATE)
             val hasSeen = prefs.getBoolean("has_seen_app_tour_v2", false)
+            _hasSeenAppTour.value = hasSeen
             if (!hasSeen) {
+                // Show tour once on fresh app install / new user
                 _showAppTourGuide.value = true
+            } else {
+                _showAppTourGuide.value = false
             }
         } catch (e: Exception) {
-            DebugLogger.w("MainViewModel", "Could not check tour state: ${e.message}")
+            _hasSeenAppTour.value = true
+            _showAppTourGuide.value = false
         }
     }
 
@@ -1644,6 +1656,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         body = "Hello ${newUser.name},\n\nWelcome to Zyphuel! Your account has been registered successfully via $provider. You will receive live order confirmations, delivery tracking, and 4-hour fuel price alerts directly at ${newUser.email}.\n\nThank you for choosing Zyphuel Lahore!"
                     )
 
+                    if (!_hasSeenAppTour.value) {
+                        _showAppTourGuide.value = true
+                    }
                     onSuccess(newUser)
                 }
             } catch (e: Exception) {
@@ -1880,6 +1895,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         subject = "🎉 Welcome to Zyphuel! Real-Time Alerts Enabled",
                         body = "Hello $trimmedName,\n\nWelcome to Zyphuel! Your customer account has been created successfully. You will receive 4-hour periodic price updates and live order delivery alerts directly at $trimmedEmail.\n\nThank you for choosing Zyphuel Lahore!"
                     )
+                    if (!_hasSeenAppTour.value) {
+                        _showAppTourGuide.value = true
+                    }
                     onSuccess()
                 } else {
                     _uiMessage.value = "User with this email already exists."
@@ -2275,36 +2293,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         type = "status"
                     )
 
-                    // Real-time Gmail email confirmation to the customer
-                    val customerEmail = user.email
-                    if (customerEmail.isNotBlank() && customerEmail.contains("@")) {
-                        val emailSubject = "🧾 Zyphuel Order Confirmation - Order #${order.id}"
-                        val emailBody = buildString {
-                            appendLine("Assalam o Alaikum ${user.name},")
-                            appendLine()
-                            appendLine("Your order has been placed successfully on Zyphuel! 🎉")
-                            appendLine()
-                            appendLine("📋 Order Details:")
-                            appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━")
-                            appendLine("🆔 Order ID: #${order.id}")
-                            appendLine("⛽ Service: $safeServiceType")
-                            appendLine("📦 Quantity: $safeQuantity units")
-                            appendLine("💰 Total Price: Rs. ${String.format(Locale.US, "%.2f", safePrice)}")
-                            appendLine("📍 Delivery Address: $finalAddress")
-                            appendLine("💳 Payment: $paymentMethod")
-                            appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━")
-                            appendLine()
-                            appendLine("🚚 A rider will be assigned shortly. Track your delivery in the Zyphuel app!")
-                            appendLine()
-                            appendLine("Thank you for choosing Zyphuel - Lahore's Premium Delivery Network.")
-                            appendLine("📞 Support: +92 323 0112464")
-                        }
+                    // Real-time automatic order tax invoice & receipt to customer's registered email
+                    sendOrderInvoiceEmail(order, isCompletedReceipt = false)
 
-                        // Dispatch to customer inbox
-                        withContext(Dispatchers.Main) {
-                            dispatchRealtimeEmail(customerEmail, emailSubject, emailBody)
-                        }
-                    }
 
                     // Real-time email alert to Rider(s)
                     val allRidersList = repository.userDao.getUsersByRole("rider")
@@ -2389,13 +2380,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         deliveryAddress: String = "",
         quantity: Int = 1,
         isEmergency: Boolean = false,
+        unitPriceOverride: Double? = null,
         onSuccess: () -> Unit = {}
     ) {
         val vehSuffix = if (vehicle != null) " [${vehicle.make} ${vehicle.model} (${vehicle.registrationNumber})]" else ""
         val notesSuffix = if (notes.isNotBlank()) " (Note: $notes)" else ""
         val fullServiceType = "${parentCategory.name} - ${subcategory.name}$vehSuffix$notesSuffix"
 
-        val itemTotal = subcategory.basePrice * quantity
+        val effectiveUnitPrice = unitPriceOverride ?: subcategory.basePrice
+        val itemTotal = effectiveUnitPrice * quantity
         val baseFee = parentCategory.pricingConfig.deliveryFee
         val emergencyFee = if (isEmergency || subcategory.isEmergency) parentCategory.pricingConfig.emergencySurcharge else 0.0
         val grandTotal = (itemTotal + baseFee + emergencyFee).coerceAtLeast(300.0)
@@ -2592,6 +2585,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
                 dispatchRealtimeEmail(riderEmail, riderSubject, riderBody)
             }
+
+            // 3. Automatically dispatch final paid Tax Invoice & Receipt upon completion
+            if (nextStatus == "Completed" || nextStatus == "Delivered") {
+                val completedOrder = updatedOrder ?: existingOrder
+                sendOrderInvoiceEmail(completedOrder, isCompletedReceipt = true)
+            }
         }
     }
 
@@ -2614,6 +2613,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 body = bodyStr,
                 type = "nearby"
             )
+        }
+    }
+
+    /**
+     * Admin action to permanently delete an order from the database and dashboard.
+     */
+    fun adminDeleteOrder(orderId: Int) {
+        val user = _currentUser.value
+        if (user?.role != "admin") {
+            _uiMessage.value = "Unauthorized: Only administrators can delete orders."
+            return
+        }
+        viewModelScope.launch {
+            repository.deleteOrder(orderId)
+            _uiMessage.value = "Order #$orderId has been permanently removed from dashboard."
         }
     }
 
@@ -3456,7 +3470,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun dispatchRealtimeEmail(recipientEmail: String, subject: String, body: String) {
+    fun dispatchRealtimeEmail(
+        recipientEmail: String,
+        subject: String,
+        body: String,
+        htmlBody: String? = null
+    ) {
         if (recipientEmail.isBlank()) return
         val newEmail = AdminEmail(
             id = _sentEmails.value.size + 1,
@@ -3475,6 +3494,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     recipientEmail = recipientEmail,
                     subject = subject,
                     bodyText = body,
+                    htmlBody = htmlBody,
                     context = appCtx,
                     customConfig = activeConfig
                 )
@@ -3509,6 +3529,52 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             } catch (e: Exception) {
                 DebugLogger.w("MainViewModel", "dispatchRealtimeEmail notification warning: ${e.message}")
             }
+        }
+    }
+
+    /**
+     * Automatically generates and dispatches official tax invoices and itemized receipts
+     * to the user's registered email address in real time with HTML and plain text formatting.
+     * Also dispatches an administrative audit copy to central operations.
+     */
+    fun sendOrderInvoiceEmail(order: OrderEntity, isCompletedReceipt: Boolean = false) {
+        val recipient = order.customerEmail.trim()
+        if (recipient.isBlank() || !recipient.contains("@")) {
+            DebugLogger.w("MainViewModel", "sendOrderInvoiceEmail skipped: invalid email '${order.customerEmail}'")
+            return
+        }
+
+        val plainTextReceipt = com.example.util.InvoiceGenerator.generatePlainTextReceipt(order)
+        val htmlInvoice = com.example.util.InvoiceGenerator.generateHtmlInvoice(order)
+
+        val subject = if (isCompletedReceipt) {
+            "🧾 Final Paid Tax Invoice & Delivery Receipt - Order #${order.id} | Zyphuel"
+        } else {
+            "🧾 Official Order Confirmation & Tax Invoice - Order #${order.id} | Zyphuel"
+        }
+
+        // 1. Instant dispatch to Customer's registered email
+        dispatchRealtimeEmail(
+            recipientEmail = recipient,
+            subject = subject,
+            body = plainTextReceipt,
+            htmlBody = htmlInvoice
+        )
+
+        // 2. Dispatch admin copy to central operations (if customer is not super admin)
+        val adminEmail = "m.daniyalkhan490@gmail.com"
+        if (!recipient.equals(adminEmail, ignoreCase = true)) {
+            val adminSubject = if (isCompletedReceipt) {
+                "🧾 [Admin Copy] Delivery Completed & Final Tax Invoice - Order #${order.id} (${order.customerName})"
+            } else {
+                "🧾 [Admin Copy] New Order Tax Invoice - Order #${order.id} (${order.customerName})"
+            }
+            dispatchRealtimeEmail(
+                recipientEmail = adminEmail,
+                subject = adminSubject,
+                body = plainTextReceipt,
+                htmlBody = htmlInvoice
+            )
         }
     }
 

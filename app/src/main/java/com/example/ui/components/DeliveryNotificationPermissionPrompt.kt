@@ -237,7 +237,7 @@ fun DeliveryNotificationPermissionPrompt(
                     NotificationFeatureRow(
                         icon = Icons.Filled.DeliveryDining,
                         iconColor = BrandBluePrimary,
-                        title = "Live Bowser Dispatch & ETA",
+                        title = "Live Bowser Dispatch Updates",
                         description = "Get notified the exact second your tanker begins driving to your location."
                     )
 

@@ -66,12 +66,10 @@ class CategoryRepository(private val context: Context) {
             if (category.id == "fuel_energy") {
                 val updatedSubcats = category.subcategories.map { sub ->
                     when (sub.id) {
-                        "petrol_regular", "petrol_emergency" -> sub.copy(basePrice = petrol.toDouble())
-                        "petrol_premium" -> sub.copy(basePrice = (petrol + 5.68).toDouble())
+                        "petrol_regular" -> sub.copy(basePrice = petrol.toDouble())
                         "petrol_octane" -> sub.copy(basePrice = octane.toDouble())
-                        "diesel_regular", "diesel_generator", "diesel_fleet", "diesel_emergency" -> sub.copy(basePrice = diesel.toDouble())
-                        "diesel_premium" -> sub.copy(basePrice = (diesel + 7.50).toDouble())
-                        "lpg_sealed_cylinder", "lpg_refill_exchange", "lpg_emergency", "lpg_commercial" -> sub.copy(basePrice = lpg.toDouble())
+                        "diesel_regular", "diesel_generator" -> sub.copy(basePrice = diesel.toDouble())
+                        "lpg_sealed_cylinder" -> sub.copy(basePrice = lpg.toDouble())
                         else -> sub
                     }
                 }
