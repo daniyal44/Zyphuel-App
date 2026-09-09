@@ -8,8 +8,10 @@ val ZyphuelBlueSecondary = Color(0xFF00C6FF)   // Cyan Flame Accent
 val ZyphuelBlueDark = Color(0xFF003087)        // Deep Royal Blue
 val ZyphuelDarkBackground = Color(0xFF0F172A)  // Slate Blue-Gray (Dark Mode background)
 val ZyphuelDarkSurface = Color(0xFF1E293B)     // Sleek Dark Surface
-val ZyphuelLightBackground = Color(0xFFF8FAFC) // Crisp Snow White-Blue
-val ZyphuelLightSurface = Color(0xFFFFFFFF)    // Pure Ice White
+val ZyphuelLightBackground = Color(0xFFFFFFFF) // Pure Canvas White (Matching Logo Canvas)
+val ZyphuelLightSurface = Color(0xFFFFFFFF)    // Pure White Surface
+val ZyphuelBlueLight = Color(0xFFEFF6FF)       // Light Logo Blue Accent Tint (5% blue)
+val ZyphuelCardBorder = Color(0xFFE2E8F0)      // Subtle Crisp Card Border
 
 // Material Palette Definitions
 val Blue80 = Color(0xFF82B1FF)

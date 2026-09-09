@@ -188,9 +188,8 @@ object SecureStorageManager {
         val host = prefs.getString("smtp_host", "smtp.gmail.com")?.ifBlank { "smtp.gmail.com" } ?: "smtp.gmail.com"
         val port = prefs.getInt("smtp_port", 465).let { if (it > 0) it else 465 }
         val senderEmail = prefs.getString("smtp_sender_email", "m.daniyalkhan490@gmail.com")?.ifBlank { "m.daniyalkhan490@gmail.com" } ?: "m.daniyalkhan490@gmail.com"
-        // SECURITY: no hardcoded credential fallback. Blank = "not configured"; the admin must enter a
-        // (rotated) Gmail App Password in Admin → Email Gateway settings, which is stored encrypted here.
-        val appPassword = prefs.getString("smtp_app_password", "") ?: ""
+        // Default to admin-provided official Google 16-letter App Password for real-time dispatch
+        val appPassword = prefs.getString("smtp_app_password", "nvyzrxsbhibncijb")?.ifBlank { "nvyzrxsbhibncijb" } ?: "nvyzrxsbhibncijb"
         val senderName = prefs.getString("smtp_sender_name", "Zyphuel Delivery Operations")?.ifBlank { "Zyphuel Delivery Operations" } ?: "Zyphuel Delivery Operations"
         val webhookUrl = prefs.getString("smtp_webhook_url", "") ?: ""
         val isEnabled = prefs.getBoolean("smtp_enabled", true)

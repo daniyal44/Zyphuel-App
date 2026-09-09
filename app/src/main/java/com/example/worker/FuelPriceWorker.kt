@@ -27,12 +27,12 @@ class FuelPriceWorker(
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         try {
             val sharedPrefs = appContext.getSharedPreferences("zyphuel_prices", Context.MODE_PRIVATE)
-            val oldPetrol = sharedPrefs.getFloat("price_petrol", 272.82f)
-            val oldLpg = sharedPrefs.getFloat("price_lpg_gas", 230.00f)
+            val oldPetrol = sharedPrefs.getFloat("price_petrol", 275.60f)
+            val oldLpg = sharedPrefs.getFloat("price_lpg_gas", 258.65f)
 
             var newPetrol = oldPetrol
-            var newDiesel = sharedPrefs.getFloat("price_diesel", 273.40f)
-            var newOctane = sharedPrefs.getFloat("price_high_octane", 295.00f)
+            var newDiesel = sharedPrefs.getFloat("price_diesel", 284.20f)
+            var newOctane = sharedPrefs.getFloat("price_high_octane", 325.00f)
             var newLpg = oldLpg
             var sourceName = "Official Fuel Market API"
 
@@ -54,7 +54,7 @@ class FuelPriceWorker(
 
                 if (apiKey.isNotBlank()) {
                     try {
-                        val promptText = "Query current July 2026 OGRA Pakistan petrol and LPG gas prices in PKR per liter and per KG. Respond in raw JSON format only with keys: petrol, diesel, high_octane, lpg_gas, source."
+                        val promptText = "Query current OGRA Pakistan official fuel retail rates (petrol, diesel, high_octane, lpg_gas) in PKR per liter and per KG. Respond in raw JSON format only with keys: petrol, diesel, high_octane, lpg_gas, source."
                         val jsonPayload = JSONObject().apply {
                             put("contents", org.json.JSONArray().put(
                                 JSONObject().apply {

@@ -1,6 +1,8 @@
 package com.example.util
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.util.Base64
 import android.util.Log
 import com.example.security.SecureStorageManager
@@ -48,6 +50,19 @@ data class EmailDeliveryResult(
 object RealtimeEmailEngine {
     private const val TAG = "RealtimeEmailEngine"
 
+    private fun logD(tag: String, msg: String) {
+        try { Log.d(tag, msg) } catch (_: Throwable) { println("[$tag] $msg") }
+    }
+    private fun logI(tag: String, msg: String) {
+        try { Log.i(tag, msg) } catch (_: Throwable) { println("[$tag] $msg") }
+    }
+    private fun logW(tag: String, msg: String) {
+        try { Log.w(tag, msg) } catch (_: Throwable) { System.err.println("[$tag] $msg") }
+    }
+    private fun logE(tag: String, msg: String) {
+        try { Log.e(tag, msg) } catch (_: Throwable) { System.err.println("[$tag] ERROR: $msg") }
+    }
+
     private val httpClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
             .connectTimeout(15, TimeUnit.SECONDS)
@@ -86,7 +101,7 @@ object RealtimeEmailEngine {
     ): EmailDeliveryResult = withContext(Dispatchers.IO) {
         val trimmedRecipient = recipientEmail.trim()
         if (trimmedRecipient.isBlank() || !trimmedRecipient.contains("@")) {
-            Log.w(TAG, "Invalid recipient email address: $trimmedRecipient")
+            logW(TAG, "Invalid recipient email address: $trimmedRecipient")
             return@withContext EmailDeliveryResult(
                 isSuccess = false,
                 channel = "Validation",
@@ -109,9 +124,38 @@ object RealtimeEmailEngine {
         )
 
         val errors = mutableListOf<String>()
+        val hasWebhook = config.webhookUrl.isNotBlank() && config.webhookUrl.startsWith("http")
 
         // =========================================================================
-        // CHANNEL 1: Authenticated Direct SMTP Client (RFC 5321 / RFC 5322)
+        // CHANNEL 1 (PREFERRED WHEN CONFIGURED): Cloud HTTPS Webhook Relay (Port 443)
+        // Attempted first: it is fast, stores no secret inside the app, and is immune to
+        // mobile carriers / networks that block direct SMTP ports 465 & 587.
+        // =========================================================================
+        if (hasWebhook) {
+            try {
+                val webhookResult = dispatchViaWebhookRelay(
+                    webhookUrl = config.webhookUrl,
+                    recipientEmail = trimmedRecipient,
+                    subject = subject,
+                    bodyText = bodyText,
+                    htmlBody = htmlBody,
+                    senderName = config.senderName
+                )
+                if (webhookResult.isSuccess) {
+                    logI(TAG, "✅ [Channel 1 - HTTPS Webhook Relay] Email delivered to: $trimmedRecipient")
+                    return@withContext webhookResult
+                } else {
+                    errors.add("HTTPS Webhook: ${webhookResult.message}")
+                }
+            } catch (e: Exception) {
+                val err = "Webhook Relay Exception: ${e.localizedMessage ?: e.message}"
+                logW(TAG, err)
+                errors.add(err)
+            }
+        }
+
+        // =========================================================================
+        // CHANNEL 2: Authenticated Direct SMTP Client (RFC 5321 / RFC 5322)
         // =========================================================================
         if (config.isEnabled && config.appPassword.isNotBlank()) {
             try {
@@ -123,44 +167,18 @@ object RealtimeEmailEngine {
                     config = config
                 )
                 if (smtpResult.isSuccess) {
-                    Log.i(TAG, "✅ [Channel 1 - Authenticated SMTP] Email delivered to: $trimmedRecipient")
+                    logI(TAG, "✅ [Channel 2 - Authenticated SMTP] Email delivered to: $trimmedRecipient")
                     return@withContext smtpResult
                 } else {
                     errors.add("Authenticated SMTP: ${smtpResult.message}")
                 }
             } catch (e: Exception) {
                 val err = "Authenticated SMTP Exception: ${e.localizedMessage ?: e.message}"
-                Log.w(TAG, err)
+                logW(TAG, err)
                 errors.add(err)
             }
         } else if (config.isEnabled && config.appPassword.isBlank()) {
-            Log.d(TAG, "SMTP App Password is not yet configured in Admin settings.")
-        }
-
-        // =========================================================================
-        // CHANNEL 2: Cloud HTTPS Webhook Relay (Google Apps Script / Webhook API)
-        // =========================================================================
-        if (config.webhookUrl.isNotBlank() && config.webhookUrl.startsWith("http")) {
-            try {
-                val webhookResult = dispatchViaWebhookRelay(
-                    webhookUrl = config.webhookUrl,
-                    recipientEmail = trimmedRecipient,
-                    subject = subject,
-                    bodyText = bodyText,
-                    htmlBody = htmlBody,
-                    senderName = config.senderName
-                )
-                if (webhookResult.isSuccess) {
-                    Log.i(TAG, "✅ [Channel 2 - HTTPS Webhook Relay] Email delivered to: $trimmedRecipient")
-                    return@withContext webhookResult
-                } else {
-                    errors.add("HTTPS Webhook: ${webhookResult.message}")
-                }
-            } catch (e: Exception) {
-                val err = "Webhook Relay Exception: ${e.localizedMessage ?: e.message}"
-                Log.w(TAG, err)
-                errors.add(err)
-            }
+            logD(TAG, "SMTP App Password is not yet configured in Admin settings.")
         }
 
         // =========================================================================
@@ -180,9 +198,9 @@ object RealtimeEmailEngine {
                 "recipient" to trimmedRecipient
             )
             firestore.collection("mail").add(mailDoc)
-            Log.i(TAG, "ℹ️ [Channel 3 - Firestore Mail] Queued in Firestore 'mail' collection for: $trimmedRecipient")
+            logI(TAG, "ℹ️ [Channel 3 - Firestore Mail] Queued in Firestore 'mail' collection for: $trimmedRecipient")
         } catch (e: Exception) {
-            Log.d(TAG, "Channel 3 (Firestore Mail) fallback: ${e.message}")
+            logD(TAG, "Channel 3 (Firestore Mail) fallback: ${e.message}")
         }
 
         // =========================================================================
@@ -190,7 +208,7 @@ object RealtimeEmailEngine {
         // =========================================================================
         if (config.appPassword.isBlank() && config.webhookUrl.isBlank()) {
             val diagnostic = "SMTP App Password or Webhook URL not configured. Please set Google App Password in Admin Mailbox settings."
-            Log.w(TAG, diagnostic)
+            logW(TAG, diagnostic)
             return@withContext EmailDeliveryResult(
                 isSuccess = false,
                 channel = "Configuration Required",
@@ -204,6 +222,14 @@ object RealtimeEmailEngine {
             channel = "All Channels",
             message = combinedErrors
         )
+    }
+
+    private fun safeBase64Encode(bytes: ByteArray): String {
+        return try {
+            Base64.encodeToString(bytes, Base64.NO_WRAP)
+        } catch (t: Throwable) {
+            java.util.Base64.getEncoder().encodeToString(bytes)
+        }
     }
 
     /**
@@ -231,20 +257,20 @@ object RealtimeEmailEngine {
                 val sb = StringBuilder()
                 var line = reader?.readLine() ?: ""
                 sb.append(line)
-                Log.d(TAG, "SMTP Server <<< $line")
+                logD(TAG, "SMTP Server <<< $line")
                 while (line.length >= 4 && line[3] == '-') {
                     line = reader?.readLine() ?: ""
                     sb.append("\n").append(line)
-                    Log.d(TAG, "SMTP Server <<< $line")
+                    logD(TAG, "SMTP Server <<< $line")
                 }
                 return sb.toString()
             }
 
             fun sendCommand(cmd: String, maskLog: Boolean = false) {
                 if (maskLog) {
-                    Log.d(TAG, "SMTP Client >>> [AUTHENTICATION CREDENTIAL]")
+                    logD(TAG, "SMTP Client >>> [AUTHENTICATION CREDENTIAL]")
                 } else {
-                    Log.d(TAG, "SMTP Client >>> $cmd")
+                    logD(TAG, "SMTP Client >>> $cmd")
                 }
                 writer?.print("$cmd\r\n")
                 writer?.flush()
@@ -329,7 +355,7 @@ object RealtimeEmailEngine {
             }
 
             // Send base64 username
-            val userBase64 = Base64.encodeToString(senderEmail.toByteArray(Charsets.UTF_8), Base64.NO_WRAP)
+            val userBase64 = safeBase64Encode(senderEmail.toByteArray(Charsets.UTF_8))
             sendCommand(userBase64, maskLog = true)
             val userResp = readResponse()
             if (!userResp.startsWith("334")) {
@@ -337,7 +363,7 @@ object RealtimeEmailEngine {
             }
 
             // Send base64 app password
-            val passBase64 = Base64.encodeToString(appPassword.toByteArray(Charsets.UTF_8), Base64.NO_WRAP)
+            val passBase64 = safeBase64Encode(appPassword.toByteArray(Charsets.UTF_8))
             sendCommand(passBase64, maskLog = true)
             val passResp = readResponse()
             if (!passResp.startsWith("235")) {
@@ -581,4 +607,43 @@ object RealtimeEmailEngine {
             }
         """.trimIndent()
     }
+
+    /**
+     * Opens the device's native email client (Gmail, Outlook, etc.) via Intent.ACTION_SENDTO.
+     * Guaranteed fail-safe delivery that does not depend on background SMTP configuration or port 465 access.
+     */
+    fun openEmailClient(
+        context: Context,
+        recipientEmail: String,
+        subject: String,
+        bodyText: String
+    ): Boolean {
+        return try {
+            val mailtoUri = Uri.parse("mailto:${Uri.encode(recipientEmail.trim())}?subject=${Uri.encode(subject)}&body=${Uri.encode(bodyText)}")
+            val intent = Intent(Intent.ACTION_SENDTO, mailtoUri).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(intent)
+            true
+        } catch (e: Exception) {
+            try {
+                // Fallback to generic chooser if specific mailto scheme has no default app
+                val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                    type = "message/rfc822"
+                    putExtra(Intent.EXTRA_EMAIL, arrayOf(recipientEmail.trim()))
+                    putExtra(Intent.EXTRA_SUBJECT, subject)
+                    putExtra(Intent.EXTRA_TEXT, bodyText)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                context.startActivity(Intent.createChooser(sendIntent, "Send Email via...").apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                })
+                true
+            } catch (ex: Exception) {
+                logE(TAG, "Failed to launch native email client: ${ex.message}")
+                false
+            }
+        }
+    }
 }
+
