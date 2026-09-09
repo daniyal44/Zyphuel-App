@@ -749,3 +749,81 @@ Zyphuel v2.4.0 introduces a comprehensive 10-category on-demand automotive and m
   - The moment a user finishes or skips the tour, `closeAppTourGuide(markAsSeen = true)` permanently flags `hasSeenAppTour = true`.
   - **Sidebar Navigation Drawer**: `Take a Guided Tour 🧭` is strictly guarded by `if (!hasSeenAppTour)`. Once seen or for any existing user, it is permanently removed from the sidebar.
   - **Help Center & Secondary Screens**: Completely purged the tour trigger from `HelpCenterScreen`, ensuring the guided tour does not linger or reappear in any menu or dialog across the app.
+
+---
+
+## 19. High-Contrast Pure Black Typography & Enhanced Visual Accessibility
+### 19.1 Profile Settings Dialog Typography Modernization (`ProfileSettingsDialog`)
+* **Crisp, Solid Black Content Rendering**:
+  - Maintained crisp, clean light/white dialog and card backgrounds (`Color.White`, `Color(0xFFF8FAFC)`) while eliminating low-contrast gray and navy-tinted text.
+  - Presets label modernized to solid black: `"OR CHOOSE A COLOR PRESET"` (`Color.Black`, `FontWeight.Bold`).
+  - Startup Transparency Notice modernized with crisp black title and bold black description text (`Color.Black`, `FontWeight.Medium`).
+  - Account Role card updated: `"ACCOUNT ROLE"` section header and role value (`Administrator`, `Verified Customer`, `Courier`) rendered in solid `Color.Black`.
+  - Order Alerts notification card modernized with bold black header and high-contrast dark charcoal subtitle (`Color(0xFF1E293B)`).
+  - Lahore Coverage Area card updated with crisp black headline and description.
+  - App Language selector (`App Language / زبان منتخب کریں`) rendered in solid `Color.Black` with bold high-contrast button labels.
+  - Saved Lahore Delivery Addresses updated with solid black headers (`🏠 Home`, `🏢 Office / Work`) and crisp black address text (`Color.Black`).
+  - Direct Lahore Support helpline modernized with solid black labels and descriptions.
+  - Storage & Cache cleaner card updated with solid black title and high-contrast status descriptions.
+  - All form input fields (Name, Email, Phone Number, Password) explicitly configured with `focusedTextColor = Color.Black`, `unfocusedTextColor = Color.Black`, `focusedLabelColor = Color.Black`, and `unfocusedLabelColor = Color.Black`.
+  - Bottom disclaimer, version footer, and Close button rendered in high-contrast `Color.Black`.
+
+### 19.2 Sidebar Navigation Drawer High-Contrast Typography (`DrawerContent`)
+* **Crisp Black Readability Across Drawer Items**:
+  - User profile header: Name rendered in solid `Color.Black` (`FontWeight.Bold`), and email in high-contrast charcoal `Color(0xFF1E293B)`.
+  - Startup disclosure notice text rendered in bold `Color.Black`.
+  - Foldable Categories header updated to solid `Color.Black` (`CATEGORIES & SERVICES`).
+  - All category items (Petrol, Diesel, Gas Cylinder, Pure Water, Detailing) rendered with bold `Color.Black` titles and high-contrast charcoal subtitles (`Color(0xFF334155)`).
+  - Drawer section headers (`ACCOUNT & SETTINGS`, `ORDERS & DELIVERIES`, `HELP & SUPPORT`, `ADMIN CONTROLS`) updated to solid `Color.Black` (`FontWeight.Bold`).
+  - `SidebarItem` component updated to render all menu item labels in crisp `Color.Black` for optimal readability against white surfaces.
+
+### 19.3 In-App Legal & Invoice Modals Typography (`TermsAndPrivacyDialog`, `InvoiceDialog`, `MyOrdersDialog`)
+* **Legal Terms & Privacy Dialog**:
+  - Updated `LegalSectionTitle`, `LegalParagraph`, and `LegalBulletPoint` to render in solid, high-contrast dark text (`Color.Black` and `Color(0xFF0F172A)`), ensuring full compliance with Google Play accessibility guidelines.
+  - Startup disclosure warning banners within Legal and Privacy tabs rendered with bold, high-contrast black text.
+* **Tax Invoice Dialog (`InvoiceDialog`)**:
+  - Customer, phone, delivery address, driver, and payment breakdown labels updated to solid `Color.Black`.
+  - Order breakdown item names, unit counts, delivery fees, and payable totals rendered in crisp `Color.Black` for unambiguous financial readability.
+* **My Order History Dialog (`MyOrdersDialog`)**:
+  - Service type titles, quantities, prices, and delivery destination text updated to bold, solid `Color.Black`.
+
+---
+
+## 20. Roadside SOS Decommissioning & Pure Water Elevation
+### 20.1 User-Facing UI Clean-up
+* **Removal of Roadside SOS**:
+  - **Customer Home Screen (`CustomerHomeScreen`)**: Decommissioned and removed the `service_roadside` SOS card. Replaced it with a clean, full-width `Pure Water Delivery` card (`service_water`) matching the layout, elevation, and typography of Petrol, Diesel, and Gas.
+  - **Navigation Drawer (`DrawerContent`)**: Removed the `Roadside SOS` entry under `CATEGORIES & SERVICES` accordion and replaced it with `Pure Water` (`"Drinking Water & Bowser Tankers"`).
+  - **Quick Actions Bar (`QuickActionsBar`)**: Replaced the `Roadside SOS 🚨` action chip with `Pure Water 🚰` (`water_delivery`), preserving a neat 6-chip 1-tap utility row.
+  - **Spotlight Tour Guide (`SpotlightStep 3`)**: Updated copy and subtitles to remove references to "Roadside SOS", highlighting Pure Water, Fuel, Gas Cylinders, Auto Repair, and Battery Jumpstart.
+  - **App Subtitles & Disclosures**: Updated screen headers and startup transparency notices from "fuel, gas & roadside support" to "fuel, gas & energy services".
+* **Preservation of Core Architecture & Tests**:
+  - Maintained `CategoryCatalogSeed` background definitions for `roadside_assistance` so data seeds, Room migrations, and architecture test assertions (`CategoryAndVehicleArchitectureTest`) continue to pass without structural breakage.
+
+---
+
+## 21. Quick Actions Bar Streamlining (Essential Utilities Exclusivity)
+### 21.1 Removal of Secondary Automotive Rescue Chips
+* **Decommissioned from Quick Actions**:
+  - Completely removed **Auto Repair** (`auto_repair`), **Battery Jump** (`battery_services`), and **Tyre Help** (`tyres_wheels`) from the `QuickActionsBar`.
+* **Focused 3-Core Essential Utilities**:
+  - The Quick Actions bar is now focused purely on rapid on-demand energy and hydration logistics:
+    1. **Order Fuel ⛽** (`fuel_energy`): 1-tap direct launch into the complete Fuel & Energy category sheet (Petrol, Diesel, High-Octane).
+    2. **Gas Cylinders 🔥** (`gas_cylinder`): Direct 1-tap trigger to open the official LPG Gas Cylinder order dialogue with live rates.
+    3. **Pure Water 🚰** (`water_delivery`): 1-tap direct launch to Mineral Drinking Water and Bowser Tanker options.
+* **Tour Guide Synchronization (`SpotlightTour.kt` / `Screens.kt`)**:
+  - SpotlightStep 3 copy and subtitle synchronized to reflect the focused 3-utility Quick Actions bar (`"Urgent Fuel Top-Up, Gas & Pure Water Delivery"`), eliminating all legacy references to mechanical or rescue services.
+
+---
+
+## 22. Location Editor Dialog Simplification
+### 22.1 Decommissioning of In-Dialog Pin Fine-Tuning Map
+* **Removal of Visual Pin Verification (`EditLocationDialog` in `Screens.kt`)**:
+  - Removed the **"Map Pin Visual Verification:"** label and the toggle button **"Fine-Tune Pin on Map 📍" / "Hide Map Pin"**.
+  - Decommissioned the inline interactive map widget (`InteractiveLocationPickerMap`) from the address change dialogue.
+  - Streamlined the location dialogue directly to Google Places Autocomplete search, Auto GPS detection, Reset Auto GPS, and Location Confirmation for a faster, clutter-free user experience.
+
+### 22.2 Decommissioning of Redundant GPS & Landmark Status Banner
+* **Removal of Status Header Pill**:
+  - Removed the `Surface` banner displaying `"🟢 Auto-Detected Live GPS & Landmark Active"` / `"Custom Location & Landmark Active"` from `EditLocationDialog`.
+  - The dialogue now opens directly with the Google Places Autocomplete search input, creating an immediate, clean, and distraction-free location picking experience.

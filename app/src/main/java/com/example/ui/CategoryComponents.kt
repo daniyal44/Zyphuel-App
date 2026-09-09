@@ -67,6 +67,7 @@ object CategoryIconHelper {
     fun getCategoryColor(id: String): Color {
         return when (id) {
             "fuel_energy" -> Color(0xFF059669)       // Emerald Green
+            "gas_cylinder" -> Color(0xFFEA580C)      // Flame Orange
             "auto_repair" -> Color(0xFF2563EB)       // Royal Blue
             "roadside_assistance" -> Color(0xFFDC2626)// Emergency Red
             "auto_detailing" -> Color(0xFF7C3AED)    // Detailing Violet
@@ -235,11 +236,8 @@ fun QuickActionsBar(
 ) {
     val actions = listOf(
         Triple("Order Fuel ⛽", Icons.Filled.LocalGasStation, "fuel_energy"),
-        Triple("Gas Cylinders 🔥", Icons.Filled.LocalGasStation, "fuel_energy"),
-        Triple("Auto Repair 🛠️", Icons.Filled.Build, "auto_repair"),
-        Triple("Roadside SOS 🚨", Icons.Filled.CarCrash, "roadside_assistance"),
-        Triple("Battery Jump 🔋", Icons.Filled.BatteryChargingFull, "battery_services"),
-        Triple("Tyre Help 🛞", Icons.Filled.TireRepair, "tyres_wheels")
+        Triple("Gas Cylinders 🔥", Icons.Filled.PropaneTank, "gas_cylinder"),
+        Triple("Pure Water 🚰", Icons.Filled.WaterDrop, "water_delivery")
     )
 
     Column(modifier = modifier.fillMaxWidth()) {

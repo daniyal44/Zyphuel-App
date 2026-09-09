@@ -164,7 +164,7 @@ fun TermsAndPrivacyDialog(
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
                                         text = "Please note: Zyphuel is currently an early-stage local startup operating in Lahore, Pakistan, run by an independent small founding team, and NOT a large corporate conglomerate or multinational commercial entity. All fuel, gas, and energy dispatches are handled with personalized attention as an agile startup in our designated Lahore coverage zones.",
-                                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFF78350F), lineHeight = 16.sp)
+                                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold, color = Color.Black, lineHeight = 16.sp)
                                     )
                                 }
                             }
@@ -220,7 +220,7 @@ fun TermsAndPrivacyDialog(
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
                                         text = "Please note: Zyphuel is currently an early-stage startup platform operating in Lahore, Pakistan, and NOT a large corporate entity. All user data, telemetry, and location permissions are processed with startup agility and strict end-to-end encryption exclusively to fulfill your on-demand service dispatches.",
-                                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFF78350F), lineHeight = 16.sp)
+                                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold, color = Color.Black, lineHeight = 16.sp)
                                     )
                                 }
                             }
@@ -311,7 +311,7 @@ fun TermsAndPrivacyDialog(
 private fun LegalSectionTitle(title: String) {
     Text(
         text = title,
-        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface),
+        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = Color.Black),
         modifier = Modifier.padding(top = 6.dp)
     )
 }
@@ -320,7 +320,7 @@ private fun LegalSectionTitle(title: String) {
 private fun LegalParagraph(text: String) {
     Text(
         text = text,
-        style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant, lineHeight = 18.sp)
+        style = MaterialTheme.typography.bodySmall.copy(color = Color(0xFF0F172A), lineHeight = 18.sp, fontWeight = FontWeight.Normal)
     )
 }
 
@@ -333,7 +333,7 @@ private fun LegalBulletPoint(text: String) {
         Text("• ", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
         Text(
             text = text,
-            style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant, lineHeight = 18.sp)
+            style = MaterialTheme.typography.bodySmall.copy(color = Color(0xFF0F172A), lineHeight = 18.sp, fontWeight = FontWeight.Normal)
         )
     }
 }

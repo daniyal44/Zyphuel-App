@@ -3533,7 +3533,7 @@ fun DrawerContent(
                                 }
                             }
 
-                            // Roadside SOS
+                            // Pure Water
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -3542,11 +3542,11 @@ fun DrawerContent(
                                     .padding(vertical = 4.dp, horizontal = 4.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text("🔋", fontSize = 16.sp)
+                                Text("🚰", fontSize = 16.sp)
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Column {
-                                    Text("Roadside Assistance", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.Black))
-                                    Text("SOS Quick Jumpstart • Battery", style = MaterialTheme.typography.labelSmall.copy(color = Color(0xFF334155), fontSize = 10.sp, fontWeight = FontWeight.Medium))
+                                    Text("Pure Water", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.Black))
+                                    Text("Drinking Water & Bowser Tankers", style = MaterialTheme.typography.labelSmall.copy(color = Color(0xFF334155), fontSize = 10.sp, fontWeight = FontWeight.Medium))
                                 }
                             }
 
@@ -4049,9 +4049,9 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
             SpotlightStep(
                 anchorKey = "home_quick_actions",
                 title = "3) 1-Tap Quick Services ⚡",
-                subtitle = "Urgent Fuel Top-Up, Gas, SOS, Tyre & Battery Rescue",
-                body = "Quick Actions bar se foran Doorstep Fuel, Gas Cylinders, Auto Repair, Roadside SOS aur Battery Jumpstart sirf 1 tap par mangwayein.",
-                tip = "Raat ke waqt ya emergency breakdown par 'Roadside SOS' instant response trigger karta hai.",
+                subtitle = "Urgent Fuel Top-Up, Gas & Pure Water Delivery",
+                body = "Quick Actions bar se foran Doorstep Fuel, Gas Cylinders aur Pure Water sirf 1 tap par mangwayein.",
+                tip = "1-tap par foran doorstep Fuel, Gas ya Pure Water request karein.",
                 badge = "QUICK ACTIONS",
                 icon = Icons.Filled.Bolt,
                 beforeShow = { revealItem(2) }
@@ -4436,12 +4436,17 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                     QuickActionsBar(
                         modifier = Modifier.spotlightAnchor(spotlight, "home_quick_actions"),
                         onActionClick = { catId ->
-                            val cat = categories.firstOrNull { it.id == catId }
-                            if (cat != null) {
-                                selectedCategoryForModal = cat
-                            } else {
-                                selectedService = ""
+                            if (catId == "gas_cylinder") {
+                                selectedService = "Gas"
                                 showOrderDialog = true
+                            } else {
+                                val cat = categories.firstOrNull { it.id == catId }
+                                if (cat != null) {
+                                    selectedCategoryForModal = cat
+                                } else {
+                                    selectedService = ""
+                                    showOrderDialog = true
+                                }
                             }
                         }
                     )
@@ -4513,7 +4518,7 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                                     )
                                 )
                                 Text(
-                                    text = "Doorstep fuel, gas & roadside support in Lahore",
+                                    text = "Doorstep fuel, gas & energy services in Lahore",
                                     style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray)
                                 )
                             }
@@ -4709,72 +4714,55 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                             }
                         }
 
-                        // 4. Roadside Assistance SOS & Pure Water Grid Row
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            // Roadside SOS
-                            Card(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .clickable {
-                                        val cat = categories.firstOrNull { it.id == "roadside_assistance" }
-                                        if (cat != null) selectedCategoryForModal = cat
-                                        else {
-                                            val dialIntent = android.content.Intent(android.content.Intent.ACTION_DIAL).apply {
-                                                data = android.net.Uri.parse("tel:+923230112464")
-                                            }
-                                            context.startActivity(dialIntent)
-                                        }
-                                    }
-                                    .testTag("service_roadside"),
-                                shape = RoundedCornerShape(16.dp),
-                                colors = CardDefaults.cardColors(containerColor = Color.White),
-                                border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                            ) {
-                                Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    Surface(
-                                        shape = RoundedCornerShape(10.dp),
-                                        color = Color(0xFFDC2626).copy(alpha = 0.12f),
-                                        modifier = Modifier.size(36.dp)
-                                    ) {
-                                        Box(contentAlignment = Alignment.Center) {
-                                            Icon(Icons.Filled.CarCrash, contentDescription = null, tint = Color(0xFFDC2626), modifier = Modifier.size(20.dp))
-                                        }
-                                    }
-                                    Text("Roadside SOS", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark))
-                                    Text("Jumpstart & 24/7 Breakdown Help", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray))
+                        // 4. Pure Water Delivery
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    selectedService = "Water"
+                                    showOrderDialog = true
                                 }
-                            }
-
-                            // Pure Water Delivery
-                            Card(
+                                .testTag("service_water"),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                        ) {
+                            Row(
                                 modifier = Modifier
-                                    .weight(1f)
-                                    .clickable {
-                                        selectedService = "Water"
-                                        showOrderDialog = true
-                                    }
-                                    .testTag("service_water"),
-                                shape = RoundedCornerShape(16.dp),
-                                colors = CardDefaults.cardColors(containerColor = Color.White),
-                                border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                    modifier = Modifier.weight(1f)
+                                ) {
                                     Surface(
-                                        shape = RoundedCornerShape(10.dp),
+                                        shape = RoundedCornerShape(12.dp),
                                         color = Color(0xFF0284C7).copy(alpha = 0.12f),
-                                        modifier = Modifier.size(36.dp)
+                                        modifier = Modifier.size(46.dp)
                                     ) {
                                         Box(contentAlignment = Alignment.Center) {
-                                            Icon(Icons.Filled.WaterDrop, contentDescription = null, tint = Color(0xFF0284C7), modifier = Modifier.size(20.dp))
+                                            Icon(Icons.Filled.WaterDrop, contentDescription = null, tint = Color(0xFF0284C7), modifier = Modifier.size(24.dp))
                                         }
                                     }
-                                    Text("Pure Water", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark))
-                                    Text("Drinking Water & Tankers", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray))
+                                    Column {
+                                        Text("Pure Water", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark))
+                                        Text(
+                                            text = "Certified Drinking Water & Bowser Tankers",
+                                            style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray)
+                                        )
+                                    }
+                                }
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Text(
+                                        text = "Rs. 4.50/Gallon",
+                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFF0284C7))
+                                    )
+                                    Text("Doorstep Delivery", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontSize = 10.sp))
                                 }
                             }
                         }
@@ -8557,10 +8545,10 @@ fun InvoiceDialog(
                 ) {
                     Column {
                         Text("⚡ ZYPHUEL TAX INVOICE", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary))
-                        Text("INV-ZYP-${order.id} • $dateStr", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray))
+                        Text("INV-ZYP-${order.id} • $dateStr", style = MaterialTheme.typography.labelSmall.copy(color = Color.Black, fontWeight = FontWeight.Medium))
                     }
                     IconButton(onClick = onDismiss) {
-                        Icon(Icons.Filled.Close, contentDescription = "Close", tint = Color.Gray)
+                        Icon(Icons.Filled.Close, contentDescription = "Close", tint = Color.Black)
                     }
                 }
 
@@ -8575,31 +8563,31 @@ fun InvoiceDialog(
                 ) {
                     Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("Customer:", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.Gray))
-                            Text(order.customerName, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold, color = ZyphuelBlueDark))
+                            Text("Customer:", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.Black))
+                            Text(order.customerName, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold, color = Color.Black))
                         }
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("Phone:", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.Gray))
-                            Text(order.customerPhone, style = MaterialTheme.typography.bodySmall.copy(color = Color.DarkGray))
+                            Text("Phone:", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.Black))
+                            Text(order.customerPhone, style = MaterialTheme.typography.bodySmall.copy(color = Color.Black, fontWeight = FontWeight.Medium))
                         }
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("Delivery:", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.Gray))
-                            Text(order.deliveryAddress, style = MaterialTheme.typography.bodySmall.copy(color = Color.DarkGray), modifier = Modifier.fillMaxWidth(0.7f), maxLines = 2)
+                            Text("Delivery:", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.Black))
+                            Text(order.deliveryAddress, style = MaterialTheme.typography.bodySmall.copy(color = Color.Black, fontWeight = FontWeight.Medium), modifier = Modifier.fillMaxWidth(0.7f), maxLines = 2)
                         }
                         HorizontalDivider(color = Color(0xFFE2E8F0).copy(alpha = 0.5f))
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("Assigned Driver:", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.Gray))
-                            Text(order.riderName ?: "Zyphuel Rider", style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold, color = Color(0xFF0284C7)))
+                            Text("Assigned Driver:", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.Black))
+                            Text(order.riderName ?: "Zyphuel Rider", style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold, color = Color.Black))
                         }
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("Payment Mode:", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.Gray))
+                            Text("Payment Mode:", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.Black))
                             Text(order.paymentMethod, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFF16A34A)))
                         }
                     }
                 }
 
                 // Itemized Breakdown
-                Text("ORDER BREAKDOWN", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.Gray, letterSpacing = 0.5.sp))
+                Text("ORDER BREAKDOWN", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.Black, letterSpacing = 0.5.sp))
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
@@ -8608,16 +8596,16 @@ fun InvoiceDialog(
                 ) {
                     Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("${order.serviceType} (${order.quantity} units)", style = MaterialTheme.typography.bodySmall.copy(color = Color.DarkGray, fontWeight = FontWeight.Medium))
-                            Text("Rs. ${String.format(java.util.Locale.US, "%,.2f", subtotal)}", style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
+                            Text("${order.serviceType} (${order.quantity} units)", style = MaterialTheme.typography.bodySmall.copy(color = Color.Black, fontWeight = FontWeight.Medium))
+                            Text("Rs. ${String.format(java.util.Locale.US, "%,.2f", subtotal)}", style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold, color = Color.Black))
                         }
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("Delivery Fee (Doorstep)", style = MaterialTheme.typography.bodySmall.copy(color = Color.DarkGray))
-                            Text("Rs. ${String.format(java.util.Locale.US, "%,.2f", deliveryFee)}", style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
+                            Text("Delivery Fee (Doorstep)", style = MaterialTheme.typography.bodySmall.copy(color = Color.Black, fontWeight = FontWeight.Medium))
+                            Text("Rs. ${String.format(java.util.Locale.US, "%,.2f", deliveryFee)}", style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold, color = Color.Black))
                         }
                         HorizontalDivider(color = Color(0xFFE2E8F0))
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                            Text("Total COD Payable:", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark))
+                            Text("Total COD Payable:", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = Color.Black))
                             Text("Rs. ${String.format(java.util.Locale.US, "%,.2f", order.totalPrice)}", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary))
                         }
                     }
@@ -11184,7 +11172,7 @@ fun ProfileSettingsDialog(
                         }
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            "Zyphuel is currently an evolving early-stage startup operating in Lahore, not a large corporation. We provide dedicated, personalized fuel & roadside dispatch service.",
+                            "Zyphuel is currently an evolving early-stage startup operating in Lahore, not a large corporation. We provide dedicated, personalized fuel & energy dispatch service.",
                             style = MaterialTheme.typography.bodySmall.copy(color = Color.Black, fontWeight = FontWeight.Medium, fontSize = 11.sp, lineHeight = 16.sp)
                         )
                     }
@@ -11801,7 +11789,7 @@ fun MyOrdersDialog(
                                             text = order.serviceType,
                                             fontWeight = FontWeight.Bold,
                                             style = MaterialTheme.typography.titleMedium,
-                                            color = ZyphuelBlueDark
+                                            color = Color.Black
                                         )
                                         Box(
                                             modifier = Modifier
@@ -11832,19 +11820,19 @@ fun MyOrdersDialog(
                                     }
                                     Text(
                                         text = "Quantity: ${order.quantity} ${if (order.serviceType == "LPG Gas") "kg" else if (order.serviceType == "Water") "Gallons" else "Liters"}",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = Color.DarkGray
+                                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                                        color = Color.Black
                                     )
                                     Text(
                                         text = "Total Price: ${viewModel.formatPrice(order.totalPrice)}",
-                                        fontWeight = FontWeight.SemiBold,
+                                        fontWeight = FontWeight.Bold,
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = ZyphuelBluePrimary
                                     )
                                     Text(
                                         text = "Address: ${order.deliveryAddress}",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = Color.Gray,
+                                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+                                        color = Color.Black,
                                         maxLines = 1,
                                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                                     )
@@ -17553,7 +17541,6 @@ fun EditLocationDialog(
     var editedAddress by remember { mutableStateOf(currentLocation) }
     var selectedLat by remember { mutableDoubleStateOf(31.5204) }
     var selectedLng by remember { mutableDoubleStateOf(74.3587) }
-    var showMapPicker by remember { mutableStateOf(false) }
 
     val hasFinePermission = androidx.core.content.ContextCompat.checkSelfPermission(
         context,
@@ -17585,33 +17572,6 @@ fun EditLocationDialog(
                     )
                 }
 
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = if (isCustomSet) Color(0xFFEFF6FF) else Color(0xFFECFDF5),
-                    border = BorderStroke(1.dp, if (isCustomSet) Color(0xFF93C5FD) else Color(0xFFA7F3D0))
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(10.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Icon(
-                            imageVector = if (isCustomSet) Icons.Filled.Edit else Icons.Filled.MyLocation,
-                            contentDescription = null,
-                            tint = if (isCustomSet) ZyphuelBluePrimary else Color(0xFF059669),
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Text(
-                            text = if (isCustomSet) "Custom Location & Landmark Active" else "🟢 Auto-Detected Live GPS & Landmark Active",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = if (isCustomSet) ZyphuelBlueDark else Color(0xFF065F46)
-                        )
-                    }
-                }
-
                 // Google Places Autocomplete Field
                 PlacesAutocompleteTextField(
                     value = editedAddress,
@@ -17622,36 +17582,6 @@ fun EditLocationDialog(
                         selectedLng = lng
                     }
                 )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Map Pin Visual Verification:",
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Gray
-                    )
-                    TextButton(onClick = { showMapPicker = !showMapPicker }) {
-                        Text(if (showMapPicker) "Hide Map Pin" else "Fine-Tune Pin on Map 📍", fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary)
-                    }
-                }
-
-                if (showMapPicker) {
-                    InteractiveLocationPickerMap(
-                        latitude = selectedLat,
-                        longitude = selectedLng,
-                        landmarkName = editedAddress.ifBlank { "Model Town, Lahore" },
-                        onLocationPinned = { lat, lng, landmark ->
-                            selectedLat = lat
-                            selectedLng = lng
-                            editedAddress = landmark
-                        }
-                    )
-                }
-
                 HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
                 Row(
