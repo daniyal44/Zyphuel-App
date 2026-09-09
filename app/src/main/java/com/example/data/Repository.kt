@@ -365,6 +365,11 @@ class AppRepository(context: Context) {
         }
     }
 
+    suspend fun deleteOrder(orderId: Int) {
+        orderDao.deleteOrderById(orderId)
+        firestoreOrderRepository.deleteOrder(orderId)
+    }
+
     // --- Admin Panel Operations ---
 
     suspend fun approveRider(riderEmail: String, adminEmail: String) {

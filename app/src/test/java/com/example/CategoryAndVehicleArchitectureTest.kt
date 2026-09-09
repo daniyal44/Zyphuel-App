@@ -142,4 +142,57 @@ class CategoryAndVehicleArchitectureTest {
         assertTrue(vehicle.isDefault)
         assertEquals(VehicleType.CAR.name, vehicle.vehicleType)
     }
+
+    @Test
+    fun `test featured 7 categories are correctly resolved from catalog seed`() {
+        val seed = CategoryCatalogSeed.getDefaultCategories()
+        val featuredIds = listOf(
+            "fuel_energy",
+            "auto_repair",
+            "roadside_assistance",
+            "auto_detailing",
+            "tyres_wheels",
+            "battery_services",
+            "water_delivery"
+        )
+        val featuredCategories = seed.filter { it.id in featuredIds }
+        assertEquals("Must resolve exactly 7 featured categories", 7, featuredCategories.size)
+        assertTrue(featuredCategories.any { it.id == "fuel_energy" })
+
+        // Verify remaining categories count is 3
+        val remainingCategories = seed.filter { it.id !in featuredIds }
+        assertEquals("Must have 3 secondary categories (EV, Lubricants, Fleet)", 3, remainingCategories.size)
+        val remainingIds = remainingCategories.map { it.id }.toSet()
+        assertEquals(setOf("lubricants_fluids", "ev_services", "fleet_business"), remainingIds)
+    }
+
+    @Test
+    fun `test fuel energy subcategories support dynamic OGRA rate resolution`() {
+        val seed = CategoryCatalogSeed.getDefaultCategories()
+        val fuelCat = seed.first { it.id == "fuel_energy" }
+        assertNotNull(fuelCat)
+        assertTrue("Fuel category pricing must have isDynamicFuelRate flag true", fuelCat.pricingConfig.isDynamicFuelRate)
+
+        // Verify exactly 5 total subcategories in Fuel & Energy: 2 Petrol, 2 Diesel, 1 Gas
+        assertEquals(5, fuelCat.subcategories.size)
+
+        // Verify Petrol (exactly 2)
+        val petrolSubs = fuelCat.subcategories.filter { it.serviceGroup == "PETROL" }
+        assertEquals(2, petrolSubs.size)
+        assertEquals(listOf("petrol_regular", "petrol_octane"), petrolSubs.map { it.id })
+
+        // Verify Diesel (exactly 2)
+        val dieselSubs = fuelCat.subcategories.filter { it.serviceGroup == "DIESEL" }
+        assertEquals(2, dieselSubs.size)
+        assertEquals(listOf("diesel_regular", "diesel_generator"), dieselSubs.map { it.id })
+
+        // Verify Gas (exactly 1 single option under GAS)
+        val gasSubs = fuelCat.subcategories.filter { it.serviceGroup == "GAS" }
+        assertEquals(1, gasSubs.size)
+        assertEquals(listOf("lpg_sealed_cylinder"), gasSubs.map { it.id })
+
+        // Verify FUEL ADD-ONS is completely removed
+        val addOns = fuelCat.subcategories.filter { it.serviceGroup?.contains("ADD-ON", ignoreCase = true) == true }
+        assertTrue("Fuel add-ons group must be removed", addOns.isEmpty())
+    }
 }

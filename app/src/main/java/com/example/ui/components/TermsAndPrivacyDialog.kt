@@ -149,6 +149,26 @@ fun TermsAndPrivacyDialog(
 
                             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
+                            // Highlighted Startup Disclosure
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = Color(0xFFFEF3C7),
+                                border = BorderStroke(1.dp, Color(0xFFF59E0B)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(modifier = Modifier.padding(10.dp)) {
+                                    Text(
+                                        text = "⚠️ CRITICAL EARLY-STAGE STARTUP NOTICE",
+                                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold, color = Color(0xFF92400E))
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "Please note: Zyphuel is currently an early-stage local startup operating in Lahore, Pakistan, run by an independent small founding team, and NOT a large corporate conglomerate or multinational commercial entity. All fuel, gas, and energy dispatches are handled with personalized attention as an agile startup in our designated Lahore coverage zones.",
+                                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFF78350F), lineHeight = 16.sp)
+                                    )
+                                }
+                            }
+
                             LegalSectionTitle("1. Acceptance & Service Scope")
                             LegalParagraph("By accessing or using Zyphuel, you agree to these Terms. Zyphuel operates an on-demand logistics dispatch network in Lahore, Pakistan connecting customers with certified delivery couriers and roadside technicians across 10 primary categories: Fuel & Energy, Auto Repair, 24/7 Roadside Assistance, Detailing, Tyres & Wheels, Battery Services, Lubricants & Fluids, EV Services, Water Delivery, and Fleet Operations.")
 
@@ -184,6 +204,26 @@ fun TermsAndPrivacyDialog(
                             )
 
                             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+
+                            // Highlighted Startup Disclosure
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = Color(0xFFFEF3C7),
+                                border = BorderStroke(1.dp, Color(0xFFF59E0B)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(modifier = Modifier.padding(10.dp)) {
+                                    Text(
+                                        text = "⚠️ STARTUP STATUS & PRIVACY TRANSPARENCY",
+                                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold, color = Color(0xFF92400E))
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "Please note: Zyphuel is currently an early-stage startup platform operating in Lahore, Pakistan, and NOT a large corporate entity. All user data, telemetry, and location permissions are processed with startup agility and strict end-to-end encryption exclusively to fulfill your on-demand service dispatches.",
+                                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFF78350F), lineHeight = 16.sp)
+                                    )
+                                }
+                            }
 
                             // Highlighted Location Disclosure
                             Surface(

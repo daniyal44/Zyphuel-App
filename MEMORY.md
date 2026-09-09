@@ -102,6 +102,21 @@
 * **Test Suite Verification**: Updated `ZyphuelComprehensiveAppTest.kt` with 13-step integrity verification.
 * **Version Advancement**: Advanced `versionCode = 9` and `versionName = "2.4.2"` in `app/build.gradle.kts`.
 
+### Phase 14: Customer Home Screen & Visual Card Overhaul (v2.4.4 Build 11)
+* **Delivery Location Card Overhaul (`user_location_active_card`)**: Modernized with a sleek deep ocean gradient (`#0F172A` -> `#0369A1`), pulsing live GPS telematics indicator, single top-right glassmorphic Share Location badge (`testTag("share_location_badge")` and `testTag("share_location_btn")`), vibrant primary `[ Auto Detect GPS ]` button (`#0284C7`), and clean `[ Change Pin ]` button. Removed redundant duplicate share button and low-contrast outlines.
+* **Pill-Shaped Global Service Search Bar (`ServiceSearchBar`)**: Refactored to a modern `RoundedCornerShape(24.dp)` pill with subtle shadow elevation, circular search icon container, and 1-tap query clear button.
+* **Quick Actions Bar Polish (`QuickActionsBar`)**: Upgraded to 24.dp pill shape with circular icon badges in brand blue, enhanced contrast, and zero label clipping for roadside assistance and emergency services.
+* **Saved Vehicles Profile Card (`SavedVehiclesBar`)**: Refactored to a 16.dp rounded card with crisp subtle border and elevated vehicle management trigger.
+* **De-Cluttered Marketplace Category Cards (`CategoryCard`)**: Removed repetitive `"Available Now"` green badge noise from all cards, reserving badges strictly for emergency/SOS services. Expanded card title layout to `minLines = 2, maxLines = 2` with 18.sp line height to completely eliminate text truncation (e.g., "Roadside Assistance" and "Auto Care & Detailing" now render with zero clipping).
+* **Delivery Dashboard Clean Text**: Replaced developer-style button text `"View Full Customer Order History Screen 📜"` with clean `"View Full Order History →"`.
+* **Elevated Past Order Cards (`CustomerPastOrderCard`)**: Upgraded to 16.dp rounded cards with soft pastel status pills (`#DCFCE7` / `#16A34A` for Completed/Delivered, `#FEE2E2` / `#DC2626` for Cancelled, `#FEF3C7` / `#D97706` for In-Progress) and tinted service icon containers.
+* **Version Advancement**: Incremented `versionCode = 11` and `versionName = "2.4.4"` in `app/build.gradle.kts`.
+
+### Phase 15: Pure Mobile Architecture & Desktop Application Decommissioning (v2.4.6 Build 13)
+* **Complete Desktop Decommissioning**: Permanently deleted all desktop applications, launchers, and modules (`desktop/`, `RUN-DESKTOP.bat`, `RUN-DESKTOP-DEBUG.bat`, `RUN-MOBILE-PREVIEW.bat`, `mobile-preview/`) per user directive to keep the system pure, lightweight, and exclusively focused on the Android mobile application.
+* **Streamlined Mobile Repository**: Removed extraneous build targets and desktop Gradle modules, ensuring 100% of project resources, testing, and CI/CD maintenance target the core Android mobile app.
+* **Version Advancement**: Incremented `versionCode = 13` and `versionName = "2.4.6"` in `app/build.gradle.kts`.
+
 ---
 
 ## 🗄️ Database Entity Schema Reference

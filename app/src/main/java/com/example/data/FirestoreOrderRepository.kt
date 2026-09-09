@@ -252,5 +252,22 @@ class FirestoreOrderRepository(private val context: Context) {
     }
 
 
+    /**
+     * Permanently deletes an order from Firestore.
+     */
+    suspend fun deleteOrder(orderId: Int): Boolean = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        val firestore = db ?: return@withContext false
+        try {
+            kotlinx.coroutines.withTimeoutOrNull(1500L) {
+                firestore.collection("orders").document(orderId.toString()).delete().await()
+            }
+            Log.d(TAG, "Order #$orderId permanently deleted from Firestore.")
+            true
+        } catch (e: Exception) {
+            Log.w(TAG, "Error deleting order from Firestore: ${e.message}")
+            false
+        }
+    }
+
     private fun String?.isNull_or_blank(): Boolean = this == null || this.trim().isEmpty()
 }
