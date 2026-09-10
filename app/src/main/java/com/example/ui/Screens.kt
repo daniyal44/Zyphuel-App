@@ -902,7 +902,7 @@ fun SplashScreen(viewModel: MainViewModel) {
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Lahore's Premium Delivery Network",
+                text = "Zyphuel Delivery App",
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Bold,
                     color = ZyphuelBlueDark,
@@ -3239,7 +3239,6 @@ fun DrawerContent(
     var showDeleteAccountDialog by remember { mutableStateOf(false) }
     var showTermsAndPrivacyDialog by remember { mutableStateOf(false) }
     var termsAndPrivacyInitialTab by remember { mutableIntStateOf(0) }
-    var categoriesFolded by remember { mutableStateOf(false) }
     val currentScreenVal by viewModel.currentScreen.collectAsState()
     val scrollState = rememberScrollState()
 
@@ -3385,179 +3384,6 @@ fun DrawerContent(
                                             color = Color(0xFF10B981)
                                         )
                                     )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Startup Disclosure Banner in Drawer
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFEFF6FF)),
-                border = BorderStroke(1.dp, Color(0xFFBFDBFE))
-            ) {
-                Row(
-                    modifier = Modifier.padding(10.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Info,
-                        contentDescription = null,
-                        tint = Color(0xFF2563EB),
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Zyphuel is an early-stage startup operating in Lahore, not a large corporation.",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            color = Color.Black,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 11.sp,
-                            lineHeight = 15.sp
-                        )
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Foldable Service Categories Section
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
-                border = BorderStroke(1.dp, Color(0xFFE2E8F0))
-            ) {
-                Column(modifier = Modifier.padding(12.dp)) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { categoriesFolded = !categoriesFolded }
-                            .testTag("sidebar_categories_toggle"),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Filled.Category,
-                                contentDescription = null,
-                                tint = ZyphuelBluePrimary,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "CATEGORIES & SERVICES",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.Black,
-                                    letterSpacing = 0.5.sp
-                                )
-                            )
-                        }
-                        Icon(
-                            imageVector = if (categoriesFolded) Icons.Filled.ExpandMore else Icons.Filled.ExpandLess,
-                            contentDescription = if (categoriesFolded) "Expand Categories" else "Collapse Categories",
-                            tint = Color.Black,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-
-                    AnimatedVisibility(visible = !categoriesFolded) {
-                        Column(
-                            modifier = Modifier.padding(top = 10.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            // Petrol (2 subcategories)
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .clickable { onClose() }
-                                    .padding(vertical = 4.dp, horizontal = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text("⛽", fontSize = 16.sp)
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Column {
-                                    Text("Petrol (2 Types)", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.Black))
-                                    Text("Regular Petrol • High-Octane", style = MaterialTheme.typography.labelSmall.copy(color = Color(0xFF334155), fontSize = 10.sp, fontWeight = FontWeight.Medium))
-                                }
-                            }
-
-                            // Diesel (2 subcategories)
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .clickable { onClose() }
-                                    .padding(vertical = 4.dp, horizontal = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text("🛢️", fontSize = 16.sp)
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Column {
-                                    Text("Diesel (2 Types)", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.Black))
-                                    Text("Regular Diesel • Generator Diesel", style = MaterialTheme.typography.labelSmall.copy(color = Color(0xFF334155), fontSize = 10.sp, fontWeight = FontWeight.Medium))
-                                }
-                            }
-
-                            // Gas (1 option)
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .clickable { onClose() }
-                                    .padding(vertical = 4.dp, horizontal = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text("🔥", fontSize = 16.sp)
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Column {
-                                    Text("Gas (Cylinder)", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.Black))
-                                    Text("Gas Cylinder 11.8kg Sealed", style = MaterialTheme.typography.labelSmall.copy(color = Color(0xFF334155), fontSize = 10.sp, fontWeight = FontWeight.Medium))
-                                }
-                            }
-
-                            // Pure Water
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .clickable { onClose() }
-                                    .padding(vertical = 4.dp, horizontal = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text("🚰", fontSize = 16.sp)
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Column {
-                                    Text("Pure Water", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.Black))
-                                    Text("Drinking Water & Bowser Tankers", style = MaterialTheme.typography.labelSmall.copy(color = Color(0xFF334155), fontSize = 10.sp, fontWeight = FontWeight.Medium))
-                                }
-                            }
-
-                            // Detailing
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .clickable { onClose() }
-                                    .padding(vertical = 4.dp, horizontal = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text("🚗", fontSize = 16.sp)
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Column {
-                                    Text("Auto Repair & Detailing", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.Black))
-                                    Text("Doorstep Maintenance & Wash", style = MaterialTheme.typography.labelSmall.copy(color = Color(0xFF334155), fontSize = 10.sp, fontWeight = FontWeight.Medium))
                                 }
                             }
                         }
@@ -3916,8 +3742,6 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
     }
 
     val categories by viewModel.categories.collectAsState()
-    val searchQuery by viewModel.serviceSearchQuery.collectAsState()
-    val searchResults by viewModel.serviceSearchResults.collectAsState()
     val selectedVehicle by viewModel.selectedVehicle.collectAsState()
 
     var selectedCategoryForModal by remember { mutableStateOf<com.example.data.category.Category?>(null) }
@@ -3931,6 +3755,13 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
     var showProfileSettingsDialog by remember { mutableStateOf(false) }
     var showMyOrdersDialog by remember { mutableStateOf(false) }
     var showEditLocationDialog by remember { mutableStateOf(false) }
+
+    val startupNoticePrefs = remember(context) {
+        context.getSharedPreferences("zyphuel_ui_prefs", android.content.Context.MODE_PRIVATE)
+    }
+    var showStartupNotice by remember {
+        mutableStateOf(!startupNoticePrefs.getBoolean("has_seen_startup_notice", false))
+    }
 
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
@@ -4031,38 +3862,18 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                 beforeShow = { revealItem(0) }
             ),
             SpotlightStep(
-                anchorKey = "home_search_bar",
-                title = "2) Search Services & Fuel 🔍",
-                subtitle = "Find Any Fuel, Gas or Repair Service in Seconds",
-                body = "Search bar mein kuch bhi type karein — 'petrol', 'diesel', 'gas cylinder', 'battery', 'tyre', 'car wash'. Hamara smart search foran sahi service dhund leta hai.",
-                tip = "Search results par tap karke aap direct us service ke live rate aur details dekh sakte hain.",
-                badge = "QUICK SEARCH",
-                icon = Icons.Filled.Search,
-                beforeShow = { revealItem(1) }
-            ),
-            SpotlightStep(
-                anchorKey = "home_quick_actions",
-                title = "3) 1-Tap Quick Services ⚡",
-                subtitle = "Urgent Fuel Top-Up, Gas & Pure Water Delivery",
-                body = "Quick Actions bar se foran Doorstep Fuel, Gas Cylinders aur Pure Water sirf 1 tap par mangwayein.",
-                tip = "1-tap par foran doorstep Fuel, Gas ya Pure Water request karein.",
-                badge = "QUICK ACTIONS",
-                icon = Icons.Filled.Bolt,
-                beforeShow = { revealItem(2) }
-            ),
-            SpotlightStep(
                 anchorKey = "service_petrol",
-                title = "4) Our Doorstep Services 🏬",
+                title = "2) Our Doorstep Services 🏬",
                 subtitle = "Transparent OGRA Rates • Fuel, Gas & Certified Auto Care",
-                body = "Mukammal doorstep services — Petrol, Diesel, High Octane, Pure Drinking Water, Gas Cylinders, Car Wash, Engine Oil, Battery aur Tyres. Sab rates official aur transparent hain.",
+                body = "Mukammal doorstep services — Petrol, High Octane, Diesel, Pure Drinking Water, Gas Cylinders, Car Wash, Engine Oil, Battery aur Tyres. Sab rates official aur transparent hain.",
                 tip = "Kisi bhi card par tap karein aur uski sub-services aur official rates check karein.",
                 badge = "DOORSTEP SERVICES",
                 icon = Icons.Filled.GridView,
-                beforeShow = { revealItem(3) }
+                beforeShow = { revealItem(2) }
             ),
             SpotlightStep(
                 anchorKey = "home_fab",
-                title = "5) Instant 1-Tap Ordering 🛒",
+                title = "3) Instant 1-Tap Ordering 🛒",
                 subtitle = "Cash on Delivery / JazzCash • 100% Risk-Free",
                 body = "Jaldi mein hain? 'Order Now' button dabayein! Fuel type aur quantity select karein, bill dekhein aur Cash on Delivery order confirm karein. Zero advance payment, zero hassle!",
                 tip = "Fuel, gas cylinders ya auto care foran mangwayein.",
@@ -4072,7 +3883,7 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
             ),
             SpotlightStep(
                 anchorKey = null,
-                title = "6) Live 4-Stage Delivery Status 📦",
+                title = "4) Live 4-Stage Delivery Status 📦",
                 subtitle = "Milestone Updates & Direct Rider Contact",
                 body = "Order confirm hotay hi status update hota hai: Order Placed ➔ Rider Assigned ➔ Out for Delivery ➔ Completed. Driver profile se direct Phone Call karein ya WhatsApp karein.",
                 tip = "Rider ke aane par tasalli ke baad payment karein.",
@@ -4082,7 +3893,7 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
             ),
             SpotlightStep(
                 anchorKey = null,
-                title = "7) Emails & Official Invoices 📧",
+                title = "5) Emails & Official Invoices 📧",
                 subtitle = "Instant Receipts & Downloadable Tax Invoices",
                 body = "Har order par instant confirmation email milti hai. Order details se official OGRA-compliant PDF invoice bhi 1 click mein download kar sakte hain.",
                 tip = "Downloaded PDF invoices aapke Downloads folder mein save hoti hain.",
@@ -4092,7 +3903,7 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
             ),
             SpotlightStep(
                 anchorKey = "home_notifications",
-                title = "8) Notification Alerts 🔔",
+                title = "6) Notification Alerts 🔔",
                 subtitle = "Dispatch Updates, Driver Arrival & Official Rate Changes",
                 body = "Rider dispatch updates aur status changes ki notifications milti hain taake koi alert miss na ho.",
                 tip = "Bell icon par tap karke aap notification history dekh sakte hain.",
@@ -4102,17 +3913,17 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
             ),
             SpotlightStep(
                 anchorKey = "home_order_history",
-                title = "9) Your Delivery History 📊",
+                title = "7) Your Delivery History 📊",
                 subtitle = "Track Total Spent, Past Orders & 1-Tap Re-Order",
                 body = "Aapka personal order record jahan total spending, completed deliveries aur mukammal past orders show hotay hain.",
                 tip = "Past orders se kisi bhi purane order ko foran repeat karein.",
                 badge = "ORDER HISTORY",
                 icon = Icons.Filled.History,
-                beforeShow = { revealItem(5) }
+                beforeShow = { revealItem(4) }
             ),
             SpotlightStep(
                 anchorKey = null,
-                title = "10) Navigation Sidebar Menu ☰",
+                title = "8) Navigation Sidebar Menu ☰",
                 subtitle = "Profile, Security, Help Center & Legal Policies",
                 body = "Top left menu (☰) se aap Profile Settings, Security, Saved Locations, Terms & Conditions, Privacy Policy aur Help Center access kar sakte hain.",
                 tip = "Koi bhi sawal ho toh 'Live Support' se WhatsApp aur Phone helpline par rabta karein.",
@@ -4123,7 +3934,7 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
             ),
             SpotlightStep(
                 anchorKey = null,
-                title = "11) Biometrics & Tour Complete! 🛡️",
+                title = "9) Biometrics & Tour Complete! 🛡️",
                 subtitle = "Fingerprint Login & You're Ready to Order!",
                 body = "Mubarak ho! Aapne Zyphuel ka tour complete kar liya hai. Apne account ko mehfooz rakhne ke liye settings se Fingerprint login zaroor on karein. Happy Ordering!",
                 tip = "Aapka account mukammal tayyar hai. Happy ordering with Zyphuel!",
@@ -4347,21 +4158,45 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                                 }
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Surface(
-                                    color = ZyphuelBluePrimary.copy(alpha = 0.1f),
+                                    color = ZyphuelBluePrimary.copy(alpha = 0.12f),
                                     shape = RoundedCornerShape(8.dp),
-                                    modifier = Modifier.testTag("location_icon_btn")
+                                    modifier = Modifier
+                                        .testTag("location_icon_btn")
+                                        .clickable {
+                                            val shareIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                                                type = "text/plain"
+                                                putExtra(android.content.Intent.EXTRA_SUBJECT, "My Zyphuel Delivery Location")
+                                                putExtra(
+                                                    android.content.Intent.EXTRA_TEXT,
+                                                    "📍 My Zyphuel Delivery Location in Lahore: $liveLocationCoordinates\nDoorstep Fuel, Gas & Energy Delivery in Lahore: https://zyphuel.com"
+                                                )
+                                            }
+                                            context.startActivity(android.content.Intent.createChooser(shareIntent, "Share Location via"))
+                                        }
                                 ) {
-                                    Text(
-                                        text = "Change",
-                                        style = MaterialTheme.typography.labelSmall.copy(
-                                            color = ZyphuelBluePrimary,
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 11.sp
-                                        ),
-                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
-                                    )
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Filled.Share,
+                                            contentDescription = "Share Location",
+                                            tint = ZyphuelBluePrimary,
+                                            modifier = Modifier.size(13.dp)
+                                        )
+                                        Text(
+                                            text = "Share Location",
+                                            style = MaterialTheme.typography.labelSmall.copy(
+                                                color = ZyphuelBluePrimary,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 11.sp
+                                            )
+                                        )
+                                    }
                                 }
                             }
+
 
                             // Bottom Row: Auto Detect GPS Action button
                             OutlinedButton(
@@ -4412,86 +4247,74 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                     }
                 }
 
-                // Primary Action: Global Service Search Bar
-                item {
-                    ServiceSearchBar(
-                        query = searchQuery,
-                        onQueryChange = { viewModel.searchServices(it) },
-                        onClearQuery = { viewModel.clearServiceSearch() },
-                        searchResults = searchResults,
-                        onSelectResult = { subcat, parentCat ->
-                            selectedCategoryForModal = parentCat
-                        },
-                        modifier = Modifier.spotlightAnchor(spotlight, "home_search_bar")
-                    )
-                }
-
-                // Quick Action Bar
-                item {
-                    QuickActionsBar(
-                        modifier = Modifier.spotlightAnchor(spotlight, "home_quick_actions"),
-                        onActionClick = { catId ->
-                            if (catId == "gas_cylinder") {
-                                selectedService = "Gas"
-                                showOrderDialog = true
-                            } else {
-                                val cat = categories.firstOrNull { it.id == catId }
-                                if (cat != null) {
-                                    selectedCategoryForModal = cat
-                                } else {
-                                    selectedService = ""
-                                    showOrderDialog = true
-                                }
-                            }
-                        }
-                    )
-                }
-
-                // Authentic Lahore Startup Transparency Notice Card
-                item {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("home_startup_notice_card"),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF0FDF4)),
-                        border = BorderStroke(1.dp, Color(0xFF86EFAC)),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(14.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                // Authentic Lahore Startup Transparency Notice Card (One-Time / Dismissible)
+                if (showStartupNotice) {
+                    item {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("home_startup_notice_card"),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF0FDF4)),
+                            border = BorderStroke(1.dp, Color(0xFF86EFAC)),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
                         ) {
-                            Surface(
-                                shape = CircleShape,
-                                color = Color(0xFF16A34A).copy(alpha = 0.15f),
-                                modifier = Modifier.size(38.dp)
+                            Row(
+                                modifier = Modifier.padding(14.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Text("🌱", fontSize = 18.sp)
+                                Surface(
+                                    shape = CircleShape,
+                                    color = Color(0xFF16A34A).copy(alpha = 0.15f),
+                                    modifier = Modifier.size(38.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Text("🌱", fontSize = 18.sp)
+                                    }
                                 }
-                            }
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "Early-Stage Lahore Startup",
-                                    style = MaterialTheme.typography.titleSmall.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color(0xFF14532D)
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "Early-Stage Lahore Startup",
+                                            style = MaterialTheme.typography.titleSmall.copy(
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color(0xFF14532D)
+                                            )
+                                        )
+                                        IconButton(
+                                            onClick = {
+                                                showStartupNotice = false
+                                                startupNoticePrefs.edit().putBoolean("has_seen_startup_notice", true).apply()
+                                            },
+                                            modifier = Modifier.size(24.dp).testTag("dismiss_startup_notice_btn")
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Filled.Close,
+                                                contentDescription = "Dismiss Notice",
+                                                tint = Color(0xFF166534),
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                        }
+                                    }
+                                    Text(
+                                        text = "Zyphuel is an agile local startup founded in Lahore — not a big corporate company. We provide personal, honest doorstep fuel, gas & emergency delivery!",
+                                        style = MaterialTheme.typography.bodySmall.copy(
+                                            color = Color(0xFF166534),
+                                            fontSize = 11.5.sp,
+                                            lineHeight = 16.sp
+                                        )
                                     )
-                                )
-                                Text(
-                                    text = "Zyphuel is an agile local startup founded in Lahore — not a big corporate company. We provide personal, honest doorstep fuel, gas & emergency delivery!",
-                                    style = MaterialTheme.typography.bodySmall.copy(
-                                        color = Color(0xFF166534),
-                                        fontSize = 11.5.sp,
-                                        lineHeight = 16.sp
-                                    )
-                                )
+                                }
                             }
                         }
                     }
                 }
+
 
                 // Primary Doorstep Services Section (Handcrafted & Clean)
                 item {
@@ -4576,11 +4399,11 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                                                 color = ZyphuelBlueLight,
                                                 shape = RoundedCornerShape(6.dp)
                                             ) {
-                                                Text("2 Types", color = ZyphuelBluePrimary, fontWeight = FontWeight.Bold, fontSize = 10.sp, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                                                Text("Euro-V", color = ZyphuelBluePrimary, fontWeight = FontWeight.Bold, fontSize = 10.sp, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
                                             }
                                         }
                                         Text(
-                                            text = "Regular Petrol (Euro-V) • High-Octane (HOBC 97)",
+                                            text = "Super Unleaded Regular Petrol (Euro-V)",
                                             style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray)
                                         )
                                     }
@@ -4595,8 +4418,70 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                             }
                         }
 
-                        // 2. Diesel (2 Subcategories: Regular Diesel & Generator Diesel)
+                        // 2. High-Octane (HOBC 97)
                         Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    selectedService = "High-Octane"
+                                    showOrderDialog = true
+                                }
+                                .testTag("service_high_octane"),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Surface(
+                                        shape = RoundedCornerShape(12.dp),
+                                        color = Color(0xFFF59E0B).copy(alpha = 0.12f),
+                                        modifier = Modifier.size(46.dp)
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Icon(Icons.Filled.LocalGasStation, contentDescription = null, tint = Color(0xFFD97706), modifier = Modifier.size(24.dp))
+                                        }
+                                    }
+                                    Column {
+                                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                            Text("High Octane", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark))
+                                            Surface(
+                                                color = Color(0xFFFEF3C7),
+                                                shape = RoundedCornerShape(6.dp)
+                                            ) {
+                                                Text("RON 97", color = Color(0xFFB45309), fontWeight = FontWeight.Bold, fontSize = 10.sp, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                                            }
+                                        }
+                                        Text(
+                                            text = "High-Octane (HOBC 97) for Luxury & High-Performance Cars",
+                                            style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray)
+                                        )
+                                    }
+                                }
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Text(
+                                        text = "Rs. ${String.format(java.util.Locale.US, "%.2f", octanePrice)}/L",
+                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFFD97706))
+                                    )
+                                    Text("OGRA Rate", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontSize = 10.sp))
+                                }
+                            }
+                        }
+
+                        // 3. Diesel (2 Subcategories: Regular Diesel & Generator Diesel)
+                        Card(
+
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
@@ -8422,11 +8307,6 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                         Text("Grand Total:", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold))
                         Text(viewModel.formatPrice(totalPrice), style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary))
                     }
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "💵 Pay via Cash on Delivery, JazzCash or EasyPaisa upon arrival.",
-                        style = MaterialTheme.typography.labelSmall.copy(color = Color(0xFF059669), fontWeight = FontWeight.SemiBold, fontSize = 11.sp)
-                    )
                 }
             }
         },
@@ -10547,10 +10427,10 @@ fun SupportDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(Icons.Filled.Email, contentDescription = null, tint = Color(0xFFA855F7), modifier = Modifier.size(22.dp))
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("Direct Admin Email Contact", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall, color = Color(0xFF581C87))
+                                Text("Support Email Contact", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall, color = Color(0xFF581C87))
                             }
                             Text(
-                                text = "Admin Email: m.daniyalkhan490@gmail.com\nSend direct inquiries or complaints to our operations management.",
+                                text = "Support Email: m.daniyalkhan490@gmail.com\nSend direct inquiries or complaints to our support team.",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Color.DarkGray
                             )
@@ -10559,12 +10439,12 @@ fun SupportDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
                                     val emailIntent = Intent(Intent.ACTION_SENDTO).apply {
                                         data = Uri.parse("mailto:m.daniyalkhan490@gmail.com")
                                         putExtra(Intent.EXTRA_SUBJECT, "Zyphuel Customer Query / Support Request")
-                                        putExtra(Intent.EXTRA_TEXT, "Hello Zyphuel Admin,\n\nI need assistance regarding:")
+                                        putExtra(Intent.EXTRA_TEXT, "Hello Zyphuel Support,\n\nI need assistance regarding:")
                                     }
                                     try {
-                                        context.startActivity(Intent.createChooser(emailIntent, "Send Email to Admin"))
+                                        context.startActivity(Intent.createChooser(emailIntent, "Send Email to Support"))
                                     } catch (e: Exception) {
-                                        Toast.makeText(context, "Admin Email: m.daniyalkhan490@gmail.com", Toast.LENGTH_LONG).show()
+                                        Toast.makeText(context, "Support Email: m.daniyalkhan490@gmail.com", Toast.LENGTH_LONG).show()
                                     }
                                 },
                                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFA855F7)),
@@ -10573,7 +10453,7 @@ fun SupportDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
                             ) {
                                 Icon(Icons.Filled.Email, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
-                                Text("Email Admin Directly", color = Color.White, fontWeight = FontWeight.Bold)
+                                Text("Support Email Contact", color = Color.White, fontWeight = FontWeight.Bold)
                             }
                         }
                     }

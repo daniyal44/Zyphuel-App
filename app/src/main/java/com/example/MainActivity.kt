@@ -25,6 +25,8 @@ import com.example.util.GlobalErrorBoundary
 import com.example.util.UnifiedAssetManager
 
 class MainActivity : FragmentActivity() {
+    private lateinit var viewModel: MainViewModel
+
     @OptIn(ExperimentalSharedTransitionApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,8 +44,9 @@ class MainActivity : FragmentActivity() {
         }
 
         // Initialize MainViewModel
-        val viewModel = ViewModelProvider(this)[MainViewModel::class.java]
+        viewModel = ViewModelProvider(this)[MainViewModel::class.java]
         viewModel.refreshSecurityAndBiometricStates(this)
+
 
         // Track unique app install in Firestore & pre-fetch download count for Admin Dashboard
         viewModel.trackAppInstall(this)
@@ -70,12 +73,7 @@ class MainActivity : FragmentActivity() {
         }
 
         // Process notification intent launch
-        intent?.let { targetIntent ->
-            val openScreen = targetIntent.getStringExtra("open_screen")
-            if (openScreen == "tracker") {
-                viewModel.navigateTo("tracker")
-            }
-        }
+        handleNotificationIntent(intent)
 
         // Schedule periodic background WorkManager task for real-time fuel price updates & notifications
         com.example.worker.FuelPriceWorker.schedulePeriodicPriceWork(this)
@@ -223,4 +221,21 @@ class MainActivity : FragmentActivity() {
             }
         }
     }
+
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleNotificationIntent(intent)
+    }
+
+    private fun handleNotificationIntent(targetIntent: android.content.Intent?) {
+        targetIntent?.let {
+            val openScreen = it.getStringExtra("open_screen")
+            when (openScreen) {
+                "tracker" -> viewModel.navigateTo("tracker")
+                "order", "fuel_rates", "home" -> viewModel.navigateTo("customer_home")
+            }
+        }
+    }
 }
+

@@ -169,23 +169,27 @@ fun TermsAndPrivacyDialog(
                                 }
                             }
 
-                            LegalSectionTitle("1. Acceptance & Service Scope")
-                            LegalParagraph("By accessing or using Zyphuel, you agree to these Terms. Zyphuel operates an on-demand logistics dispatch network in Lahore, Pakistan connecting customers with certified delivery couriers and roadside technicians across 10 primary categories: Fuel & Energy, Auto Repair, 24/7 Roadside Assistance, Detailing, Tyres & Wheels, Battery Services, Lubricants & Fluids, EV Services, Water Delivery, and Fleet Operations.")
+                            LegalSectionTitle("1. Service Scope & Operational Area")
+                            LegalParagraph("Zyphuel operates an on-demand doorstep fuel, energy, and pure drinking water delivery service in Lahore, Pakistan. Our verified logistics fleet delivers core energy products directly to your doorstep: Super Petrol (Euro-V), High-Octane (HOBC 97), High-Speed Diesel (Regular & Generator Diesel), Sealed LPG Gas Cylinders (11.8kg), and Pure Drinking Water across Lahore coverage sectors (Gulberg, DHA, Model Town, Johar Town, Bahria Town, Green Town, Cantt, etc.).")
 
-                            LegalSectionTitle("2. Safety & Hazardous Materials (OGRA Compliance)")
-                            LegalParagraph("Petroleum and LPG are volatile and flammable materials. In compliance with Oil & Gas Regulatory Authority (OGRA) guidelines:")
-                            LegalBulletPoint("Customers must ensure no active flames, burning cigarettes, or active generators are present within 10 meters of fuel dispensing.")
-                            LegalBulletPoint("Fuel is delivered exclusively into motor vehicle fuel tanks or approved explosion-proof safety containers.")
-                            LegalBulletPoint("Delivery couriers possess the statutory right and duty to refuse dispensing if conditions violate safety standards.")
+                            LegalSectionTitle("2. Safety & Petroleum Compliance (OGRA)")
+                            LegalParagraph("Petroleum and LPG are hazardous and flammable materials. In strict compliance with Oil & Gas Regulatory Authority (OGRA) and Civil Defense regulations:")
+                            LegalBulletPoint("Customers must maintain a strict 10-meter safety perimeter free from open flames, smoking, or active generators during fuel dispensing.")
+                            LegalBulletPoint("Fuel is dispensed exclusively into motor vehicle fuel tanks or certified explosion-proof fuel canisters.")
+                            LegalBulletPoint("All fuel bowsers utilize calibrated digital flow-meters and anti-adulteration security seals.")
+                            LegalBulletPoint("Delivery riders have the statutory authority and safety obligation to decline dispensing if on-site conditions present a fire or safety hazard.")
 
-                            LegalSectionTitle("3. Pricing & Billing")
-                            LegalParagraph("Fuel rates strictly adhere to officially notified OGRA retail prices. Transparent delivery and convenience charges are itemized prior to order checkout. Payments may be completed via Cash on Delivery (COD), JazzCash, EasyPaisa, or bank transfer.")
+                            LegalSectionTitle("3. Transparent Pricing & Cash on Delivery")
+                            LegalParagraph("All petroleum and LPG prices strictly adhere to official notified OGRA retail prices. Delivery charges are transparently itemized prior to checkout. Payment is collected 100% via Cash on Delivery (COD) upon inspection at your doorstep.")
 
-                            LegalSectionTitle("4. Cancellations & Disputes")
-                            LegalParagraph("Orders may be cancelled free of charge prior to driver dispatch. Report any quality or calibration concerns via in-app Support within 2 hours of delivery.")
+                            LegalSectionTitle("4. Cancellations & Quality Assurance")
+                            LegalParagraph("Orders may be cancelled free of charge prior to driver dispatch. Any quantity or quality inquiries can be reported immediately to our support team via in-app Live Support or WhatsApp within 2 hours of delivery.")
 
-                            LegalSectionTitle("5. Account Deletion")
-                            LegalParagraph("You may permanently delete your account, saved vehicle profiles, and personal data at any time via Profile Settings > Delete Account or online at https://www.zyphuel.com/request-deletion.")
+                            LegalSectionTitle("5. Permanent Account Deletion")
+                            LegalParagraph("You maintain full control to permanently delete your account, marked location coordinates, and order data directly in the app via Profile Settings > Delete Account, or online at https://zyphuel.netlify.app/privacy.")
+
+                            LegalSectionTitle("6. Contact & Support Helpline")
+                            LegalParagraph("For customer assistance, business inquiries, or legal notices:\n• Phone / WhatsApp: +92 323 0112464\n• Support Email: m.daniyalkhan490@gmail.com\n• Operations: 75-Main Boulevard, Gulberg III, Lahore, Pakistan\n• Website: https://zyphuel.netlify.app/terms-of-use")
                         }
                     } else {
                         Column(
@@ -234,28 +238,30 @@ fun TermsAndPrivacyDialog(
                             ) {
                                 Column(modifier = Modifier.padding(10.dp)) {
                                     Text(
-                                        text = "📍 Prominent Location Disclosure",
+                                        text = "📍 Prominent Location & Permissions Disclosure",
                                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFF0284C7))
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
-                                        text = "Zyphuel accesses fine and coarse device location to enable doorstep deliveries, identify drop-off locations, and provide live telematic tracking while an order is active. Couriers use Foreground Service Location during deliveries. We do not track continuous background location outside of active delivery fulfillment.",
+                                        text = "Zyphuel accesses fine and coarse device location exclusively to identify your doorstep delivery coordinates in Lahore and route our bowsers directly to you. We do not track continuous background location when no delivery is active. Notification permissions are utilized solely for delivery milestone updates and official rate alerts.",
                                         style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurface)
                                     )
                                 }
                             }
 
-                            LegalSectionTitle("1. Data Collected")
-                            LegalBulletPoint("Account Identifiers: Full Name, Email, Phone Number, Delivery Addresses.")
-                            LegalBulletPoint("Saved Vehicle Profiles: Make, model, year, license plate, and fuel type to personalize roadside dispatch.")
-                            LegalBulletPoint("Rider Credentials: CNIC/ID, Driving License, Vehicle Plate, Emergency Contacts for fleet safety.")
-                            LegalBulletPoint("Order Records: Products purchased, invoice summaries, selected payment method (no raw card CVVs stored).")
+                            LegalSectionTitle("1. Information We Collect")
+                            LegalBulletPoint("Account Identifiers: Full Name, Email Address, Phone Number, and Delivery Location Addresses.")
+                            LegalBulletPoint("Order & Invoice History: Products ordered (Super Petrol, High Octane, Diesel, LPG, Water), quantities in liters, and COD invoice breakdown.")
+                            LegalBulletPoint("Driver & Logistics Credentials: CNIC/ID, Driving License, Vehicle Registration plate, and emergency contact for verified couriers.")
 
-                            LegalSectionTitle("2. Data Sharing & Protection")
-                            LegalParagraph("We never sell user data. Data is securely processed with Google Maps SDK and Firebase services over encrypted HTTPS/TLS. Local sensitive credentials are protected using AES-256 Room database encryption.")
+                            LegalSectionTitle("2. Data Protection & Zero Third-Party Sale")
+                            LegalParagraph("We never sell, rent, or trade your personal information. Data is transmitted securely over encrypted TLS/SSL channels, and local credentials are protected with AES-256 Room database encryption.")
 
-                            LegalSectionTitle("3. User Rights & Account Erasure")
-                            LegalParagraph("You have full control to inspect, export, or permanently erase your account data directly in-app or via https://www.zyphuel.com/request-deletion.")
+                            LegalSectionTitle("3. User Rights & Permanent Account Erasure")
+                            LegalParagraph("In accordance with Google Play Developer policies, you have the right to permanently erase your account, location pins, and all stored data at any time via Profile Settings > Delete Account, or online at https://zyphuel.netlify.app/privacy.")
+
+                            LegalSectionTitle("4. Privacy Support & Contact")
+                            LegalParagraph("For privacy inquiries, data requests, or compliance questions:\n• Email: m.daniyalkhan490@gmail.com\n• Phone / WhatsApp: +92 323 0112464\n• Official Policy: https://zyphuel.netlify.app/privacy")
                         }
                     }
                 }
@@ -271,9 +277,9 @@ fun TermsAndPrivacyDialog(
                     OutlinedButton(
                         onClick = {
                             val targetUrl = if (selectedTab == 0) {
-                                "https://www.zyphuel.com/terms-and-conditions"
+                                "https://zyphuel.netlify.app/terms-of-use"
                             } else {
-                                "https://www.zyphuel.com/privacy-policy"
+                                "https://zyphuel.netlify.app/privacy"
                             }
                             try {
                                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl))

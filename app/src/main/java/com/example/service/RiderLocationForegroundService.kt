@@ -126,12 +126,6 @@ class RiderLocationForegroundService : Service() {
         }
         val contentIntent = PendingIntent.getActivity(this, 0, openIntent, pendingFlags)
 
-        val largeIcon = try {
-            android.graphics.BitmapFactory.decodeResource(resources, com.example.R.drawable.icon)
-        } catch (e: Exception) {
-            null
-        }
-
         val notificationBuilder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Live delivery tracking active")
             .setContentText("Sharing your live location for Order #$orderId")
@@ -141,11 +135,8 @@ class RiderLocationForegroundService : Service() {
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setContentIntent(contentIntent)
 
-        if (largeIcon != null) {
-            notificationBuilder.setLargeIcon(largeIcon)
-        }
-
         val notification = notificationBuilder.build()
+
 
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {

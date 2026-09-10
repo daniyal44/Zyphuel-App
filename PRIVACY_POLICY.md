@@ -1,11 +1,14 @@
 # Privacy Policy for Zyphuel
 
-**Effective Date:** September 9, 2026  
-**Last Updated:** September 9, 2026  
-**Application Version:** 2.5.0 (Build 14)  
+**Effective Date:** September 2026  
+**Last Updated:** September 2026  
+**Application Version:** 2.6.4.0.0.04 (Build 32)  
 **Package Name:** `com.aistudio.zyphuel.appv2`  
-**Official Website:** [https://www.zyphuel.com/](https://www.zyphuel.com/)  
-**Contact Email:** compliance@zyphuel.com | support@zyphuel.com  
+**Official Website:** [https://zyphuel.netlify.app/](https://zyphuel.netlify.app/)  
+**Privacy Policy URL:** [https://zyphuel.netlify.app/privacy](https://zyphuel.netlify.app/privacy)  
+**Terms of Use URL:** [https://zyphuel.netlify.app/terms-of-use](https://zyphuel.netlify.app/terms-of-use)  
+**Support Email:** m.daniyalkhan490@gmail.com  
+**WhatsApp Helpline:** +92 323 0112464
 
 ---
 
@@ -80,7 +83,7 @@ In strict compliance with Google Play's User Data & Account Deletion policies:
   2. Open the Navigation Drawer or Profile Settings.
   3. Select **"Delete Account / Erase Data"**.
   4. Confirm your selection on the modal.
-* **Web-Based Deletion Request**: If you have uninstalled the app or prefer to request deletion online, you can submit an account and data erasure request by visiting [https://www.zyphuel.com/request-deletion](https://www.zyphuel.com/request-deletion) or emailing `compliance@zyphuel.com`. Your request will be fulfilled within 30 days.
+* **Web-Based Deletion Request**: If you have uninstalled the app or prefer to request deletion online, you can submit an account and data erasure request by visiting [https://zyphuel.netlify.app/privacy](https://zyphuel.netlify.app/privacy) or emailing `m.daniyalkhan490@gmail.com`. Your request will be fulfilled within 30 days.
 
 ---
 
@@ -96,7 +99,8 @@ We may revise this Privacy Policy periodically to reflect new features, updated 
 
 ## 9. Contact Information
 If you have any questions, concerns, or inquiries regarding this Privacy Policy, please contact our Data Protection Team:
-* **Email**: compliance@zyphuel.com / support@zyphuel.com
-* **Company**: Zyphuel Technologies (Pvt) Ltd.
-* **Address**: Main Gulberg III, Lahore, Punjab, Pakistan
-* **Website**: [https://www.zyphuel.com/](https://www.zyphuel.com/)
+* **Support Email**: m.daniyalkhan490@gmail.com
+* **WhatsApp / Phone Helpline**: +92 323 0112464
+* **Company**: Zyphuel Pakistan
+* **Address**: 75-Main Boulevard, Gulberg III, Lahore, Punjab, Pakistan
+* **Official Website**: [https://zyphuel.netlify.app/](https://zyphuel.netlify.app/)

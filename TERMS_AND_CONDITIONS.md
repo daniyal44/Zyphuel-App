@@ -1,10 +1,13 @@
 # Terms and Conditions of Service (Zyphuel)
 
-**Effective Date:** September 9, 2026  
-**Last Updated:** September 9, 2026  
-**Application Version:** 2.5.0 (Build 14)  
+**Effective Date:** September 2026  
+**Last Updated:** September 2026  
+**Application Version:** 2.6.4.0.0.04 (Build 32)  
 **Package Name:** `com.aistudio.zyphuel.appv2`  
-**Official Website:** [https://www.zyphuel.com/](https://www.zyphuel.com/)  
+**Official Website:** [https://zyphuel.netlify.app/](https://zyphuel.netlify.app/)  
+**Terms of Use URL:** [https://zyphuel.netlify.app/terms-of-use](https://zyphuel.netlify.app/terms-of-use)  
+**Support Email:** m.daniyalkhan490@gmail.com  
+**WhatsApp Helpline:** +92 323 0112464
 
 ---
 
@@ -81,7 +84,7 @@ To the maximum extent permitted by applicable law in Pakistan:
 ---
 
 ## 9. Account Termination & Deletion
-Zyphuel respects your right to terminate your relationship with the platform. You may permanently delete your account directly inside the app under Profile Settings ("Delete Account / Erase Data") or online at [https://www.zyphuel.com/request-deletion](https://www.zyphuel.com/request-deletion).
+Zyphuel respects your right to terminate your relationship with the platform. You may permanently delete your account directly inside the app under Profile Settings ("Delete Account / Erase Data") or online at [https://zyphuel.netlify.app/privacy](https://zyphuel.netlify.app/privacy).
 
 ---
 
@@ -92,6 +95,8 @@ These Terms shall be governed by and construed in accordance with the laws of th
 
 ## 11. Contact Us
 For any legal notices, queries, or assistance regarding these Terms:
-* **Email:** legal@zyphuel.com / support@zyphuel.com
-* **Company:** Zyphuel Technologies (Pvt) Ltd.
-* **Address:** Main Gulberg III, Lahore, Punjab, Pakistan
+* **Support Email:** m.daniyalkhan490@gmail.com
+* **WhatsApp / Phone Helpline:** +92 323 0112464
+* **Company:** Zyphuel Pakistan
+* **Address:** 75-Main Boulevard, Gulberg III, Lahore, Punjab, Pakistan
+* **Website:** [https://zyphuel.netlify.app/](https://zyphuel.netlify.app/)
