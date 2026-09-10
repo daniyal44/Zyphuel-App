@@ -1,5 +1,5 @@
 # 🚀 Zyphuel App Features & Technical Documentation
-**App Version:** `v2.6.2 (Build 26)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** `2026`
+**App Version:** `v2.6.4.0.0.04 (Build 32)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** `2026`
 
 Welcome to the complete architectural and functional guide for the **Zyphuel** Android application. This document outlines every single feature, function, database entity, and user flow from start to finish.
 
@@ -177,6 +177,12 @@ The app strictly segments access control across three user roles:
   * **Full Vertical Scrolling & Screen Safety (`verticalScroll`)**: Complete sidebar navigation drawer content is wrapped in a vertical scroll state with safe-area padding (`statusBarsPadding()` & `navigationBarsPadding()`), guaranteeing that all action buttons, settings, order histories, admin tools, delete account option, and log out button are 100% visible and accessible on all screen resolutions, phone aspect ratios, and accessibility font scale factors without clipping.
     * **Categorized Navigation Architecture**: Items organized into clean, labeled visual sections (*Account & Settings*, *Orders & Deliveries*, *Help & Support*, *Admin Controls*, *Account Actions*) separated with subtle dividers (`HorizontalDivider`).
     * **Touch Feedback & Visual Polish**: `SidebarItem` with rounded background icon badges, distinct category labels, high-contrast dark text, custom destructive tinting for account deletion, and Material 3 ripple feedback.
+* **Customer Dashboard Modernization & Streamlining (v2.6.4 Build 28)**:
+  * **"Share Location" Action Chip**: Replaced the legacy "Change" button under the "Coverage: Lahore Active" indicator with a dedicated `[ ↗️ Share Location ]` action chip. Tapping it opens the Android native share sheet dispatching formatted Lahore GPS coordinates (`https://maps.google.com/?q=lat,lng`) and street address for instant sharing with family or riders, while retaining interactive click-to-edit on the address card.
+  * **Streamlined Service Grid (Removed Quick Actions)**: Removed the entire `QuickActionsBar` row from the Customer Home Screen to eliminate visual clutter and present a focused, high-clarity layout directly connecting users to core energy services.
+  * **High-Octane (HOBC 97) Live Price Card (`service_high_octane`)**: Integrated a dedicated High-Octane fuel card right next to Super Petrol under "Our Services". Dynamically displays live OGRA notified rates from `viewModel.highOctanePrice` (e.g. `Rs. 300.00/L`) and pre-configures `OrderDialog` for "High-Octane" on tap.
+  * **One-Time Dismissible Startup Transparency Notice**: Transformed the "Early-Stage Lahore Startup" transparency card (`home_startup_notice_card`) from a permanent fixture into a one-time dismissible banner. Persisted via `SharedPreferences` (`zyphuel_ui_prefs`, `has_seen_startup_notice`), users can acknowledge and close the notice via the top-right `[X]` button, keeping the interface uncluttered on subsequent visits.
+  * **App Tour Harmonization**: Updated the 13-stage guided tour spotlight anchors in `homeTourSteps` to smoothly guide users from the search bar directly into primary energy offerings without orphan references to removed quick action buttons.
 
 
 ---
@@ -284,14 +290,23 @@ The app strictly segments access control across three user roles:
       * **Admin-Controlled Broadcast Schedule**: The central administrator controls how many hours after which real-time fuel price update notifications automatically broadcast to system users (e.g., 1 Hour, 2 Hours, 4 Hours, 6 Hours, 12 Hours, 24 Hours, or custom hours).
       * **Admin Panel Form (`AdminFuelPriceNotificationScheduleCard`)**: Located in the Admin Center under the "Fuel Prices" tab. The Admin can set the exact interval in hours, enable/disable broadcasts, apply schedules to `FuelPriceWorker` WorkManager, or trigger test broadcasts immediately.
       * **Centralized User Experience**: Users cannot decide or alter the broadcast schedule. No popup dialogs or selection forms are shown to regular customers upon login/app open. Information in `SecuritySettingsScreen` reflects the Admin's active broadcast schedule.
-  * **System Notification Icon & UI Alignment Architecture**:
-    * **Monochrome Vector Small Icon (`@drawable/ic_notification`)**: Android System UI-compliant 24x24dp monochrome vector drawable featuring the signature Zyphuel fuel drop with transparent 'Z' cutout (`fillType="evenOdd"`), optical padding safe-zones (2dp margin), and dynamic status-bar tinting support.
-    * **Brand Primary Accent Tinting**: Automatic notification header and small icon tinting using Zyphuel primary blue (`#0284C7` / `R.color.primary`).
-    * **High-Res Large Icon Display**: Rich notification shade cards decode and render the full-color Zyphuel brand badge (`@drawable/icon`) via `setLargeIcon` across FCM pushes, local notifications, foreground services, and WorkManager price alerts.
-  * **Firebase Cloud Messaging (FCM) Integration**: Real-time push payload processing via `ZyphuelFcmService.kt` with foreground banners and background system notification triggers using the monochrome vector notification icon (`@drawable/ic_notification`) and high-res brand large icon.
+      * **Clean Rate Text Formatting**: Suppresses internal debug API tags (such as raw `Trackmate Fuel API` strings) and formats consumer-facing rates cleanly with separator bullets and official verification attribution.
+  * **Modern Notification & Launcher Icon Architecture (`ZyphuelNotificationHelper.kt`)**:
+    * **Left Circular Avatar with App Badge Layout (`NotificationCompat.MessagingStyle`)**: Implements modern Android conversation/assistant style notifications. The notification shade displays a large high-resolution circular avatar (`@drawable/ic_zyphuel_avatar`) on the left, with the monochrome Zyphuel app badge (`@drawable/ic_notification`) anchored at the bottom-right corner of the avatar.
+    * **Elimination of Right-Side Standalone Icon**: Strictly removes the legacy right-side standalone `setLargeIcon` across price alerts, FCM pushes, and local notifications, delivering an uncluttered, modern appearance identical to high-end messaging and AI assistant notifications.
+    * **Interactive Action Chips**: Equipped with instant interactive notification actions:
+      * **"⛽ Order Fuel"**: Directly opens `MainActivity` and navigates to the customer home/ordering screen.
+      * **"📊 View Rates"**: Directly opens `MainActivity` and navigates to fuel rate analytics.
+    * **Monochrome Vector Small Icon (`@drawable/ic_notification`)**: Android System UI-compliant 24x24dp monochrome vector drawable featuring the signature Zyphuel fuel drop with a true transparent 'Z' negative-space cutout (`fillType="evenOdd"`), safe-zone margins, and dynamic status-bar tinting support.
+    * **Adaptive Launcher Icon & Mipmap Repair**:
+      * Updated `ic_launcher_background.xml` from transparent (`#00000000`) to solid brand dark navy (`#0A0F1D`), preventing Android notification headers and launchers from synthesizing awkward black square borders inside circular masks.
+      * Centered foreground safe-zone scaling (68%) in `ic_launcher_foreground.xml`.
+      * Regenerated valid binary PNG files for all 10 legacy mipmap variants across all densities (`mdpi`, `hdpi`, `xhdpi`, `xxhdpi`, `xxxhdpi`) for both standard square and circular (`ic_launcher_round.png`) icon styles.
+  * **Firebase Cloud Messaging (FCM) Integration**: Real-time push payload processing via `ZyphuelFcmService.kt` and `ZyphuelNotificationHelper.kt` with foreground banners and background system notification triggers using the avatar + badge layout.
   * **Real-time Email Dispatch**: Instant automated email receipts and order status updates sent to customer inbox.
   * **WhatsApp Hotline Integration**: Direct deep-linking to official WhatsApp support line (`+92 323 0112464`).
   * **In-App Notification Center**: Local Room DB persistence (`NotificationEntity`) for user notification log history.
+
 
 ---
 
@@ -932,5 +947,67 @@ Zyphuel v2.4.0 introduces a comprehensive 10-category on-demand automotive and m
   - Synchronized `README.md` to official version `v2.6.2 (Build 26)`.
   - Added live badges for active commits, version tags, and build status.
   - Embedded the vector engineering activity dashboard directly into repository overview.
+
+---
+
+## 27. Customer Dashboard Modernization & High-Octane Live Pricing (v2.6.4 Build 28)
+### 27.1 Customer Home Location Action Overhaul
+* **"Share Location" Native Sharing Integration**:
+  - Replaced the previous "Change" button under the "Coverage: Lahore Active" header with a modern `[ ↗️ Share Location ]` action chip.
+  - Dispatches an Android `Intent.ACTION_SEND` chooser formatted with the active delivery address and direct Google Maps coordinate pin (`https://maps.google.com/?q=lat,lng`).
+  - Retains inline address editing capability via direct container clicks.
+
+### 27.2 Visual Decluttering & Elimination of Quick Actions
+* **Streamlined View Hierarchy**:
+  - Decommissioned and removed the `QuickActionsBar` from `CustomerHomeScreen`.
+  - Shifts user focus immediately toward available energy categories without secondary redundant buttons.
+
+### 27.3 Dedicated High-Octane (HOBC 97) Live Price Card
+* **Live Dynamic Rate Showcase**:
+  - Added a prominent High-Octane fuel card (`service_high_octane`) under "Our Services" directly alongside Super Petrol.
+  - Dynamically observes `viewModel.highOctanePrice` (`Rs. %.2f/L`) with official OGRA notified rates.
+  - Automatically loads the `OrderDialog` pre-selected with `High-Octane` on tap.
+
+### 27.4 One-Time Lahore Startup Transparency Notice
+* **Dismissible Startup Notice Card**:
+  - Upgraded the "Early-Stage Lahore Startup" transparency card (`home_startup_notice_card`) to be dismissible.
+  - Uses persistent local state via `SharedPreferences` (`zyphuel_ui_prefs`, `has_seen_startup_notice`).
+  - Equips the card with a clean dismiss `IconButton` (`Icons.Filled.Close`, `dismiss_startup_notice_btn`), ensuring returning users enjoy a persistent, clutter-free dashboard after acknowledging the notice once.
+
+### 27.5 Granular Sub-Version Standard (v2.6.4.0.0.01 Build 29)
+* **Standardized 5-Segment Version Progression**:
+  - Standardized the app `versionName` format to `MAJOR.MINOR.PATCH.0.0.XX` (starting at `2.6.4.0.0.01`).
+  - Strict release rule: Every future modification, feature, or bug fix advances `versionCode` by `+1` and increments the trailing sub-version segment by `+0.0.0.0.01` (`2.6.4.0.0.01` -> `2.6.4.0.0.02` -> `2.6.4.0.0.03`...).
+
+### 27.6 Sidebar Navigation Drawer Decluttering (v2.6.4.0.0.02 Build 30)
+* **Streamlined Navigation Architecture**:
+  - **Removed Startup Disclosure Banner in Drawer**: Eliminated the redundant blue startup disclosure card ("Zyphuel is an early-stage startup operating in Lahore...") located directly below the Profile Header and "VERIFIED ADMIN" badge.
+  - **Removed "Categories & Services" Section**: Completely removed the foldable service categories accordion from the sidebar navigation drawer, ensuring direct and immediate access to Account Settings, Active Orders, Help Center, and Admin Controls without excessive vertical scrolling.
+
+### 27.7 Checkout & Home Screen Decluttering (v2.6.4.0.0.03 Build 31)
+* **OrderDialog Grand Total Section Simplification**:
+  - Removed the payment instruction subtext (`"💵 Pay via Cash on Delivery, JazzCash or EasyPaisa upon arrival."`) located below the Grand Total price row in `OrderDialog`.
+  - The Grand Total amount now cleanly terminates the order breakdown without secondary explanatory notes.
+* **Home Screen Search Bar Decommissioning**:
+  - Removed the global `ServiceSearchBar` from `CustomerHomeScreen`.
+  - Cleaned up unused `serviceSearchQuery` / `serviceSearchResults` collection in the screen composable.
+  - Harmonized the interactive spotlight guided tour (`homeTourSteps`), advancing smoothly from the delivery location card directly into doorstep services (`service_petrol`).
+
+### 27.8 Terms & Privacy Web Sync, Anonymous Order Acceptance & Splash Branding (v2.6.4.0.0.04 Build 32)
+* **Real Terms & Privacy Policy URLs & Accurate Lahore Energy Coverage**:
+  - Rewrote in-app `TermsAndPrivacyDialog` to replace all placeholder `zyphuel.com` domains with official live links:
+    - Terms of Use: `https://zyphuel.netlify.app/terms-of-use`
+    - Privacy Policy: `https://zyphuel.netlify.app/privacy`
+  - Replaced generic sample text with accurate Lahore doorstep energy delivery coverage (Euro-V Petrol, High-Octane 97, High-Speed Diesel, 11.8kg LPG Cylinders, Pure Drinking Water @ Rs. 50/gallon, 100% Cash-on-Delivery, and OGRA Petroleum Rules 1937 compliance).
+  - Explicitly disclosed Google Play Store compliance mandates: Foreground & background location telematics (`FOREGROUND_SERVICE_LOCATION`), safety standards, and permanent one-tap account deletion (`delete_account_btn`).
+  - Synchronized `TERMS_AND_CONDITIONS.md` and `PRIVACY_POLICY.md` with official contact info (`m.daniyalkhan490@gmail.com`, `+92 323 0112464`, `https://zyphuel.netlify.app/`).
+* **Support Email Contact Renaming**:
+  - Replaced label `"Direct Admin Email Contact"` with `"Support Email Contact"` in `SupportDialog` (`Screens.kt`).
+* **Anonymous Customer Order Acceptance Notifications**:
+  - Customer notifications across in-app push, local notifications, and automated transactional emails no longer disclose who accepted the order (neither rider name nor admin direct assignment).
+  - Standardized notification title to `"Order Accepted ✅"` and message to `"Your Order #$orderId has been accepted and is being prepared for dispatch."` across `Repository.kt` (`acceptOrder`), `MainViewModel.kt` (`acceptRiderOrder`, `adminAcceptOrder`, and `changeOrderStatus`).
+* **Splash Screen Logo Branding Update**:
+  - Changed the tagline under the company splash logo in `SplashScreen` (`Screens.kt`) from `"Lahore's Premium Delivery Network"` to `"Zyphuel Delivery App"`.
+
 
 

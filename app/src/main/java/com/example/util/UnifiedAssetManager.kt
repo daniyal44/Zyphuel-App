@@ -24,6 +24,9 @@ object UnifiedAssetManager {
     @DrawableRes
     val NOTIFICATION_SMALL_ICON = R.drawable.ic_notification
 
+    @DrawableRes
+    val NOTIFICATION_AVATAR = R.drawable.ic_zyphuel_avatar
+
     val NOTIFICATION_CHANNEL_ID = "zyphuel_fuel_updates"
     val NOTIFICATION_CHANNEL_NAME = "Fuel Price & Order Updates"
 
@@ -35,8 +38,9 @@ object UnifiedAssetManager {
         return try {
             val appDrawable = context.getDrawable(PRIMARY_APP_ICON)
             val notifDrawable = context.getDrawable(NOTIFICATION_SMALL_ICON)
-            val isValid = appDrawable != null && notifDrawable != null
-            DebugLogger.i("UnifiedAssetManager", "Asset integrity check completed. Valid: $isValid (Primary: ${appDrawable != null}, Notif: ${notifDrawable != null})")
+            val avatarDrawable = context.getDrawable(NOTIFICATION_AVATAR)
+            val isValid = appDrawable != null && notifDrawable != null && avatarDrawable != null
+            DebugLogger.i("UnifiedAssetManager", "Asset integrity check completed. Valid: $isValid (Primary: ${appDrawable != null}, Notif: ${notifDrawable != null}, Avatar: ${avatarDrawable != null})")
             isValid
         } catch (e: Exception) {
             DebugLogger.e("UnifiedAssetManager", "Asset integrity check failed", e)
@@ -44,3 +48,4 @@ object UnifiedAssetManager {
         }
     }
 }
+

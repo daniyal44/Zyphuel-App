@@ -13,6 +13,7 @@ import com.example.data.AppDatabase
 import com.example.data.NotificationEntity
 import com.example.util.DebugLogger
 import com.example.util.UnifiedAssetManager
+import com.example.util.ZyphuelNotificationHelper
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import kotlinx.coroutines.CoroutineScope
@@ -83,55 +84,25 @@ class ZyphuelFcmService : FirebaseMessagingService() {
             notificationManager.createNotificationChannel(channel)
         }
 
-        val intent = Intent(this, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-            putExtra("fcm_type", type)
-            putExtra("fcm_order_id", orderId)
-            putExtra("open_screen", if (type == "delivery_status") "tracker" else "home")
+        val sender = when (type) {
+            "delivery_status", "rider_dispatch" -> "Zyphuel Dispatch"
+            "fuel_alert" -> "Zyphuel Fuel Alert"
+            else -> "Zyphuel Support"
         }
+        val targetScreen = if (type == "delivery_status") "tracker" else "customer_home"
 
-        val pendingIntent = PendingIntent.getActivity(
-            this,
-            System.currentTimeMillis().toInt(),
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        ZyphuelNotificationHelper.dispatchModernNotification(
+            context = this,
+            title = title,
+            message = message,
+            channelId = FCM_CHANNEL_ID,
+            channelName = "Zyphuel Instant Alerts",
+            senderName = sender,
+            openScreen = targetScreen,
+            includeFuelActions = (type == "fuel_alert")
         )
-
-        val iconRes = try {
-            UnifiedAssetManager.NOTIFICATION_SMALL_ICON
-        } catch (e: Exception) {
-            R.drawable.ic_notification
-        }
-
-        val largeIcon = try {
-            android.graphics.BitmapFactory.decodeResource(resources, R.drawable.icon)
-        } catch (e: Exception) {
-            null
-        }
-
-        val builder = NotificationCompat.Builder(this, FCM_CHANNEL_ID)
-            .setSmallIcon(iconRes)
-            .setColor(androidx.core.content.ContextCompat.getColor(this, R.color.primary))
-            .setContentTitle(title)
-            .setContentText(message)
-            .setStyle(NotificationCompat.BigTextStyle().bigText(message))
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setCategory(NotificationCompat.CATEGORY_MESSAGE)
-            .setContentIntent(pendingIntent)
-            .setAutoCancel(true)
-            .setVibrate(longArrayOf(0, 250, 100, 250))
-
-        if (largeIcon != null) {
-            builder.setLargeIcon(largeIcon)
-        }
-
-        try {
-            notificationManager.notify((System.currentTimeMillis() % 100000).toInt(), builder.build())
-            DebugLogger.i(TAG, "System Push Notification posted: $title")
-        } catch (e: Exception) {
-            DebugLogger.e(TAG, "Error posting system push notification", e)
-        }
     }
+
 
     private fun persistInAppNotification(title: String, message: String, type: String) {
         CoroutineScope(Dispatchers.IO).launch {

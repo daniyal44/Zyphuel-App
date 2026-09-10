@@ -317,64 +317,22 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
             val channelId = "zyphuel_order_updates"
 
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                val channelName = "Order Status & Live Delivery Updates"
-                val channel = android.app.NotificationChannel(
-                    channelId,
-                    channelName,
-                    android.app.NotificationManager.IMPORTANCE_HIGH
-                ).apply {
-                    description = "Notifications for fuel and water order status changes and real-time delivery driver location updates."
-                    enableVibration(true)
-                    enableLights(true)
-                    lightColor = android.graphics.Color.parseColor("#0284C7")
-                }
-                notificationManager.createNotificationChannel(channel)
-            }
+            val channelName = "Order Status & Live Delivery Updates"
+            val targetScreen = if (orderId != null) "tracker" else "customer_home"
+            val sender = if (orderId != null) "Zyphuel Dispatch" else "Zyphuel Assistant"
 
-            val intent = Intent(context, com.example.MainActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-                putExtra("open_screen", "tracker")
-                orderId?.let { putExtra("order_id", it) }
-            }
-
-            val pendingIntent = android.app.PendingIntent.getActivity(
-                context,
-                (System.currentTimeMillis() % 10000).toInt(),
-                intent,
-                android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+            com.example.util.ZyphuelNotificationHelper.dispatchModernNotification(
+                context = context,
+                title = title,
+                message = message,
+                channelId = channelId,
+                channelName = channelName,
+                senderName = sender,
+                openScreen = targetScreen,
+                includeFuelActions = (orderId == null)
             )
-
-            val iconRes = try {
-                com.example.util.UnifiedAssetManager.NOTIFICATION_SMALL_ICON
-            } catch (e: Exception) {
-                com.example.R.drawable.ic_notification
-            }
-
-            val largeIcon = try {
-                android.graphics.BitmapFactory.decodeResource(context.resources, com.example.R.drawable.icon)
-            } catch (e: Exception) {
-                null
-            }
-
-            val builder = androidx.core.app.NotificationCompat.Builder(context, channelId)
-                .setSmallIcon(iconRes)
-                .setColor(androidx.core.content.ContextCompat.getColor(context, com.example.R.color.primary))
-                .setContentTitle(title)
-                .setContentText(message)
-                .setStyle(androidx.core.app.NotificationCompat.BigTextStyle().bigText(message))
-                .setPriority(androidx.core.app.NotificationCompat.PRIORITY_HIGH)
-                .setCategory(androidx.core.app.NotificationCompat.CATEGORY_MESSAGE)
-                .setContentIntent(pendingIntent)
-                .setAutoCancel(true)
-                .setVibrate(longArrayOf(0, 250, 100, 250))
-
-            if (largeIcon != null) {
-                builder.setLargeIcon(largeIcon)
-            }
-
-            notificationManager.notify((System.currentTimeMillis() % 100000).toInt(), builder.build())
             DebugLogger.i("MainViewModel", "Local System Notification dispatched: $title - $message")
+
         } catch (e: Exception) {
             DebugLogger.e("MainViewModel", "Failed to post local system notification", e)
         }
@@ -2451,8 +2409,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             if (updatedOrder != null && _trackingOrder.value?.id == orderId) {
                 setTrackingOrder(updatedOrder)
             }
-            val titleStr = "Driver Assigned 🚚"
-            val bodyStr = "Driver ${user.name} has been assigned to Order #${orderId} and is preparing for dispatch!"
+            val titleStr = "Order Accepted ✅"
+            val bodyStr = "Your Order #${orderId} has been accepted and is being prepared for dispatch."
 
             postLocalSystemNotification(titleStr, bodyStr, orderId)
 
@@ -2470,19 +2428,19 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 type = "status"
             )
 
-            // Real-time email to Customer: Rider accepted order
+            // Real-time email to Customer: Order accepted
             val custEmail = updatedOrder?.customerEmail
             if (!custEmail.isNullOrBlank() && custEmail.contains("@")) {
-                val subject = "🚚 Rider Assigned - Order #$orderId"
+                val subject = "✅ Order #$orderId Accepted"
                 val body = buildString {
                     appendLine("Assalam o Alaikum ${updatedOrder.customerName},")
                     appendLine()
-                    appendLine("Great news! Rider ${user.name} (${user.phoneNumber}) has accepted your order #$orderId.")
+                    appendLine("Great news! Your order #$orderId has been accepted and is being prepared for dispatch.")
                     appendLine("Service: ${updatedOrder.serviceType} (${updatedOrder.quantity} units)")
                     appendLine("Destination: ${updatedOrder.deliveryAddress}")
                     appendLine("Estimated Arrival: ~${updatedOrder.etaMinutes} minutes")
                     appendLine()
-                    appendLine("Track your driver live in the Zyphuel app.")
+                    appendLine("Thank you for choosing Zyphuel.")
                 }
                 dispatchRealtimeEmail(custEmail, subject, body)
             }
@@ -2553,7 +2511,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
 
             val (titleStr, bodyStr) = when (nextStatus) {
-                "Assigned", "Accepted" -> "Driver Assigned 🚚" to "Driver assigned for Order #${orderId}."
+                "Assigned", "Accepted" -> "Order Accepted ✅" to "Your Order #${orderId} has been accepted and is being prepared for dispatch."
                 "Delivering", "Dispatched", "Out for Delivery" -> "Out for Delivery 🛵" to "Your Order #${orderId} is now Out for Delivery! Bowser is en route to your location."
                 "Arriving", "Arriving Soon" -> "Arriving Soon 📍" to "Your delivery driver for Order #${orderId} is Arriving Soon! Please get ready."
                 "Arrived", "Reached Location", "At Location" -> "Driver Reached Location! 📍" to "Your delivery driver for Order #${orderId} has reached your location! Please meet the bowser driver."
@@ -2818,8 +2776,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
             }
 
-            val titleStr = "Order #$orderId Approved by Admin ✅"
-            val bodyStr = "Your order #$orderId has been approved by Zyphuel Admin and assigned to $riderName!"
+            val titleStr = "Order Accepted ✅"
+            val bodyStr = "Your Order #$orderId has been accepted and is being prepared for dispatch."
             postLocalSystemNotification(titleStr, bodyStr, orderId)
             repository.notificationDao.insertNotification(
                 NotificationEntity(title = titleStr, message = bodyStr, targetRole = "all")
@@ -2827,16 +2785,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
             // Real-time email to customer
             if (order.customerEmail.isNotBlank() && order.customerEmail.contains("@")) {
-                val custSubject = "✅ Order #$orderId Approved by Zyphuel Admin"
+                val custSubject = "✅ Order #$orderId Accepted"
                 val custBody = buildString {
                     appendLine("Assalam o Alaikum ${order.customerName},")
                     appendLine()
-                    appendLine("Your order #$orderId has been approved by the Zyphuel Central Admin team! 🎉")
+                    appendLine("Great news! Your order #$orderId has been accepted and is being prepared for delivery. 🎉")
                     appendLine()
                     appendLine("📋 Order Details:")
                     appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━")
                     appendLine("🆔 Order ID: #${order.id}")
-                    appendLine("🚚 Assigned Rider: $riderName")
                     appendLine("⛽ Service: ${order.serviceType} (${order.quantity} units)")
                     appendLine("💰 Total COD: Rs. ${String.format(java.util.Locale.US, "%.2f", order.totalPrice)}")
                     appendLine("📍 Destination: ${order.deliveryAddress}")

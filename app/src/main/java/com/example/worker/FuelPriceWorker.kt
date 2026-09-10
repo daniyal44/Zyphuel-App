@@ -123,7 +123,8 @@ class FuelPriceWorker(
             val allowSending = priceNotifsAllowed && systemNotifsEnabled
 
             val title = "⛽ Real-time Fuel Price Update"
-            val message = "Latest Rates in Pakistan: Petrol: Rs. $newPetrol/L | LPG Gas: Rs. $newLpg/KG | High Octane: Rs. $newOctane/L ($sourceName)"
+            val displaySource = if (sourceName.contains("Trackmate", ignoreCase = true) || sourceName.contains("API", ignoreCase = true)) "Official Rates" else sourceName
+            val message = "Petrol: Rs. $newPetrol/L  •  High Octane: Rs. $newOctane/L  •  LPG: Rs. $newLpg/KG  ($displaySource)"
 
             if (allowSending) {
                 notifPrefs.edit().putString("last_sent_price_notif_date", todayDateStr).apply()
@@ -150,61 +151,16 @@ class FuelPriceWorker(
     }
 
     private fun sendSystemNotification(title: String, message: String) {
-        val channelId = com.example.util.UnifiedAssetManager.NOTIFICATION_CHANNEL_ID
-        val notificationManager = appContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                channelId,
-                com.example.util.UnifiedAssetManager.NOTIFICATION_CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_DEFAULT
-            ).apply {
-                description = "Periodic real-time fuel price updates every 4 hours in Pakistan"
-                enableVibration(true)
-            }
-            notificationManager.createNotificationChannel(channel)
-        }
-
-        val intent = android.content.Intent(appContext, com.example.MainActivity::class.java).apply {
-            flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
-        }
-
-        val pendingIntent = android.app.PendingIntent.getActivity(
-            appContext,
-            0,
-            intent,
-            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+        com.example.util.ZyphuelNotificationHelper.dispatchModernNotification(
+            context = appContext,
+            title = title,
+            message = message,
+            senderName = "Zyphuel Fuel Alert",
+            openScreen = "customer_home",
+            includeFuelActions = true
         )
-
-        val largeIcon = try {
-            android.graphics.BitmapFactory.decodeResource(appContext.resources, com.example.R.drawable.icon)
-        } catch (e: Exception) {
-            null
-        }
-
-        val builder = NotificationCompat.Builder(appContext, channelId)
-            .setSmallIcon(com.example.util.UnifiedAssetManager.NOTIFICATION_SMALL_ICON)
-            .setColor(androidx.core.content.ContextCompat.getColor(appContext, com.example.R.color.primary))
-            .setContentTitle(title)
-            .setContentText(message)
-            .setStyle(NotificationCompat.BigTextStyle().bigText(message))
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            .setCategory(NotificationCompat.CATEGORY_MESSAGE)
-            .setContentIntent(pendingIntent)
-            .setAutoCancel(true)
-            .setOngoing(false)
-
-        if (largeIcon != null) {
-            builder.setLargeIcon(largeIcon)
-        }
-
-        try {
-            notificationManager.notify((System.currentTimeMillis() % 100000).toInt(), builder.build())
-            com.example.util.DebugLogger.i("FuelPriceWorker", "System notification posted successfully: $title")
-        } catch (e: Exception) {
-            com.example.util.DebugLogger.e("FuelPriceWorker", "Failed to post system notification", e)
-        }
     }
+
 
     companion object {
         fun schedulePeriodicPriceWork(context: Context, intervalHours: Int = 4, isEnabled: Boolean = true) {

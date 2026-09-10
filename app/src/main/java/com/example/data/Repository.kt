@@ -298,15 +298,15 @@ class AppRepository(context: Context) {
             // Notifications to Customer & Rider (all) and Admin
             notificationDao.insertNotification(
                 NotificationEntity(
-                    title = "Driver Assigned 🚚",
-                    message = "Driver $riderName has been assigned to your Order #$orderId. Estimated arrival: ${updated.etaMinutes} mins.",
+                    title = "Order Accepted ✅",
+                    message = "Your Order #$orderId has been accepted and is being prepared for dispatch.",
                     targetRole = "all"
                 )
             )
             notificationDao.insertNotification(
                 NotificationEntity(
-                    title = "Admin: Driver Assigned for Order #$orderId",
-                    message = "Rider $riderName ($riderEmail) assigned to order #$orderId.",
+                    title = "Admin: Order Accepted for Order #$orderId",
+                    message = "Order #$orderId accepted by $riderName ($riderEmail).",
                     targetRole = "admin"
                 )
             )
@@ -331,7 +331,7 @@ class AppRepository(context: Context) {
                 )
 
                 val (notifTitle, notifMsg) = when (newStatus) {
-                    "Assigned" -> "Driver Assigned 🚚" to "Driver assigned for Order #$orderId."
+                    "Assigned" -> "Order Accepted ✅" to "Your Order #$orderId has been accepted."
                     "Delivering", "Dispatched" -> "Out for Delivery 🛵" to "Your Order #$orderId is now Out for Delivery! Track your delivery vehicle live on the map."
                     "Arriving", "Arriving Soon" -> "Arriving Soon 📍" to "Your delivery driver for Order #$orderId is Arriving Soon! Please get ready at your delivery location."
                     "Completed" -> "Order Delivered 🎉" to "Order #$orderId has been delivered successfully. Thank you for choosing Zyphuel!"
