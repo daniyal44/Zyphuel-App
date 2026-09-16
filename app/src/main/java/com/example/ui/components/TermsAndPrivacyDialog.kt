@@ -195,7 +195,7 @@ fun TermsAndPrivacyDialog(
                             LegalBulletPoint("Live GPS order tracking with real-time rider location.")
                             LegalBulletPoint("Automated real-time invoice generation and email receipts.")
                             LegalBulletPoint("Live OGRA-synced fuel pricing and instant delivery-milestone notifications.")
-                            LegalBulletPoint("Saved vehicles, Cash on Delivery, optional biometric app lock, and an encrypted (TLS 1.3 / AES-256) secure cloud built on Google Firebase.")
+                            LegalBulletPoint("1-Tap Ordering, Cash on Delivery, optional biometric app lock, and an encrypted (TLS 1.3 / AES-256) secure cloud built on Google Firebase.")
                             LegalParagraph("For a full overview of everything Zyphuel offers, open the \"How It Works\" tab above.")
 
                             LegalSectionTitle("3. Safety & Petroleum Compliance (OGRA)")
@@ -212,10 +212,10 @@ fun TermsAndPrivacyDialog(
                             LegalParagraph("Orders may be cancelled free of charge prior to driver dispatch. Any quantity or quality inquiries can be reported immediately to our support team via in-app Live Support or WhatsApp within 2 hours of delivery.")
 
                             LegalSectionTitle("6. Permanent Account Deletion")
-                            LegalParagraph("You maintain full control to permanently delete your account, marked location coordinates, and order data directly in the app via Profile Settings > Delete Account, or online at https://zyphuel.netlify.app/privacy.")
+                            LegalParagraph("You maintain full control to permanently delete your account, marked location coordinates, and order data directly in the app via Profile Settings > Delete Account, or online at https://www.zyphuel.com/privacy.")
 
                             LegalSectionTitle("7. Contact & Support Helpline")
-                            LegalParagraph("For customer assistance, business inquiries, or legal notices:\n• Phone / WhatsApp: +92 323 0112464\n• Support Email: m.daniyalkhan490@gmail.com\n• Operations: 75-Main Boulevard, Gulberg III, Lahore, Pakistan\n• Website: https://zyphuel.netlify.app/terms-of-use")
+                            LegalParagraph("For customer assistance, business inquiries, or legal notices:\n• Phone / WhatsApp: +92 323 0112464\n• Support Email: m.daniyalkhan490@gmail.com\n• Operations: 75-Main Boulevard, Gulberg III, Lahore, Pakistan\n• Website: https://www.zyphuel.com/terms-of-use")
                         }
                     } else if (selectedTab == 1) {
                         Column(
@@ -285,10 +285,10 @@ fun TermsAndPrivacyDialog(
                             LegalParagraph("We never sell, rent, or trade your personal information. Data is transmitted securely over encrypted TLS/SSL channels, and local credentials are protected with AES-256 Room database encryption. Our platform runs on a secure, industry-standard encrypted cloud backend (Google Firebase), with real-time delivery notifications delivered via Firebase Cloud Messaging (FCM).")
 
                             LegalSectionTitle("3. User Rights & Permanent Account Erasure")
-                            LegalParagraph("In accordance with Google Play Developer policies, you have the right to permanently erase your account, location pins, and all stored data at any time via Profile Settings > Delete Account, or online at https://zyphuel.netlify.app/privacy.")
+                            LegalParagraph("In accordance with Google Play Developer policies, you have the right to permanently erase your account, location pins, and all stored data at any time via Profile Settings > Delete Account, or online at https://www.zyphuel.com/privacy.")
 
                             LegalSectionTitle("4. Privacy Support & Contact")
-                            LegalParagraph("For privacy inquiries, data requests, or compliance questions:\n• Email: m.daniyalkhan490@gmail.com\n• Phone / WhatsApp: +92 323 0112464\n• Official Policy: https://zyphuel.netlify.app/privacy")
+                            LegalParagraph("For privacy inquiries, data requests, or compliance questions:\n• Email: m.daniyalkhan490@gmail.com\n• Phone / WhatsApp: +92 323 0112464\n• Official Policy: https://www.zyphuel.com/privacy")
                         }
                     } else {
                         Column(
@@ -352,7 +352,7 @@ fun TermsAndPrivacyDialog(
                             FeatureCard(Icons.Filled.LocationOn, "Live GPS Delivery Tracking", "Watch your rider and bowser move to your doorstep in real time on the map.", Color(0xFF0284C7))
                             FeatureCard(Icons.Filled.Receipt, "Real-Time Invoice & Email Receipts", "Every order creates an itemized invoice, emailed to you automatically.", Color(0xFF16A34A))
                             FeatureCard(Icons.Filled.TrendingUp, "Live OGRA Price Sync", "Fuel rates stay synced with official notified OGRA prices — no overcharging.", Color(0xFFF59E0B))
-                            FeatureCard(Icons.Filled.DirectionsCar, "My Vehicles & Quick Order", "Save your vehicles for faster, accurate fuel selection at checkout.", Color(0xFF0284C7))
+                            FeatureCard(Icons.Filled.LocalGasStation, "1-Tap Quick Order", "Select fuel type, quantity, and confirm delivery in seconds.", Color(0xFF0284C7))
                             FeatureCard(Icons.Filled.Payments, "Cash on Delivery", "Pay only after you inspect the delivery at your doorstep.", Color(0xFF16A34A))
                             FeatureCard(Icons.Filled.Fingerprint, "Biometric Security & Encryption", "Optional app lock with AES-256 storage and TLS 1.3 encrypted transfers.", Color(0xFF7C3AED))
                             FeatureCard(Icons.Filled.Notifications, "Instant Milestone Alerts", "Get notified as your order is accepted, dispatched and arriving.", Color(0xFFF59E0B))
@@ -411,9 +411,9 @@ fun TermsAndPrivacyDialog(
                     OutlinedButton(
                         onClick = {
                             val targetUrl = if (selectedTab == 0) {
-                                "https://zyphuel.netlify.app/terms-of-use"
+                                "https://www.zyphuel.com/terms-of-use"
                             } else {
-                                "https://zyphuel.netlify.app/privacy"
+                                "https://www.zyphuel.com/privacy"
                             }
                             try {
                                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl))

@@ -3794,6 +3794,7 @@ fun DrawerContent(
     val whatsappNumber = "+92 323 0112464"
     var showDeleteAccountDialog by remember { mutableStateOf(false) }
     var showTermsAndPrivacyDialog by remember { mutableStateOf(false) }
+    var showLanguageDialog by remember { mutableStateOf(false) }
     var termsAndPrivacyInitialTab by remember { mutableIntStateOf(0) }
     val currentScreenVal by viewModel.currentScreen.collectAsState()
     val scrollState = rememberScrollState()
@@ -3966,8 +3967,8 @@ fun DrawerContent(
                     label = "Language: ${activeLang.flag} ${activeLang.nameNative}",
                     modifier = Modifier.testTag("sidebar_language_settings"),
                     onClick = {
-                        onOpenProfile()
-                        onClose()
+                        // Opens the language selector in place — does NOT route to Profile Settings.
+                        showLanguageDialog = true
                     }
                 )
                 SidebarItem(
@@ -4207,6 +4208,13 @@ fun DrawerContent(
                 onDismiss = { showDeleteAccountDialog = false }
             )
         }
+
+        if (showLanguageDialog) {
+            LanguagePickerDialog(
+                viewModel = viewModel,
+                onDismiss = { showLanguageDialog = false }
+            )
+        }
     }
 }
 
@@ -4436,12 +4444,10 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
     }
 
     val categories by viewModel.categories.collectAsState()
-    val selectedVehicle by viewModel.selectedVehicle.collectAsState()
     val serviceSearchQuery by viewModel.serviceSearchQuery.collectAsState()
     val serviceSearchResults by viewModel.serviceSearchResults.collectAsState()
 
     var selectedCategoryForModal by remember { mutableStateOf<com.example.data.category.Category?>(null) }
-    var showMyVehiclesDialog by remember { mutableStateOf(false) }
 
     var showOrderDialog by remember { mutableStateOf(false) }
     var selectedService by remember { mutableStateOf("") }
@@ -4559,7 +4565,7 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
             ),
             SpotlightStep(
                 anchorKey = "service_petrol",
-                title = "2) Our Doorstep Services 🏬",
+                title = "2) Doorstep Energy & Fuel ⛽",
                 subtitle = "Transparent OGRA Rates • Fuel, Gas & Certified Auto Care",
                 body = "Mukammal doorstep services — Petrol, High Octane, Diesel, Pure Drinking Water, Gas Cylinders, Car Wash, Engine Oil, Battery aur Tyres. Sab rates official aur transparent hain.",
                 tip = "Kisi bhi card par tap karein aur uski sub-services aur official rates check karein.",
@@ -5012,7 +5018,7 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                 }
 
 
-                // Global Typo-Tolerant Service Search + My Vehicles Quick Access.
+                // Global Typo-Tolerant Service Search.
                 // Kept as a single LazyColumn item so the guided-tour scroll indices below stay stable.
                 item {
                     Column(
@@ -5029,11 +5035,6 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                                 selectedCategoryForModal = category
                             }
                         )
-
-                        SavedVehiclesBar(
-                            selectedVehicle = selectedVehicle,
-                            onOpenMyVehicles = { showMyVehiclesDialog = true }
-                        )
                     }
                 }
 
@@ -5043,40 +5044,6 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column {
-                                Text(
-                                    text = "Our Services",
-                                    style = MaterialTheme.typography.titleMedium.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        color = ZyphuelBlueDark
-                                    )
-                                )
-                                Text(
-                                    text = "Doorstep fuel, gas & energy services in Lahore",
-                                    style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray)
-                                )
-                            }
-                            Surface(
-                                color = ZyphuelBluePrimary.copy(alpha = 0.1f),
-                                shape = RoundedCornerShape(10.dp)
-                            ) {
-                                Text(
-                                    text = "Deliver to Lahore",
-                                    style = MaterialTheme.typography.labelSmall.copy(
-                                        color = ZyphuelBluePrimary,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 11.sp
-                                    ),
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                )
-                            }
-                        }
-
                         // 1. Petrol (2 Subcategories: Regular Euro-V & High-Octane 97)
                         Card(
                             modifier = Modifier
@@ -5630,13 +5597,6 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
             category = selectedCategoryForModal!!,
             viewModel = viewModel,
             onDismiss = { selectedCategoryForModal = null }
-        )
-    }
-
-    if (showMyVehiclesDialog) {
-        MyVehiclesDialog(
-            viewModel = viewModel,
-            onDismiss = { showMyVehiclesDialog = false }
         )
     }
 
@@ -11647,11 +11607,6 @@ fun ProfileSettingsDialog(
     var showDeleteConfirmInProfile by remember { mutableStateOf(false) }
     var pushNotificationsEnabled by remember { mutableStateOf(true) }
 
-    // Enhanced Settings State (Multi-Language, Storage, Notice)
-    val currentAppLang by viewModel.currentLanguage.collectAsState()
-    var showAllLanguagesDialog by remember { mutableStateOf(false) }
-    var cacheCleared by remember { mutableStateOf(false) }
-
     val startupNoticePrefs = remember(context) {
         context.getSharedPreferences("zyphuel_ui_prefs", android.content.Context.MODE_PRIVATE)
     }
@@ -11890,153 +11845,6 @@ fun ProfileSettingsDialog(
                     }
                 }
 
-                // Coverage Zone Card
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF0FDF4)),
-                    border = BorderStroke(1.dp, Color(0xFFBBF7D0))
-                ) {
-                    Row(
-                        modifier = Modifier.padding(12.dp).fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(Icons.Filled.LocationOn, contentDescription = null, tint = Color(0xFF16A34A), modifier = Modifier.size(20.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Column {
-                            Text("Coverage Area: Lahore Active", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.Black))
-                            Text("Serving Gulberg, DHA, Model Town, Johar Town, Bahria & all Lahore sectors", style = MaterialTheme.typography.bodySmall.copy(color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Medium))
-                        }
-                    }
-                }
-
-                // App Multi-Language Selection
-                Card(
-                    modifier = Modifier.fillMaxWidth().testTag("profile_language_card"),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
-                    border = BorderStroke(1.dp, Color(0xFFE2E8F0))
-                ) {
-                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Filled.Language, contentDescription = null, tint = ZyphuelBluePrimary, modifier = Modifier.size(18.dp))
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "App Language / ایپ کی زبان",
-                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, color = Color.Black)
-                                )
-                            }
-                            Surface(
-                                shape = RoundedCornerShape(8.dp),
-                                color = ZyphuelBluePrimary.copy(alpha = 0.12f),
-                                border = BorderStroke(1.dp, ZyphuelBluePrimary.copy(alpha = 0.3f))
-                            ) {
-                                Text(
-                                    text = "${currentAppLang.flag} ${currentAppLang.nameNative}",
-                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary),
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                )
-                            }
-                        }
-
-                        Text(
-                            text = "Select your preferred language / اپنی مرضی کے مطابق زبان منتخب کریں",
-                            style = MaterialTheme.typography.bodySmall.copy(color = Color.DarkGray, fontSize = 11.sp)
-                        )
-
-                        // Quick regional language chips
-                        androidx.compose.foundation.layout.FlowRow(
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            AppLanguageManager.getPopularLanguages().forEach { lang ->
-                                val isSelected = currentAppLang.code == lang.code
-                                OutlinedButton(
-                                    onClick = {
-                                        viewModel.setAppLanguage(lang)
-                                        val toastMsg = "${AppLanguageManager.translate("msg_lang_changed", lang.code, "Language set to")} ${lang.nameNative} (${lang.nameEn})"
-                                        Toast.makeText(context, toastMsg, Toast.LENGTH_SHORT).show()
-                                    },
-                                    colors = ButtonDefaults.outlinedButtonColors(
-                                        containerColor = if (isSelected) ZyphuelBluePrimary.copy(alpha = 0.12f) else Color.White,
-                                        contentColor = if (isSelected) ZyphuelBluePrimary else Color.Black
-                                    ),
-                                    border = BorderStroke(1.dp, if (isSelected) ZyphuelBluePrimary else Color(0xFFCBD5E1)),
-                                    shape = RoundedCornerShape(8.dp),
-                                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
-                                ) {
-                                    Text(
-                                        text = "${lang.flag} ${lang.nameNative}",
-                                        style = MaterialTheme.typography.labelSmall.copy(
-                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                            color = if (isSelected) ZyphuelBluePrimary else Color.Black
-                                        )
-                                    )
-                                }
-                            }
-                        }
-
-                        // More Languages (14+ Global Languages) trigger
-                        OutlinedButton(
-                            onClick = { showAllLanguagesDialog = true },
-                            modifier = Modifier.fillMaxWidth().testTag("more_languages_btn"),
-                            shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White),
-                            border = BorderStroke(1.dp, Color(0xFFCBD5E1)),
-                            contentPadding = PaddingValues(vertical = 6.dp)
-                        ) {
-                            Icon(Icons.Filled.Translate, contentDescription = null, modifier = Modifier.size(16.dp), tint = ZyphuelBluePrimary)
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = "All Languages (14+) / مزید تمام زبانیں",
-                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary)
-                            )
-                        }
-                    }
-                }
-
-                // Storage & Cache Cleaner
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
-                    border = BorderStroke(1.dp, Color(0xFFE2E8F0))
-                ) {
-                    Row(
-                        modifier = Modifier.padding(12.dp).fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                            Icon(Icons.Filled.Delete, contentDescription = null, tint = ZyphuelBluePrimary, modifier = Modifier.size(20.dp))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Column {
-                                Text("Storage & Cache", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, color = Color.Black))
-                                Text(if (cacheCleared) "Cache optimized (Clean)" else "Clear temporary map & data cache", style = MaterialTheme.typography.bodySmall.copy(color = if (cacheCleared) Color(0xFF16A34A) else Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Medium))
-                            }
-                        }
-                        OutlinedButton(
-                            onClick = {
-                                cacheCleared = true
-                                Toast.makeText(context, "App cache cleared successfully! (3.8 MB freed)", Toast.LENGTH_SHORT).show()
-                            },
-                            shape = RoundedCornerShape(8.dp),
-                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                            border = BorderStroke(1.dp, if (cacheCleared) Color(0xFF16A34A) else Color(0xFFCBD5E1))
-                        ) {
-                            Text(
-                                if (cacheCleared) "Cleaned ✔" else "Clear",
-                                style = MaterialTheme.typography.labelSmall.copy(color = if (cacheCleared) Color(0xFF16A34A) else Color.Black, fontWeight = FontWeight.Bold)
-                            )
-                        }
-                    }
-                }
-
                 // Name (Read-only or viewable)
                 OutlinedTextField(
                     value = currentUser!!.name,
@@ -12188,17 +11996,6 @@ fun ProfileSettingsDialog(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(4.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Zyphuel v${BuildConfig.VERSION_NAME} (Build ${BuildConfig.VERSION_CODE}) • Handcrafted in Lahore",
-                        style = MaterialTheme.typography.labelSmall.copy(color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
-                    )
-                }
             }
         },
         confirmButton = {
@@ -12237,75 +12034,89 @@ fun ProfileSettingsDialog(
             onDismiss = { showDeleteConfirmInProfile = false }
         )
     }
+}
 
-    if (showAllLanguagesDialog) {
-        AlertDialog(
-            onDismissRequest = { showAllLanguagesDialog = false },
-            title = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Filled.Language, contentDescription = null, tint = ZyphuelBluePrimary)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Select Language / زبان منتخب کریں",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 17.sp,
-                        color = Color.Black
-                    )
-                }
-            },
-            text = {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(max = 400.dp)
-                        .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    AppLanguageManager.getSupportedLanguages().forEach { lang ->
-                        val isSelected = currentAppLang.code == lang.code
-                        Surface(
+
+/**
+ * Standalone language selector. Opened directly from the navigation sidebar so that
+ * tapping the language row changes the language in place instead of routing to Profile Settings.
+ */
+@Composable
+fun LanguagePickerDialog(
+    viewModel: MainViewModel,
+    onDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+    val currentAppLang by viewModel.currentLanguage.collectAsState()
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = Color.White,
+        shape = RoundedCornerShape(20.dp),
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Filled.Language, contentDescription = null, tint = ZyphuelBluePrimary)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Select Language / زبان منتخب کریں",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 17.sp,
+                    color = Color.Black
+                )
+            }
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 400.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                AppLanguageManager.getSupportedLanguages().forEach { lang ->
+                    val isSelected = currentAppLang.code == lang.code
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                viewModel.setAppLanguage(lang)
+                                onDismiss()
+                                val toastMsg = "${AppLanguageManager.translate("msg_lang_changed", lang.code, "Language set to")} ${lang.nameNative} (${lang.nameEn})"
+                                Toast.makeText(context, toastMsg, Toast.LENGTH_SHORT).show()
+                            },
+                        shape = RoundedCornerShape(10.dp),
+                        color = if (isSelected) ZyphuelBluePrimary.copy(alpha = 0.12f) else Color(0xFFF8FAFC),
+                        border = BorderStroke(1.dp, if (isSelected) ZyphuelBluePrimary else Color(0xFFE2E8F0))
+                    ) {
+                        Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable {
-                                    viewModel.setAppLanguage(lang)
-                                    showAllLanguagesDialog = false
-                                    val toastMsg = "${AppLanguageManager.translate("msg_lang_changed", lang.code, "Language set to")} ${lang.nameNative} (${lang.nameEn})"
-                                    Toast.makeText(context, toastMsg, Toast.LENGTH_SHORT).show()
-                                },
-                            shape = RoundedCornerShape(10.dp),
-                            color = if (isSelected) ZyphuelBluePrimary.copy(alpha = 0.12f) else Color(0xFFF8FAFC),
-                            border = BorderStroke(1.dp, if (isSelected) ZyphuelBluePrimary else Color(0xFFE2E8F0))
+                                .padding(horizontal = 12.dp, vertical = 10.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 12.dp, vertical = 10.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(lang.flag, fontSize = 20.sp)
-                                    Spacer(modifier = Modifier.width(10.dp))
-                                    Column {
-                                        Text(lang.nameNative, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color.Black)
-                                        Text(lang.nameEn, fontSize = 11.sp, color = Color.DarkGray)
-                                    }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(lang.flag, fontSize = 20.sp)
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Column {
+                                    Text(lang.nameNative, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color.Black)
+                                    Text(lang.nameEn, fontSize = 11.sp, color = Color.DarkGray)
                                 }
-                                if (isSelected) {
-                                    Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = ZyphuelBluePrimary, modifier = Modifier.size(20.dp))
-                                }
+                            }
+                            if (isSelected) {
+                                Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = ZyphuelBluePrimary, modifier = Modifier.size(20.dp))
                             }
                         }
                     }
                 }
-            },
-            confirmButton = {
-                TextButton(onClick = { showAllLanguagesDialog = false }) {
-                    Text("Close", fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary)
-                }
             }
-        )
-    }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Close", fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary)
+            }
+        }
+    )
 }
 
 
@@ -14703,25 +14514,6 @@ fun AdminDashboardScreen(viewModel: MainViewModel) {
                                 Text(notifications.size.toString(), style = MaterialTheme.typography.labelSmall)
                             }
                         }
-                    }
-
-                    // Admin developer tools: ASO keyword optimizer & FCM push console.
-                    // Both dialogs and their state existed, but nothing ever set them to true.
-                    IconButton(
-                        onClick = { showAsoDialog = true },
-                        modifier = Modifier.testTag("admin_aso_btn")
-                    ) {
-                        Icon(Icons.Filled.Tune, contentDescription = "ASO Optimizer", tint = ZyphuelBluePrimary)
-                    }
-                    IconButton(
-                        onClick = { showFcmDialog = true },
-                        modifier = Modifier.testTag("admin_fcm_btn")
-                    ) {
-                        Icon(
-                            Icons.Filled.Campaign,
-                            contentDescription = "FCM Push Console",
-                            tint = ZyphuelBluePrimary
-                        )
                     }
 
                     if (showNotificationsDialog) {

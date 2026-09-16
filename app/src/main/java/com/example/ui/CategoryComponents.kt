@@ -416,42 +416,6 @@ fun CategoryGridSection(
     }
 
     Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        // Section Header
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column {
-                Text(
-                    text = "Our Services",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = ZyphuelBlueDark
-                    )
-                )
-                Text(
-                    text = "Doorstep fuel, gas & certified auto care in Lahore",
-                    style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray)
-                )
-            }
-
-            Surface(
-                color = ZyphuelBluePrimary.copy(alpha = 0.1f),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text(
-                    text = "Lahore",
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        color = ZyphuelBluePrimary,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 11.sp
-                    ),
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                )
-            }
-        }
-
         // Category Filter Tabs
         Row(
             modifier = Modifier

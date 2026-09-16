@@ -1,5 +1,5 @@
 # 🚀 Zyphuel App Features & Technical Documentation
-**App Version:** `v2.6.4.0.0.09 (Build 37)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** `2026`
+**App Version:** `v2.6.4.0.0.10 (Build 38)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** `2026`
 
 Welcome to the complete architectural and functional guide for the **Zyphuel** Android application. This document outlines every single feature, function, database entity, and user flow from start to finish.
 
@@ -1072,3 +1072,37 @@ Zyphuel v2.4.0 introduces a comprehensive 10-category on-demand automotive and m
 * **Strict Compliance & Zero-Deletion**:
   - No existing screen, button, composable, or data model was removed; every change was additive or connective.
   - Incremented `versionCode` to `37` and advanced `versionName` to `"2.6.4.0.0.09"`. `assembleDebug` verified SUCCESSFUL.
+
+### 28. Comprehensive UI Streamlining, Legal Policy Alignment & Navigation Fixes (v2.6.4.0.0.10 Build 38)
+* **Legal Compliance & Terms & Privacy Policy Synchronization (`PRIVACY_POLICY.md`, `TERMS_AND_CONDITIONS.md`, `TermsAndPrivacyDialog.kt`)**:
+  - **Version & Build Alignment**: Updated application version in all legal documents to `2.6.4.0.0.10 (Build 38)`.
+  - **Domain Transition**: Replaced legacy staging URLs (`https://zyphuel.netlify.app/`) across all markdown documents and in-app legal dialogs with the official website domain: `https://www.zyphuel.com/`, `https://www.zyphuel.com/privacy`, and `https://www.zyphuel.com/terms-of-use`.
+  - **App Service Alignment**: Aligned service definitions to accurately mirror the actual Zyphuel operational footprint in Lahore:
+    - Euro-V Super Petrol (Regular 92 Octane)
+    - HOBC 97 Octane (High-Octane)
+    - High-Speed Diesel (HSD) & commercial generator backup refueling
+    - Certified factory-sealed 11.8kg LPG domestic cylinders
+    - Pure 19L filtered mineral drinking water & water dispensers
+    - 24/7 Emergency roadside assistance: 5L rapid emergency top-up fuel and high-amperage battery booster jumpstarts.
+  - **Maintained Critical Disclosures**: Preserved OGRA petroleum safety rules, Google Play 30-day account deletion compliance, and the prominent early-stage Lahore startup notice.
+* **Removal of "Add Your Vehicle Profile" Prompt (`CustomerHomeScreen`)**:
+  - Cleanly removed `SavedVehiclesBar` from the customer home screen layout so customers are no longer prompted to add a vehicle profile on home launch.
+  - Preserved underlying Room database models (`VehicleEntity`, `VehicleDao`) and `MyVehiclesDialog` for vehicle management when needed.
+* **Sidebar Language Selector In-Place Activation (`DrawerContent`)**:
+  - Resolved navigation issue where clicking "Language: English" (`sidebar_language_settings`) inadvertently redirected the user to the Profile Settings screen.
+  - Tapping `sidebar_language_settings` now opens the `LanguagePickerDialog` in place (`showLanguageDialog = true`) without navigating away or triggering `onOpenProfile()`.
+* **Removal of Redundant Sections from Profile Settings (`ProfileSettingsDialog`)**:
+  - **Removed "Coverage Area: Lahore Active" Card**: Eliminated the redundant coverage status card from the profile settings dialog.
+  - **Removed "App Language" Card**: Removed the language selection card from Profile Settings, consolidating language preferences directly inside the navigation sidebar drawer.
+  - **Removed "Storage & Cache" Card**: Cleaned up the storage & cache inspection and cache clearing section.
+  - **Removed Version Text Footer**: Removed the bottom version badge (`Zyphuel v... • Handcrafted in Lahore`) from the profile dialog.
+* **Permanent Removal of "Our Services" Section Headers (`CustomerHomeScreen`, `CategoryComponents.kt`)**:
+  - Removed the "Our Services" section header row and icon above primary service cards on `CustomerHomeScreen`.
+  - Removed the "Our Services" section header row and subtitle text in `CategoryGridSection` within `CategoryComponents.kt`.
+  - Updated guided tour step 2 title from `"2) Our Doorstep Services 🏬"` to `"2) Doorstep Energy & Fuel ⛽"` to keep onboarding tips aligned.
+* **Admin Dashboard Top-Right Icons Cleanup (`AdminDashboardScreen`)**:
+  - Removed the two action buttons (`admin_aso_btn` and `admin_fcm_btn`) situated to the right of the notification bell icon in `AdminDashboardTopBar`.
+* **Build Versioning Rules Enforcement (`app/build.gradle.kts`)**:
+  - Incremented `versionCode` from `37` to `38`.
+  - Advanced `versionName` to `"2.6.4.0.0.10"`.
+

@@ -2,10 +2,10 @@
 
 **Effective Date:** September 2026  
 **Last Updated:** September 2026  
-**Application Version:** 2.6.4.0.0.04 (Build 32)  
+**Application Version:** 2.6.4.0.0.10 (Build 38)  
 **Package Name:** `com.aistudio.zyphuel.appv2`  
-**Official Website:** [https://zyphuel.netlify.app/](https://zyphuel.netlify.app/)  
-**Terms of Use URL:** [https://zyphuel.netlify.app/terms-of-use](https://zyphuel.netlify.app/terms-of-use)  
+**Official Website:** [https://www.zyphuel.com/](https://www.zyphuel.com/)  
+**Terms of Use URL:** [https://www.zyphuel.com/terms-of-use](https://www.zyphuel.com/terms-of-use)  
 **Support Email:** m.daniyalkhan490@gmail.com  
 **WhatsApp Helpline:** +92 323 0112464
 
@@ -23,17 +23,11 @@ By downloading, installing, registering an account, or placing an order on the *
 ---
 
 ## 2. Service Description & Geographical Coverage
-Zyphuel provides an on-demand marketplace and logistics coordination platform connecting customers with authorized delivery riders, bowser vehicles, and certified roadside technicians for the doorstep and on-road delivery of 10 primary service categories:
-* **1. Fuel & Energy**: Super Petrol, High-Speed Diesel, Emergency Canister Fuel, Generator Refueling, LPG Cylinders.
-* **2. Auto Repair & Care**: On-demand Mobile Mechanics, Diagnostic Scanning, Brake Service, AC Gas Refill, Engine Tune-ups.
-* **3. Roadside Assistance**: Emergency Flatbed Towing, Winching, Vehicle Lockout, Accident Breakdown Recovery.
-* **4. Auto Care & Detailing**: Waterless Eco Wash, Interior Vacuuming, Ceramic Wax, Mobile Detailing.
-* **5. Tyres & Wheels**: Puncture Repair, Spare Tyre Installation, Air Inflation, New Tyre Replacement.
-* **6. Battery Services**: Emergency Jumpstart, Battery Voltage Diagnostic, New Battery Delivery & Installation.
-* **7. Lubricants & Fluids**: Engine Oil Changes, Coolant Flushes, Transmission & Brake Fluid Refills.
-* **8. EV Services**: Mobile EV Rescue Charging (Level 2/DC Fast), Home Charger Setup Consultation, EV Diagnostics.
-* **9. Water Delivery**: 5-Gallon Drinking Water Bottles, Bulk Water Tankers, Commercial Water Supply.
-* **10. Fleet & Business**: B2B Fuel Supplies, Commercial Fleet Scheduled Maintenance, Generator Diesel Contracts.
+Zyphuel provides an on-demand marketplace and logistics coordination platform connecting customers with authorized delivery riders and bowser vehicles for the doorstep delivery of energy and fuel products:
+* **1. Fuel & Energy**: Euro-V Super Petrol, HOBC 97 Octane, High-Speed Diesel (HSD), Commercial Generator Backup Refueling, and OGRA-certified 11.8kg Sealed LPG Domestic Cylinders.
+* **2. Pure Drinking Water**: Premium filtered 19-Liter Drinking Water bottles and dispenser units.
+* **3. Emergency Roadside Support**: Rapid 5L Emergency Fuel top-up delivery and high-amperage battery booster jumpstarts.
+* **4. Fleet & Commercial Logistics**: Scheduled diesel logistics and generator refueling contracts for commercial establishments and corporate fleets.
 
 **Geographical Coverage:** Services are currently operated within the municipal limits of **Lahore, Punjab, Pakistan** (including Gulberg, DHA, Bahria Town, Model Town, Johar Town, Cantt, Wapda Town, and surrounding zones within a 45 km radius of the central hub). Out-of-zone requests are automatically assessed via GPS coverage telemetry.
 
@@ -65,7 +59,7 @@ Petroleum products and LPG cylinders are hazardous and flammable materials regul
 ## 6. Order Modifications, Cancellations & Refunds
 * **Cancellation Window:** Orders may be cancelled free of charge before a rider has been dispatched.
 * **Dispatched Orders:** Once a rider is actively in transit, a partial cancellation fee may apply to reimburse logistics costs.
-* **Quality & Quantity Disputes:** If you suspect quantity variance or product contamination, report it via the in-app Support Channel or email `support@zyphuel.com` within 2 hours of delivery. Zyphuel maintains calibration records for all bowsers and measuring units.
+* **Quality & Quantity Disputes:** If you suspect quantity variance or product contamination, report it via the in-app Support Channel or email `m.daniyalkhan490@gmail.com` within 2 hours of delivery. Zyphuel maintains calibration records for all bowsers and measuring units.
 
 ---
 
@@ -84,7 +78,7 @@ To the maximum extent permitted by applicable law in Pakistan:
 ---
 
 ## 9. Account Termination & Deletion
-Zyphuel respects your right to terminate your relationship with the platform. You may permanently delete your account directly inside the app under Profile Settings ("Delete Account / Erase Data") or online at [https://zyphuel.netlify.app/privacy](https://zyphuel.netlify.app/privacy).
+Zyphuel respects your right to terminate your relationship with the platform. You may permanently delete your account directly inside the app under Profile Settings ("Delete Account / Erase Data") or online at [https://www.zyphuel.com/privacy](https://www.zyphuel.com/privacy).
 
 ---
 
@@ -99,4 +93,4 @@ For any legal notices, queries, or assistance regarding these Terms:
 * **WhatsApp / Phone Helpline:** +92 323 0112464
 * **Company:** Zyphuel Pakistan
 * **Address:** 75-Main Boulevard, Gulberg III, Lahore, Punjab, Pakistan
-* **Website:** [https://zyphuel.netlify.app/](https://zyphuel.netlify.app/)
+* **Website:** [https://www.zyphuel.com/](https://www.zyphuel.com/)
