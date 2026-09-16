@@ -1,5 +1,5 @@
 # 🚀 Zyphuel App Features & Technical Documentation
-**App Version:** `v2.6.4.0.0.04 (Build 32)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** `2026`
+**App Version:** `v2.6.4.0.0.06 (Build 34)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** `2026`
 
 Welcome to the complete architectural and functional guide for the **Zyphuel** Android application. This document outlines every single feature, function, database entity, and user flow from start to finish.
 
@@ -7,10 +7,11 @@ Welcome to the complete architectural and functional guide for the **Zyphuel** A
 
 ## 📋 Table of Contents & Modular Documentation Files Index
 
-Below is the complete index of all **13 dedicated documentation files** (including 11 modular feature guides in `/docs`, system architecture, and persistent project memory) covering every aspect of Zyphuel:
+Below is the complete index of all **dedicated documentation files** (including the Master Audit & Zero-Deletion Catalog, 11 modular feature guides in `/docs`, system architecture, and persistent project memory) covering every aspect of Zyphuel:
 
 | # | File Name | Category | Primary Focus & Functions Covered |
 | :-: | :--- | :--- | :--- |
+| **⭐** | [`GLOBAL_AUDIT_AND_FEATURE_INTEGRITY.md`](/GLOBAL_AUDIT_AND_FEATURE_INTEGRITY.md) | **Master Audit & Integrity** | **Complete catalog of 100% working features, disconnected components, UX/safety rules & missing feature blueprints.** |
 | **-** | [`ARCHITECTURE.md`](/ARCHITECTURE.md) | System Architecture | MVVM architecture, layer stack diagram, directory structure, data flow constraints. |
 | **-** | [`MEMORY.md`](/MEMORY.md) | Project Memory & Log | Evolution history, immutable development rules, phase completion records, entity schema. |
 | **1** | [`docs/01_USER_ROLES_AND_AUTHENTICATION.md`](/docs/01_USER_ROLES_AND_AUTHENTICATION.md) | Security & User Control | Customer, Rider & Admin registration, SHA-256 login, role routing. |
@@ -1009,5 +1010,45 @@ Zyphuel v2.4.0 introduces a comprehensive 10-category on-demand automotive and m
 * **Splash Screen Logo Branding Update**:
   - Changed the tagline under the company splash logo in `SplashScreen` (`Screens.kt`) from `"Lahore's Premium Delivery Network"` to `"Zyphuel Delivery App"`.
 
+### 27.9 Profile Settings Cleanup, App-Wide Single Notice & Multi-Language Engine (v2.6.4.0.0.06 Build 34)
+* **Profile Settings & Security Screen Cleanup**:
+  - Removed the "Legal & App Compliance" card from `SecuritySettingsScreen.kt`.
+  - Removed "Saved Lahore Addresses" and "Direct Lahore Support" from `ProfileSettingsDialog`.
+  - Bound the Early-Stage Startup Notice across `ProfileSettingsDialog` and `CustomerHomeScreen` to a strict 1-time app-wide display rule (`has_seen_startup_notice` in `zyphuel_ui_prefs`). Once dismissed, it never reappears anywhere in the app.
+* **14+ Language Multi-Language Localization Engine (`AppLanguageManager.kt`)**:
+  - Built comprehensive localization engine supporting English, Urdu, Punjabi, Sindhi, Pashto, Arabic, Persian, Turkish, French, Spanish, German, Chinese, Hindi, and Russian.
+  - Provided reactive dynamic string lookup (`viewModel.getString(key, fallback)`) and persistent selection in `zyphuel_ui_prefs`.
 
+### 27.10 Admin Category Operations Center & Persistent Biometric Authentication Lifecycle (v2.6.4.0.0.07 Build 35)
+* **Admin Dashboard Current Category Spotlight (`AdminCategoryManagementTab`)**:
+  - Located at the top of Tab 8 (Categories) in `AdminDashboardScreen`.
+  - Prominently showcases the currently inspected / active category with its name, icon, Category ID, and operational badge ("CURRENT ACTIVE 🎯" / "INACTIVE 🔴").
+  - Displays instant delivery fee, subcategories active count, operational availability status chip, and location coverage area.
+  - Equipped with an immediate live toggle switch and horizontal quick-selection category chips allowing the administrator to switch the spotlighted current category with one tap.
+* **Robust Biometric Authentication Lifecycle & Privacy Isolation (`SecureStorageManager`, `Screens.kt`, `MainViewModel`)**:
+  - **Disabled by Default**: On fresh installation or for un-enrolled accounts, biometric fingerprint authentication is strictly disabled (`false`).
+  - **Only for Registered Users**: First-time or unregistered users never see the biometric login card on `AuthScreen` or `PortalSelectScreen`. The option is only rendered if `isBioEnabled && !registeredEmail.isNullOrBlank() && !isRegister`.
+  - **Persistent Across Logout & App Reopen**:
+    - Hardened `SecureStorageManager` with cached `EncryptedSharedPreferences` instances and infallible device-level persistent backing (`zyphuel_biometric_device_prefs`).
+    - Fixed `logout()` to only revoke active session tokens while preserving device biometric enrollment and registered email.
+    - Synchronized biometric states automatically on `MainViewModel` initialization and upon user logout.
+    - Added role-aware logout routing so riders return to `login_rider` and customers return to `login_customer`.
+  - **One-Tap Re-entry on Portal Select & Login Screen**:
+    - When a registered user re-opens the app while logged out, `PortalSelectScreen` displays a dedicated **"⚡ Quick Biometric Login"** card for their registered email.
+    - `AuthScreen` displays the registered user's email and a 1-tap fingerprint authentication button that directly logs them in without entering passwords.
 
+### 27.11 Rider Login Integration into Customer Login Sidebar & Seamless Portal Switching (v2.6.4.0.0.08 Build 36)
+* **Customer Login Sidebar Navigation Drawer (`AuthDrawerContent`)**:
+  - Embedded a complete Material 3 `ModalNavigationDrawer` into the customer authentication flow (`AuthScreen`).
+  - Added a hamburger menu button (`Icons.Filled.Menu`, testTag `"auth_sidebar_menu_btn"`) on the top navigation bar to open the sidebar.
+  - Features dedicated **"Switch as Rider"** card (`testTag("sidebar_switch_as_rider")`) with custom fleet badge and chevron.
+  - Tapping **"Switch as Rider"** smoothly closes the drawer and redirects the user directly to the **Rider Login Form** (`login_rider`).
+  - Added reciprocal **"Switch as Customer"** card in the rider authentication drawer (`testTag("sidebar_switch_as_customer")`) to allow riders to switch to the customer login screen seamlessly.
+* **Top-Bar Quick Switch Action (`switch_as_rider_top_btn`)**:
+  - Implemented a 1-tap quick action chip on the customer login top bar beside the back button, enabling instant switching between Rider and Customer portals without opening the drawer.
+* **In-App Customer Drawer Integration (`DrawerContent`)**:
+  - Added **"Switch as Rider"** (`testTag("sidebar_switch_as_rider")`) with rider motorcycle icon and fleet badge inside the customer's main navigation drawer under "ACCOUNT & SETTINGS".
+  - Logged-in customers can switch to the Rider Login form directly from anywhere in the app with zero friction.
+* **Strict Compliance & Zero-Deletion**:
+  - Preserved all existing authentication flows, registration fields, Google Sign-In, and biometric capabilities intact.
+  - Incremented `versionCode` to `36` and advanced `versionName` to `"2.6.4.0.0.08"`.

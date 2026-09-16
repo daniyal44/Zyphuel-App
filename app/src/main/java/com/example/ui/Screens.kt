@@ -101,6 +101,10 @@ import com.example.data.PasswordSuggestion
 import com.example.data.UserEntity
 import androidx.compose.ui.zIndex
 import com.example.ui.theme.*
+import com.example.util.AppLanguage
+import com.example.util.AppLanguageManager
+import com.example.util.tr
+import com.example.util.trStatus
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.filter
@@ -940,6 +944,20 @@ fun SplashScreen(viewModel: MainViewModel) {
 
 @Composable
 fun PortalSelectScreen(viewModel: MainViewModel) {
+    val context = LocalContext.current
+    val fragmentActivity = context as? androidx.fragment.app.FragmentActivity
+
+    LaunchedEffect(Unit) {
+        viewModel.refreshSecurityAndBiometricStates(context)
+    }
+
+    val isCustBio by viewModel.isCustomerBioEnabled.collectAsState()
+    val isRiderBio by viewModel.isRiderBioEnabled.collectAsState()
+    val registeredCustEmail = com.example.security.SecureStorageManager.getRegisteredEmail(context, com.example.security.AppModule.CUSTOMER)
+    val registeredRiderEmail = com.example.security.SecureStorageManager.getRegisteredEmail(context, com.example.security.AppModule.RIDER)
+    val hasRegisteredCustBio = isCustBio && !registeredCustEmail.isNullOrBlank()
+    val hasRegisteredRiderBio = isRiderBio && !registeredRiderEmail.isNullOrBlank()
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -974,7 +992,157 @@ fun PortalSelectScreen(viewModel: MainViewModel) {
                 )
             )
 
-            Spacer(modifier = Modifier.height(36.dp))
+            // --- QUICK BIOMETRIC LOGIN CARD (Only shown to registered users who enabled biometrics) ---
+            if (hasRegisteredCustBio || hasRegisteredRiderBio) {
+                Spacer(modifier = Modifier.height(20.dp))
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("portal_quick_biometric_card"),
+                    shape = RoundedCornerShape(18.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF0FDF4)),
+                    border = BorderStroke(1.5.dp, Color(0xFF10B981)),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Filled.Fingerprint,
+                                    contentDescription = null,
+                                    tint = Color(0xFF059669),
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Quick Biometric Login 👆",
+                                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFF065F46))
+                                )
+                            }
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = Color(0xFF10B981).copy(alpha = 0.2f)
+                            ) {
+                                Text(
+                                    text = "Enrolled 🔓",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFF047857)),
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+
+                        Text(
+                            text = "Scan fingerprint or face ID to sign in directly without typing your password.",
+                            style = MaterialTheme.typography.bodySmall.copy(color = Color(0xFF065F46))
+                        )
+
+                        if (hasRegisteredCustBio && registeredCustEmail != null) {
+                            Button(
+                                onClick = {
+                                    val performBioLogin = {
+                                        viewModel.loginWithBiometrics(
+                                            context = context,
+                                            module = com.example.security.AppModule.CUSTOMER,
+                                            userEmailInput = registeredCustEmail,
+                                            onSuccess = { user ->
+                                                Toast.makeText(context, "Welcome back, ${user.name}! 👋", Toast.LENGTH_SHORT).show()
+                                                viewModel.navigateTo("customer_home")
+                                            },
+                                            onError = { err -> Toast.makeText(context, err, Toast.LENGTH_LONG).show() }
+                                        )
+                                    }
+                                    if (fragmentActivity != null) {
+                                        com.example.security.BiometricSecurityManager.showBiometricPrompt(
+                                            activity = fragmentActivity,
+                                            title = "Customer Biometric Login",
+                                            subtitle = "Scan fingerprint to enter Customer Portal",
+                                            description = "Account: $registeredCustEmail",
+                                            onSuccess = { performBioLogin() },
+                                            onError = { code, errStr ->
+                                                val userCancelled = code == androidx.biometric.BiometricPrompt.ERROR_USER_CANCELED ||
+                                                    code == androidx.biometric.BiometricPrompt.ERROR_NEGATIVE_BUTTON ||
+                                                    code == androidx.biometric.BiometricPrompt.ERROR_CANCELED
+                                                if (!userCancelled) {
+                                                    Toast.makeText(context, errStr.toString(), Toast.LENGTH_LONG).show()
+                                                }
+                                            },
+                                            onFailed = {
+                                                Toast.makeText(context, "Fingerprint not recognized. Try again.", Toast.LENGTH_SHORT).show()
+                                            }
+                                        )
+                                    } else {
+                                        performBioLogin()
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth().testTag("portal_bio_login_cust_btn"),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF059669)),
+                                shape = RoundedCornerShape(10.dp)
+                            ) {
+                                Icon(Icons.Filled.Fingerprint, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Customer Login ($registeredCustEmail)", fontWeight = FontWeight.Bold, color = Color.White)
+                            }
+                        }
+
+                        if (hasRegisteredRiderBio && registeredRiderEmail != null) {
+                            Button(
+                                onClick = {
+                                    val performBioLogin = {
+                                        viewModel.loginWithBiometrics(
+                                            context = context,
+                                            module = com.example.security.AppModule.RIDER,
+                                            userEmailInput = registeredRiderEmail,
+                                            onSuccess = { user ->
+                                                Toast.makeText(context, "Welcome back, Rider ${user.name}! 🛵", Toast.LENGTH_SHORT).show()
+                                                viewModel.navigateTo("rider_home")
+                                            },
+                                            onError = { err -> Toast.makeText(context, err, Toast.LENGTH_LONG).show() }
+                                        )
+                                    }
+                                    if (fragmentActivity != null) {
+                                        com.example.security.BiometricSecurityManager.showBiometricPrompt(
+                                            activity = fragmentActivity,
+                                            title = "Rider Biometric Login",
+                                            subtitle = "Scan fingerprint to enter Rider Portal",
+                                            description = "Account: $registeredRiderEmail",
+                                            onSuccess = { performBioLogin() },
+                                            onError = { code, errStr ->
+                                                val userCancelled = code == androidx.biometric.BiometricPrompt.ERROR_USER_CANCELED ||
+                                                    code == androidx.biometric.BiometricPrompt.ERROR_NEGATIVE_BUTTON ||
+                                                    code == androidx.biometric.BiometricPrompt.ERROR_CANCELED
+                                                if (!userCancelled) {
+                                                    Toast.makeText(context, errStr.toString(), Toast.LENGTH_LONG).show()
+                                                }
+                                            },
+                                            onFailed = {
+                                                Toast.makeText(context, "Fingerprint not recognized. Try again.", Toast.LENGTH_SHORT).show()
+                                            }
+                                        )
+                                    } else {
+                                        performBioLogin()
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth().testTag("portal_bio_login_rider_btn"),
+                                colors = ButtonDefaults.buttonColors(containerColor = ZyphuelBlueDark),
+                                shape = RoundedCornerShape(10.dp)
+                            ) {
+                                Icon(Icons.Filled.TwoWheeler, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Rider Login ($registeredRiderEmail)", fontWeight = FontWeight.Bold, color = Color.White)
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(28.dp))
 
             // Button 1: Customer Portal
             Card(
@@ -1371,7 +1539,7 @@ fun SupportStepTwoScreenshot() {
             }
             
             // Order Header
-            Text("Order Fuel & Gas", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, color = Color.Black))
+            Text(tr("lbl_order_fuel_gas", "Order Fuel & Gas"), style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, color = Color.Black))
             Spacer(modifier = Modifier.height(6.dp))
             
             // Fuel product list
@@ -1387,7 +1555,7 @@ fun SupportStepTwoScreenshot() {
                     Column(modifier = Modifier.padding(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(Icons.Filled.LocalGasStation, contentDescription = null, tint = ZyphuelBluePrimary, modifier = Modifier.size(20.dp))
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text("Super Petrol", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                        Text(tr("svc_super_petrol", "Super Petrol"), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
                         Text("Rs. 297.53/L", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontSize = 9.sp))
                     }
                 }
@@ -1399,7 +1567,7 @@ fun SupportStepTwoScreenshot() {
                     Column(modifier = Modifier.padding(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(Icons.Filled.PropaneTank, contentDescription = null, tint = Color.DarkGray, modifier = Modifier.size(20.dp))
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text("LPG Gas", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                        Text(tr("svc_lpg", "LPG Gas"), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
                         Text("Rs. 308.76/kg", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontSize = 9.sp))
                     }
                 }
@@ -1933,6 +2101,287 @@ fun DocumentUploaderBox(
     }
 }
 
+@Composable
+fun AuthDrawerContent(
+    isRider: Boolean,
+    isRegister: Boolean,
+    onClose: () -> Unit,
+    onNavigateToRiderLogin: () -> Unit,
+    onNavigateToCustomerLogin: () -> Unit,
+    onNavigateToPortalSelect: () -> Unit,
+    onOpenLegal: (Int) -> Unit
+) {
+    val scrollState = rememberScrollState()
+
+    Surface(
+        modifier = Modifier
+            .fillMaxHeight()
+            .widthIn(min = 280.dp, max = 320.dp)
+            .statusBarsPadding()
+            .navigationBarsPadding(),
+        color = Color.White,
+        tonalElevation = 4.dp
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .padding(horizontal = 16.dp, vertical = 16.dp)
+        ) {
+            // Header
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    ZyphuelOuterLogo(modifier = Modifier.height(36.dp))
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = "Zyphuel",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = ZyphuelBlueDark
+                            )
+                        )
+                        Text(
+                            text = if (isRider) "Rider Portal" else "Customer Portal",
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = Color.Gray,
+                                fontSize = 11.sp
+                            )
+                        )
+                    }
+                }
+                IconButton(onClick = onClose) {
+                    Icon(
+                        imageVector = Icons.Filled.Close,
+                        contentDescription = "Close Menu",
+                        tint = Color.Gray
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Switch Platform Section
+            Text(
+                text = "SWITCH PLATFORM",
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black,
+                    letterSpacing = 1.sp
+                ),
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+            )
+
+            if (!isRider) {
+                // Prominent Switch as Rider Card
+                Card(
+                    onClick = onNavigateToRiderLogin,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp)
+                        .testTag("sidebar_switch_as_rider"),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = ZyphuelBluePrimary.copy(alpha = 0.08f)),
+                    border = BorderStroke(1.5.dp, ZyphuelBluePrimary.copy(alpha = 0.4f))
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(44.dp)
+                                .background(ZyphuelBluePrimary, RoundedCornerShape(12.dp)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.TwoWheeler,
+                                contentDescription = "Rider Icon",
+                                tint = Color.White,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = "Switch as Rider",
+                                    style = MaterialTheme.typography.bodyLarge.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = ZyphuelBlueDark
+                                    )
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = Color(0xFF10B981).copy(alpha = 0.2f)
+                                ) {
+                                    Text(
+                                        text = "🏍️ Fleet",
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            color = Color(0xFF047857),
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 10.sp
+                                        ),
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.dp)
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "Sign in to deliver fuel & earn with Zyphuel Fleet",
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    color = Color.DarkGray,
+                                    fontSize = 11.sp
+                                )
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.Filled.ChevronRight,
+                            contentDescription = "Go",
+                            tint = ZyphuelBluePrimary,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                }
+
+                SidebarItem(
+                    icon = Icons.Filled.TwoWheeler,
+                    label = tr("nav_switch_rider", "Switch as Rider"),
+                    badgeText = "Fleet 🏍️",
+                    badgeColor = ZyphuelBluePrimary,
+                    modifier = Modifier.testTag("auth_sidebar_switch_as_rider_item"),
+                    onClick = onNavigateToRiderLogin
+                )
+            } else {
+                // Switch as Customer Card
+                Card(
+                    onClick = onNavigateToCustomerLogin,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp)
+                        .testTag("sidebar_switch_as_customer"),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF1F5F9)),
+                    border = BorderStroke(1.dp, Color(0xFFCBD5E1))
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(44.dp)
+                                .background(ZyphuelBlueDark, RoundedCornerShape(12.dp)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Store,
+                                contentDescription = "Customer Icon",
+                                tint = Color.White,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Switch as Customer",
+                                style = MaterialTheme.typography.bodyLarge.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = ZyphuelBlueDark
+                                )
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "Order Petrol, Diesel & LPG to your doorstep",
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    color = Color.DarkGray,
+                                    fontSize = 11.sp
+                                )
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.Filled.ChevronRight,
+                            contentDescription = "Go",
+                            tint = Color.Gray,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                }
+
+                SidebarItem(
+                    icon = Icons.Filled.Store,
+                    label = tr("nav_switch_customer", "Switch as Customer"),
+                    badgeText = "Customer 🛒",
+                    badgeColor = ZyphuelBluePrimary,
+                    modifier = Modifier.testTag("auth_sidebar_switch_as_customer_item"),
+                    onClick = onNavigateToCustomerLogin
+                )
+            }
+
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = 12.dp),
+                color = Color(0xFFF1F5F9),
+                thickness = 1.dp
+            )
+
+            // General Navigation
+            Text(
+                text = "NAVIGATION & HELP",
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black,
+                    letterSpacing = 1.sp
+                ),
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+            )
+
+            SidebarItem(
+                icon = Icons.Filled.Home,
+                label = "Portal Selection",
+                modifier = Modifier.testTag("auth_sidebar_portal_select"),
+                onClick = onNavigateToPortalSelect
+            )
+
+            SidebarItem(
+                icon = Icons.Filled.Description,
+                label = "Terms & Conditions",
+                modifier = Modifier.testTag("auth_sidebar_terms"),
+                onClick = { onOpenLegal(0) }
+            )
+
+            SidebarItem(
+                icon = Icons.Filled.Policy,
+                label = "Privacy Policy",
+                modifier = Modifier.testTag("auth_sidebar_privacy"),
+                onClick = { onOpenLegal(1) }
+            )
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Zyphuel v${BuildConfig.VERSION_NAME} • Build ${BuildConfig.VERSION_CODE}",
+                    style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontSize = 11.sp)
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AuthScreen(viewModel: MainViewModel, isRegister: Boolean, isRider: Boolean) {
@@ -1988,53 +2437,159 @@ fun AuthScreen(viewModel: MainViewModel, isRegister: Boolean, isRider: Boolean) 
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
     if (isInitialScreenLoading) {
         TeslaAuthSkeleton()
         return
     }
 
-
-
-    BoxWithConstraints(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(ZyphuelLightBackground)
-            .statusBarsPadding()
-            .navigationBarsPadding()
-    ) {
-        val isWide = maxWidth > 600.dp
-        Column(
-            modifier = Modifier
-                .then(if (isWide) Modifier.widthIn(max = 580.dp).align(Alignment.Center) else Modifier.fillMaxSize())
-                .padding(20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Back to Portal Selection
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Start
-            ) {
-                TextButton(
-                    onClick = { viewModel.navigateTo("portal_select") },
-                    colors = ButtonDefaults.textButtonColors(contentColor = ZyphuelBluePrimary)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "Back",
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
-                    )
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        gesturesEnabled = true,
+        drawerContent = {
+            AuthDrawerContent(
+                isRider = isRider,
+                isRegister = isRegister,
+                onClose = { scope.launch { drawerState.close() } },
+                onNavigateToRiderLogin = {
+                    scope.launch {
+                        drawerState.close()
+                        viewModel.navigateTo("login_rider")
+                    }
+                },
+                onNavigateToCustomerLogin = {
+                    scope.launch {
+                        drawerState.close()
+                        viewModel.navigateTo("login_customer")
+                    }
+                },
+                onNavigateToPortalSelect = {
+                    scope.launch {
+                        drawerState.close()
+                        viewModel.navigateTo("portal_select")
+                    }
+                },
+                onOpenLegal = { tab ->
+                    legalDialogInitialTab = tab
+                    showLegalDialog = true
+                    scope.launch { drawerState.close() }
                 }
-            }
+            )
+        }
+    ) {
+        BoxWithConstraints(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(ZyphuelLightBackground)
+                .statusBarsPadding()
+                .navigationBarsPadding()
+        ) {
+            val isWide = maxWidth > 600.dp
+            Column(
+                modifier = Modifier
+                    .then(if (isWide) Modifier.widthIn(max = 580.dp).align(Alignment.Center) else Modifier.fillMaxSize())
+                    .padding(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Top Navigation Bar (Sidebar Toggle & Back to Portal & Quick Switch Button)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(
+                            onClick = { scope.launch { drawerState.open() } },
+                            modifier = Modifier.testTag("auth_sidebar_menu_btn")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Menu,
+                                contentDescription = "Open Sidebar Menu",
+                                tint = ZyphuelBluePrimary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(2.dp))
+                        TextButton(
+                            onClick = { viewModel.navigateTo("portal_select") },
+                            colors = ButtonDefaults.textButtonColors(contentColor = ZyphuelBluePrimary)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Back",
+                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
+                            )
+                        }
+                    }
 
-            // Header Logo & Branding
-            ZyphuelOuterLogo(modifier = Modifier.height(50.dp))
-            Spacer(modifier = Modifier.height(12.dp))
+                    if (!isRider) {
+                        Surface(
+                            onClick = { viewModel.navigateTo("login_rider") },
+                            shape = RoundedCornerShape(12.dp),
+                            color = ZyphuelBluePrimary.copy(alpha = 0.1f),
+                            border = BorderStroke(1.dp, ZyphuelBluePrimary.copy(alpha = 0.35f)),
+                            modifier = Modifier.testTag("switch_as_rider_top_btn")
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.TwoWheeler,
+                                    contentDescription = "Switch as Rider",
+                                    tint = ZyphuelBluePrimary,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "Switch as Rider",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = ZyphuelBluePrimary
+                                    )
+                                )
+                            }
+                        }
+                    } else {
+                        Surface(
+                            onClick = { viewModel.navigateTo("login_customer") },
+                            shape = RoundedCornerShape(12.dp),
+                            color = Color(0xFFF1F5F9),
+                            border = BorderStroke(1.dp, Color(0xFFCBD5E1)),
+                            modifier = Modifier.testTag("switch_as_customer_top_btn")
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Store,
+                                    contentDescription = "Switch as Customer",
+                                    tint = ZyphuelBlueDark,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "Customer Login",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = ZyphuelBlueDark
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Header Logo & Branding
+                ZyphuelOuterLogo(modifier = Modifier.height(50.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
             // Box Card for Form
             Card(
@@ -2990,7 +3545,7 @@ fun AuthScreen(viewModel: MainViewModel, isRegister: Boolean, isRider: Boolean) 
                         val targetUserEmail = if (email.isNotBlank()) email.trim().lowercase() else (registeredEmail ?: "")
                         val displayEmail = if (targetUserEmail.isNotBlank()) targetUserEmail else if (registeredEmail != null) registeredEmail else "Registered Account"
 
-                        if (!isRegister && isBioEnabled) {
+                        if (!isRegister && isBioEnabled && !registeredEmail.isNullOrBlank()) {
                             Spacer(modifier = Modifier.height(16.dp))
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
@@ -3185,6 +3740,7 @@ fun AuthScreen(viewModel: MainViewModel, isRegister: Boolean, isRider: Boolean) 
             }
         }
     }
+}
 
     if (showForgotPasswordDialog) {
         ForgotPasswordDialog(
@@ -3393,85 +3949,39 @@ fun DrawerContent(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Section: Account & Security
-            Text(
-                text = "ACCOUNT & SETTINGS",
-                style = MaterialTheme.typography.labelSmall.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black,
-                    letterSpacing = 1.sp
-                ),
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-            )
-
-            SidebarItem(
-                icon = Icons.Filled.Person,
-                label = "Profile Settings",
-                modifier = Modifier.testTag("sidebar_profile_settings"),
-                onClick = {
-                    onOpenProfile()
-                    onClose()
-                }
-            )
-            SidebarItem(
-                icon = Icons.Filled.Fingerprint,
-                label = "Security & Biometrics",
-                modifier = Modifier.testTag("sidebar_security_settings"),
-                onClick = {
-                    onClose()
-                    val target = when (currentUser.role) {
-                        "rider" -> "rider_security"
-                        "admin" -> "admin_security"
-                        else -> "customer_security"
-                    }
-                    viewModel.navigateTo(target)
-                }
-            )
-
-            HorizontalDivider(
-                modifier = Modifier.padding(vertical = 8.dp),
-                color = Color(0xFFF1F5F9),
-                thickness = 1.dp
-            )
-
-            // Section: Orders
-            Text(
-                text = "ORDERS & DELIVERIES",
-                style = MaterialTheme.typography.labelSmall.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black,
-                    letterSpacing = 1.sp
-                ),
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-            )
-
-            if (currentUser.role != "rider") {
+            // Collapsible Section: Account & Security
+            CollapsibleSidebarSection(title = tr("sec_account_settings", "ACCOUNT & SETTINGS")) {
                 SidebarItem(
-                    icon = Icons.Filled.ShoppingCart,
-                    label = "My Active Orders",
-                    modifier = Modifier.testTag("sidebar_my_orders"),
+                    icon = Icons.Filled.Person,
+                    label = tr("nav_profile", "Profile Settings"),
+                    modifier = Modifier.testTag("sidebar_profile_settings"),
                     onClick = {
-                        onOpenOrders()
+                        onOpenProfile()
+                        onClose()
+                    }
+                )
+                val activeLang by viewModel.currentLanguage.collectAsState()
+                SidebarItem(
+                    icon = Icons.Filled.Language,
+                    label = "Language: ${activeLang.flag} ${activeLang.nameNative}",
+                    modifier = Modifier.testTag("sidebar_language_settings"),
+                    onClick = {
+                        onOpenProfile()
                         onClose()
                     }
                 )
                 SidebarItem(
-                    icon = Icons.Filled.History,
-                    label = "Customer Order History",
-                    modifier = Modifier.testTag("sidebar_customer_order_history"),
+                    icon = Icons.Filled.Fingerprint,
+                    label = tr("nav_security", "Security & Biometrics"),
+                    modifier = Modifier.testTag("sidebar_security_settings"),
                     onClick = {
                         onClose()
-                        viewModel.navigateTo("customer_order_history")
-                    }
-                )
-            } else {
-                SidebarItem(
-                    icon = Icons.Filled.ListAlt,
-                    label = "Received Orders",
-                    modifier = Modifier.testTag("sidebar_received_orders"),
-                    onClick = {
-                        onOpenOrders()
-                        onClose()
+                        val target = when (currentUser.role) {
+                            "rider" -> "rider_security"
+                            "admin" -> "admin_security"
+                            else -> "customer_security"
+                        }
+                        viewModel.navigateTo(target)
                     }
                 )
             }
@@ -3482,81 +3992,105 @@ fun DrawerContent(
                 thickness = 1.dp
             )
 
-            // Section: Support & Info
-            Text(
-                text = "HELP & SUPPORT",
-                style = MaterialTheme.typography.labelSmall.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black,
-                    letterSpacing = 1.sp
-                ),
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+            // Collapsible Section: Orders
+            CollapsibleSidebarSection(title = tr("sec_orders_deliveries", "ORDERS & DELIVERIES")) {
+                if (currentUser.role != "rider") {
+                    SidebarItem(
+                        icon = Icons.Filled.ShoppingCart,
+                        label = tr("nav_active_orders", "My Active Orders"),
+                        modifier = Modifier.testTag("sidebar_my_orders"),
+                        onClick = {
+                            onOpenOrders()
+                            onClose()
+                        }
+                    )
+                    SidebarItem(
+                        icon = Icons.Filled.History,
+                        label = tr("nav_order_history", "Customer Order History"),
+                        modifier = Modifier.testTag("sidebar_customer_order_history"),
+                        onClick = {
+                            onClose()
+                            viewModel.navigateTo("customer_order_history")
+                        }
+                    )
+                } else {
+                    SidebarItem(
+                        icon = Icons.Filled.ListAlt,
+                        label = tr("nav_received_orders", "Received Orders"),
+                        modifier = Modifier.testTag("sidebar_received_orders"),
+                        onClick = {
+                            onOpenOrders()
+                            onClose()
+                        }
+                    )
+                }
+            }
+
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = 8.dp),
+                color = Color(0xFFF1F5F9),
+                thickness = 1.dp
             )
 
-            SidebarItem(
-                icon = Icons.Filled.QuestionMark,
-                label = "FAQ / Guidelines",
-                modifier = Modifier.testTag("sidebar_faq"),
-                onClick = {
-                    onOpenFAQ()
-                    onClose()
-                }
-            )
-            SidebarItem(
-                icon = Icons.Filled.SupportAgent,
-                label = "Live Support & Help Center",
-                modifier = Modifier.testTag("sidebar_live_support"),
-                onClick = {
-                    onOpenSupport()
-                    onClose()
-                }
-            )
-            val hasSeenAppTour by viewModel.hasSeenAppTour.collectAsState()
-            if (!hasSeenAppTour) {
+            // Collapsible Section: Support & Info
+            CollapsibleSidebarSection(title = tr("sec_help_support", "HELP & SUPPORT")) {
                 SidebarItem(
-                    icon = Icons.Filled.Explore,
-                    label = "Take a Guided Tour 🧭",
-                    modifier = Modifier.testTag("sidebar_app_tour"),
+                    icon = Icons.Filled.QuestionMark,
+                    label = tr("nav_faq", "FAQ / Guidelines"),
+                    modifier = Modifier.testTag("sidebar_faq"),
                     onClick = {
-                        viewModel.openAppTourGuide()
+                        onOpenFAQ()
                         onClose()
                     }
                 )
+                SidebarItem(
+                    icon = Icons.Filled.SupportAgent,
+                    label = tr("nav_live_support", "Live Support & Help Center"),
+                    modifier = Modifier.testTag("sidebar_live_support"),
+                    onClick = {
+                        onOpenSupport()
+                        onClose()
+                    }
+                )
+                val hasSeenAppTour by viewModel.hasSeenAppTour.collectAsState()
+                if (!hasSeenAppTour) {
+                    SidebarItem(
+                        icon = Icons.Filled.Explore,
+                        label = "Take a Guided Tour 🧭",
+                        modifier = Modifier.testTag("sidebar_app_tour"),
+                        onClick = {
+                            viewModel.openAppTourGuide()
+                            onClose()
+                        }
+                    )
+                }
             }
 
-            // Section: Admin & Developer Tools (if admin)
+            // Collapsible Section: Admin & Developer Tools (if admin)
             if (currentUser.role == "admin") {
                 HorizontalDivider(
                     modifier = Modifier.padding(vertical = 8.dp),
                     color = Color(0xFFF1F5F9),
                     thickness = 1.dp
                 )
-                Text(
-                    text = "ADMIN CONTROLS",
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black,
-                        letterSpacing = 1.sp
-                    ),
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                )
-
-                if (currentScreenVal != "admin_dashboard") {
-                    Button(
-                        onClick = {
-                            onClose()
-                            viewModel.switchToPlatform("admin_dashboard", "Admin Dashboard")
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = ZyphuelBlueDark),
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp)
-                            .testTag("sidebar_admin_entry")
-                    ) {
-                        Icon(Icons.Filled.AdminPanelSettings, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Admin Dashboard", color = Color.White, fontWeight = FontWeight.Bold)
+                CollapsibleSidebarSection(title = "ADMIN CONTROLS") {
+                    if (currentScreenVal != "admin_dashboard") {
+                        Button(
+                            onClick = {
+                                onClose()
+                                viewModel.switchToPlatform("admin_dashboard", "Admin Dashboard")
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = ZyphuelBlueDark),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp)
+                                .testTag("sidebar_admin_entry")
+                        ) {
+                            Icon(Icons.Filled.AdminPanelSettings, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Admin Dashboard", color = Color.White, fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
             }
@@ -3567,11 +4101,40 @@ fun DrawerContent(
                 thickness = 1.dp
             )
 
+            // ─── Rider/Customer Role Switch (permanently relocated · standalone · no category · bold + highlighted) ───
+            if (currentUser.role != "rider") {
+                SidebarRoleSwitchButton(
+                    icon = Icons.Filled.TwoWheeler,
+                    label = tr("nav_switch_rider", "Switch as Rider"),
+                    badgeText = "Fleet 🏍️",
+                    modifier = Modifier.testTag("sidebar_switch_as_rider"),
+                    onClick = {
+                        onClose()
+                        viewModel.navigateTo("login_rider")
+                    }
+                )
+            } else {
+                SidebarRoleSwitchButton(
+                    icon = Icons.Filled.Store,
+                    label = tr("nav_switch_customer", "Switch as Customer"),
+                    badgeText = "Customer 🛒",
+                    modifier = Modifier.testTag("sidebar_switch_as_customer"),
+                    onClick = {
+                        onClose()
+                        viewModel.navigateTo("login_customer")
+                    }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
             // Terms & Privacy Policy Option (Play Store Compliance)
             SidebarItem(
                 icon = Icons.Filled.Policy,
-                label = "Terms & Privacy Policy",
+                label = tr("nav_terms_privacy", "Terms & Privacy Policy"),
                 iconTint = ZyphuelBluePrimary,
+                badgeText = "Legal",
+                badgeColor = ZyphuelBluePrimary,
                 modifier = Modifier.testTag("sidebar_terms_privacy"),
                 onClick = {
                     showTermsAndPrivacyDialog = true
@@ -3584,7 +4147,7 @@ fun DrawerContent(
             if (currentUser.role != "admin" && !currentUser.email.equals("m.daniyalkhan490@gmail.com", ignoreCase = true)) {
                 SidebarItem(
                     icon = Icons.Filled.DeleteForever,
-                    label = "Delete Account / Erase Data",
+                    label = tr("lbl_delete_account", "Delete Account / Erase Data"),
                     iconTint = Color(0xFFDC2626),
                     modifier = Modifier.testTag("sidebar_delete_account"),
                     onClick = {
@@ -3609,7 +4172,7 @@ fun DrawerContent(
             ) {
                 Icon(Icons.Filled.ExitToApp, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Log Out", color = Color.White, fontWeight = FontWeight.Bold)
+                Text(tr("lbl_logout", "Log Out"), color = Color.White, fontWeight = FontWeight.Bold)
             }
 
             Spacer(modifier = Modifier.height(14.dp))
@@ -3709,6 +4272,137 @@ fun SidebarItem(
                     )
                 }
             }
+        }
+    }
+}
+
+/**
+ * Collapsible / foldable sidebar section.
+ * Tap the header (title + chevron) to expand or collapse its items.
+ * Expanded by default so nothing appears hidden on first open.
+ */
+@Composable
+fun CollapsibleSidebarSection(
+    title: String,
+    modifier: Modifier = Modifier,
+    initiallyExpanded: Boolean = true,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    var expanded by remember { mutableStateOf(initiallyExpanded) }
+    val chevronRotation by animateFloatAsState(
+        targetValue = if (expanded) 180f else 0f,
+        label = "sidebar_section_chevron"
+    )
+    Column(modifier = modifier.fillMaxWidth()) {
+        Surface(
+            onClick = { expanded = !expanded },
+            shape = RoundedCornerShape(10.dp),
+            color = Color.Transparent,
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("sidebar_section_header_$title")
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black,
+                        letterSpacing = 1.sp
+                    ),
+                    modifier = Modifier.weight(1f)
+                )
+                Icon(
+                    imageVector = Icons.Filled.KeyboardArrowDown,
+                    contentDescription = if (expanded) "Collapse $title" else "Expand $title",
+                    tint = ZyphuelBluePrimary,
+                    modifier = Modifier
+                        .size(20.dp)
+                        .rotate(chevronRotation)
+                )
+            }
+        }
+        AnimatedVisibility(visible = expanded) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                content()
+            }
+        }
+    }
+}
+
+/**
+ * Standalone, bold, highlighted role-switch button (Rider ⇄ Customer).
+ * Intentionally NOT inside any collapsible category — permanently pinned near the bottom of the drawer.
+ */
+@Composable
+fun SidebarRoleSwitchButton(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    badgeText: String,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(14.dp),
+        color = ZyphuelBluePrimary,
+        shadowElevation = 4.dp,
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.25f)),
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(38.dp)
+                    .background(Color.White.copy(alpha = 0.20f), RoundedCornerShape(11.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Color.White
+                ),
+                modifier = Modifier.weight(1f)
+            )
+            Box(
+                modifier = Modifier
+                    .background(Color.White.copy(alpha = 0.22f), RoundedCornerShape(8.dp))
+                    .padding(horizontal = 8.dp, vertical = 3.dp)
+            ) {
+                Text(
+                    text = badgeText,
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                )
+            }
+            Spacer(modifier = Modifier.width(6.dp))
+            Icon(
+                imageVector = Icons.Filled.ChevronRight,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
 }
@@ -4394,7 +5088,7 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                                     }
                                     Column {
                                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                            Text("Petrol", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark))
+                                            Text(tr("svc_petrol", "Petrol"), style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark))
                                             Surface(
                                                 color = ZyphuelBlueLight,
                                                 shape = RoundedCornerShape(6.dp)
@@ -4455,7 +5149,7 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                                     }
                                     Column {
                                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                            Text("High Octane", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark))
+                                            Text(tr("svc_octane", "High Octane"), style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark))
                                             Surface(
                                                 color = Color(0xFFFEF3C7),
                                                 shape = RoundedCornerShape(6.dp)
@@ -4517,7 +5211,7 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                                     }
                                     Column {
                                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                            Text("Diesel", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark))
+                                            Text(tr("svc_diesel", "Diesel"), style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark))
                                             Surface(
                                                 color = ZyphuelBlueLight,
                                                 shape = RoundedCornerShape(6.dp)
@@ -4577,7 +5271,7 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                                         }
                                     }
                                     Column {
-                                        Text("Gas", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark))
+                                        Text(tr("svc_lpg", "Gas"), style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark))
                                         Text(
                                             text = "Certified 11.8kg Factory-Sealed Cylinder",
                                             style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray)
@@ -4630,7 +5324,7 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                                         }
                                     }
                                     Column {
-                                        Text("Pure Water", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark))
+                                        Text(tr("svc_water", "Pure Water"), style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark))
                                         Text(
                                             text = "Certified Drinking Water & Bowser Tankers",
                                             style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray)
@@ -5094,7 +5788,7 @@ fun AnimatedOrderStatusBadge(
                 }
 
                 Text(
-                    text = displayText,
+                    text = trStatus(displayText),
                     style = MaterialTheme.typography.labelSmall.copy(
                         fontWeight = FontWeight.Bold,
                         color = animatedTextColor
@@ -7923,8 +8617,8 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Column {
-                    Text("Place Your Order", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                    Text("Order items together for delivery discounts", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                    Text(tr("dlg_order_title", "Place Your Order"), fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Text(tr("dlg_order_subtitle", "Order items together for delivery discounts"), style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                 }
             }
         },
@@ -7992,7 +8686,7 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                                 colors = CheckboxDefaults.colors(checkedColor = ZyphuelBluePrimary)
                             )
                             Column {
-                                Text("Petrol", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
+                                Text(tr("svc_petrol", "Petrol"), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
                                 Text("${viewModel.formatUnitPrice(petrolPrice, "L")}", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                             }
                         }
@@ -8035,7 +8729,7 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                                 colors = CheckboxDefaults.colors(checkedColor = ZyphuelBluePrimary)
                             )
                             Column {
-                                Text("Diesel", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
+                                Text(tr("svc_diesel", "Diesel"), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
                                 Text("${viewModel.formatUnitPrice(dieselPrice, "L")}", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                             }
                         }
@@ -8078,7 +8772,7 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                                 colors = CheckboxDefaults.colors(checkedColor = ZyphuelBluePrimary)
                             )
                             Column {
-                                Text("High-Octane", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
+                                Text(tr("svc_octane", "High-Octane"), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
                                 Text("${viewModel.formatUnitPrice(octanePrice, "L")}", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                             }
                         }
@@ -8121,7 +8815,7 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                                 colors = CheckboxDefaults.colors(checkedColor = ZyphuelBluePrimary)
                             )
                             Column {
-                                Text("Gas", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
+                                Text(tr("svc_lpg", "Gas"), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
                                 Text("${viewModel.formatUnitPrice(lpgPrice, "Kg")}", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                             }
                         }
@@ -8164,7 +8858,7 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                                 colors = CheckboxDefaults.colors(checkedColor = ZyphuelBluePrimary)
                             )
                             Column {
-                                Text("Pure Water", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
+                                Text(tr("svc_water", "Pure Water"), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
                                 Text("${viewModel.formatUnitPrice(waterPrice, "Gallon")}", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                             }
                         }
@@ -8353,7 +9047,7 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                             strokeWidth = 2.dp
                         )
                         Text(
-                            "Placing Order...",
+                            tr("btn_placing_order", "Placing Order..."),
                             color = Color.White,
                             fontWeight = FontWeight.Bold
                         )
@@ -8365,7 +9059,7 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                             tint = Color.White
                         )
                         Text(
-                            "Place Delivery Order 🚀",
+                            tr("btn_place_delivery_order", "Place Delivery Order 🚀"),
                             color = Color.White,
                             fontWeight = FontWeight.Bold
                         )
@@ -10915,13 +11609,17 @@ fun ProfileSettingsDialog(
     var showDeleteConfirmInProfile by remember { mutableStateOf(false) }
     var pushNotificationsEnabled by remember { mutableStateOf(true) }
 
-    // Enhanced Settings State (Language, Saved Addresses, Storage)
-    var selectedLanguage by remember { mutableStateOf("English") }
-    var savedHomeAddress by remember { mutableStateOf("Model Town Block C, Lahore") }
-    var savedWorkAddress by remember { mutableStateOf("Main Boulevard, Gulberg III, Lahore") }
-    var editingAddressType by remember { mutableStateOf<String?>(null) }
-    var tempAddressText by remember { mutableStateOf("") }
+    // Enhanced Settings State (Multi-Language, Storage, Notice)
+    val currentAppLang by viewModel.currentLanguage.collectAsState()
+    var showAllLanguagesDialog by remember { mutableStateOf(false) }
     var cacheCleared by remember { mutableStateOf(false) }
+
+    val startupNoticePrefs = remember(context) {
+        context.getSharedPreferences("zyphuel_ui_prefs", android.content.Context.MODE_PRIVATE)
+    }
+    var showStartupNoticeInProfile by remember {
+        mutableStateOf(!startupNoticePrefs.getBoolean("has_seen_startup_notice", false))
+    }
 
     // System gallery picker
     val pickerLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
@@ -11047,27 +11745,49 @@ fun ProfileSettingsDialog(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                // Startup Transparency Notice Card
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFEFF6FF)),
-                    border = BorderStroke(1.dp, Color(0xFFBFDBFE))
-                ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Filled.Info, contentDescription = null, tint = Color(0xFF2563EB), modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
+                // Startup Transparency Notice Card (Strict 1-Time Display App-Wide)
+                if (showStartupNoticeInProfile) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth().testTag("profile_startup_notice_card"),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFEFF6FF)),
+                        border = BorderStroke(1.dp, Color(0xFFBFDBFE))
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Filled.Info, contentDescription = null, tint = Color(0xFF2563EB), modifier = Modifier.size(18.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        "Early-Stage Startup Notice",
+                                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold, color = Color.Black)
+                                    )
+                                }
+                                IconButton(
+                                    onClick = {
+                                        showStartupNoticeInProfile = false
+                                        startupNoticePrefs.edit().putBoolean("has_seen_startup_notice", true).apply()
+                                    },
+                                    modifier = Modifier.size(24.dp).testTag("dismiss_profile_startup_notice_btn")
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Close,
+                                        contentDescription = "Dismiss Notice",
+                                        tint = Color(0xFF2563EB),
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                "Early-Stage Startup Notice",
-                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold, color = Color.Black)
+                                "Zyphuel is currently an evolving early-stage startup operating in Lahore, not a large corporation. We provide dedicated, personalized fuel & energy dispatch service.",
+                                style = MaterialTheme.typography.bodySmall.copy(color = Color.Black, fontWeight = FontWeight.Medium, fontSize = 11.sp, lineHeight = 16.sp)
                             )
                         }
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            "Zyphuel is currently an evolving early-stage startup operating in Lahore, not a large corporation. We provide dedicated, personalized fuel & energy dispatch service.",
-                            style = MaterialTheme.typography.bodySmall.copy(color = Color.Black, fontWeight = FontWeight.Medium, fontSize = 11.sp, lineHeight = 16.sp)
-                        )
                     }
                 }
 
@@ -11084,7 +11804,7 @@ fun ProfileSettingsDialog(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
-                            Text("ACCOUNT ROLE", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.Black))
+                            Text(tr("lbl_role", "ACCOUNT ROLE"), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.Black))
                             Text(
                                 text = when (currentUser!!.role) {
                                     "admin" -> "Administrator"
@@ -11120,7 +11840,7 @@ fun ProfileSettingsDialog(
                             Icon(Icons.Filled.Notifications, contentDescription = null, tint = ZyphuelBluePrimary, modifier = Modifier.size(22.dp))
                             Spacer(modifier = Modifier.width(10.dp))
                             Column {
-                                Text("Order Alerts", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, color = Color.Black))
+                                Text(tr("lbl_order_alerts", "Order Alerts"), style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, color = Color.Black))
                                 Text("Push updates on driver dispatch", style = MaterialTheme.typography.bodySmall.copy(color = Color(0xFF1E293B), fontWeight = FontWeight.Medium))
                             }
                         }
@@ -11152,195 +11872,92 @@ fun ProfileSettingsDialog(
                     }
                 }
 
-                // App Language Selection
+                // App Multi-Language Selection
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().testTag("profile_language_card"),
                     shape = RoundedCornerShape(12.dp),
                     colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
                     border = BorderStroke(1.dp, Color(0xFFE2E8F0))
                 ) {
                     Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Filled.Language, contentDescription = null, tint = ZyphuelBluePrimary, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("App Language / زبان منتخب کریں", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, color = Color.Black))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Filled.Language, contentDescription = null, tint = ZyphuelBluePrimary, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "App Language / ایپ کی زبان",
+                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, color = Color.Black)
+                                )
+                            }
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = ZyphuelBluePrimary.copy(alpha = 0.12f),
+                                border = BorderStroke(1.dp, ZyphuelBluePrimary.copy(alpha = 0.3f))
+                            ) {
+                                Text(
+                                    text = "${currentAppLang.flag} ${currentAppLang.nameNative}",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary),
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                )
+                            }
                         }
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            listOf("English" to "English", "Urdu" to "اردو (Urdu)").forEach { (langKey, label) ->
-                                val isSelected = selectedLanguage == langKey
+
+                        Text(
+                            text = "Select your preferred language / اپنی مرضی کے مطابق زبان منتخب کریں",
+                            style = MaterialTheme.typography.bodySmall.copy(color = Color.DarkGray, fontSize = 11.sp)
+                        )
+
+                        // Quick regional language chips
+                        androidx.compose.foundation.layout.FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            AppLanguageManager.getPopularLanguages().forEach { lang ->
+                                val isSelected = currentAppLang.code == lang.code
                                 OutlinedButton(
                                     onClick = {
-                                        selectedLanguage = langKey
-                                        Toast.makeText(context, "Language set to $label", Toast.LENGTH_SHORT).show()
+                                        viewModel.setAppLanguage(lang)
+                                        val toastMsg = "${AppLanguageManager.translate("msg_lang_changed", lang.code, "Language set to")} ${lang.nameNative} (${lang.nameEn})"
+                                        Toast.makeText(context, toastMsg, Toast.LENGTH_SHORT).show()
                                     },
                                     colors = ButtonDefaults.outlinedButtonColors(
-                                        containerColor = if (isSelected) ZyphuelBluePrimary.copy(alpha = 0.1f) else Color.White,
+                                        containerColor = if (isSelected) ZyphuelBluePrimary.copy(alpha = 0.12f) else Color.White,
                                         contentColor = if (isSelected) ZyphuelBluePrimary else Color.Black
                                     ),
                                     border = BorderStroke(1.dp, if (isSelected) ZyphuelBluePrimary else Color(0xFFCBD5E1)),
                                     shape = RoundedCornerShape(8.dp),
-                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
                                 ) {
-                                    Text(label, style = MaterialTheme.typography.labelSmall.copy(fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium, color = if (isSelected) ZyphuelBluePrimary else Color.Black))
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Saved Lahore Delivery Addresses
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
-                    border = BorderStroke(1.dp, Color(0xFFE2E8F0))
-                ) {
-                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Filled.Home, contentDescription = null, tint = ZyphuelBluePrimary, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Saved Lahore Addresses", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, color = Color.Black))
-                        }
-
-                        // Home address row
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(Color.White, RoundedCornerShape(8.dp))
-                                .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(8.dp))
-                                .padding(10.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text("🏠 Home", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.Black))
-                                Text(savedHomeAddress, style = MaterialTheme.typography.bodySmall.copy(color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Medium))
-                            }
-                            TextButton(
-                                onClick = {
-                                    editingAddressType = "home"
-                                    tempAddressText = savedHomeAddress
-                                },
-                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
-                            ) {
-                                Text("Edit", fontSize = 11.sp, color = ZyphuelBluePrimary, fontWeight = FontWeight.Bold)
-                            }
-                        }
-
-                        // Office address row
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(Color.White, RoundedCornerShape(8.dp))
-                                .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(8.dp))
-                                .padding(10.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text("🏢 Office / Work", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.Black))
-                                Text(savedWorkAddress, style = MaterialTheme.typography.bodySmall.copy(color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Medium))
-                            }
-                            TextButton(
-                                onClick = {
-                                    editingAddressType = "work"
-                                    tempAddressText = savedWorkAddress
-                                },
-                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
-                            ) {
-                                Text("Edit", fontSize = 11.sp, color = ZyphuelBluePrimary, fontWeight = FontWeight.Bold)
-                            }
-                        }
-
-                        // Inline Address Editor if editing
-                        if (editingAddressType != null) {
-                            Column(modifier = Modifier.fillMaxWidth().padding(top = 4.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                OutlinedTextField(
-                                    value = tempAddressText,
-                                    onValueChange = { tempAddressText = it },
-                                    label = { Text(if (editingAddressType == "home") "Home Address (Lahore)" else "Work Address (Lahore)") },
-                                    singleLine = true,
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = RoundedCornerShape(8.dp),
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        focusedTextColor = Color.Black,
-                                        unfocusedTextColor = Color.Black,
-                                        focusedLabelColor = Color.Black,
-                                        unfocusedLabelColor = Color.Black,
-                                        focusedContainerColor = Color.White,
-                                        unfocusedContainerColor = Color.White
+                                    Text(
+                                        text = "${lang.flag} ${lang.nameNative}",
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                            color = if (isSelected) ZyphuelBluePrimary else Color.Black
+                                        )
                                     )
-                                )
-                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    Button(
-                                        onClick = {
-                                            if (editingAddressType == "home") savedHomeAddress = tempAddressText
-                                            else savedWorkAddress = tempAddressText
-                                            editingAddressType = null
-                                            Toast.makeText(context, "Address updated!", Toast.LENGTH_SHORT).show()
-                                        },
-                                        colors = ButtonDefaults.buttonColors(containerColor = ZyphuelBluePrimary),
-                                        shape = RoundedCornerShape(8.dp),
-                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
-                                    ) {
-                                        Text("Save", fontSize = 12.sp)
-                                    }
-                                    OutlinedButton(
-                                        onClick = { editingAddressType = null },
-                                        shape = RoundedCornerShape(8.dp),
-                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
-                                    ) {
-                                        Text("Cancel", fontSize = 12.sp, color = Color.Black)
-                                    }
                                 }
                             }
                         }
-                    }
-                }
 
-                // Direct Founder & Operations Helpline (WhatsApp & Call)
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
-                    border = BorderStroke(1.dp, Color(0xFFE2E8F0))
-                ) {
-                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Filled.Call, contentDescription = null, tint = Color(0xFF16A34A), modifier = Modifier.size(20.dp))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Column {
-                                Text("Direct Lahore Support", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, color = Color.Black))
-                                Text("No bots — chat directly with our Lahore founders & team", style = MaterialTheme.typography.labelSmall.copy(color = Color.Black, fontWeight = FontWeight.Medium))
-                            }
-                        }
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Button(
-                                onClick = {
-                                    val waIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://wa.me/923230112464?text=${Uri.encode("Salam Zyphuel Lahore Team, I need help with my fuel service.")}"))
-                                    context.startActivity(waIntent)
-                                },
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366)),
-                                shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier.weight(1f),
-                                contentPadding = PaddingValues(vertical = 6.dp)
-                            ) {
-                                Text("💬 WhatsApp", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.White))
-                            }
-                            OutlinedButton(
-                                onClick = {
-                                    val dialIntent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:+923230112464"))
-                                    context.startActivity(dialIntent)
-                                },
-                                shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier.weight(1f),
-                                contentPadding = PaddingValues(vertical = 6.dp),
-                                border = BorderStroke(1.dp, Color(0xFF0284C7))
-                            ) {
-                                Icon(Icons.Filled.Phone, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color(0xFF0284C7))
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("Call Us", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFF0284C7)))
-                            }
+                        // More Languages (14+ Global Languages) trigger
+                        OutlinedButton(
+                            onClick = { showAllLanguagesDialog = true },
+                            modifier = Modifier.fillMaxWidth().testTag("more_languages_btn"),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White),
+                            border = BorderStroke(1.dp, Color(0xFFCBD5E1)),
+                            contentPadding = PaddingValues(vertical = 6.dp)
+                        ) {
+                            Icon(Icons.Filled.Translate, contentDescription = null, modifier = Modifier.size(16.dp), tint = ZyphuelBluePrimary)
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "All Languages (14+) / مزید تمام زبانیں",
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary)
+                            )
                         }
                     }
                 }
@@ -11580,6 +12197,75 @@ fun ProfileSettingsDialog(
                 }
             },
             onDismiss = { showDeleteConfirmInProfile = false }
+        )
+    }
+
+    if (showAllLanguagesDialog) {
+        AlertDialog(
+            onDismissRequest = { showAllLanguagesDialog = false },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Filled.Language, contentDescription = null, tint = ZyphuelBluePrimary)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Select Language / زبان منتخب کریں",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 17.sp,
+                        color = Color.Black
+                    )
+                }
+            },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 400.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    AppLanguageManager.getSupportedLanguages().forEach { lang ->
+                        val isSelected = currentAppLang.code == lang.code
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    viewModel.setAppLanguage(lang)
+                                    showAllLanguagesDialog = false
+                                    val toastMsg = "${AppLanguageManager.translate("msg_lang_changed", lang.code, "Language set to")} ${lang.nameNative} (${lang.nameEn})"
+                                    Toast.makeText(context, toastMsg, Toast.LENGTH_SHORT).show()
+                                },
+                            shape = RoundedCornerShape(10.dp),
+                            color = if (isSelected) ZyphuelBluePrimary.copy(alpha = 0.12f) else Color(0xFFF8FAFC),
+                            border = BorderStroke(1.dp, if (isSelected) ZyphuelBluePrimary else Color(0xFFE2E8F0))
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(lang.flag, fontSize = 20.sp)
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Column {
+                                        Text(lang.nameNative, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color.Black)
+                                        Text(lang.nameEn, fontSize = 11.sp, color = Color.DarkGray)
+                                    }
+                                }
+                                if (isSelected) {
+                                    Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = ZyphuelBluePrimary, modifier = Modifier.size(20.dp))
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showAllLanguagesDialog = false }) {
+                    Text("Close", fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary)
+                }
+            }
         )
     }
 }
@@ -15504,7 +16190,6 @@ fun AdminRiderCard(rider: UserEntity, viewModel: MainViewModel) {
     var showBiodataDialog by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
-    var showPassword by remember { mutableStateOf(false) }
 
     val riderSeqNum = rider.riderNumber ?: 1
     val riderSeqId = rider.riderId ?: "RIDER-$riderSeqNum"
@@ -15646,27 +16331,11 @@ fun AdminRiderCard(rider: UserEntity, viewModel: MainViewModel) {
                 Column(modifier = Modifier.padding(12.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Filled.Lock, contentDescription = null, tint = ZyphuelBluePrimary, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Rider Account Login Credentials", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge, color = ZyphuelBlueDark)
-                        }
-                        IconButton(
-                            onClick = { showPassword = !showPassword },
-                            modifier = Modifier
-                                .size(28.dp)
-                                .testTag("toggle_rider_password_${rider.email}")
-                        ) {
-                            Icon(
-                                imageVector = if (showPassword) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
-                                contentDescription = "Toggle Password",
-                                tint = ZyphuelBluePrimary,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
+                        Icon(Icons.Filled.Lock, contentDescription = null, tint = ZyphuelBluePrimary, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Rider Account", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge, color = ZyphuelBlueDark)
                     }
 
                     Spacer(modifier = Modifier.height(6.dp))
@@ -15678,12 +16347,16 @@ fun AdminRiderCard(rider: UserEntity, viewModel: MainViewModel) {
 
                     Spacer(modifier = Modifier.height(4.dp))
 
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                         Text("Login Password:", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-                        Text(
-                            text = if (showPassword) rider.passwordHash else "••••••••",
-                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFFD97706))
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Filled.Lock, contentDescription = null, tint = Color(0xFF64748B), modifier = Modifier.size(13.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Hidden for privacy",
+                                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFF64748B))
+                            )
+                        }
                     }
                 }
             }

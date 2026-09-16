@@ -24,6 +24,8 @@ import com.example.security.SecurityInputValidator
 import com.example.security.SecurityRateLimiter
 import com.example.security.SecurityReport
 import com.example.security.ValidationResult
+import com.example.util.AppLanguage
+import com.example.util.AppLanguageManager
 import com.example.util.DebugLogger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -126,6 +128,24 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _deviceLongitude = MutableStateFlow(74.3587)
     val deviceLongitude = _deviceLongitude.asStateFlow()
+
+    // --- Multi-Language Localization Engine ---
+    private val _currentLanguage = MutableStateFlow(AppLanguageManager.loadSavedLanguage(application))
+    val currentLanguage: StateFlow<AppLanguage> = _currentLanguage.asStateFlow()
+
+    fun setAppLanguage(language: AppLanguage) {
+        _currentLanguage.value = language
+        AppLanguageManager.saveLanguage(getApplication(), language)
+    }
+
+    fun setAppLanguageByCode(code: String) {
+        val lang = AppLanguageManager.getLanguageByCode(code)
+        setAppLanguage(lang)
+    }
+
+    fun translate(key: String, fallback: String): String {
+        return AppLanguageManager.translate(key, _currentLanguage.value.code, fallback)
+    }
 
     // --- App Download / Install Counter (Firestore-backed) ---
     private val _appDownloadCount = MutableStateFlow(0L)
@@ -1248,6 +1268,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             _waterPrice.value
         )
 
+        // Initialize security and biometric state for registered device profiles
+        refreshSecurityAndBiometricStates(getApplication())
+
         viewModelScope.launch {
             _currentUser.flatMapLatest { user ->
                 when {
@@ -2081,6 +2104,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun logout() {
         viewModelScope.launch {
             val user = _currentUser.value
+            val targetScreen = if (user?.role == "rider") "login_rider" else "login_customer"
             if (user != null) {
                 val module = when (user.role) {
                     "rider" -> AppModule.RIDER
@@ -2101,7 +2125,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             com.example.auth.FirebaseAuthProvider.getInstance(getApplication()).signOut()
             _currentUser.value = null
             _trackingOrder.value = null
-            _currentScreen.value = "login_customer"
+            refreshSecurityAndBiometricStates(getApplication())
+            _currentScreen.value = targetScreen
         }
     }
 
