@@ -4437,6 +4437,8 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
 
     val categories by viewModel.categories.collectAsState()
     val selectedVehicle by viewModel.selectedVehicle.collectAsState()
+    val serviceSearchQuery by viewModel.serviceSearchQuery.collectAsState()
+    val serviceSearchResults by viewModel.serviceSearchResults.collectAsState()
 
     var selectedCategoryForModal by remember { mutableStateOf<com.example.data.category.Category?>(null) }
     var showMyVehiclesDialog by remember { mutableStateOf(false) }
@@ -4613,7 +4615,7 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                 tip = "Past orders se kisi bhi purane order ko foran repeat karein.",
                 badge = "ORDER HISTORY",
                 icon = Icons.Filled.History,
-                beforeShow = { revealItem(4) }
+                beforeShow = { revealItem(6) }
             ),
             SpotlightStep(
                 anchorKey = null,
@@ -5010,6 +5012,31 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                 }
 
 
+                // Global Typo-Tolerant Service Search + My Vehicles Quick Access.
+                // Kept as a single LazyColumn item so the guided-tour scroll indices below stay stable.
+                item {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        ServiceSearchBar(
+                            query = serviceSearchQuery,
+                            onQueryChange = { viewModel.searchServices(it) },
+                            onClearQuery = { viewModel.clearServiceSearch() },
+                            searchResults = serviceSearchResults,
+                            onSelectResult = { _, category ->
+                                viewModel.clearServiceSearch()
+                                selectedCategoryForModal = category
+                            }
+                        )
+
+                        SavedVehiclesBar(
+                            selectedVehicle = selectedVehicle,
+                            onOpenMyVehicles = { showMyVehiclesDialog = true }
+                        )
+                    }
+                }
+
                 // Primary Doorstep Services Section (Handcrafted & Clean)
                 item {
                     Column(
@@ -5394,6 +5421,17 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                             }
                         }
                     }
+                }
+
+                // 10-Category Marketplace Grid (Fuel, Repair, Roadside SOS, Tyres, Battery,
+                // Lubricants, EV, Detailing, Water & Fleet) — surfaces the full marketplace
+                // catalog that was previously coded but never rendered on the home screen.
+                item {
+                    CategoryGridSection(
+                        categories = categories,
+                        onCategoryClick = { selectedCategoryForModal = it },
+                        viewModel = viewModel
+                    )
                 }
 
                 // Dedicated Order History Dashboard Section
@@ -14665,6 +14703,25 @@ fun AdminDashboardScreen(viewModel: MainViewModel) {
                                 Text(notifications.size.toString(), style = MaterialTheme.typography.labelSmall)
                             }
                         }
+                    }
+
+                    // Admin developer tools: ASO keyword optimizer & FCM push console.
+                    // Both dialogs and their state existed, but nothing ever set them to true.
+                    IconButton(
+                        onClick = { showAsoDialog = true },
+                        modifier = Modifier.testTag("admin_aso_btn")
+                    ) {
+                        Icon(Icons.Filled.Tune, contentDescription = "ASO Optimizer", tint = ZyphuelBluePrimary)
+                    }
+                    IconButton(
+                        onClick = { showFcmDialog = true },
+                        modifier = Modifier.testTag("admin_fcm_btn")
+                    ) {
+                        Icon(
+                            Icons.Filled.Campaign,
+                            contentDescription = "FCM Push Console",
+                            tint = ZyphuelBluePrimary
+                        )
                     }
 
                     if (showNotificationsDialog) {

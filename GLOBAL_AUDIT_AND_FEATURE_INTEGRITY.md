@@ -1,5 +1,5 @@
 # Zyphuel Master App Audit, Feature Analysis & Global Memory Record 🧠📋
-**Document Version:** 2.6.4.0.0.05 • **Build Code:** 33  
+**Document Version:** 2.6.4.0.0.09 • **Build Code:** 37  
 **Operating Region:** Lahore, Punjab, Pakistan  
 **Compliance Standard:** OGRA (Oil & Gas Regulatory Authority), Civil Defence Pakistan & Google Play Store Policies  
 
@@ -28,13 +28,13 @@
 | **Live Fuel Price Sync** | 🟢 100% Working | TrackmateFuelApiService (PSO/Shell rates), Gemini sync & WorkManager background alerts. |
 | **Multi-Channel Email Gateway** | 🟢 100% Working | SMTP SSL (465) / STARTTLS (587) + Google Apps Script Webhook with Firestore cross-device sync. |
 | **Admin Supervisory Controls** | 🟢 100% Working | 9-tab dashboard: Orders, Riders, Customers, Feedback, Prices, Email Gateway, Audit Logs, Categories. |
-| **10-Category Marketplace Grid** | 🟡 Built but Disconnected | Fully coded in CategoryComponents.kt, but NOT displayed on CustomerHomeScreen. |
-| **Global Service Search Bar** | 🟡 Built but Disconnected | Typo-tolerant Levenshtein search exists in CategoryComponents.kt, but omitted from Home layout. |
-| **"My Vehicles" Profile Launcher** | 🟡 Built but Disconnected | Dialog and Room DB ready, but no launcher button in Home or Sidebar Drawer. |
+| **10-Category Marketplace Grid** | 🟢 Wired to Home | Rendered on `CustomerHomeScreen` below the Doorstep Services section. |
+| **Global Service Search Bar** | 🟢 Wired to Home | Rendered on `CustomerHomeScreen` directly below the Delivery Location card. |
+| **"My Vehicles" Profile Launcher** | 🟢 Wired to Home | `SavedVehiclesBar` on Home opens `MyVehiclesDialog` (Room DB `VehicleEntity`). |
 | **Real-Time Rider GPS Telematics** | 🟡 Simulated Fallback Only | LiveTrackingRepository server writes are disabled; tracking runs on timer interpolation. |
 | **Driver In-App Chat Modal** | 🟡 Local Mockup Only | Messages saved in local UI memory; not synced via Firestore to rider phone. |
 | **Support Screenshot Mockup Buttons**| 🟡 Empty Click Handlers | Lines 1435 & 1449 in Screens.kt have onClick = {} inside the help illustration card. |
-| **Admin ASO & FCM Trigger Buttons** | 🟡 Dialogs Ready, No Trigger | showAsoDialog and showFcmDialog have no button in Admin Dashboard to set them to true. |
+| **Admin ASO & FCM Trigger Buttons** | 🟢 Wired to Admin Bar | ASO + FCM icon buttons added to the Admin Dashboard TopAppBar. |
 | **Pakistani Digital Payments** | 🔴 Missing Feature | No JazzCash, EasyPaisa, Nayapay, or Card gateway (COD only). |
 | **Anti-Fraud Delivery OTP / QR** | 🔴 Missing Feature | Rider can mark delivered without customer verification OTP. |
 | **Vehicle Tank Capacity Validator**| 🔴 Missing Feature | Customer can order 80L for a 9L motorcycle tank without warning. |
@@ -158,7 +158,8 @@
 
 ## 🟡 3. Features That Are Incomplete, Dummy, or Disconnected
 
-### Issue 1: 10-Category Marketplace Grid is Disconnected from CustomerHomeScreen
+### Issue 1: 10-Category Marketplace Grid is Disconnected from CustomerHomeScreen — ✅ RESOLVED
+- **Status**: ✅ **FIXED (v2.6.4.0.0.09 Build 37)** — `CategoryGridSection` is now rendered in `CustomerHomeScreen`'s `LazyColumn`, immediately after the Doorstep Services section. Tapping any category opens the existing `CategoryDetailModal`.
 - **Where Coded**: `CategoryComponents.kt` (`CategoryGridSection`, `CategoryCard`, `CategoryCatalogSeed`).
 - **The Problem**: Even though `CategoryCatalogSeed` defines 10 categories with 35+ subcategories (Auto Repair, Roadside SOS, Detailing, Tyres, Battery, Lubricants, EV, Water, Fleet) and `CategoryAndVehicleArchitectureTest` passes 100%, **`CategoryGridSection` is never invoked inside `CustomerHomeScreen`'s `LazyColumn`**!
 - **User Impact**: Customers currently only see 5 basic cards (Petrol, High Octane, Diesel, Gas, Water). The rest of the platform's multi-category marketplace is invisible on the home screen!
@@ -166,7 +167,8 @@
 
 ---
 
-### Issue 2: Global Typo-Tolerant Search Bar is Disconnected
+### Issue 2: Global Typo-Tolerant Search Bar is Disconnected — ✅ RESOLVED
+- **Status**: ✅ **FIXED (v2.6.4.0.0.09 Build 37)** — `ServiceSearchBar` is now rendered in `CustomerHomeScreen`, directly below the Delivery Location card, bound to `viewModel.searchServices` / `clearServiceSearch` / `serviceSearchResults`. Selecting a result opens its parent category via `CategoryDetailModal`.
 - **Where Coded**: `CategoryComponents.kt` (`ServiceSearchBar`).
 - **The Problem**: A typo-tolerant Levenshtein search bar that searches services like "puncture", "battery jump", "oil", "petrol" is completely written, but **it is not placed on `CustomerHomeScreen`**.
 - **User Impact**: Customers cannot search for automotive services from the home screen.
@@ -174,7 +176,8 @@
 
 ---
 
-### Issue 3: "My Vehicles" Dialog Has No Launcher Button
+### Issue 3: "My Vehicles" Dialog Has No Launcher Button — ✅ RESOLVED
+- **Status**: ✅ **FIXED (v2.6.4.0.0.09 Build 37)** — `SavedVehiclesBar` is now rendered on `CustomerHomeScreen` (bundled with the search bar item) and its `onOpenMyVehicles` callback sets `showMyVehiclesDialog = true`, which opens the already-coded `MyVehiclesDialog`. This was the missing launcher referenced below; the dialog and Room DB were already functional.
 - **Where Coded**: `MyVehiclesDialog.kt`, `SavedVehiclesBar` in `CategoryComponents.kt`.
 - **The Problem**: `MyVehiclesDialog` (backed by Room DB `VehicleEntity` and `VehicleDao`) is completely operational, and `var showMyVehiclesDialog by remember { mutableStateOf(false) }` is declared in `CustomerHomeScreen`. However, because `SavedVehiclesBar` was omitted from the screen layout and the Sidebar Navigation Drawer does not have a "My Vehicles" item, **there is no button for the user to open their saved vehicles profile**!
 - **Fix Recommendation (NO DELETIONS)**:
@@ -206,8 +209,9 @@
 
 ---
 
-### Issue 7: Admin ASO & FCM Console Dialogs Have No UI Triggers
-- **Where Coded**: `AdminDashboardScreen` in `Screens.kt` lines 13922–13923 & 14939–14944.
+### Issue 7: Admin ASO & FCM Console Dialogs Have No UI Triggers — ✅ RESOLVED
+- **Status**: ✅ **FIXED (v2.6.4.0.0.09 Build 37)** — Two icon buttons (`admin_aso_btn` / `admin_fcm_btn`) were added to the `AdminDashboardScreen` TopAppBar `actions` row, setting `showAsoDialog = true` and `showFcmDialog = true` respectively.
+- **Where Coded**: `AdminDashboardScreen` in `Screens.kt`.
 - **The Problem**: `showAsoDialog` and `showFcmDialog` are defined and their modals are coded, but there are no action buttons in the Admin Dashboard Top Bar or Tabs to set them to `true`.
 - **Fix Recommendation (NO DELETIONS)**: Add icon buttons in the Admin Dashboard TopAppBar so administrators can access these tools.
 
