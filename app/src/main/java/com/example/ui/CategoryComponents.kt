@@ -1341,6 +1341,11 @@ fun AdminCategoryManagementTab(
     modifier: Modifier = Modifier
 ) {
     val categories by viewModel.categories.collectAsState()
+    var selectedCategoryId by remember(categories) {
+        mutableStateOf(categories.firstOrNull { it.isActive }?.id ?: categories.firstOrNull()?.id ?: "fuel_petrol")
+    }
+    val currentCategory = categories.firstOrNull { it.id == selectedCategoryId } ?: categories.firstOrNull()
+
     var expandedCatId by remember { mutableStateOf<String?>(null) }
     var editingFeeCatId by remember { mutableStateOf<String?>(null) }
     var feeInput by remember { mutableStateOf("") }
@@ -1361,6 +1366,145 @@ fun AdminCategoryManagementTab(
                     Column {
                         Text("Category & Service Operations Control", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall, color = ZyphuelBlueDark)
                         Text("Manage availability, pricing, and service activation without republishing the app.", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                    }
+                }
+            }
+        }
+
+        // --- CURRENT CATEGORY OVERVIEW / SPOTLIGHT CARD ---
+        if (currentCategory != null) {
+            item {
+                val accentColor = CategoryIconHelper.getCategoryColor(currentCategory.id)
+                Card(
+                    modifier = Modifier.fillMaxWidth().testTag("admin_current_category_card"),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    border = BorderStroke(1.5.dp, ZyphuelBluePrimary),
+                    shape = RoundedCornerShape(16.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(44.dp)
+                                        .background(accentColor.copy(alpha = 0.15f), CircleShape),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = CategoryIconHelper.getIcon(currentCategory.iconName),
+                                        contentDescription = null,
+                                        tint = accentColor,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                        Text(
+                                            text = currentCategory.name,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            style = MaterialTheme.typography.titleMedium,
+                                            color = ZyphuelBlueDark
+                                        )
+                                        Surface(
+                                            color = if (currentCategory.isActive) Color(0xFFDCFCE7) else Color(0xFFFEE2E2),
+                                            shape = RoundedCornerShape(6.dp),
+                                            border = BorderStroke(1.dp, if (currentCategory.isActive) Color(0xFF86EFAC) else Color(0xFFFCA5A5))
+                                        ) {
+                                            Text(
+                                                text = if (currentCategory.isActive) "CURRENT ACTIVE 🎯" else "INACTIVE 🔴",
+                                                color = if (currentCategory.isActive) Color(0xFF15803D) else Color(0xFFB91C1C),
+                                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp, fontWeight = FontWeight.ExtraBold),
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                            )
+                                        }
+                                    }
+                                    Text(
+                                        text = "ID: ${currentCategory.id} • ${currentCategory.estimatedResponseTime}",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = Color.DarkGray
+                                    )
+                                }
+                            }
+
+                            Switch(
+                                checked = currentCategory.isActive,
+                                onCheckedChange = { viewModel.toggleCategoryActive(currentCategory.id, it) },
+                                colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Color(0xFF10B981))
+                            )
+                        }
+
+                        // Operational Details Row for Current Category
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color(0xFFF8FAFC), RoundedCornerShape(10.dp))
+                                .padding(10.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text("Delivery Fee", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                                Text("Rs. ${String.format(java.util.Locale.US, "%.0f", currentCategory.pricingConfig.deliveryFee)}", fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary, style = MaterialTheme.typography.bodyMedium)
+                            }
+                            Column {
+                                Text("Subcategories", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                                Text("${currentCategory.subcategories.size} (${currentCategory.subcategories.count { it.isActive }} Active)", fontWeight = FontWeight.Bold, color = Color.Black, style = MaterialTheme.typography.bodyMedium)
+                            }
+                            Column {
+                                Text("Status", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                                Text(currentCategory.availabilityStatus.label, fontWeight = FontWeight.Bold, color = Color(currentCategory.availabilityStatus.colorHex), style = MaterialTheme.typography.bodyMedium)
+                            }
+                            Column {
+                                Text("Coverage", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                                Text(currentCategory.locationCoverage.firstOrNull() ?: "Lahore", fontWeight = FontWeight.Bold, color = Color.Black, style = MaterialTheme.typography.bodyMedium)
+                            }
+                        }
+
+                        // Switch Current Category in Focus Chips
+                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Text("Switch Current Category in Focus:", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = Color.DarkGray)
+                            LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                items(categories) { cat ->
+                                    val isSelected = cat.id == currentCategory.id
+                                    val catColor = CategoryIconHelper.getCategoryColor(cat.id)
+                                    Surface(
+                                        onClick = {
+                                            selectedCategoryId = cat.id
+                                            expandedCatId = cat.id
+                                        },
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = if (isSelected) ZyphuelBluePrimary else Color(0xFFF1F5F9),
+                                        border = if (isSelected) BorderStroke(1.dp, ZyphuelBlueDark) else null
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = CategoryIconHelper.getIcon(cat.iconName),
+                                                contentDescription = null,
+                                                tint = if (isSelected) Color.White else catColor,
+                                                modifier = Modifier.size(14.dp)
+                                            )
+                                            Text(
+                                                text = cat.name,
+                                                style = MaterialTheme.typography.labelSmall.copy(
+                                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                                    color = if (isSelected) Color.White else Color.Black
+                                                )
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }

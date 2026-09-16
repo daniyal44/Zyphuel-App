@@ -16,12 +16,15 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.lifecycle.ViewModelProvider
 import com.example.security.BiometricSecurityManager
 import com.example.ui.*
 import com.example.ui.theme.MyApplicationTheme
 import com.example.util.DebugLogger
 import com.example.util.GlobalErrorBoundary
+import com.example.util.LocalAppLanguage
 import com.example.util.UnifiedAssetManager
 
 class MainActivity : FragmentActivity() {
@@ -80,6 +83,17 @@ class MainActivity : FragmentActivity() {
 
         setContent {
             MyApplicationTheme {
+                // --- Multi-Language + RTL root ---
+                // Feed the in-app selected language into the Compose tree. LocalAppLanguage is a
+                // staticCompositionLocalOf, so changing it recomposes the entire subtree — every
+                // tr()/trStatus() label re-renders in one go. LocalLayoutDirection mirrors the whole
+                // UI for RTL scripts (Urdu, Arabic, Sindhi, Pashto, Persian).
+                val appLanguage by viewModel.currentLanguage.collectAsState()
+                val appLayoutDirection = if (appLanguage.isRtl) LayoutDirection.Rtl else LayoutDirection.Ltr
+                CompositionLocalProvider(
+                    LocalAppLanguage provides appLanguage,
+                    LocalLayoutDirection provides appLayoutDirection
+                ) {
                 GlobalErrorBoundary(
                     onResetAppState = {
                         DebugLogger.i("MainActivity", "Resetting App State from Error Boundary")
@@ -217,6 +231,7 @@ class MainActivity : FragmentActivity() {
                             }
                         }
                     }
+                }
                 }
             }
         }

@@ -8,6 +8,11 @@
 ---
 
 ## 🏛️ Immutable Architectural Rules (`AGENTS.md`)
+* **🚫 No-Deletion Safety Rule (HIGHEST PRIORITY - USER HARD COMMAND)**:
+  - **User Explicit Directive**: *"app ma koi be cheez delete nai hone chaye apni memony ma save be karo lo or .md file ma be save karlo global memory"*.
+  - **Zero Deletion Policy**: NEVER delete anything in the app — code, features, screens, buttons, functions, UI components, data models, or files.
+  - **Audit Master Reference**: See [`GLOBAL_AUDIT_AND_FEATURE_INTEGRITY.md`](/GLOBAL_AUDIT_AND_FEATURE_INTEGRITY.md) for the master audit catalog of working, disconnected, and missing features.
+  - All maintenance must be additive, connective, or restorative without ever deleting existing capabilities. Work carefully and make zero accidental mistakes.
 * **Documentation Maintenance Rule**: Whenever creating, modifying, or updating any feature, screen, ViewModel method, or database model in Zyphuel, **MUST ALWAYS Update `FEATURES_DOCUMENTATION.md`** and relevant modular docs in `/docs`.
 * **UI Stack**: Kotlin with Jetpack Compose (Material 3).
 * **State Management**: Centralized `MainViewModel` with Kotlin `StateFlow`.
@@ -112,12 +117,36 @@
 * **Elevated Past Order Cards (`CustomerPastOrderCard`)**: Upgraded to 16.dp rounded cards with soft pastel status pills (`#DCFCE7` / `#16A34A` for Completed/Delivered, `#FEE2E2` / `#DC2626` for Cancelled, `#FEF3C7` / `#D97706` for In-Progress) and tinted service icon containers.
 * **Version Advancement**: Incremented `versionCode = 11` and `versionName = "2.4.4"` in `app/build.gradle.kts`.
 
-### Phase 15: Pure Mobile Architecture & Desktop Application Decommissioning (v2.4.6 Build 13)
-* **Complete Desktop Decommissioning**: Permanently deleted all desktop applications, launchers, and modules (`desktop/`, `RUN-DESKTOP.bat`, `RUN-DESKTOP-DEBUG.bat`, `RUN-MOBILE-PREVIEW.bat`, `mobile-preview/`) per user directive to keep the system pure, lightweight, and exclusively focused on the Android mobile application.
-* **Streamlined Mobile Repository**: Removed extraneous build targets and desktop Gradle modules, ensuring 100% of project resources, testing, and CI/CD maintenance target the core Android mobile app.
-* **Version Advancement**: Incremented `versionCode = 13` and `versionName = "2.4.6"` in `app/build.gradle.kts`.
+### Phase 16: Comprehensive App Audit, Zero-Deletion Global Memory & Integrity Catalog (v2.6.4.0.0.05 Build 33)
+* **Master App Audit & Global Memory File**: Created [`GLOBAL_AUDIT_AND_FEATURE_INTEGRITY.md`](/GLOBAL_AUDIT_AND_FEATURE_INTEGRITY.md) documenting 100% of working features, disconnected/dummy components, UX/safety recommendations, and missing feature blueprints.
+* **Permanent Zero-Deletion Directive**: Formally locked in the hard user rule: zero deletions under any circumstances. All past and future work is strictly additive or connective.
+* **Cataloged Disconnected Components**: Documented the disconnected state of the 10-Category Marketplace grid, "My Vehicles" launcher, Levenshtein search bar, rider GPS telematics stream in `LiveTrackingRepository`, and local-only chat state in `TrackerScreen`.
+* **Missing Features Blueprint**: Mapped out Pakistani digital payments (JazzCash/EasyPaisa), Delivery Verification OTP, Vehicle Tank Capacity Guard, and Urdu language toggle.
+### Phase 17: Multi-Language Engine, App-Wide Single Notice Enforcement & Settings Cleanup (v2.6.4.0.0.06 Build 34)
+* **Security & Biometrics Cleanup**: Removed the "Legal & App Compliance" card from `SecuritySettingsScreen.kt` per user directive.
+* **App-Wide Single-Time Startup Notice**: Bound the Early-Stage Startup Notice in `ProfileSettingsDialog` and `CustomerHomeScreen` to a unified persistent flag (`has_seen_startup_notice`). If dismissed anywhere, it will never show again anywhere in the app.
+* **Profile Settings Cleanup**: Removed the "Saved Lahore Addresses" card and "Direct Lahore Support" card from `ProfileSettingsDialog`.
+* **Multi-Language Architecture (`AppLanguageManager.kt`)**: Implemented dynamic localization engine supporting 14+ languages (English, Urdu اردو, Punjabi پنجابی, Sindhi سنڌي, Pashto پښتو, Arabic العربية, Persian فارسی, Turkish Türkçe, Spanish Español, French Français, German Deutsch, Chinese 中文, Hindi हिन्दी, Russian Русский) with persistent SharedPreferences storage (`app_language_code`), `MainViewModel` reactive state flow, quick-select regional chips, and a full language selection dialog.
+* **Navigation Drawer Language Integration**: Added language indicator and quick-switcher item to `DrawerContent`.
+### Phase 18: Admin Dashboard Current Category Spotlight & Persistent Biometric Lifecycle (v2.6.4.0.0.07 Build 35)
+* **Admin Dashboard Current Category Spotlight (`AdminCategoryManagementTab`)**: Added a prominent "Current Category Overview Card" at the top of Tab 8 (Categories) in `AdminDashboardScreen` displaying the active category name, ID, icon, live operational toggle (Active/Inactive), delivery fee, response time, coverage area, and quick category switcher chips.
+* **Biometric Authentication Lifecycle & Privacy Isolation**:
+  - Disabled by default upon fresh install or un-enrolled accounts.
+  - Strictly hidden for unregistered / first-time users (`!isRegister && isBioEnabled && !registeredEmail.isNullOrBlank()`).
+  - Added infallible dual-layer persistence (`SecureStorageManager` with instance caching + `zyphuel_biometric_device_prefs`) so Keystore fluctuations never lose biometric enrollment or registered email.
+  - Preserved biometric enrollment across logouts; updated `logout()` with role-based routing (`login_rider` / `login_customer`) and automatic state refresh.
+  - Added 1-tap "Quick Biometric Login" card on `PortalSelectScreen` and 1-tap fingerprint login on `AuthScreen` for registered users.
+* **Version Advancement**: Incremented `versionCode = 35` and `versionName = "2.6.4.0.0.07"` in `app/build.gradle.kts`.
+
+### Phase 19: Rider Login Integration into Customer Login Sidebar & Portal Switching (v2.6.4.0.0.08 Build 36)
+* **Customer Login Sidebar Navigation Drawer (`AuthDrawerContent`)**: Added a full Material 3 navigation drawer to the authentication screen (`AuthScreen`) accessible via the top-bar hamburger menu button (`testTag("auth_sidebar_menu_btn")`).
+* **"Switch as Rider" Sidebar Card & Item**: Prominently displays "Switch as Rider" (`testTag("sidebar_switch_as_rider")`) with motorcycle icon and fleet badge inside the customer login sidebar. Clicking it immediately closes the drawer and redirects the user to the Rider Login Form (`login_rider`).
+* **Top-Bar Quick Switch Action (`switch_as_rider_top_btn`)**: Added a 1-tap surface chip button on the customer login top bar beside the Back button for instantaneous switching to the rider login form without opening the drawer.
+* **Customer In-App Drawer Integration (`DrawerContent`)**: Added "Switch as Rider" under "ACCOUNT & SETTINGS" in the main customer drawer so logged-in customers can switch straight to rider login anytime.
+* **Strict App Versioning & Zero-Deletion**: Bumped `versionCode = 36` and advanced `versionName = "2.6.4.0.0.08"` in `app/build.gradle.kts`. Maintained zero deletions of existing code or portals.
 
 ---
+
 
 ## 🗄️ Database Entity Schema Reference
 * `UserEntity`: `email` (PK), `name`, `passwordHash`, `role`, `phoneNumber`, `residentialAddress`, `isVerified`.
