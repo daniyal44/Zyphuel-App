@@ -145,6 +145,14 @@
 * **Customer In-App Drawer Integration (`DrawerContent`)**: Added "Switch as Rider" under "ACCOUNT & SETTINGS" in the main customer drawer so logged-in customers can switch straight to rider login anytime.
 * **Strict App Versioning & Zero-Deletion**: Bumped `versionCode = 36` and advanced `versionName = "2.6.4.0.0.08"` in `app/build.gradle.kts`. Maintained zero deletions of existing code or portals.
 
+### Phase 20: Home Marketplace Wiring, Typo-Tolerant Search, My Vehicles Launcher & Admin Dev-Tool Triggers (v2.6.4.0.0.09 Build 37)
+* **10-Category Marketplace Grid Now Visible (`CustomerHomeScreen`)**: Rendered `CategoryGridSection` in the home `LazyColumn` immediately after the Doorstep Services section. Tapping any category opens the existing `CategoryDetailModal`. The full 10-category / 35+ subcategory catalog is no longer invisible.
+* **Global Typo-Tolerant Service Search Wired**: Rendered `ServiceSearchBar` directly below the Delivery Location card, bound to `viewModel.serviceSearchQuery` / `serviceSearchResults` / `searchServices()` / `clearServiceSearch()`. Selecting a result clears the query and opens its parent category.
+* **"My Vehicles" Launcher Connected**: `SavedVehiclesBar` is now rendered on the home screen and its `onOpenMyVehicles` callback sets `showMyVehiclesDialog = true`, opening the already-functional `MyVehiclesDialog` (Room `VehicleEntity`). This was the previously missing launcher.
+* **Admin ASO & FCM Console Triggers**: Added two TopAppBar icon buttons to `AdminDashboardScreen` (`admin_aso_btn` → `showAsoDialog`, `admin_fcm_btn` → `showFcmDialog`), giving the pre-existing dialogs their first entry points.
+* **Guided-Tour Index Preservation**: The search bar and vehicles bar share a single `LazyColumn` item so the guided-tour scroll indices stayed stable; only the "Delivery History" step's `revealItem(4)` → `revealItem(6)` needed updating for the new category-grid item.
+* **Version Advancement**: Incremented `versionCode = 37` and `versionName = "2.6.4.0.0.09"`. Build verified (`assembleDebug` SUCCESSFUL).
+
 ---
 
 

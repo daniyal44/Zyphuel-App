@@ -1,5 +1,5 @@
 # 🚀 Zyphuel App Features & Technical Documentation
-**App Version:** `v2.6.4.0.0.06 (Build 34)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** `2026`
+**App Version:** `v2.6.4.0.0.09 (Build 37)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** `2026`
 
 Welcome to the complete architectural and functional guide for the **Zyphuel** Android application. This document outlines every single feature, function, database entity, and user flow from start to finish.
 
@@ -1052,3 +1052,23 @@ Zyphuel v2.4.0 introduces a comprehensive 10-category on-demand automotive and m
 * **Strict Compliance & Zero-Deletion**:
   - Preserved all existing authentication flows, registration fields, Google Sign-In, and biometric capabilities intact.
   - Incremented `versionCode` to `36` and advanced `versionName` to `"2.6.4.0.0.08"`.
+
+### 27.12 Home Marketplace Wiring, Service Search, My Vehicles Launcher & Admin Dev-Tool Triggers (v2.6.4.0.0.09 Build 37)
+* **10-Category Marketplace Grid Made Visible (`CustomerHomeScreen`)**:
+  - `CategoryGridSection` was fully coded in `CategoryComponents.kt` but never invoked, so the 10-category / 35+ subcategory marketplace was invisible to customers.
+  - Now rendered in the home `LazyColumn` directly after the Doorstep Services section. Tapping a category opens the existing `CategoryDetailModal`.
+* **Global Typo-Tolerant Service Search Bar Wired (`CustomerHomeScreen`)**:
+  - `ServiceSearchBar` (Levenshtein typo-tolerant matching) is now rendered directly below the Delivery Location card.
+  - Bound to `viewModel.serviceSearchQuery`, `serviceSearchResults`, `searchServices()` and `clearServiceSearch()`.
+  - Selecting a search result clears the query and opens the matching parent category.
+* **"My Vehicles" Profile Launcher Connected**:
+  - `SavedVehiclesBar` is now rendered on the home screen; its `onOpenMyVehicles` callback sets `showMyVehiclesDialog = true`.
+  - This provides the previously missing entry point to the fully-functional `MyVehiclesDialog` (Room `VehicleEntity` / `VehicleDao`).
+* **Admin ASO & FCM Console Triggers**:
+  - Added two TopAppBar `actions` icon buttons to `AdminDashboardScreen`: `admin_aso_btn` (opens `AsoOptimizationDialog`) and `admin_fcm_btn` (opens `FcmConsoleDialog`).
+  - Both dialogs and their state already existed but had no way to be opened.
+* **Guided-Tour Index Preservation**:
+  - The search bar and vehicles bar share one `LazyColumn` item so existing guided-tour scroll indices stayed stable; only the "Delivery History" step needed `revealItem(4)` → `revealItem(6)` for the new category-grid item.
+* **Strict Compliance & Zero-Deletion**:
+  - No existing screen, button, composable, or data model was removed; every change was additive or connective.
+  - Incremented `versionCode` to `37` and advanced `versionName` to `"2.6.4.0.0.09"`. `assembleDebug` verified SUCCESSFUL.
