@@ -2,7 +2,7 @@
 
 **Effective Date:** September 2026  
 **Last Updated:** September 2026  
-**Application Version:** 2.6.4.0.0.10 (Build 38)  
+**Application Version:** 2.6.4.0.0.11 (Build 39)  
 **Package Name:** `com.aistudio.zyphuel.appv2`  
 **Official Website:** [https://www.zyphuel.com/](https://www.zyphuel.com/)  
 **Terms of Use URL:** [https://www.zyphuel.com/terms-of-use](https://www.zyphuel.com/terms-of-use)  
@@ -43,13 +43,12 @@ Zyphuel provides an on-demand marketplace and logistics coordination platform co
 ## 4. Safety & Hazardous Materials Compliance (OGRA / Civil Defense)
 Petroleum products and LPG cylinders are hazardous and flammable materials regulated under Pakistani law:
 1. **Dispensing Environment:** Customers must ensure a safe delivery environment free from open flames, running electrical generators, or lit cigarettes during fuel dispensing.
-2. **Standard Containers:** Deliveries will only be dispensed into approved motor vehicle fuel tanks or certified explosion-resistant fuel jerrycans.
-3. **Safety Right of Refusal:** A delivery rider has the absolute legal right and safety obligation to refuse delivery if they determine the destination poses a fire hazard, explosion risk, or violates local safety ordinances.
+2. **Safety Perimeter:** A strict 3-meter safety radius must be observed around delivery bowsers during mobile refueling operations.
 
 ---
 
 ## 5. Pricing, Peak Surge & Payment Policies
-* **Fuel Pricing:** Petroleum product prices are based on official notified rates established by the **Oil & Gas Regulatory Authority (OGRA)** of Pakistan.
+* **Fuel Pricing & Petrol Pump Retail Rates:** Petroleum product prices are based on official notified rates established by the **Oil & Gas Regulatory Authority (OGRA)** of Pakistan. In accordance with petroleum retail distribution in Lahore, retail rates for Super Petrol, High-Speed Diesel, and High-Octane include a standard petrol pump rate adjustment of Rs. 2.50 per liter over official OGRA ex-depot base notifications, transparently calculated on checkout.
 * **Service & Delivery Charges:** Platform convenience and distance delivery fees are transparently itemized on the order confirmation checkout screen before order placement.
 * **Peak-Hour Surge:** During severe weather conditions or high-demand delivery windows, a dynamic surge fee may apply, clearly disclosed before confirmation.
 * **Payment Methods:** Customers may pay via Cash on Delivery (COD), JazzCash, EasyPaisa, or supported bank card transfers. Orders exceeding 30 Liters / bulk quantities may require advance digital confirmation.

@@ -4423,10 +4423,13 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
     val orders by viewModel.customerOrders.collectAsState()
     val context = LocalContext.current
 
-    // Dynamic fuel prices from ViewModel
+    // Dynamic fuel prices from ViewModel (Base OGRA rates & Petrol Pump Rates)
     val petrolPrice by viewModel.petrolPrice.collectAsState()
     val dieselPrice by viewModel.dieselPrice.collectAsState()
     val octanePrice by viewModel.highOctanePrice.collectAsState()
+    val petrolPumpPrice by viewModel.petrolPumpPrice.collectAsState()
+    val dieselPumpPrice by viewModel.dieselPumpPrice.collectAsState()
+    val octanePumpPrice by viewModel.highOctanePumpPrice.collectAsState()
     val lpgPrice by viewModel.lpgGasPrice.collectAsState()
     val waterPrice by viewModel.waterPrice.collectAsState()
     val liveLocationCoordinates by viewModel.liveLocationCoordinates.collectAsState()
@@ -5098,10 +5101,10 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                                 }
                                 Column(horizontalAlignment = Alignment.End) {
                                     Text(
-                                        text = "Rs. ${String.format(java.util.Locale.US, "%.2f", petrolPrice)}/L",
+                                        text = "Rs. ${String.format(java.util.Locale.US, "%.2f", petrolPumpPrice)}/L",
                                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary)
                                     )
-                                    Text("OGRA Rate", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontSize = 10.sp))
+                                    Text("Pump Rate (+Rs 2.50)", style = MaterialTheme.typography.labelSmall.copy(color = Color(0xFF15803D), fontSize = 9.sp, fontWeight = FontWeight.SemiBold))
                                 }
                             }
                         }
@@ -5159,10 +5162,10 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                                 }
                                 Column(horizontalAlignment = Alignment.End) {
                                     Text(
-                                        text = "Rs. ${String.format(java.util.Locale.US, "%.2f", octanePrice)}/L",
+                                        text = "Rs. ${String.format(java.util.Locale.US, "%.2f", octanePumpPrice)}/L",
                                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFFD97706))
                                     )
-                                    Text("OGRA Rate", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontSize = 10.sp))
+                                    Text("Pump Rate (+Rs 2.50)", style = MaterialTheme.typography.labelSmall.copy(color = Color(0xFF15803D), fontSize = 9.sp, fontWeight = FontWeight.SemiBold))
                                 }
                             }
                         }
@@ -5221,10 +5224,10 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                                 }
                                 Column(horizontalAlignment = Alignment.End) {
                                     Text(
-                                        text = "Rs. ${String.format(java.util.Locale.US, "%.2f", dieselPrice)}/L",
+                                        text = "Rs. ${String.format(java.util.Locale.US, "%.2f", dieselPumpPrice)}/L",
                                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary)
                                     )
-                                    Text("OGRA Rate", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontSize = 10.sp))
+                                    Text("Pump Rate (+Rs 2.50)", style = MaterialTheme.typography.labelSmall.copy(color = Color(0xFF15803D), fontSize = 9.sp, fontWeight = FontWeight.SemiBold))
                                 }
                             }
                         }
@@ -8491,10 +8494,13 @@ fun RealTimeOrderTrackingCard(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> Unit) {
-    // Collect prices dynamically from the ViewModel
+    // Collect prices dynamically from the ViewModel (Base OGRA rates & Petrol Pump Rates)
     val petrolPrice by viewModel.petrolPrice.collectAsState()
     val dieselPrice by viewModel.dieselPrice.collectAsState()
     val octanePrice by viewModel.highOctanePrice.collectAsState()
+    val petrolPumpPrice by viewModel.petrolPumpPrice.collectAsState()
+    val dieselPumpPrice by viewModel.dieselPumpPrice.collectAsState()
+    val octanePumpPrice by viewModel.highOctanePumpPrice.collectAsState()
     val lpgPrice by viewModel.lpgGasPrice.collectAsState()
     val waterPrice by viewModel.waterPrice.collectAsState()
     val selectedCurrency by viewModel.selectedCurrency.collectAsState()
@@ -8538,9 +8544,9 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
     }
     val context = LocalContext.current
 
-    val petrolSubtotal = if (petrolSelected) petrolQty * petrolPrice.toDouble() else 0.0
-    val dieselSubtotal = if (dieselSelected) dieselQty * dieselPrice.toDouble() else 0.0
-    val octaneSubtotal = if (octaneSelected) octaneQty * octanePrice.toDouble() else 0.0
+    val petrolSubtotal = if (petrolSelected) petrolQty * petrolPumpPrice.toDouble() else 0.0
+    val dieselSubtotal = if (dieselSelected) dieselQty * dieselPumpPrice.toDouble() else 0.0
+    val octaneSubtotal = if (octaneSelected) octaneQty * octanePumpPrice.toDouble() else 0.0
     val lpgSubtotal = if (lpgSelected) lpgQty * lpgPrice.toDouble() else 0.0
     val waterSubtotal = if (waterSelected) waterQty * waterPrice.toDouble() else 0.0
 
@@ -8685,7 +8691,8 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                             )
                             Column {
                                 Text(tr("svc_petrol", "Petrol"), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
-                                Text("${viewModel.formatUnitPrice(petrolPrice, "L")}", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                                Text("${viewModel.formatUnitPrice(petrolPumpPrice, "L")} (Pump Rate)", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold, color = Color(0xFF15803D)))
+                                Text("OGRA ${viewModel.formatPrice(petrolPrice.toDouble())}/L + Rs 2.50/L", style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, color = Color.Gray))
                             }
                         }
                         if (petrolSelected) {
@@ -8728,7 +8735,8 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                             )
                             Column {
                                 Text(tr("svc_diesel", "Diesel"), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
-                                Text("${viewModel.formatUnitPrice(dieselPrice, "L")}", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                                Text("${viewModel.formatUnitPrice(dieselPumpPrice, "L")} (Pump Rate)", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold, color = Color(0xFF15803D)))
+                                Text("OGRA ${viewModel.formatPrice(dieselPrice.toDouble())}/L + Rs 2.50/L", style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, color = Color.Gray))
                             }
                         }
                         if (dieselSelected) {
@@ -8771,7 +8779,8 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                             )
                             Column {
                                 Text(tr("svc_octane", "High-Octane"), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
-                                Text("${viewModel.formatUnitPrice(octanePrice, "L")}", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                                Text("${viewModel.formatUnitPrice(octanePumpPrice, "L")} (Pump Rate)", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold, color = Color(0xFF15803D)))
+                                Text("OGRA ${viewModel.formatPrice(octanePrice.toDouble())}/L + Rs 2.50/L", style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, color = Color.Gray))
                             }
                         }
                         if (octaneSelected) {
@@ -8941,6 +8950,18 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                         style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold, color = ZyphuelBlueDark)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
+                    val totalPumpFuelLiters = (if (petrolSelected) petrolQty else 0) +
+                            (if (dieselSelected) dieselQty else 0) +
+                            (if (octaneSelected) octaneQty else 0)
+                    if (totalPumpFuelLiters > 0) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text("Pump Rate Included (+Rs 2.50/L):", style = MaterialTheme.typography.bodySmall.copy(color = Color(0xFF15803D)))
+                            Text("Rs. ${String.format(java.util.Locale.US, "%.2f", totalPumpFuelLiters * 2.50)}", style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold, color = Color(0xFF15803D)))
+                        }
+                    }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -18148,6 +18169,9 @@ fun LahoreFuelMarketWidget(
     val petrolPrice by viewModel.petrolPrice.collectAsState()
     val dieselPrice by viewModel.dieselPrice.collectAsState()
     val octanePrice by viewModel.highOctanePrice.collectAsState()
+    val petrolPumpPrice by viewModel.petrolPumpPrice.collectAsState()
+    val dieselPumpPrice by viewModel.dieselPumpPrice.collectAsState()
+    val octanePumpPrice by viewModel.highOctanePumpPrice.collectAsState()
     val lpgPrice by viewModel.lpgGasPrice.collectAsState()
     val waterPrice by viewModel.waterPrice.collectAsState()
     val priceSyncing by viewModel.priceSyncing.collectAsState()
@@ -18249,11 +18273,11 @@ fun LahoreFuelMarketWidget(
                 // Petrol Highlight Card
                 FuelRateCardItem(
                     title = "Petrol (Super Euro-V)",
-                    rate = viewModel.formatUnitPrice(petrolPrice, "L"),
-                    basePrice = "Rs. ${String.format(java.util.Locale.US, "%.2f", (petrolPrice - 20.0f).coerceAtLeast(0f))}/L Base",
+                    rate = viewModel.formatUnitPrice(petrolPumpPrice, "L"),
+                    basePrice = "OGRA: Rs. ${String.format(java.util.Locale.US, "%.2f", petrolPrice)}/L (+Rs 2.50 Pump Rate)",
                     icon = Icons.Filled.LocalGasStation,
                     accentColor = Color(0xFF059669),
-                    badgeText = "OGRA Rate",
+                    badgeText = "Pump Rate",
                     modifier = Modifier.weight(1f),
                     onOrderClick = { onSelectService("Petrol") }
                 )
@@ -18261,11 +18285,11 @@ fun LahoreFuelMarketWidget(
                 // Diesel Highlight Card
                 FuelRateCardItem(
                     title = "Diesel (High Speed)",
-                    rate = viewModel.formatUnitPrice(dieselPrice, "L"),
-                    basePrice = "Rs. ${String.format(java.util.Locale.US, "%.2f", (dieselPrice - 20.0f).coerceAtLeast(0f))}/L Base",
+                    rate = viewModel.formatUnitPrice(dieselPumpPrice, "L"),
+                    basePrice = "OGRA: Rs. ${String.format(java.util.Locale.US, "%.2f", dieselPrice)}/L (+Rs 2.50 Pump Rate)",
                     icon = Icons.Filled.DirectionsCar,
                     accentColor = Color(0xFF2563EB),
-                    badgeText = "OGRA Rate",
+                    badgeText = "Pump Rate",
                     modifier = Modifier.weight(1f),
                     onOrderClick = { onSelectService("Diesel") }
                 )
@@ -18278,7 +18302,7 @@ fun LahoreFuelMarketWidget(
             ) {
                 CompactFuelRateItem(
                     label = "High-Octane",
-                    rate = viewModel.formatUnitPrice(octanePrice, "L"),
+                    rate = viewModel.formatUnitPrice(octanePumpPrice, "L"),
                     accentColor = Color(0xFF7C3AED),
                     modifier = Modifier.weight(1f)
                 )

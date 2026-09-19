@@ -396,9 +396,9 @@ fun CategoryGridSection(
 ) {
     var selectedTab by remember { mutableIntStateOf(0) } // 0: All Services, 1: Emergency & Fuel, 2: Care & Maintenance
 
-    val livePetrol = viewModel?.petrolPrice?.collectAsState()?.value ?: 272.82f
-    val liveDiesel = viewModel?.dieselPrice?.collectAsState()?.value ?: 273.40f
-    val liveLpg = viewModel?.lpgGasPrice?.collectAsState()?.value ?: 241.43f
+    val livePetrol = viewModel?.petrolPumpPrice?.collectAsState()?.value ?: 291.88f
+    val liveDiesel = viewModel?.dieselPumpPrice?.collectAsState()?.value ?: 292.34f
+    val liveLpg = viewModel?.lpgGasPrice?.collectAsState()?.value ?: 258.65f
 
     val displayedCategories = when (selectedTab) {
         0 -> categories
@@ -739,10 +739,10 @@ fun CategoryDetailModal(
     val deviceLng by viewModel.deviceLongitude.collectAsState()
     val liveLocationAddr by viewModel.liveLocationCoordinates.collectAsState()
 
-    // Dynamic Live Rates from ViewModel (OGRA notified)
-    val livePetrol by viewModel.petrolPrice.collectAsState()
-    val liveDiesel by viewModel.dieselPrice.collectAsState()
-    val liveOctane by viewModel.highOctanePrice.collectAsState()
+    // Dynamic Live Petrol Pump Rates from ViewModel (OGRA notified + Rs. 2.50/L pump rate)
+    val livePetrol by viewModel.petrolPumpPrice.collectAsState()
+    val liveDiesel by viewModel.dieselPumpPrice.collectAsState()
+    val liveOctane by viewModel.highOctanePumpPrice.collectAsState()
     val liveLpg by viewModel.lpgGasPrice.collectAsState()
 
     val getEffectivePrice = remember(category.id, livePetrol, liveDiesel, liveOctane, liveLpg) {
