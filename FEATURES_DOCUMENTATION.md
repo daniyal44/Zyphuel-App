@@ -1,5 +1,5 @@
 # 🚀 Zyphuel App Features & Technical Documentation
-**App Version:** `v2.6.4.0.0.10 (Build 38)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** `2026`
+**App Version:** `v2.6.4.0.0.11 (Build 39)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** `September 2026`
 
 Welcome to the complete architectural and functional guide for the **Zyphuel** Android application. This document outlines every single feature, function, database entity, and user flow from start to finish.
 
@@ -7,11 +7,15 @@ Welcome to the complete architectural and functional guide for the **Zyphuel** A
 
 ## 📋 Table of Contents & Modular Documentation Files Index
 
-Below is the complete index of all **dedicated documentation files** (including the Master Audit & Zero-Deletion Catalog, 11 modular feature guides in `/docs`, system architecture, and persistent project memory) covering every aspect of Zyphuel:
+Below is the complete index of all **dedicated documentation files** (including the Master Audit & Zero-Deletion Catalog, 11 modular feature guides in `/docs`, release logs, vibe-coding context files, system architecture, and persistent project memory) covering every aspect of Zyphuel:
 
 | # | File Name | Category | Primary Focus & Functions Covered |
 | :-: | :--- | :--- | :--- |
 | **⭐** | [`GLOBAL_AUDIT_AND_FEATURE_INTEGRITY.md`](/GLOBAL_AUDIT_AND_FEATURE_INTEGRITY.md) | **Master Audit & Integrity** | **Complete catalog of 100% working features, disconnected components, UX/safety rules & missing feature blueprints.** |
+| **-** | [`changes.md`](/changes.md) | Release Audit | Complete log of all modifications introduced in v2.6.4.0.0.11 (Petrol pump rate engine +Rs 2.50/L, Order page updates). |
+| **-** | [`remove.md`](/remove.md) | Deprecation & Removals | Legacy hardcoded rates, unadjusted calculations, and deprecated code paths. |
+| **-** | [`delete.md`](/delete.md) | Deletion & Purge Audit | Cleanups, model retention verification (`UserEntity`, `OrderEntity`, `AuditLogEntity`), and cache purges. |
+| **-** | [`vibe-coding-context-files/`](/vibe-coding-context-files/) | AI Context Files | 8 persistent context files (`architecture.md`, `database.md`, `error-handling.md`, `phases.md`, etc.). |
 | **-** | [`ARCHITECTURE.md`](/ARCHITECTURE.md) | System Architecture | MVVM architecture, layer stack diagram, directory structure, data flow constraints. |
 | **-** | [`MEMORY.md`](/MEMORY.md) | Project Memory & Log | Evolution history, immutable development rules, phase completion records, entity schema. |
 | **1** | [`docs/01_USER_ROLES_AND_AUTHENTICATION.md`](/docs/01_USER_ROLES_AND_AUTHENTICATION.md) | Security & User Control | Customer, Rider & Admin registration, SHA-256 login, role routing. |
@@ -1105,4 +1109,46 @@ Zyphuel v2.4.0 introduces a comprehensive 10-category on-demand automotive and m
 * **Build Versioning Rules Enforcement (`app/build.gradle.kts`)**:
   - Incremented `versionCode` from `37` to `38`.
   - Advanced `versionName` to `"2.6.4.0.0.10"`.
+
+---
+
+### 29. Petrol Pump Rate Engine (+Rs. 2.50/L), Order Page Calculations & Vibe Coding Context Files (v2.6.4.0.0.11 Build 39)
+* **Official Petrol Pump Rate Engine (+Rs. 2.50 / Litre Surcharge)**:
+  - **Fuel Applicability**: Applied a fixed retail petrol pump markup of **+Rs. 2.50 per litre** to **Petrol**, **Diesel**, and **High-Octane** (`basePrice + FeeConstants.PETROL_PUMP_RATE_SURCHARGE`).
+  - **Dynamic Market Resistance**: Whether base OGRA fuel rates fluctuate downwards, upwards, or stay identical, the retail pump rate offset is consistently and immutably enforced across all calculations.
+  - **LPG & Pure Water Exemption**: Factory-sealed LPG cylinders and pure drinking water bottles remain exempt from the petrol pump surcharge as they are not retail petrol pump fuels.
+  - **`FeeConstants.kt` Constants & Helpers**:
+    - Added `PETROL_PUMP_RATE_SURCHARGE = 2.50` and `PETROL_PUMP_RATE_SURCHARGE_FLOAT = 2.50f`.
+    - Added `isPumpRateApplicable(serviceType: String?): Boolean`.
+    - Added overloaded `getPumpRate(basePrice, serviceType)` calculation helpers.
+* **Order Page & Dialog Upgrades (`OrderDialog` in `Screens.kt`)**:
+  - **Live Petrol Pump Unit Prices**: Petrol, Diesel, and High-Octane product cards display the active petrol pump rate with explicit badges `(Pump Rate • incl. +Rs 2.5/L)` alongside the base OGRA price comparison.
+  - **Dynamic Subtotal Calculations**: Item subtotals for fuel items are calculated accurately via `quantity * pumpPrice`.
+  - **Transparent Summary Breakdown**: Introduced an explicit `Pump Rate Included (+Rs 2.50/L)` row in the order breakdown summarizing the exact pump surcharge included in the order.
+  - **Grand Total Consistency**: Ensures `placeOrder()` receives the exact total price reflecting active petrol pump rates.
+* **Customer Home & Rates Market Widget Enhancements**:
+  - **`CustomerHomeScreen` Fuel Cards**: Display live petrol pump rates (e.g. Rs. 291.88/L for Petrol) with badge `Pump Rate (+Rs 2.50)`.
+  - **`LahoreFuelMarketWidget` / `RatesScreen`**: Petrol and Diesel highlight cards display the Petrol Pump Rate as primary rate, with base OGRA price comparison shown beneath.
+* **Category Repository Live Price Synchronization (`CategoryRepository.kt`, `CategoryComponents.kt`)**:
+  - `syncLiveFuelPrices()` synchronizes the +Rs. 2.50 petrol pump rate directly into `petrol_regular`, `petrol_octane`, `diesel_regular`, and `diesel_generator` subcategories so that all category screens, search results, and booking dialogs reflect the petrol pump prices.
+* **Release Audit Documentation Files (`changes.md`, `remove.md`, `delete.md`)**:
+  - Created [`changes.md`](/changes.md) detailing all modifications in v2.6.4.0.0.11.
+  - Created [`remove.md`](/remove.md) documenting deprecated flat rates and replaced code paths.
+  - Created [`delete.md`](/delete.md) logging cleanups and model retention checks.
+* **Vibe Coding Context Files Integration (`vibe-coding-context-files/`)**:
+  - Imported and adapted 8 persistent AI context files from `D:\Games\vibe-coding-context-files\vibe-coding-context-files`:
+    - `README.md`: Overview of the 6+ context files.
+    - `architecture.md`: Tailored for Zyphuel Kotlin/Compose, MVVM, Room, Firestore, and telematics.
+    - `database.md`: Complete Room SQLite schema (`users`, `orders`, `audit_logs`, `notifications`, `marked_locations`, `vehicles`).
+    - `error-handling.md`: Error handling, input validation, and UI snackbars.
+    - `phases.md`: 4 production phases from MVP to Petrol Pump Rate Engine.
+    - `prompts.md`: Gemini 2.0 Flash OGRA rates grounding prompt and AI Assistant prompt.
+    - `security.md`: AES-256 GCM storage, Biometrics, anti-tamper, and Play Store policies.
+    - `generator-prompt.md`: Base context generation prompt.
+* **Legal Policy & Compliance Synchronization**:
+  - Updated [`TERMS_AND_CONDITIONS.md`](/TERMS_AND_CONDITIONS.md), [`PRIVACY_POLICY.md`](/PRIVACY_POLICY.md), and [`TermsAndPrivacyDialog.kt`](file:///d:/Games/New%20folder-web/Claude/app/src/main/java/com/example/ui/components/TermsAndPrivacyDialog.kt) to incorporate disclosures on the retail petrol pump rate adjustment (+Rs. 2.50/L).
+* **Build Versioning**:
+  - Incremented `versionCode` from `38` to `39`.
+  - Advanced `versionName` to `"2.6.4.0.0.11"`.
+
 

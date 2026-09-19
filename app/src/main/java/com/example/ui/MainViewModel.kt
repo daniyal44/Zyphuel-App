@@ -35,6 +35,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
@@ -763,10 +764,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private val _petrolPrice = MutableStateFlow(sharedPrefs.getFloat("petrol", 275.60f))
+    private val _petrolPrice = MutableStateFlow(sharedPrefs.getFloat("petrol", 289.38f))
     val petrolPrice = _petrolPrice.asStateFlow()
 
-    private val _dieselPrice = MutableStateFlow(sharedPrefs.getFloat("diesel", 284.20f))
+    private val _dieselPrice = MutableStateFlow(sharedPrefs.getFloat("diesel", 289.84f))
     val dieselPrice = _dieselPrice.asStateFlow()
 
     private val _highOctanePrice = MutableStateFlow(sharedPrefs.getFloat("high_octane", 325.00f))
@@ -777,6 +778,30 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _waterPrice = MutableStateFlow(sharedPrefs.getFloat("water", 50.0f))
     val waterPrice = _waterPrice.asStateFlow()
+
+    // --- Retail Petrol Pump Rates (Base OGRA Rate + Rs. 2.50/L Petrol Pump Surcharge) ---
+    val petrolPumpPrice: StateFlow<Float> = _petrolPrice
+        .map { it + com.example.util.FeeConstants.PETROL_PUMP_RATE_SURCHARGE_FLOAT }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, _petrolPrice.value + com.example.util.FeeConstants.PETROL_PUMP_RATE_SURCHARGE_FLOAT)
+
+    val dieselPumpPrice: StateFlow<Float> = _dieselPrice
+        .map { it + com.example.util.FeeConstants.PETROL_PUMP_RATE_SURCHARGE_FLOAT }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, _dieselPrice.value + com.example.util.FeeConstants.PETROL_PUMP_RATE_SURCHARGE_FLOAT)
+
+    val highOctanePumpPrice: StateFlow<Float> = _highOctanePrice
+        .map { it + com.example.util.FeeConstants.PETROL_PUMP_RATE_SURCHARGE_FLOAT }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, _highOctanePrice.value + com.example.util.FeeConstants.PETROL_PUMP_RATE_SURCHARGE_FLOAT)
+
+    fun getEffectiveFuelPumpPrice(serviceType: String): Float {
+        return when {
+            serviceType.contains("Diesel", ignoreCase = true) -> dieselPumpPrice.value
+            serviceType.contains("Octane", ignoreCase = true) || serviceType.contains("HOBB", ignoreCase = true) -> highOctanePumpPrice.value
+            serviceType.contains("Petrol", ignoreCase = true) -> petrolPumpPrice.value
+            serviceType.contains("LPG", ignoreCase = true) || serviceType.contains("Gas", ignoreCase = true) -> lpgGasPrice.value
+            serviceType.contains("Water", ignoreCase = true) -> waterPrice.value
+            else -> petrolPumpPrice.value
+        }
+    }
 
     // --- Currency Conversion State (PKR vs GBP) ---
     private val _selectedCurrency = MutableStateFlow("PKR") // "PKR" or "GBP"
@@ -912,18 +937,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val smtpConfig: StateFlow<com.example.security.SmtpConfig> = _smtpConfig.asStateFlow()
 
     init {
-        // Enforce Official OGRA Pakistan Fuel & Gas Rates
+        // Enforce Official OGRA Pakistan Fuel & Gas Rates (e.g. Base Petrol Rs. 289.38 -> Petrol Pump Rate Rs. 291.88)
         sharedPrefs.edit()
-            .putFloat("petrol", 275.60f)
-            .putFloat("diesel", 284.20f)
+            .putFloat("petrol", 289.38f)
+            .putFloat("diesel", 289.84f)
             .putFloat("high_octane", 325.00f)
             .putFloat("lpg_gas", 258.65f)
             .putFloat("water", 50.0f)
             .putString("last_sync_time", "Official OGRA Pakistan Feed")
             .apply()
         
-        _petrolPrice.value = 275.60f
-        _dieselPrice.value = 284.20f
+        _petrolPrice.value = 289.38f
+        _dieselPrice.value = 289.84f
         _highOctanePrice.value = 325.00f
         _lpgGasPrice.value = 258.65f
         _waterPrice.value = 50.00f

@@ -206,7 +206,7 @@ fun TermsAndPrivacyDialog(
                             LegalBulletPoint("Delivery riders have the statutory authority and safety obligation to decline dispensing if on-site conditions present a fire or safety hazard.")
 
                             LegalSectionTitle("4. Transparent Pricing & Cash on Delivery")
-                            LegalParagraph("All petroleum and LPG prices strictly adhere to official notified OGRA retail prices. Delivery charges are transparently itemized prior to checkout. Payment is collected 100% via Cash on Delivery (COD) upon inspection at your doorstep.")
+                            LegalParagraph("All petroleum and LPG prices strictly adhere to official notified OGRA retail prices. In accordance with petroleum retail distribution in Lahore, retail rates for Super Petrol, High-Speed Diesel, and High-Octane include a standard petrol pump rate adjustment of Rs. 2.50 per liter over base notifications, transparently calculated on checkout. Delivery charges are transparently itemized prior to checkout. Payment is collected 100% via Cash on Delivery (COD) upon inspection at your doorstep.")
 
                             LegalSectionTitle("5. Cancellations & Quality Assurance")
                             LegalParagraph("Orders may be cancelled free of charge prior to driver dispatch. Any quantity or quality inquiries can be reported immediately to our support team via in-app Live Support or WhatsApp within 2 hours of delivery.")
