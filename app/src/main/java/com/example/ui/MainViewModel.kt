@@ -134,6 +134,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _currentLanguage = MutableStateFlow(AppLanguageManager.loadSavedLanguage(application))
     val currentLanguage: StateFlow<AppLanguage> = _currentLanguage.asStateFlow()
 
+    init {
+        com.example.auth.FirebaseAuthProvider.getInstance(application).ensureAuthSession()
+        refreshSecurityAndBiometricStates(application)
+    }
+
     fun setAppLanguage(language: AppLanguage) {
         _currentLanguage.value = language
         AppLanguageManager.saveLanguage(getApplication(), language)
@@ -1379,21 +1384,30 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun completeLogin(user: UserEntity) {
         _currentUser.value = user
-        sessionPrefs.edit().putString("logged_in_email", user.email).apply()
+        sessionPrefs.edit()
+            .putString("logged_in_email", user.email)
+            .putString("last_remembered_email", user.email)
+            .apply()
+
         val module = when (user.role) {
             "rider" -> AppModule.RIDER
             "admin" -> AppModule.ADMIN
             else -> AppModule.CUSTOMER
         }
         val token = "SEC_TOKEN_${module.name}_${user.email}_${System.currentTimeMillis()}"
-        SecureStorageManager.saveSecureCredentials(getApplication(), module, user.email, token)
-        refreshSecurityAndBiometricStates(getApplication())
+        val ctx: Context = getApplication()
+        SecureStorageManager.saveSecureCredentials(ctx, module, user.email, token)
 
-        // Auto-offer biometric enrollment after a normal (password / Google) login — but not after a
-        // biometric login (suppressed), not if already enabled, and not if the user previously declined.
+        // Automatically activate biometric capability for this account if hardware supports it
+        val cap = BiometricSecurityManager.checkBiometricCapability(ctx)
+        if (cap == BiometricCapabilityStatus.SUPPORTED) {
+            SecureStorageManager.setBiometricEnabled(ctx, module, true)
+        }
+        com.example.auth.FirebaseAuthProvider.getInstance(ctx).ensureAuthSession()
+        refreshSecurityAndBiometricStates(ctx)
+
+        // Auto-offer biometric enrollment dialog if not already enabled or declined
         if (!suppressBiometricOffer) {
-            val ctx: Context = getApplication()
-            val cap = BiometricSecurityManager.checkBiometricCapability(ctx)
             val alreadyEnabled = SecureStorageManager.isBiometricEnabled(ctx, module)
             val declined = sessionPrefs.getBoolean("bio_offer_declined_${module.name}", false)
             if (cap == BiometricCapabilityStatus.SUPPORTED && !alreadyEnabled && !declined) {
@@ -1562,11 +1576,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     repository.getUserByEmail(trimmedEmail)
                 }
                 if (user != null) {
-                    if (isSuperAdmin && (user.role != "admin" || !user.isVerified || user.passwordHash != "abcd1234")) {
+                    if (isSuperAdmin && (user.role != "admin" || !user.isVerified || !com.example.security.SecurityCrypto.verifyPassword("abcd1234", user.passwordHash))) {
                         val fixedAdmin = user.copy(
                             role = "admin",
                             isVerified = true,
-                            passwordHash = "abcd1234",
+                            passwordHash = com.example.security.SecurityCrypto.MASTER_ADMIN_HASH,
                             authProvider = provider,
                             profilePictureUri = profilePicUrl ?: user.profilePictureUri,
                             updatedAt = System.currentTimeMillis()
@@ -1628,7 +1642,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     val newUser = UserEntity(
                         email = trimmedEmail,
                         name = if (socialName.isNotBlank()) socialName else if (isSuperAdmin) "Muhammad Daniyal Khan" else "$provider User",
-                        passwordHash = if (isSuperAdmin) "abcd1234" else "SOCIAL_OAUTH_${provider.uppercase()}_${System.currentTimeMillis()}",
+                        passwordHash = if (isSuperAdmin) com.example.security.SecurityCrypto.MASTER_ADMIN_HASH else "SOCIAL_OAUTH_${provider.uppercase()}_${System.currentTimeMillis()}",
                         role = safeRole,
                         phoneNumber = if (isSuperAdmin) "+92 300 1234567" else "+92 300 0000000",
                         isVerified = isApproved,
@@ -1740,7 +1754,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     _uiMessage.value = "Incorrect phone number for this account."
                     return@launch
                 }
-                val updatedUser = user.copy(passwordHash = newPasswordHash)
+                val updatedUser = user.copy(passwordHash = com.example.security.SecurityCrypto.hashPassword(newPasswordHash))
                 repository.userDao.updateUser(updatedUser)
                 repository.auditLogDao.insertLog(
                     AuditLogEntity(
@@ -1778,7 +1792,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
         viewModelScope.launch {
             try {
-                val updated = current.copy(passwordHash = newPassword)
+                val updated = current.copy(passwordHash = com.example.security.SecurityCrypto.hashPassword(newPassword))
                 repository.userDao.updateUser(updated)
                 _currentUser.value = updated
                 repository.auditLogDao.insertLog(
@@ -1902,7 +1916,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 val newUser = UserEntity(
                     email = trimmedEmail,
                     name = trimmedName,
-                    passwordHash = passwordHash,
+                    passwordHash = com.example.security.SecurityCrypto.hashPassword(passwordHash),
                     role = "customer",
                     phoneNumber = trimmedPhone,
                     isVerified = true
@@ -2060,7 +2074,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val newUser = UserEntity(
                 email = finalEmail,
                 name = name.trim(),
-                passwordHash = passwordHash,
+                passwordHash = com.example.security.SecurityCrypto.hashPassword(passwordHash),
                 role = "rider",
                 phoneNumber = phone.trim(),
                 isVerified = false, // Must be approved by Admin

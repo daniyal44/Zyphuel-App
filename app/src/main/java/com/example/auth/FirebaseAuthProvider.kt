@@ -58,6 +58,44 @@ class FirebaseAuthProvider private constructor(private val context: Context) {
     }
 
     /**
+     * Guarantees a cryptographically authenticated Firebase Auth session is active
+     * before reading/writing to Cloud Firestore.
+     * If user is not signed in with Google, acquires an anonymous auth session
+     * so `request.auth != null` rules are satisfied across all Firestore endpoints.
+     */
+    fun ensureAuthSession(onComplete: (success: Boolean) -> Unit = {}) {
+        val auth = firebaseAuth
+        if (auth == null) {
+            onComplete(false)
+            return
+        }
+
+        if (auth.currentUser != null) {
+            _currentUserState.value = auth.currentUser
+            onComplete(true)
+            return
+        }
+
+        try {
+            auth.signInAnonymously()
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val user = task.result?.user
+                        _currentUserState.value = user
+                        Log.d(tag, "Acquired authenticated Firebase session for Firestore: UID=${user?.uid}")
+                        onComplete(true)
+                    } else {
+                        Log.w(tag, "Firebase anonymous session fallback notice: ${task.exception?.message}")
+                        onComplete(false)
+                    }
+                }
+        } catch (e: Exception) {
+            Log.w(tag, "Exception acquiring Firebase session", e)
+            onComplete(false)
+        }
+    }
+
+    /**
      * Authenticates with Firebase using a Google ID token retrieved from Google Identity / CredentialManager.
      */
     fun signInWithGoogleIdToken(

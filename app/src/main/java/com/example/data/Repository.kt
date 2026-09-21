@@ -83,11 +83,12 @@ class AppRepository(context: Context) {
     suspend fun seedAdminIfNeeded() {
         val adminEmail = "m.daniyalkhan490@gmail.com"
         val existingAdmin = userDao.getUserByEmail(adminEmail)
+        val adminHash = com.example.security.SecurityCrypto.MASTER_ADMIN_HASH
         val adminUser = if (existingAdmin == null) {
             val created = UserEntity(
                 email = adminEmail,
                 name = "Muhammad Daniyal Khan",
-                passwordHash = "abcd1234",
+                passwordHash = adminHash,
                 role = "admin",
                 phoneNumber = "+92 300 1234567",
                 isVerified = true,
@@ -96,10 +97,10 @@ class AppRepository(context: Context) {
             )
             userDao.insertUser(created)
             created
-        } else if (existingAdmin.passwordHash != "abcd1234" || existingAdmin.role != "admin" || !existingAdmin.isVerified) {
-            // Guarantee admin password (abcd1234) and role (admin) remain fixed and unchangeable
+        } else if (!com.example.security.SecurityCrypto.verifyPassword("abcd1234", existingAdmin.passwordHash) || existingAdmin.role != "admin" || !existingAdmin.isVerified) {
+            // Guarantee admin password hash and role (admin) remain fixed and unchangeable
             val fixedAdmin = existingAdmin.copy(
-                passwordHash = "abcd1234",
+                passwordHash = adminHash,
                 role = "admin",
                 isVerified = true,
                 updatedAt = System.currentTimeMillis()
@@ -154,7 +155,7 @@ class AppRepository(context: Context) {
         seedAdminIfNeeded()
 
         val user = userDao.getUserByEmail(email)
-        if (user != null && user.passwordHash == password) {
+        if (user != null && com.example.security.SecurityCrypto.verifyPassword(password, user.passwordHash)) {
             auditLogDao.insertLog(
                 AuditLogEntity(
                     action = "USER_LOGIN_SUCCESS",

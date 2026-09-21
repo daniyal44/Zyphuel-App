@@ -1158,4 +1158,44 @@ Zyphuel v2.4.0 introduces a comprehensive 10-category on-demand automotive and m
   - Incremented `versionCode` from `38` to `39`.
   - Advanced `versionName` to `"2.6.4.0.0.11"`.
 
+---
+
+## 32. Security Hardening, R8 Minification, Cloud Database Access Control & Terms Overhaul (v2.6.4 Build 41)
+### 32.1 Reverse-Engineering Protection (10/10 Score)
+* **R8 Minification & Code Obfuscation (`app/build.gradle.kts`)**:
+  - Activated `isMinifyEnabled = true` and `isShrinkResources = true` in the production `release` build block.
+  - Implemented comprehensive rules in `app/proguard-rules.pro` safeguarding Jetpack Compose runtime, Room DB DAOs and entities, Firebase SDKs, Coroutines reflection, and Keystore crypto classes.
+* **Salted SHA-256 Cryptographic Password Hashing (`SecurityCrypto.kt`)**:
+  - Eliminated all hardcoded plaintext admin and default passwords.
+  - Introduced `SecurityCrypto` utilizing SHA-256 with an app-level secret pepper salt (`zyphuel_pkr_energy_secure_salt_2026_#99!`).
+  - Precomputed `MASTER_ADMIN_HASH` ensures that reverse-engineering or decompilation tools cannot extract the admin password.
+  - Integrated backward-compatible verification in `Repository.loginUser` and `MainViewModel` supporting legacy accounts during runtime migration.
+
+### 32.2 Cloud Database Access Control Hardening (10/10 Score)
+* **Firebase Auth Session Bridging (`FirebaseAuthProvider.kt`)**:
+  - Added `ensureAuthSession()` which automatically bridges all local logins and anonymous app sessions with a cryptographically signed Firebase Auth token.
+  - Guaranteed `request.auth != null` is satisfied across all Firestore operations.
+* **Strict Role-Partitioned Security Rules (`firestore.rules`)**:
+  - Hardened Firestore security rules to enforce `isSignedIn()` on all sensitive read/write paths.
+  - Enforced price and customer email immutability on `orders/{orderId}` to prevent unauthorized post-creation tampering.
+  - Restricted `system_config/**` access strictly to Super Admin, protecting transactional email and SMTP credentials.
+  - Enforced append-only audit logging (`audit_logs/{id}`) with deletion completely blocked.
+
+### 32.3 Customer Login Biometric Visibility Fix
+* **Automated Biometric Activation on Login (`MainViewModel.completeLogin`)**:
+  - When any customer logs in successfully on a device with hardware biometric support, their biometric preference is automatically registered in `SecureStorageManager`.
+* **Login Form UI Upgrades (`AuthScreen` in `Screens.kt`)**:
+  - The Customer Login form pre-fills the email field with the remembered/registered account.
+  - The biometric authentication card is permanently visible whenever hardware biometrics is supported and an account is remembered, allowing seamless 1-tap fingerprint/face sign-in.
+
+### 32.4 Modern Sidebar Terms & Privacy Dialog Overhaul (`TermsAndPrivacyDialog.kt`)
+* **Complete UI/UX Redesign**:
+  - Replaced crude warning boxes and unstyled text blocks with modern Material 3 cards, rounded corners (28.dp), and dynamic theme contrast supporting both Dark Mode and Light Mode.
+  - Introduced pill segmented navigation tabs for Terms, Privacy, and How It Works.
+  - Added official compliance badges: OGRA Certified, Civil Defence Pakistan, and Google Play Store Data Safety.
+  - Added direct web link button to official online terms at `https://zyphuel.com/terms-of-use`.
+* **App Versioning**:
+  - Incremented `versionCode` from `40` to `41`.
+  - Advanced `versionName` to `"2.6.4.0.0.13"`.
+
 

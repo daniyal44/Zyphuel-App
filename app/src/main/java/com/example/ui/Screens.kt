@@ -2385,7 +2385,14 @@ fun AuthDrawerContent(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AuthScreen(viewModel: MainViewModel, isRegister: Boolean, isRider: Boolean) {
-    var email by remember { mutableStateOf("") }
+    val context = LocalContext.current
+    val bioModule = if (isRider) com.example.security.AppModule.RIDER else com.example.security.AppModule.CUSTOMER
+    val rememberedEmail = remember(bioModule) {
+        com.example.security.SecureStorageManager.getRegisteredEmail(context, bioModule)
+            ?: context.getSharedPreferences("zyphuel_session", Context.MODE_PRIVATE).getString("last_remembered_email", "")
+            ?: ""
+    }
+    var email by remember { mutableStateOf(rememberedEmail) }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var name by remember { mutableStateOf("") }
@@ -2435,7 +2442,6 @@ fun AuthScreen(viewModel: MainViewModel, isRegister: Boolean, isRider: Boolean) 
     }
 
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
@@ -3538,14 +3544,17 @@ fun AuthScreen(viewModel: MainViewModel, isRegister: Boolean, isRider: Boolean) 
                         val isCustomerBioEnabled by viewModel.isCustomerBioEnabled.collectAsState()
                         val isRiderBioEnabled by viewModel.isRiderBioEnabled.collectAsState()
                         val isBioEnabled = if (isRider) isRiderBioEnabled else isCustomerBioEnabled
+                        val bioCapability by viewModel.biometricCapability.collectAsState()
+                        val isHardwareBioSupported = bioCapability == com.example.security.BiometricCapabilityStatus.SUPPORTED
 
                         val registeredEmail = com.example.security.SecureStorageManager.getRegisteredEmail(context, bioModule)
                         val fragmentActivity = context as? androidx.fragment.app.FragmentActivity
 
                         val targetUserEmail = if (email.isNotBlank()) email.trim().lowercase() else (registeredEmail ?: "")
                         val displayEmail = if (targetUserEmail.isNotBlank()) targetUserEmail else if (registeredEmail != null) registeredEmail else "Registered Account"
+                        val hasStoredAccount = !registeredEmail.isNullOrBlank() || targetUserEmail.isNotBlank()
 
-                        if (!isRegister && isBioEnabled && !registeredEmail.isNullOrBlank()) {
+                        if (!isRegister && (isBioEnabled || isHardwareBioSupported) && hasStoredAccount) {
                             Spacer(modifier = Modifier.height(16.dp))
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
