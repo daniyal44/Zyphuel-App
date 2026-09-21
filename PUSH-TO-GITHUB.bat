@@ -91,6 +91,12 @@ git remote remove origin 2>nul
 git remote add origin %REPO%
 if errorlevel 1 goto GITFAIL
 
+where node >nul 2>&1
+if not errorlevel 1 (
+    echo  [i] Updating code-based velocity dashboard...
+    node scripts\generate_github_graph.js >nul 2>&1
+)
+
 echo  [4/5] Files add + commit kar rahe hain...
 git add -A
 if errorlevel 1 goto GITFAIL
