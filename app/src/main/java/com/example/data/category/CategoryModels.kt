@@ -135,8 +135,8 @@ object CategoryCatalogSeed {
                     // Diesel (2 subcategories)
                     Subcategory("diesel_regular", "fuel_energy", "Regular Diesel", "High-Speed Diesel for commercial & heavy vehicles", "DIESEL", true, 284.20, "L", "Direct Dispatch", badgeText = "OGRA Live"),
                     Subcategory("diesel_generator", "fuel_energy", "Generator Diesel", "Bulk & backup diesel delivery for home and commercial generators", "DIESEL", true, 284.20, "L", "Scheduled Dispatch", requiresVehicle = false),
-                    // Gas (Only 1 Single Option)
-                    Subcategory("lpg_sealed_cylinder", "fuel_energy", "Gas Cylinder", "Certified factory-sealed 11.8kg cylinder with safety seal inspection", "GAS", true, 258.65, "Kg", "Direct Dispatch", requiresVehicle = false, operationalRestrictions = "Strictly OGRA & Civil Defence verified cylinders only.")
+                    // Gas (Only 1 Single Option - Temporarily Unavailable)
+                    Subcategory("lpg_sealed_cylinder", "fuel_energy", "Gas Cylinder", "Certified factory-sealed 11.8kg cylinder with safety seal inspection", "GAS", false, 258.65, "Kg", "Direct Dispatch", requiresVehicle = false, badgeText = "Unavailable", operationalRestrictions = "Strictly OGRA & Civil Defence verified cylinders only.")
                 )
             ),
 
@@ -400,28 +400,28 @@ object CategoryCatalogSeed {
                 )
             ),
 
-            // 9. WATER DELIVERY
+            // 9. WATER DELIVERY (Temporarily Unavailable)
             Category(
                 id = "water_delivery",
                 name = "Water Delivery",
                 shortDescription = "Purified mineral water, dispenser bottles & bulk tankers",
                 iconName = "InvertColors",
-                isActive = true,
+                isActive = false,
                 sortOrder = 9,
-                availabilityStatus = CategoryAvailability.AVAILABLE,
+                availabilityStatus = CategoryAvailability.CLOSED,
                 serviceType = CategoryServiceType.ON_DEMAND_DELIVERY,
                 supportedVehicleTypes = listOf(VehicleType.CAR, VehicleType.VAN, VehicleType.COMMERCIAL),
                 locationCoverage = listOf("All Lahore Residential & Commercial Zones"),
-                estimatedResponseTime = "25-40 mins",
+                estimatedResponseTime = "Temporarily Unavailable",
                 pricingConfig = PricingConfig(deliveryFee = 50.0, unitLabel = "Unit"),
                 backendServiceMapping = "water_v1",
                 subcategories = listOf(
-                    Subcategory("water_drinking", "water_delivery", "Drinking Water", "Certified 19-Litre multi-stage RO purified drinking water bottle", "BOTTLED", true, 180.0, "19L Bottle", "30 mins", requiresVehicle = false),
-                    Subcategory("water_bottles", "water_delivery", "Water Bottles", "Pack of 12 x 1.5L premium mineral water bottles", "BOTTLED", true, 960.0, "Pack", "30 mins", requiresVehicle = false),
-                    Subcategory("water_can", "water_delivery", "Water Can", "Portable 10-Litre food-grade handled container for events & trips", "CONTAINER", true, 120.0, "10L Can", "30 mins", requiresVehicle = false),
-                    Subcategory("water_dispenser", "water_delivery", "Water Dispenser Supply", "Bi-weekly scheduled 4-bottle home or office refill plan", "SUBSCRIPTION", true, 700.0, "Bundle", "Scheduled", requiresVehicle = false),
-                    Subcategory("water_bulk", "water_delivery", "Bulk Water", "1,000 to 3,000 Litre clean water supply for overhead tanks", "BULK", true, 3200.0, "Tank", "60 mins", requiresVehicle = false),
-                    Subcategory("water_tanker", "water_delivery", "Water Tanker", "5,000+ Litre high-capacity commercial and residential tanker dispatch", "BULK", true, 6500.0, "Tanker", "90 mins", requiresVehicle = false, operationalRestrictions = "Dispatched via verified municipal water haulers.")
+                    Subcategory("water_drinking", "water_delivery", "Drinking Water", "Certified 19-Litre multi-stage RO purified drinking water bottle", "BOTTLED", false, 180.0, "19L Bottle", "Unavailable", requiresVehicle = false, badgeText = "Unavailable"),
+                    Subcategory("water_bottles", "water_delivery", "Water Bottles", "Pack of 12 x 1.5L premium mineral water bottles", "BOTTLED", false, 960.0, "Pack", "Unavailable", requiresVehicle = false, badgeText = "Unavailable"),
+                    Subcategory("water_can", "water_delivery", "Water Can", "Portable 10-Litre food-grade handled container for events & trips", "CONTAINER", false, 120.0, "10L Can", "Unavailable", requiresVehicle = false, badgeText = "Unavailable"),
+                    Subcategory("water_dispenser", "water_delivery", "Water Dispenser Supply", "Bi-weekly scheduled 4-bottle home or office refill plan", "SUBSCRIPTION", false, 700.0, "Bundle", "Unavailable", requiresVehicle = false, badgeText = "Unavailable"),
+                    Subcategory("water_bulk", "water_delivery", "Bulk Water", "1,000 to 3,000 Litre clean water supply for overhead tanks", "BULK", false, 3200.0, "Tank", "Unavailable", requiresVehicle = false, badgeText = "Unavailable"),
+                    Subcategory("water_tanker", "water_delivery", "Water Tanker", "5,000+ Litre high-capacity commercial and residential tanker dispatch", "BULK", false, 6500.0, "Tanker", "Unavailable", requiresVehicle = false, badgeText = "Unavailable", operationalRestrictions = "Dispatched via verified municipal water haulers.")
                 )
             ),
 

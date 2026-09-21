@@ -1,5 +1,5 @@
 # 🚀 Zyphuel App Features & Technical Documentation
-**App Version:** `v2.6.4.0.0.11 (Build 39)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** `September 2026`
+**App Version:** `v2.6.4.0.0.14 (Build 42)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** `September 2026`
 
 Welcome to the complete architectural and functional guide for the **Zyphuel** Android application. This document outlines every single feature, function, database entity, and user flow from start to finish.
 
@@ -1197,5 +1197,50 @@ Zyphuel v2.4.0 introduces a comprehensive 10-category on-demand automotive and m
 * **App Versioning**:
   - Incremented `versionCode` from `40` to `41`.
   - Advanced `versionName` to `"2.6.4.0.0.13"`.
+
+---
+
+## 33. Streamlined Fuel Delivery UI, Water & Gas Unavailability, Pump Rate Surcharge Text Removal & Brand Color System (v2.6.4 Build 42)
+### 33.1 Water & Gas Services Temporary Unavailability
+* **Customer Home & Order Dialog Availability Lockdown (`Screens.kt`)**:
+  - Pure Drinking Water and LPG Gas cylinders are set to "Temporarily Unavailable" status across all customer ordering touchpoints.
+  - Interactive fuel cards on `CustomerHomeScreen` for Water and Gas show distinct red "Unavailable" status chips with muted container colors (`#FFF1F2`). Tapping displays an informational toast notification advising users that service is temporarily offline.
+  - Inside `OrderDialog`, Gas and Water selection checkboxes are completely disabled with high-visibility red `Unavailable` badges, preventing customers from queueing unfulfillable orders.
+  - The default state for Gas and Water selection checkboxes is preset to `false`.
+* **Category Catalog Seed Lockdown (`CategoryModels.kt`)**:
+  - In `CategoryCatalogSeed.getDefaultCategories()`, `lpg_sealed_cylinder` has been updated with `isActive = false` and `badgeText = "Unavailable"`.
+  - The `water_delivery` category has been locked down with `isActive = false`, `availabilityStatus = CategoryAvailability.CLOSED`, and all 6 subcategories set to `isActive = false` with `badgeText = "Unavailable"`.
+* **Fuel Rates Dialog (`FuelRatesDialog` in `Screens.kt`)**:
+  - Marked LPG Gas and Drinking Water items with `(Off) / Unavailable` status pills and muted red containers.
+
+### 33.2 Removal of Retail Surcharge Text ("Pump Rate (+Rs 2.50)")
+* **Total Omission of Surcharge Labeling**:
+  - Removed all user-facing instances of `Text("Pump Rate (+Rs 2.50)")`, `"(Pump Rate)"`, `"+Rs 2.50/L"`, and `badgeText = "Pump Rate"` across `CustomerHomeScreen`, `OrderDialog`, and `FuelRatesDialog`.
+  - Customers see clean, transparent fuel rates (Euro-V Petrol, HOBC 97-Octane, High-Speed Diesel) reflecting standard pump prices without confusing surcharge labels or calculations.
+  - Eliminated the `Pump Rate Included (+Rs 2.50/L)` surcharge line item row from the checkout breakdown in `OrderDialog`.
+
+### 33.3 Marketplace "All Services" Catalog Removal
+* **Streamlined Doorstep Delivery Flow (`CustomerHomeScreen` in `Screens.kt`)**:
+  - Completely removed the `CategoryGridSection` ("All Services" section and sub-services category catalog grid) from `CustomerHomeScreen`.
+  - Streamlined the Customer Home interface directly to on-demand petroleum fuel dispatch (Petrol, High-Octane, Diesel), significantly decluttering the view and accelerating order placement.
+
+### 33.4 Sidebar Terms & Privacy Policy Brand Alignment & High-Contrast Readability (`TermsAndPrivacyDialog.kt`)
+* **Brand Color Scheme Alignment**:
+  - Unified `TermsAndPrivacyDialog.kt` with official Zyphuel branding: `#0062FF` Electric Cobalt Blue (Primary/Active tabs), `#003087` Royal Navy (Dark accents/Titles), and `#EFF6FF` soft ice-blue tint.
+  - Completely eliminated washed-out/pale text styling. Replaced transparent alpha backgrounds with solid `#FFFFFF` cards, `#F8FAFC` slate-tinted inner boxes, and crisp 1-dp `#E2E8F0` borders.
+* **Sharp Charcoal Typography**:
+  - Enhanced contrast using `#0F172A` deep navy-black for headers and `#334155` dark slate for body copy, with 19–20.sp line heights for maximum legibility on AMOLED and LCD screens.
+* **Content Accuracy**:
+  - Updated legal terms and "How It Works" to explicitly state that Euro-V Petrol and High-Speed Diesel are actively dispatched, while Water and Gas delivery are temporarily unavailable.
+  - Removed all mentions of the internal `+Rs 2.50/L` surcharge from customer-facing legal dialog text.
+
+### 33.5 Biometric Hardware Login Card Post-Logout Visibility (`AuthScreen` in `Screens.kt`)
+* **Permanent Biometric Card Display**:
+  - Removed the restrictive `&& hasStoredAccount` requirement from the login biometric card condition (`isHardwareBioSupported && hasStoredAccount`), allowing the Biometric Card to remain permanently visible whenever device hardware biometrics is supported.
+  - Added automatic email field restoration upon logout (`LaunchedEffect(rememberedEmail)`), ensuring seamless single-tap fingerprint or face authentication without manual re-typing.
+* **App Versioning**:
+  - Incremented `versionCode` from `41` to `42`.
+  - Advanced `versionName` to `"2.6.4.0.0.14"`.
+
 
 
