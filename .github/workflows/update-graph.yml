@@ -1,18 +1,17 @@
-name: Update GitHub Activity Graph
+name: Update GitHub Code-Based Activity Dashboard
 
 on:
   push:
     branches:
       - main
     paths-ignore:
-      - '.github/assets/repo-activity-chart.svg'
       - 'README.md'
 
 permissions:
   contents: write
 
 jobs:
-  generate-graph:
+  update-code-dashboard:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -23,14 +22,14 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
 
-      - name: Generate Commit Activity SVG Graph
+      - name: Generate Code-Based Velocity & Activity Dashboard
         run: node scripts/generate_github_graph.js
 
-      - name: Commit and push updated graph
+      - name: Commit and push updated README dashboard
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add .github/assets/repo-activity-chart.svg
-          git diff --quiet && git diff --staged --quiet || (git commit -m "chore(graph): auto-update github commit velocity graph [skip ci]" && git push)
+          git add README.md
+          git diff --quiet && git diff --staged --quiet || (git commit -m "chore(dashboard): auto-update code-based engineering velocity graph [skip ci]" && git push)

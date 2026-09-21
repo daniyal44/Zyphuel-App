@@ -1,12 +1,12 @@
-# 🚚 Zyphuel Platform (Android v2.6.2 • Release 2026)
+# 🚚 Zyphuel Platform (Android v2.6.4 • Release 2026)
 
 <div align="center">
   <img src="company .png" width="140" height="140" alt="Zyphuel MDK Logo" />
   <h3>Pakistan's Premier On-Demand Energy & Clean Water Ecosystem</h3>
-  <p><b>Version 2.6.2 (Build 26) • Target SDK 36 • Android 15/16 Ready • Jetpack Compose Material 3 • Room DB • Real-Time Dual Notifications</b></p>
+  <p><b>Version 2.6.4.0.0.12 (Build 40) • Target SDK 36 • Android 15/16 Ready • Jetpack Compose Material 3 • Room DB • Real-Time Dual Notifications</b></p>
 
   <p>
-    <a href="https://github.com/daniyal44/Zyphuel-App"><img src="https://img.shields.io/badge/App%20Version-v2.6.2%20(Build%2026)-0284c7?style=for-the-badge&logo=android" alt="App Version v2.6.2" /></a>
+    <a href="https://github.com/daniyal44/Zyphuel-App"><img src="https://img.shields.io/badge/App%20Version-v2.6.4.0.0.12%20(Build%2040)-0284c7?style=for-the-badge&logo=android" alt="App Version v2.6.4.0.0.12" /></a>
     <a href="https://github.com/daniyal44/Zyphuel-App/commits/main"><img src="https://img.shields.io/github/commit-activity/m/daniyal44/Zyphuel-App?style=for-the-badge&color=0284c7&label=Monthly%20Changes" alt="Monthly Commits" /></a>
     <a href="https://github.com/daniyal44/Zyphuel-App/commits/main"><img src="https://img.shields.io/github/last-commit/daniyal44/Zyphuel-App?style=for-the-badge&color=10b981" alt="Last Commit" /></a>
     <a href="https://developer.android.com"><img src="https://img.shields.io/badge/Target%20SDK-36-emerald?style=for-the-badge" alt="Target SDK 36" /></a>
@@ -15,11 +15,97 @@
 
 ---
 
+<!-- START_VELOCITY_DASHBOARD -->
 ### 📊 Real-Time Engineering Velocity & Activity Dashboard (Auto-Updates on Push)
 
-<p align="center">
-  <img src="./.github/assets/repo-activity-chart.svg" alt="Zyphuel App Engineering Velocity & Git Activity Chart" width="100%" />
-</p>
+> **Repository Health & Architecture Telemetry** • Pure Code-Based Visualization • Zero Static Image Reliance
+
+| Metric | Current Status | Specification |
+| :--- | :--- | :--- |
+| 🚀 **App Version** | **v2.6.4.0.0.12** | Production Build `40` |
+| 🛡️ **Target Android SDK** | **Android 15/16 Ready** | API Level `36` |
+| 📦 **Total Production Commits** | **47+ Commits** | Across `2` Active Sprints |
+| ⚡ **Latest Git Revision** | `f177f22` (2026-09-19) | `Real-time rider GPS tracking, live map fixes, an` |
+| 🟢 **System Build Health** | **100% Operational** | Dual SMTP Gateway • Biometric Auth • Live GPS |
+
+#### 🌳 Native Git Commit & Branch Lifecycle Graph
+```mermaid
+gitGraph
+    commit id: "Init Engine" tag: "v2.0"
+    commit id: "Room DB v11"
+    branch feat-marketplace
+    checkout feat-marketplace
+    commit id: "10-Category Catalog"
+    commit id: "Typo Search & Vehicles"
+    checkout main
+    merge feat-marketplace id: "v2.4.1 Release" tag: "v2.4.1"
+    commit id: "13-Step Tour Guide"
+    branch feat-email-gateway
+    checkout feat-email-gateway
+    commit id: "Dual SMTP Relay"
+    commit id: "HTML Invoice Engine"
+    checkout main
+    merge feat-email-gateway id: "v2.6.2 Release" tag: "v2.6.2"
+    branch feat-live-telematics
+    checkout feat-live-telematics
+    commit id: "Biometrics & i18n"
+    commit id: "Rider Live GPS Service"
+    commit id: "Smooth Map Interpolation"
+    commit id: "COD & Card Settlement"
+    checkout main
+    merge feat-live-telematics id: "Build 40" tag: "v2.6.4.0.0.12"
+```
+
+#### 🎯 Engineering Velocity & Module Effort Distribution
+```mermaid
+pie title Engineering Distribution by Domain
+    "Features & Order Flow" : 12
+    "Rider GPS & Live Telematics" : 12
+    "UI/UX & High-Contrast Typography" : 19
+    "Security, Biometrics & Room DB" : 1
+    "Releases, Legal & ASO Compliance" : 3
+```
+
+#### 📈 Sprint Velocity Burndown
+```text
+========================================================================================
+🚀 RECENT SPRINT VELOCITY & COMMIT DISTRIBUTION (AUTO-COMPUTED FROM GIT LOG)
+========================================================================================
+Aug '26   : [█████░░░░░░░░░░░░░░░░░]   8 commits
+Sep '26   : [██████████████████████]  39 commits (🔥 Peak Velocity)
+========================================================================================
+Status: 🟢 Continuous Delivery Active | Sync Engine: GitHub Actions Telemetry Bot
+```
+
+<details>
+<summary><b>🔍 View Recent Daily Engineering Activity &amp; Commit Ledger (Click to expand)</b></summary>
+
+##### 📅 Recent Active Days Commit Frequency
+| Date | Commits | Activity Meter | Sprint Status |
+| :--- | :---: | :--- | :--- |
+| `2026-09-19` | **1** | `[██░░░░░░░░░░]` | Active Sprint Delivery |
+| `2026-09-17` | **1** | `[██░░░░░░░░░░]` | Active Sprint Delivery |
+| `2026-09-16` | **3** | `[██████░░░░░░]` | Active Sprint Delivery |
+| `2026-09-11` | **1** | `[██░░░░░░░░░░]` | Active Sprint Delivery |
+| `2026-09-10` | **1** | `[██░░░░░░░░░░]` | Active Sprint Delivery |
+| `2026-09-09` | **6** | `[████████████]` | Active Sprint Delivery |
+| `2026-09-08` | **2** | `[████░░░░░░░░]` | Active Sprint Delivery |
+| `2026-09-07` | **2** | `[████░░░░░░░░]` | Active Sprint Delivery |
+| `2026-09-06` | **2** | `[████░░░░░░░░]` | Active Sprint Delivery |
+| `2026-09-04` | **1** | `[██░░░░░░░░░░]` | Active Sprint Delivery |
+
+##### 📝 Latest Verified Revisions
+| SHA | Date | Message |
+| :--- | :--- | :--- |
+| `f177f22` | 2026-09-19 | Real-time rider GPS tracking, live map fixes, and COD paymen... |
+| `c24da2f` | 2026-09-17 | feat: streamline UI, align terms & privacy policy, and bump ... |
+| `4e4c0d3` | 2026-09-16 | feat(home,admin): wire disconnected marketplace grid, servic... |
+| `2a0bc40` | 2026-09-16 | feat(i18n,security,ui): multi-language engine, biometric lif... |
+| `cf52d17` | 2026-09-11 | feat(legal,ui,notifications): update terms links, anonymous ... |
+
+</details>
+
+<!-- END_VELOCITY_DASHBOARD -->
 
 ---
 

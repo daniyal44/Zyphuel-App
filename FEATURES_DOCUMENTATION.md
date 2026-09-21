@@ -936,22 +936,29 @@ Zyphuel v2.4.0 introduces a comprehensive 10-category on-demand automotive and m
 
 ---
 
-## 26. Automated GitHub Engineering Velocity & Activity Telemetry (v2.6.2)
-### 26.1 Real-Time Git Velocity Chart Generator (`scripts/generate_github_graph.js`)
-* **Local Git History Analysis**:
-  - Automatically parses git commit metadata, commit timestamps, and author messages directly from git log.
-  - Aggregates daily velocity curves, 4-month sprint volumes, and 10-week contribution heatmaps.
-  - Generates high-definition dark-themed SVG vector asset at `.github/assets/repo-activity-chart.svg`.
-* **Continuous Integration (`.github/workflows/update-graph.yml`)**:
-  - Triggered on every commit pushed to `main` branch.
-  - Automatically executes graph generator script in GitHub Actions Ubuntu runner.
-  - Auto-commits and pushes updated velocity chart with `[skip ci]` flag to maintain continuous repository synchronization.
+## 26. Automated GitHub Engineering Velocity & Activity Telemetry (Code-Based Graph Engine • v2.6.4 Build 40)
+### 26.1 Real-Time Code-Based Velocity Generator (`scripts/generate_github_graph.js`)
+* **Pure Code-Based Markdown Visualization (Zero SVG Reliance)**:
+  - Decommissioned and removed legacy static `.svg` image assets (`.github/assets/repo-activity-chart.svg`).
+  - Directly writes GitHub-native code blocks into `README.md` within designated boundary markers (`<!-- START_VELOCITY_DASHBOARD -->` and `<!-- END_VELOCITY_DASHBOARD -->`).
+* **Mermaid `gitGraph` Branch & Architecture Visualizer**:
+  - Code-rendered Git commit lifecycle displaying the mainline evolution (`v2.0` -> `v2.4.1` -> `v2.6.2` -> `v2.6.4`), alongside feature branches (`feat-marketplace`, `feat-email-gateway`, `feat-live-telematics`) and production merge tags.
+* **Mermaid `pie` Effort Distribution**:
+  - Dynamically classifies repository commits across 5 key engineering domains:
+    1. Core Features & Order Flow
+    2. Rider GPS & Live Telematics
+    3. UI/UX & High-Contrast Typography
+    4. Security, Biometrics & Room DB
+    5. Releases, Legal & ASO Compliance
+* **Sprint Burndown & Daily Activity Unicode Meters**:
+  - Automatically calculates 4-month sprint volume bars (`[████████████████████] 39 commits`) and detects peak velocity intervals.
+  - Generates collapsible recent active days frequency breakdown and verified production revision table.
 
-### 26.2 Platform & Repository Synchronization
-* **Public Repository Alignment**:
-  - Synchronized `README.md` to official version `v2.6.2 (Build 26)`.
-  - Added live badges for active commits, version tags, and build status.
-  - Embedded the vector engineering activity dashboard directly into repository overview.
+### 26.2 Continuous Integration Automation (`.github/workflows/update-graph.yml`)
+* **Automated CI/CD Workflow**:
+  - Triggered on push to the `main` branch.
+  - Executes `node scripts/generate_github_graph.js` inside an Ubuntu runner with full Git commit history (`fetch-depth: 0`).
+  - Commits updated code blocks in `README.md` with `chore(dashboard): auto-update code-based engineering velocity graph [skip ci]`, avoiding infinite CI trigger loops while guaranteeing a 100% up-to-date repository dashboard on every push.
 
 ---
 
