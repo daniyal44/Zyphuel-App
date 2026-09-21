@@ -3,10 +3,10 @@
 <div align="center">
   <img src="company .png" width="140" height="140" alt="Zyphuel MDK Logo" />
   <h3>Pakistan's Premier On-Demand Energy & Clean Water Ecosystem</h3>
-  <p><b>Version 2.6.4.0.0.12 (Build 40) • Target SDK 36 • Android 15/16 Ready • Jetpack Compose Material 3 • Room DB • Real-Time Dual Notifications</b></p>
+  <p><b>Version 2.6.4.0.0.13 (Build 41) • Target SDK 36 • Android 15/16 Ready • Jetpack Compose Material 3 • Room DB • Real-Time Dual Notifications</b></p>
 
   <p>
-    <a href="https://github.com/daniyal44/Zyphuel-App"><img src="https://img.shields.io/badge/App%20Version-v2.6.4.0.0.12%20(Build%2040)-0284c7?style=for-the-badge&logo=android" alt="App Version v2.6.4.0.0.12" /></a>
+    <a href="https://github.com/daniyal44/Zyphuel-App"><img src="https://img.shields.io/badge/App%20Version-v2.6.4.0.0.13%20(Build%2041)-0284c7?style=for-the-badge&logo=android" alt="App Version v2.6.4.0.0.13" /></a>
     <a href="https://github.com/daniyal44/Zyphuel-App/commits/main"><img src="https://img.shields.io/github/commit-activity/m/daniyal44/Zyphuel-App?style=for-the-badge&color=0284c7&label=Monthly%20Changes" alt="Monthly Commits" /></a>
     <a href="https://github.com/daniyal44/Zyphuel-App/commits/main"><img src="https://img.shields.io/github/last-commit/daniyal44/Zyphuel-App?style=for-the-badge&color=10b981" alt="Last Commit" /></a>
     <a href="https://developer.android.com"><img src="https://img.shields.io/badge/Target%20SDK-36-emerald?style=for-the-badge" alt="Target SDK 36" /></a>
@@ -22,10 +22,10 @@
 
 | Metric | Current Status | Specification |
 | :--- | :--- | :--- |
-| 🚀 **App Version** | **v2.6.4.0.0.12** | Production Build `40` |
+| 🚀 **App Version** | **v2.6.4.0.0.13** | Production Build `41` |
 | 🛡️ **Target Android SDK** | **Android 15/16 Ready** | API Level `36` |
-| 📦 **Total Production Commits** | **49+ Commits** | Across `2` Active Sprints |
-| ⚡ **Latest Git Revision** | `4f3db84` (2026-09-21) | `Real-time rider GPS tracking, live map fixes, an` |
+| 📦 **Total Production Commits** | **50+ Commits** | Across `2` Active Sprints |
+| ⚡ **Latest Git Revision** | `b5d418b` (2026-09-21) | `chore(dashboard): sync code-based velocity dashb` |
 | 🟢 **System Build Health** | **100% Operational** | Dual SMTP Gateway • Biometric Auth • Live GPS |
 
 #### 🌳 Native Git Commit & Branch Lifecycle Graph
@@ -53,7 +53,7 @@ gitGraph
     commit id: "Smooth Map Interpolation"
     commit id: "COD & Card Settlement"
     checkout main
-    merge feat-live-telematics id: "Build 40" tag: "v2.6.4.0.0.12"
+    merge feat-live-telematics id: "Build 41" tag: "v2.6.4.0.0.13"
 ```
 
 #### 🎯 Engineering Velocity & Module Effort Distribution
@@ -63,7 +63,7 @@ pie title Engineering Distribution by Domain
     "Rider GPS & Live Telematics" : 13
     "UI/UX & High-Contrast Typography" : 19
     "Security, Biometrics & Room DB" : 1
-    "Releases, Legal & ASO Compliance" : 4
+    "Releases, Legal & ASO Compliance" : 5
 ```
 
 #### 📈 Sprint Velocity Burndown
@@ -72,7 +72,7 @@ pie title Engineering Distribution by Domain
 🚀 RECENT SPRINT VELOCITY & COMMIT DISTRIBUTION (AUTO-COMPUTED FROM GIT LOG)
 ========================================================================================
 Aug '26   : [████░░░░░░░░░░░░░░░░░░]   8 commits
-Sep '26   : [██████████████████████]  41 commits (🔥 Peak Velocity)
+Sep '26   : [██████████████████████]  42 commits (🔥 Peak Velocity)
 ========================================================================================
 Status: 🟢 Continuous Delivery Active | Sync Engine: GitHub Actions Telemetry Bot
 ```
@@ -83,7 +83,7 @@ Status: 🟢 Continuous Delivery Active | Sync Engine: GitHub Actions Telemetry 
 ##### 📅 Recent Active Days Commit Frequency
 | Date | Commits | Activity Meter | Sprint Status |
 | :--- | :---: | :--- | :--- |
-| `2026-09-21` | **1** | `[██░░░░░░░░░░]` | Active Sprint Delivery |
+| `2026-09-21` | **2** | `[████░░░░░░░░]` | Active Sprint Delivery |
 | `2026-09-19` | **2** | `[████░░░░░░░░]` | Active Sprint Delivery |
 | `2026-09-17` | **1** | `[██░░░░░░░░░░]` | Active Sprint Delivery |
 | `2026-09-16` | **3** | `[██████░░░░░░]` | Active Sprint Delivery |

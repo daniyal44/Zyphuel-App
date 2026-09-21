@@ -1,21 +1,75 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# Zyphuel Production ProGuard & R8 Optimization Rules (v2.6.4 Build 41)
+# Comprehensive Reverse-Engineering Protection & Obfuscation Configuration
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# -----------------------------------------------------------------------------
+# 1. Code Obfuscation & Renaming Settings
+# -----------------------------------------------------------------------------
+-repackageclasses 'com.example.obf'
+-allowaccessmodification
+-keeppackagenames com.example.**
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# Keep source file and line numbers for sanitized stack traces in crash logs
+-keepattributes SourceFile,LineNumberTable,Signature,InnerClasses,EnclosingMethod,*Annotation*
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# -----------------------------------------------------------------------------
+# 2. Android Architecture Components & Room Database
+# -----------------------------------------------------------------------------
+-keep class androidx.room.** { *; }
+-keep class * extends androidx.room.RoomDatabase
+-dontwarn androidx.room.paging.**
+
+# Keep all Room Entities, DAOs, and Database models
+-keep @androidx.room.Entity class * { *; }
+-keep @androidx.room.Dao interface * { *; }
+-keep @androidx.room.Database class * { *; }
+-keepclassmembers class * extends androidx.room.TypeConverter { *; }
+
+# Keep data models used in local persistence and Firestore
+-keep class com.example.data.** { *; }
+-keepclassmembers class com.example.data.** { *; }
+
+# -----------------------------------------------------------------------------
+# 3. Security, Hardware Keystore & Biometrics
+# -----------------------------------------------------------------------------
+-keep class androidx.biometric.** { *; }
+-keep class androidx.security.crypto.** { *; }
+-keep class com.example.security.** { *; }
+-keepclassmembers class com.example.security.** { *; }
+
+# -----------------------------------------------------------------------------
+# 4. Jetpack Compose & Material 3
+# -----------------------------------------------------------------------------
+-keep class androidx.compose.** { *; }
+-keep class * extends androidx.compose.runtime.State
+-keepclassmembers class * {
+    @androidx.compose.runtime.Composable *;
+    @androidx.compose.runtime.ReadOnlyComposable *;
+}
+
+# -----------------------------------------------------------------------------
+# 5. Firebase, Google Play Services & Maps
+# -----------------------------------------------------------------------------
+-keep class com.google.firebase.** { *; }
+-keep class com.google.android.gms.** { *; }
+-dontwarn com.google.firebase.**
+-dontwarn com.google.android.gms.**
+
+# -----------------------------------------------------------------------------
+# 6. Kotlin Coroutines & Reflection
+# -----------------------------------------------------------------------------
+-keepnames class kotlinx.coroutines.internal.MainDispatcherFactory {}
+-keepnames class kotlinx.coroutines.CoroutineExceptionHandler {}
+-keepclassmembernames class kotlinx.** {
+    volatile <fields>;
+}
+
+# -----------------------------------------------------------------------------
+# 7. Network, JSON & Email Gateways
+# -----------------------------------------------------------------------------
+-keepattributes EnclosingMethod
+-keepclassmembers enum * {
+    public static **[] values();
+    public static ** valueOf(java.lang.String);
+}
+-dontwarn java.awt.**
+-dontwarn javax.activation.**
