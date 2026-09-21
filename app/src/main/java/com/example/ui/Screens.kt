@@ -8,6 +8,7 @@ package com.example.ui
 import com.example.auth.findActivity
 import com.example.auth.SocialAuthManager
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
@@ -2393,6 +2394,11 @@ fun AuthScreen(viewModel: MainViewModel, isRegister: Boolean, isRider: Boolean) 
             ?: ""
     }
     var email by remember { mutableStateOf(rememberedEmail) }
+    LaunchedEffect(rememberedEmail) {
+        if (email.isBlank() && rememberedEmail.isNotBlank()) {
+            email = rememberedEmail
+        }
+    }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var name by remember { mutableStateOf("") }
@@ -3550,11 +3556,13 @@ fun AuthScreen(viewModel: MainViewModel, isRegister: Boolean, isRider: Boolean) 
                         val registeredEmail = com.example.security.SecureStorageManager.getRegisteredEmail(context, bioModule)
                         val fragmentActivity = context as? androidx.fragment.app.FragmentActivity
 
-                        val targetUserEmail = if (email.isNotBlank()) email.trim().lowercase() else (registeredEmail ?: "")
-                        val displayEmail = if (targetUserEmail.isNotBlank()) targetUserEmail else if (registeredEmail != null) registeredEmail else "Registered Account"
-                        val hasStoredAccount = !registeredEmail.isNullOrBlank() || targetUserEmail.isNotBlank()
+                        val targetUserEmail = if (email.isNotBlank()) email.trim().lowercase()
+                            else (registeredEmail ?: context.getSharedPreferences("zyphuel_session", Context.MODE_PRIVATE).getString("last_remembered_email", "") ?: "")
+                        val displayEmail = if (targetUserEmail.isNotBlank()) targetUserEmail
+                            else if (!registeredEmail.isNullOrBlank()) registeredEmail
+                            else "Registered Account"
 
-                        if (!isRegister && (isBioEnabled || isHardwareBioSupported) && hasStoredAccount) {
+                        if (!isRegister && (isBioEnabled || isHardwareBioSupported)) {
                             Spacer(modifier = Modifier.height(16.dp))
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
@@ -5113,7 +5121,7 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                                         text = "Rs. ${String.format(java.util.Locale.US, "%.2f", petrolPumpPrice)}/L",
                                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary)
                                     )
-                                    Text("Pump Rate (+Rs 2.50)", style = MaterialTheme.typography.labelSmall.copy(color = Color(0xFF15803D), fontSize = 9.sp, fontWeight = FontWeight.SemiBold))
+                                    Text("Super Euro-V", style = MaterialTheme.typography.labelSmall.copy(color = Color(0xFF15803D), fontSize = 9.sp, fontWeight = FontWeight.SemiBold))
                                 }
                             }
                         }
@@ -5174,7 +5182,7 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                                         text = "Rs. ${String.format(java.util.Locale.US, "%.2f", octanePumpPrice)}/L",
                                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFFD97706))
                                     )
-                                    Text("Pump Rate (+Rs 2.50)", style = MaterialTheme.typography.labelSmall.copy(color = Color(0xFF15803D), fontSize = 9.sp, fontWeight = FontWeight.SemiBold))
+                                    Text("RON 97", style = MaterialTheme.typography.labelSmall.copy(color = Color(0xFFB45309), fontSize = 9.sp, fontWeight = FontWeight.SemiBold))
                                 }
                             }
                         }
@@ -5236,24 +5244,23 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                                         text = "Rs. ${String.format(java.util.Locale.US, "%.2f", dieselPumpPrice)}/L",
                                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary)
                                     )
-                                    Text("Pump Rate (+Rs 2.50)", style = MaterialTheme.typography.labelSmall.copy(color = Color(0xFF15803D), fontSize = 9.sp, fontWeight = FontWeight.SemiBold))
+                                    Text("Euro-V", style = MaterialTheme.typography.labelSmall.copy(color = Color(0xFF15803D), fontSize = 9.sp, fontWeight = FontWeight.SemiBold))
                                 }
                             }
                         }
 
-                        // 3. Gas (Only 1 Single Option: Gas Cylinder)
+                        // 4. Gas (Temporarily Unavailable)
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
-                                    selectedService = "Gas"
-                                    showOrderDialog = true
+                                    Toast.makeText(context, "LPG Gas Cylinder delivery is currently unavailable in Lahore.", Toast.LENGTH_SHORT).show()
                                 }
                                 .testTag("service_gas"),
                             shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFFAFAFA)),
                             border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
                         ) {
                             Row(
                                 modifier = Modifier
@@ -5269,17 +5276,25 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                                 ) {
                                     Surface(
                                         shape = RoundedCornerShape(12.dp),
-                                        color = ZyphuelBluePrimary.copy(alpha = 0.12f),
+                                        color = Color(0xFFF1F5F9),
                                         modifier = Modifier.size(46.dp)
                                     ) {
                                         Box(contentAlignment = Alignment.Center) {
-                                            Icon(Icons.Filled.PropaneTank, contentDescription = null, tint = ZyphuelBluePrimary, modifier = Modifier.size(24.dp))
+                                            Icon(Icons.Filled.PropaneTank, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(24.dp))
                                         }
                                     }
                                     Column {
-                                        Text(tr("svc_lpg", "Gas"), style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark))
+                                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                            Text(tr("svc_lpg", "Gas"), style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = Color.Gray))
+                                            Surface(
+                                                color = Color(0xFFFEE2E2),
+                                                shape = RoundedCornerShape(6.dp)
+                                            ) {
+                                                Text("Unavailable", color = Color(0xFFDC2626), fontWeight = FontWeight.Bold, fontSize = 10.sp, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                                            }
+                                        }
                                         Text(
-                                            text = "Certified 11.8kg Factory-Sealed Cylinder",
+                                            text = "Certified 11.8kg Cylinder • Currently Unavailable",
                                             style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray)
                                         )
                                     }
@@ -5287,26 +5302,25 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                                 Column(horizontalAlignment = Alignment.End) {
                                     Text(
                                         text = "Rs. ${String.format(java.util.Locale.US, "%.2f", lpgPrice)}/Kg",
-                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary)
+                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = Color.Gray)
                                     )
-                                    Text("Standard Rate", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontSize = 10.sp))
+                                    Text("Temporarily Off", style = MaterialTheme.typography.labelSmall.copy(color = Color(0xFFDC2626), fontSize = 10.sp, fontWeight = FontWeight.Bold))
                                 }
                             }
                         }
 
-                        // 4. Pure Water Delivery
+                        // 5. Pure Water Delivery (Temporarily Unavailable)
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
-                                    selectedService = "Water"
-                                    showOrderDialog = true
+                                    Toast.makeText(context, "Pure Water delivery is currently unavailable in Lahore.", Toast.LENGTH_SHORT).show()
                                 }
                                 .testTag("service_water"),
                             shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFFAFAFA)),
                             border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
                         ) {
                             Row(
                                 modifier = Modifier
@@ -5322,17 +5336,25 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                                 ) {
                                     Surface(
                                         shape = RoundedCornerShape(12.dp),
-                                        color = ZyphuelBluePrimary.copy(alpha = 0.12f),
+                                        color = Color(0xFFF1F5F9),
                                         modifier = Modifier.size(46.dp)
                                     ) {
                                         Box(contentAlignment = Alignment.Center) {
-                                            Icon(Icons.Filled.WaterDrop, contentDescription = null, tint = ZyphuelBluePrimary, modifier = Modifier.size(24.dp))
+                                            Icon(Icons.Filled.WaterDrop, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(24.dp))
                                         }
                                     }
                                     Column {
-                                        Text(tr("svc_water", "Pure Water"), style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark))
+                                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                            Text(tr("svc_water", "Pure Water"), style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = Color.Gray))
+                                            Surface(
+                                                color = Color(0xFFFEE2E2),
+                                                shape = RoundedCornerShape(6.dp)
+                                            ) {
+                                                Text("Unavailable", color = Color(0xFFDC2626), fontWeight = FontWeight.Bold, fontSize = 10.sp, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                                            }
+                                        }
                                         Text(
-                                            text = "Certified Drinking Water & Bowser Tankers",
+                                            text = "Certified Drinking Water • Currently Unavailable",
                                             style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray)
                                         )
                                     }
@@ -5340,9 +5362,9 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                                 Column(horizontalAlignment = Alignment.End) {
                                     Text(
                                         text = "Rs. ${String.format(java.util.Locale.US, "%.2f", waterPrice)}/Gal",
-                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary)
+                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = Color.Gray)
                                     )
-                                    Text("Doorstep Delivery", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontSize = 10.sp))
+                                    Text("Temporarily Off", style = MaterialTheme.typography.labelSmall.copy(color = Color(0xFFDC2626), fontSize = 10.sp, fontWeight = FontWeight.Bold))
                                 }
                             }
                         }
@@ -5402,16 +5424,6 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                     }
                 }
 
-                // 10-Category Marketplace Grid (Fuel, Repair, Roadside SOS, Tyres, Battery,
-                // Lubricants, EV, Detailing, Water & Fleet) — surfaces the full marketplace
-                // catalog that was previously coded but never rendered on the home screen.
-                item {
-                    CategoryGridSection(
-                        categories = categories,
-                        onCategoryClick = { selectedCategoryForModal = it },
-                        viewModel = viewModel
-                    )
-                }
 
                 // Dedicated Order History Dashboard Section
                 item {
@@ -8520,11 +8532,9 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
 
     val initialDiesel = serviceType == "Diesel" || serviceType.contains("Diesel", ignoreCase = true)
     val initialOctane = serviceType == "High-Octane" || serviceType.contains("Octane", ignoreCase = true)
-    val initialLpg = serviceType == "LPG Gas" || serviceType.contains("LPG", ignoreCase = true) || serviceType.contains("Gas", ignoreCase = true)
-    val initialWater = serviceType == "Water" || serviceType.contains("Water", ignoreCase = true)
-    val initialPetrol = serviceType == "Petrol" || serviceType.isBlank() || serviceType == "all" || serviceType.contains("Petrol", ignoreCase = true) || (!initialDiesel && !initialOctane && !initialLpg && !initialWater)
+    val initialPetrol = serviceType == "Petrol" || serviceType.isBlank() || serviceType == "all" || serviceType.contains("Petrol", ignoreCase = true) || (!initialDiesel && !initialOctane)
 
-    // Support multi-item selection state (Petrol, Diesel, High-Octane, LPG Gas, Water)
+    // Support multi-item selection state (Petrol, Diesel, High-Octane) — Gas and Water are unavailable
     var petrolSelected by remember { mutableStateOf(initialPetrol) }
     var petrolQty by remember { mutableIntStateOf(5) }
 
@@ -8534,10 +8544,10 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
     var octaneSelected by remember { mutableStateOf(initialOctane) }
     var octaneQty by remember { mutableIntStateOf(5) }
 
-    var lpgSelected by remember { mutableStateOf(initialLpg) }
+    var lpgSelected by remember { mutableStateOf(false) }
     var lpgQty by remember { mutableIntStateOf(5) }
 
-    var waterSelected by remember { mutableStateOf(initialWater) }
+    var waterSelected by remember { mutableStateOf(false) }
     var waterQty by remember { mutableIntStateOf(1) }
 
     val liveLocationCoordinates by viewModel.liveLocationCoordinates.collectAsState()
@@ -8700,8 +8710,8 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                             )
                             Column {
                                 Text(tr("svc_petrol", "Petrol"), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
-                                Text("${viewModel.formatUnitPrice(petrolPumpPrice, "L")} (Pump Rate)", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold, color = Color(0xFF15803D)))
-                                Text("OGRA ${viewModel.formatPrice(petrolPrice.toDouble())}/L + Rs 2.50/L", style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, color = Color.Gray))
+                                Text(viewModel.formatUnitPrice(petrolPumpPrice, "L"), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold, color = Color(0xFF15803D)))
+                                Text("Super Euro-V Standard Rate", style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, color = Color.Gray))
                             }
                         }
                         if (petrolSelected) {
@@ -8744,8 +8754,8 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                             )
                             Column {
                                 Text(tr("svc_diesel", "Diesel"), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
-                                Text("${viewModel.formatUnitPrice(dieselPumpPrice, "L")} (Pump Rate)", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold, color = Color(0xFF15803D)))
-                                Text("OGRA ${viewModel.formatPrice(dieselPrice.toDouble())}/L + Rs 2.50/L", style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, color = Color.Gray))
+                                Text(viewModel.formatUnitPrice(dieselPumpPrice, "L"), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold, color = Color(0xFF15803D)))
+                                Text("Euro-V Standard Rate", style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, color = Color.Gray))
                             }
                         }
                         if (dieselSelected) {
@@ -8788,8 +8798,8 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                             )
                             Column {
                                 Text(tr("svc_octane", "High-Octane"), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
-                                Text("${viewModel.formatUnitPrice(octanePumpPrice, "L")} (Pump Rate)", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold, color = Color(0xFF15803D)))
-                                Text("OGRA ${viewModel.formatPrice(octanePrice.toDouble())}/L + Rs 2.50/L", style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, color = Color.Gray))
+                                Text(viewModel.formatUnitPrice(octanePumpPrice, "L"), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold, color = Color(0xFF15803D)))
+                                Text("RON 97 Standard Rate", style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, color = Color.Gray))
                             }
                         }
                         if (octaneSelected) {
@@ -8812,87 +8822,63 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                     }
                 }
 
-                // 4. Gas
+                // 4. Gas (Unavailable)
                 Card(
-                    colors = CardDefaults.cardColors(containerColor = if (lpgSelected) ZyphuelBlueLight else Color.White),
-                    border = BorderStroke(1.dp, if (lpgSelected) ZyphuelBluePrimary else Color(0xFFE2E8F0)),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
+                    border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
                     shape = RoundedCornerShape(10.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
-                        modifier = Modifier.padding(8.dp),
+                        modifier = Modifier.padding(10.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
                             Checkbox(
-                                checked = lpgSelected,
-                                onCheckedChange = { lpgSelected = it },
-                                colors = CheckboxDefaults.colors(checkedColor = ZyphuelBluePrimary)
+                                checked = false,
+                                onCheckedChange = null,
+                                enabled = false
                             )
                             Column {
-                                Text(tr("svc_lpg", "Gas"), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
-                                Text("${viewModel.formatUnitPrice(lpgPrice, "Kg")}", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
-                            }
-                        }
-                        if (lpgSelected) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                IconButton(
-                                    onClick = { if (lpgQty > 5) lpgQty-- },
-                                    modifier = Modifier.size(28.dp).background(ZyphuelBlueSecondary.copy(alpha = 0.15f), CircleShape)
-                                ) {
-                                    Icon(Icons.Filled.Remove, contentDescription = "Decrease", tint = ZyphuelBluePrimary, modifier = Modifier.size(16.dp))
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Text(tr("svc_lpg", "Gas"), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                                    Surface(color = Color(0xFFFEE2E2), shape = RoundedCornerShape(4.dp)) {
+                                        Text("Unavailable", color = Color(0xFFDC2626), fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp))
+                                    }
                                 }
-                                Text(" $lpgQty KG ", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
-                                IconButton(
-                                    onClick = { lpgQty++ },
-                                    modifier = Modifier.size(28.dp).background(ZyphuelBlueSecondary.copy(alpha = 0.15f), CircleShape)
-                                ) {
-                                    Icon(Icons.Filled.Add, contentDescription = "Increase", tint = ZyphuelBluePrimary, modifier = Modifier.size(16.dp))
-                                }
+                                Text("LPG Cylinder is temporarily unavailable", style = MaterialTheme.typography.labelSmall, color = Color.LightGray)
                             }
                         }
                     }
                 }
 
-                // 5. Water
+                // 5. Water (Unavailable)
                 Card(
-                    colors = CardDefaults.cardColors(containerColor = if (waterSelected) ZyphuelBlueLight else Color.White),
-                    border = BorderStroke(1.dp, if (waterSelected) ZyphuelBluePrimary else Color(0xFFE2E8F0)),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
+                    border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
                     shape = RoundedCornerShape(10.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
-                        modifier = Modifier.padding(8.dp),
+                        modifier = Modifier.padding(10.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
                             Checkbox(
-                                checked = waterSelected,
-                                onCheckedChange = { waterSelected = it },
-                                colors = CheckboxDefaults.colors(checkedColor = ZyphuelBluePrimary)
+                                checked = false,
+                                onCheckedChange = null,
+                                enabled = false
                             )
                             Column {
-                                Text(tr("svc_water", "Pure Water"), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
-                                Text("${viewModel.formatUnitPrice(waterPrice, "Gallon")}", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
-                            }
-                        }
-                        if (waterSelected) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                IconButton(
-                                    onClick = { if (waterQty > 1) waterQty-- },
-                                    modifier = Modifier.size(28.dp).background(ZyphuelBlueSecondary.copy(alpha = 0.15f), CircleShape)
-                                ) {
-                                    Icon(Icons.Filled.Remove, contentDescription = "Decrease", tint = ZyphuelBluePrimary, modifier = Modifier.size(16.dp))
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Text(tr("svc_water", "Pure Water"), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                                    Surface(color = Color(0xFFFEE2E2), shape = RoundedCornerShape(4.dp)) {
+                                        Text("Unavailable", color = Color(0xFFDC2626), fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp))
+                                    }
                                 }
-                                Text(" $waterQty Gal ", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
-                                IconButton(
-                                    onClick = { waterQty++ },
-                                    modifier = Modifier.size(28.dp).background(ZyphuelBlueSecondary.copy(alpha = 0.15f), CircleShape)
-                                ) {
-                                    Icon(Icons.Filled.Add, contentDescription = "Increase", tint = ZyphuelBluePrimary, modifier = Modifier.size(16.dp))
-                                }
+                                Text("Drinking water is temporarily unavailable", style = MaterialTheme.typography.labelSmall, color = Color.LightGray)
                             }
                         }
                     }
@@ -8959,18 +8945,6 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                         style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold, color = ZyphuelBlueDark)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
-                    val totalPumpFuelLiters = (if (petrolSelected) petrolQty else 0) +
-                            (if (dieselSelected) dieselQty else 0) +
-                            (if (octaneSelected) octaneQty else 0)
-                    if (totalPumpFuelLiters > 0) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text("Pump Rate Included (+Rs 2.50/L):", style = MaterialTheme.typography.bodySmall.copy(color = Color(0xFF15803D)))
-                            Text("Rs. ${String.format(java.util.Locale.US, "%.2f", totalPumpFuelLiters * 2.50)}", style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold, color = Color(0xFF15803D)))
-                        }
-                    }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -18283,10 +18257,10 @@ fun LahoreFuelMarketWidget(
                 FuelRateCardItem(
                     title = "Petrol (Super Euro-V)",
                     rate = viewModel.formatUnitPrice(petrolPumpPrice, "L"),
-                    basePrice = "OGRA: Rs. ${String.format(java.util.Locale.US, "%.2f", petrolPrice)}/L (+Rs 2.50 Pump Rate)",
+                    basePrice = "Official Notified Rate: Rs. ${String.format(java.util.Locale.US, "%.2f", petrolPumpPrice)}/L",
                     icon = Icons.Filled.LocalGasStation,
                     accentColor = Color(0xFF059669),
-                    badgeText = "Pump Rate",
+                    badgeText = "Euro-V",
                     modifier = Modifier.weight(1f),
                     onOrderClick = { onSelectService("Petrol") }
                 )
@@ -18295,10 +18269,10 @@ fun LahoreFuelMarketWidget(
                 FuelRateCardItem(
                     title = "Diesel (High Speed)",
                     rate = viewModel.formatUnitPrice(dieselPumpPrice, "L"),
-                    basePrice = "OGRA: Rs. ${String.format(java.util.Locale.US, "%.2f", dieselPrice)}/L (+Rs 2.50 Pump Rate)",
+                    basePrice = "Official Notified Rate: Rs. ${String.format(java.util.Locale.US, "%.2f", dieselPumpPrice)}/L",
                     icon = Icons.Filled.DirectionsCar,
                     accentColor = Color(0xFF2563EB),
-                    badgeText = "Pump Rate",
+                    badgeText = "Euro-V",
                     modifier = Modifier.weight(1f),
                     onOrderClick = { onSelectService("Diesel") }
                 )
@@ -18316,15 +18290,15 @@ fun LahoreFuelMarketWidget(
                     modifier = Modifier.weight(1f)
                 )
                 CompactFuelRateItem(
-                    label = "LPG Gas",
-                    rate = viewModel.formatUnitPrice(lpgPrice, "Kg"),
-                    accentColor = Color(0xFFEA580C),
+                    label = "LPG (Off)",
+                    rate = "Unavailable",
+                    accentColor = Color(0xFF94A3B8),
                     modifier = Modifier.weight(1f)
                 )
                 CompactFuelRateItem(
-                    label = "Pure Water",
-                    rate = viewModel.formatUnitPrice(waterPrice, "Gallon"),
-                    accentColor = Color(0xFF0284C7),
+                    label = "Water (Off)",
+                    rate = "Unavailable",
+                    accentColor = Color(0xFF94A3B8),
                     modifier = Modifier.weight(1f)
                 )
             }

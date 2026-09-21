@@ -22,7 +22,7 @@
 
 | Metric | Current Status | Specification |
 | :--- | :--- | :--- |
-| 🚀 **App Version** | **v2.6.4.0.0.13** | Production Build `41` |
+| 🚀 **App Version** | **v2.6.4.0.0.14** | Production Build `42` |
 | 🛡️ **Target Android SDK** | **Android 15/16 Ready** | API Level `36` |
 | 📦 **Total Production Commits** | **51+ Commits** | Across `2` Active Sprints |
 | ⚡ **Latest Git Revision** | `d77e41a` (2026-09-21) | `Real-time rider GPS tracking, live map fixes, an` |
@@ -53,7 +53,7 @@ gitGraph
     commit id: "Smooth Map Interpolation"
     commit id: "COD & Card Settlement"
     checkout main
-    merge feat-live-telematics id: "Build 41" tag: "v2.6.4.0.0.13"
+    merge feat-live-telematics id: "Build 42" tag: "v2.6.4.0.0.14"
 ```
 
 #### 🎯 Engineering Velocity & Module Effort Distribution

@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -23,21 +24,26 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.BuildConfig
 
-private val PrimaryBlue = Color(0xFF0284C7)
-private val PrimaryDark = Color(0xFF0F172A)
-private val AccentEmerald = Color(0xFF10B981)
+// Zyphuel Official Brand & High-Contrast Typography Palette
+private val ZyphuelBluePrimary = Color(0xFF0062FF)     // Electric Cobalt Blue
+private val ZyphuelBlueDark = Color(0xFF003087)        // Deep Royal Navy
+private val ZyphuelBlueLight = Color(0xFFEFF6FF)       // Light Blue Accent Tint
+private val ZyphuelCardBorder = Color(0xFFE2E8F0)      // Crisp Card Border
+private val TextPrimary = Color(0xFF0F172A)            // Deep Charcoal for Headings (High Contrast)
+private val TextSecondary = Color(0xFF334155)          // Clear Slate for Paragraphs (High Contrast)
+private val AccentGreen = Color(0xFF10B981)            // Emerald Green for Safe/Verified
+private val AccentAmber = Color(0xFFD97706)            // Amber for Status Warning
 
 /**
- * Modern, High-Contrast In-App Legal & Compliance Dialog.
- * Beautifully formats Terms of Service, Privacy Policy, and Operational Disclosures.
- * Fully compliant with OGRA safety standards, Civil Defence Pakistan, and Google Play Store policies.
+ * High-Contrast, Brand-Aligned In-App Legal & Compliance Dialog.
+ * Formats Terms of Service, Privacy Policy, and How It Works with maximum readability.
+ * Strictly complies with OGRA petroleum safety standards and Google Play Store policies.
  */
 @Composable
 fun TermsAndPrivacyDialog(
@@ -61,12 +67,12 @@ fun TermsAndPrivacyDialog(
         Card(
             modifier = Modifier
                 .fillMaxWidth(0.95f)
-                .fillMaxHeight(0.90f)
+                .fillMaxHeight(0.92f)
                 .testTag("terms_privacy_dialog"),
-            shape = RoundedCornerShape(28.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 14.dp),
+            border = BorderStroke(1.5.dp, ZyphuelCardBorder)
         ) {
             Column(
                 modifier = Modifier
@@ -84,26 +90,33 @@ fun TermsAndPrivacyDialog(
                             modifier = Modifier
                                 .size(44.dp)
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(PrimaryBlue.copy(alpha = 0.12f)),
+                                .background(ZyphuelBlueLight),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.Gavel,
                                 contentDescription = null,
-                                tint = PrimaryBlue,
+                                tint = ZyphuelBluePrimary,
                                 modifier = Modifier.size(24.dp)
                             )
                         }
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
                             Text(
-                                text = "Legal & Compliance",
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                color = MaterialTheme.colorScheme.onSurface
+                                text = "Terms & Privacy Policy",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 17.sp
+                                ),
+                                color = TextPrimary
                             )
                             Text(
-                                text = "Zyphuel v${BuildConfig.VERSION_NAME} (Build ${BuildConfig.VERSION_CODE})",
-                                style = MaterialTheme.typography.labelSmall.copy(color = PrimaryBlue, fontWeight = FontWeight.SemiBold)
+                                text = "Zyphuel App v${BuildConfig.VERSION_NAME} • Build ${BuildConfig.VERSION_CODE}",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    color = ZyphuelBluePrimary,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 11.sp
+                                )
                             )
                         }
                     }
@@ -113,13 +126,13 @@ fun TermsAndPrivacyDialog(
                         modifier = Modifier
                             .size(36.dp)
                             .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
+                            .background(Color(0xFFF1F5F9))
                             .testTag("close_terms_btn")
                     ) {
                         Icon(
                             Icons.Filled.Close,
                             contentDescription = "Close",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            tint = TextPrimary,
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -131,20 +144,20 @@ fun TermsAndPrivacyDialog(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(Color(0xFFF1F5F9))
                         .padding(4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     LegalPillTab(
-                        title = "Terms",
+                        title = "Terms of Service",
                         icon = Icons.Filled.Description,
                         selected = selectedTab == 0,
                         modifier = Modifier.weight(1f),
                         onClick = { selectedTab = 0 }
                     )
                     LegalPillTab(
-                        title = "Privacy",
+                        title = "Privacy Policy",
                         icon = Icons.Filled.Security,
                         selected = selectedTab == 1,
                         modifier = Modifier.weight(1f),
@@ -154,7 +167,7 @@ fun TermsAndPrivacyDialog(
                         title = "How It Works",
                         icon = Icons.Filled.Bolt,
                         selected = selectedTab == 2,
-                        modifier = Modifier.weight(1.15f),
+                        modifier = Modifier.weight(1.05f),
                         onClick = { selectedTab = 2 }
                     )
                 }
@@ -166,15 +179,16 @@ fun TermsAndPrivacyDialog(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(18.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f))
-                        .padding(horizontal = 14.dp, vertical = 12.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color(0xFFF8FAFC))
+                        .border(1.dp, ZyphuelCardBorder, RoundedCornerShape(16.dp))
+                        .padding(horizontal = 14.dp, vertical = 14.dp)
                 ) {
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
                             .verticalScroll(scrollState),
-                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         when (selectedTab) {
                             0 -> TermsContent()
@@ -199,12 +213,16 @@ fun TermsAndPrivacyDialog(
                             context.startActivity(intent)
                         },
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(14.dp),
-                        border = BorderStroke(1.dp, PrimaryBlue.copy(alpha = 0.5f))
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(1.2.dp, ZyphuelBluePrimary.copy(alpha = 0.6f)),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = Color.White,
+                            contentColor = ZyphuelBluePrimary
+                        )
                     ) {
-                        Icon(Icons.Filled.OpenInBrowser, contentDescription = null, tint = PrimaryBlue, modifier = Modifier.size(16.dp))
+                        Icon(Icons.Filled.OpenInBrowser, contentDescription = null, tint = ZyphuelBluePrimary, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Web Version", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold, color = PrimaryBlue))
+                        Text("Web Version", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary))
                     }
 
                     Button(
@@ -213,12 +231,12 @@ fun TermsAndPrivacyDialog(
                             onDismissRequest()
                         },
                         modifier = Modifier.weight(1.3f),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = ZyphuelBluePrimary)
                     ) {
                         Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Understood & Agreed", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold, color = Color.White))
+                        Text("I Understand & Agree", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold, color = Color.White))
                     }
                 }
             }
@@ -235,17 +253,17 @@ private fun LegalPillTab(
     onClick: () -> Unit
 ) {
     val bg by animateColorAsState(
-        targetValue = if (selected) PrimaryBlue else Color.Transparent,
+        targetValue = if (selected) ZyphuelBluePrimary else Color.Transparent,
         label = "pill_bg"
     )
     val contentColor by animateColorAsState(
-        targetValue = if (selected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+        targetValue = if (selected) Color.White else TextSecondary,
         label = "pill_content"
     )
 
     Surface(
         onClick = onClick,
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(10.dp),
         color = bg,
         modifier = modifier.height(38.dp)
     ) {
@@ -254,13 +272,13 @@ private fun LegalPillTab(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(icon, contentDescription = null, tint = contentColor, modifier = Modifier.size(16.dp))
-            Spacer(modifier = Modifier.width(6.dp))
+            Icon(icon, contentDescription = null, tint = contentColor, modifier = Modifier.size(15.dp))
+            Spacer(modifier = Modifier.width(5.dp))
             Text(
                 text = title,
                 style = MaterialTheme.typography.labelMedium.copy(
-                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                    fontSize = 12.sp
+                    fontWeight = if (selected) FontWeight.Bold else FontWeight.SemiBold,
+                    fontSize = 11.5.sp
                 ),
                 color = contentColor,
                 maxLines = 1
@@ -275,38 +293,44 @@ private fun TermsContent() {
     LegalHighlightCard(
         title = "Official Petroleum & Fuel Delivery Standard",
         subtitle = "Governed under OGRA & Civil Defence Laws of Pakistan",
-        accent = PrimaryBlue,
+        accent = ZyphuelBluePrimary,
         icon = Icons.Filled.Verified
     )
 
     LegalCard(
         icon = Icons.Filled.LocationOn,
         title = "1. Operational Coverage & Service Scope",
-        description = "Zyphuel operates an on-demand doorstep energy, fuel, and mineral water delivery ecosystem across Lahore, Punjab. Service sectors include Gulberg, DHA (Phases 1-9), Model Town, Johar Town, Bahria Town, Green Town, Lahore Cantt, and Faisal Town."
+        description = "Zyphuel operates an on-demand doorstep petroleum delivery ecosystem across Lahore, Punjab. Active operational sectors include Gulberg, DHA (Phases 1-9), Model Town, Johar Town, Bahria Town, Green Town, Lahore Cantt, and Faisal Town."
     )
 
     LegalCard(
         icon = Icons.Filled.LocalGasStation,
-        title = "2. Strict Safety & Petroleum Compliance (OGRA)",
-        description = "Petroleum products and LPG are hazardous flammable fuels. Deliveries comply strictly with statutory petroleum safety regulations:\n• A mandatory 10-meter perimeter free of open flames, active smoking, and generators must be maintained during fuel dispensing.\n• Dispensing occurs exclusively into vehicle tanks or certified explosion-proof containers.\n• Certified digital flow-meters and tamper-evident security seals are installed on all bowsers.\n• Delivery personnel hold statutory authority to halt dispensing if site conditions present an ignition risk."
+        title = "2. Available Fuel Products & Unavailability Notice",
+        description = "Zyphuel provides doorstep delivery for Super Euro-V Petrol, High-Octane 97, and High-Speed Diesel (Regular & Generator).\n\n⚠️ Operational Notice: Water Delivery and LPG Gas Cylinders are currently TEMPORARILY UNAVAILABLE across all sectors. Orders for these two items cannot be placed at this time."
+    )
+
+    LegalCard(
+        icon = Icons.Filled.Shield,
+        title = "3. Strict Safety & Petroleum Compliance (OGRA)",
+        description = "Petroleum products are hazardous flammable fuels. Deliveries comply strictly with statutory petroleum safety regulations:\n• A mandatory 10-meter perimeter free of open flames, active smoking, and generators must be maintained during fuel dispensing.\n• Dispensing occurs exclusively into vehicle tanks or certified explosion-proof containers.\n• Certified digital flow-meters and tamper-evident security seals are installed on all delivery bowsers.\n• Delivery personnel hold statutory authority to halt dispensing if site conditions present an ignition risk."
     )
 
     LegalCard(
         icon = Icons.Filled.Payments,
-        title = "3. Regulated Pricing & Cash on Delivery (COD)",
-        description = "Fuel rates strictly track official notified retail prices set by the Oil & Gas Regulatory Authority (OGRA). A transparent petroleum retail adjustment of Rs. 2.50/L applies at checkout. Standard delivery fees are Rs. 250 flat for fuel/gas and Rs. 50 for pure drinking water. All transactions are settled via 100% Cash on Delivery upon direct doorstep verification."
+        title = "4. Transparent Pricing & Cash on Delivery (COD)",
+        description = "All fuel rates strictly track notified retail pump prices. A flat delivery fee of Rs. 250 applies per dispatch. All transactions are settled via 100% Cash on Delivery (COD) upon direct doorstep verification. No hidden charges apply."
     )
 
     LegalCard(
         icon = Icons.Filled.Cancel,
-        title = "4. Order Cancellation & Customer Rights",
+        title = "5. Order Cancellation & Customer Rights",
         description = "Orders can be cancelled free of charge prior to driver dispatch. Immediate quality or volumetric inquiries are resolved 24/7 via in-app support within 2 hours of delivery."
     )
 
     LegalCard(
         icon = Icons.Filled.DeleteForever,
-        title = "5. Permanent Account Deletion",
-        description = "In full compliance with Google Play Developer Policies, customers retain the right to permanently delete their account, GPS history, and personal data at any time via Profile Settings > Delete Account."
+        title = "6. Permanent Account Deletion",
+        description = "In full compliance with Google Play Developer Policies, customers retain the statutory right to permanently delete their account, order history, and personal data at any time via Profile Settings > Delete Account."
     )
 }
 
@@ -315,7 +339,7 @@ private fun PrivacyContent() {
     LegalHighlightCard(
         title = "Google Play Store Data Safety & Privacy Guarantee",
         subtitle = "Encrypted in Transit (TLS 1.3) & at Rest (AES-256)",
-        accent = AccentEmerald,
+        accent = AccentGreen,
         icon = Icons.Filled.Shield
     )
 
@@ -353,16 +377,16 @@ private fun PrivacyContent() {
 @Composable
 private fun HowItWorksContent() {
     LegalHighlightCard(
-        title = "Seamless Doorstep Delivery in 4 Simple Steps",
+        title = "Doorstep Fueling in 4 Simple Steps",
         subtitle = "Verified Logistics Fleet • Zero Wait Time",
-        accent = Color(0xFF8B5CF6),
+        accent = ZyphuelBluePrimary,
         icon = Icons.Filled.ElectricBolt
     )
 
     StepCard(
         stepNumber = "1",
-        title = "Choose Product & Volume",
-        description = "Select Super Euro-V Petrol, High-Octane 97, High-Speed Diesel, 11.8kg LPG Cylinder, or Pure RO Drinking Water. Adjust volume with precision 1-liter steppers or full-tank presets."
+        title = "Select Fuel Product & Quantity",
+        description = "Choose Super Euro-V Petrol, High-Octane 97, or High-Speed Diesel. Adjust volume with precision 1-liter steppers or full-tank presets. (Water and Gas are currently unavailable)."
     )
 
     StepCard(
@@ -380,7 +404,7 @@ private fun HowItWorksContent() {
     StepCard(
         stepNumber = "4",
         title = "Direct Fueling & Instant Invoice",
-        description = "Our rider dispenses certified fuel into your vehicle tank. Pay via Cash on Delivery and instantly receive your official PDF tax invoice."
+        description = "Our certified rider dispenses fuel directly into your vehicle tank. Pay via Cash on Delivery and instantly receive your official digital receipt."
     )
 }
 
@@ -392,9 +416,10 @@ private fun LegalHighlightCard(
     icon: ImageVector
 ) {
     Surface(
-        shape = RoundedCornerShape(16.dp),
-        color = accent.copy(alpha = 0.08f),
-        border = BorderStroke(1.dp, accent.copy(alpha = 0.35f)),
+        shape = RoundedCornerShape(14.dp),
+        color = Color.White,
+        border = BorderStroke(1.2.dp, accent.copy(alpha = 0.35f)),
+        shadowElevation = 1.dp,
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
@@ -405,7 +430,7 @@ private fun LegalHighlightCard(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(RoundedCornerShape(10.dp))
-                    .background(accent.copy(alpha = 0.15f)),
+                    .background(accent.copy(alpha = 0.12f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(icon, contentDescription = null, tint = accent, modifier = Modifier.size(22.dp))
@@ -414,12 +439,19 @@ private fun LegalHighlightCard(
             Column {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface
+                    style = MaterialTheme.typography.titleSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.5.sp
+                    ),
+                    color = TextPrimary
                 )
                 Text(
                     text = subtitle,
-                    style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = TextSecondary,
+                        fontSize = 11.5.sp,
+                        fontWeight = FontWeight.Medium
+                    )
                 )
             }
         }
@@ -434,33 +466,46 @@ private fun LegalCard(
 ) {
     Surface(
         shape = RoundedCornerShape(14.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
+        color = Color.White,
+        border = BorderStroke(1.dp, ZyphuelCardBorder),
+        shadowElevation = 1.dp,
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
             modifier = Modifier.padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = PrimaryBlue,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
+                Box(
+                    modifier = Modifier
+                        .size(30.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(ZyphuelBlueLight),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = ZyphuelBluePrimary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(10.dp))
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface
+                    style = MaterialTheme.typography.titleSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.5.sp
+                    ),
+                    color = TextPrimary
                 )
             }
             Text(
                 text = description,
                 style = MaterialTheme.typography.bodySmall.copy(
-                    lineHeight = 18.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    lineHeight = 19.sp,
+                    fontSize = 12.5.sp,
+                    color = TextSecondary
                 )
             )
         }
@@ -475,8 +520,9 @@ private fun StepCard(
 ) {
     Surface(
         shape = RoundedCornerShape(14.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
+        color = Color.White,
+        border = BorderStroke(1.dp, ZyphuelCardBorder),
+        shadowElevation = 1.dp,
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
@@ -485,29 +531,33 @@ private fun StepCard(
         ) {
             Box(
                 modifier = Modifier
-                    .size(30.dp)
+                    .size(28.dp)
                     .clip(CircleShape)
-                    .background(PrimaryBlue),
+                    .background(ZyphuelBluePrimary),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = stepNumber,
-                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold, color = Color.White)
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold, color = Color.White, fontSize = 12.sp)
                 )
             }
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface
+                    style = MaterialTheme.typography.titleSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.5.sp
+                    ),
+                    color = TextPrimary
                 )
-                Spacer(modifier = Modifier.height(3.dp))
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = description,
                     style = MaterialTheme.typography.bodySmall.copy(
-                        lineHeight = 17.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        lineHeight = 18.sp,
+                        fontSize = 12.5.sp,
+                        color = TextSecondary
                     )
                 )
             }
