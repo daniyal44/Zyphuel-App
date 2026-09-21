@@ -1,5 +1,5 @@
 # 🚀 Zyphuel App Features & Technical Documentation
-**App Version:** `v2.6.4.0.0.14 (Build 42)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** `September 2026`
+**App Version:** `v2.6.4.0.0.15 (Build 43)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** `September 2026`
 
 Welcome to the complete architectural and functional guide for the **Zyphuel** Android application. This document outlines every single feature, function, database entity, and user flow from start to finish.
 
@@ -1241,6 +1241,21 @@ Zyphuel v2.4.0 introduces a comprehensive 10-category on-demand automotive and m
 * **App Versioning**:
   - Incremented `versionCode` from `41` to `42`.
   - Advanced `versionName` to `"2.6.4.0.0.14"`.
+
+---
+
+## 34. Security Hardening: Manifest Attack Surface Reduction & Backup Tamper Protection (v2.6.4 Build 43)
+### 34.1 Android Manifest Security Hardening (`AndroidManifest.xml`)
+* **Disabled Application Backup (`android:allowBackup="false"`)**:
+  - Closed the physical tampering / USB adb extraction vulnerability where app databases or shared preferences could be extracted via `adb backup`.
+  - Prevents Android Keystore restore desynchronization crashes on new device transfers.
+* **Secured Login Activity (`android:exported="false"`)**:
+  - Closed an unauthenticated entry point where third-party malicious apps could attempt to invoke `LoginActivity` via explicit intents.
+  - Ensures only internal Zyphuel app components can launch `LoginActivity`.
+* **App Versioning**:
+  - Incremented `versionCode` from `42` to `43`.
+  - Advanced `versionName` to `"2.6.4.0.0.15"`.
+
 
 
 
