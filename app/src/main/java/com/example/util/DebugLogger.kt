@@ -22,25 +22,46 @@ object DebugLogger {
     private val logQueue = ConcurrentLinkedQueue<LogEntry>()
     private val dateFormat = SimpleDateFormat("HH:mm:ss.SSS", Locale.US)
 
+    private val SENSITIVE_PATTERNS = listOf(
+        Regex("(?i)(password|token|secret|apiKey|hash|credential|bearer)\\s*[:=]\\s*[^\\s,;]+"),
+        Regex("(?i)SEC_TOKEN_[A-Z]+_[^\\s]+"),
+        Regex("(?i)AIza[0-9A-Za-z_-]{35}")
+    )
+
+    private fun sanitizeMessage(msg: String): String {
+        var clean = msg
+        for (pattern in SENSITIVE_PATTERNS) {
+            clean = clean.replace(pattern) { matchResult ->
+                val key = matchResult.value.substringBefore("=").substringBefore(":")
+                if (key.length < matchResult.value.length) "$key=[REDACTED]" else "[REDACTED]"
+            }
+        }
+        return clean
+    }
+
     fun i(tag: String, message: String) {
-        addLog("INFO", tag, message)
-        Log.i("ZyphuelDebug", "[$tag] $message")
+        val sanitized = sanitizeMessage(message)
+        addLog("INFO", tag, sanitized)
+        Log.i("ZyphuelDebug", "[$tag] $sanitized")
     }
 
     fun d(tag: String, message: String) {
-        addLog("DEBUG", tag, message)
-        Log.d("ZyphuelDebug", "[$tag] $message")
+        val sanitized = sanitizeMessage(message)
+        addLog("DEBUG", tag, sanitized)
+        Log.d("ZyphuelDebug", "[$tag] $sanitized")
     }
 
     fun w(tag: String, message: String) {
-        addLog("WARN", tag, message)
-        Log.w("ZyphuelDebug", "[$tag] $message")
+        val sanitized = sanitizeMessage(message)
+        addLog("WARN", tag, sanitized)
+        Log.w("ZyphuelDebug", "[$tag] $sanitized")
     }
 
     fun e(tag: String, message: String, throwable: Throwable? = null) {
-        val exStr = throwable?.let { Log.getStackTraceString(it) }
-        addLog("ERROR", tag, message, exStr)
-        Log.e("ZyphuelDebug", "[$tag] $message", throwable)
+        val sanitized = sanitizeMessage(message)
+        val exStr = throwable?.let { Log.getStackTraceString(it) }?.let { sanitizeMessage(it) }
+        addLog("ERROR", tag, sanitized, exStr)
+        Log.e("ZyphuelDebug", "[$tag] $sanitized", throwable)
     }
 
     private fun addLog(level: String, tag: String, message: String, exceptionDetails: String? = null) {

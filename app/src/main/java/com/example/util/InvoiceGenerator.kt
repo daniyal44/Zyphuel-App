@@ -23,7 +23,7 @@ object InvoiceGenerator {
      * Formats an itemized text receipt suitable for SMS, WhatsApp, and clipboard sharing.
      */
     fun generatePlainTextReceipt(order: OrderEntity): String {
-        val deliveryFee = FeeConstants.calculateDeliveryFee(order.serviceType)
+        val deliveryFee = FeeConstants.calculateDeliveryFee(order.serviceType, order.quantity)
         val subtotal = (order.totalPrice - deliveryFee).coerceAtLeast(0.0)
         val dateStr = SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.US).format(Date(order.createdAt))
 
@@ -77,7 +77,7 @@ object InvoiceGenerator {
      * Generates a complete, responsive HTML invoice document for PDF rendering.
      */
     fun generateHtmlInvoice(order: OrderEntity): String {
-        val deliveryFee = FeeConstants.calculateDeliveryFee(order.serviceType)
+        val deliveryFee = FeeConstants.calculateDeliveryFee(order.serviceType, order.quantity)
         val subtotal = (order.totalPrice - deliveryFee).coerceAtLeast(0.0)
         val dateStr = SimpleDateFormat("dd MMMM yyyy - hh:mm a", Locale.US).format(Date(order.createdAt))
         val isAdminFulfillment = order.riderEmail.isNullOrBlank() ||

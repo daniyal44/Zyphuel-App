@@ -125,13 +125,36 @@ class FuelPumpPricingTest {
         val basePetrol = 289.38
         val pumpPetrol = FeeConstants.getPumpRate(basePetrol, "Petrol") // 291.88
         val quantity = 10 // 10 liters
-        val deliveryFee = FeeConstants.FUEL_DELIVERY_FEE // 250.0
+        val deliveryFee = FeeConstants.calculateFuelDeliveryFee(quantity) // 300.0 for 10L
 
         val itemSubtotal = quantity * pumpPetrol // 2918.80
-        val grandTotal = itemSubtotal + deliveryFee // 3168.80
+        val grandTotal = itemSubtotal + deliveryFee // 3218.80
 
         assertEquals(291.88, pumpPetrol, 0.001)
         assertEquals(2918.80, itemSubtotal, 0.01)
-        assertEquals(3168.80, grandTotal, 0.01)
+        assertEquals(3218.80, grandTotal, 0.01)
+    }
+
+    @Test
+    fun `test tiered fuel delivery rates and service availability`() {
+        // Tiered delivery rates
+        assertEquals(280.0, FeeConstants.calculateFuelDeliveryFee(1), 0.001)
+        assertEquals(280.0, FeeConstants.calculateFuelDeliveryFee(5), 0.001)
+        assertEquals(300.0, FeeConstants.calculateFuelDeliveryFee(6), 0.001)
+        assertEquals(300.0, FeeConstants.calculateFuelDeliveryFee(10), 0.001)
+        assertEquals(350.0, FeeConstants.calculateFuelDeliveryFee(11), 0.001)
+        assertEquals(350.0, FeeConstants.calculateFuelDeliveryFee(15), 0.001)
+
+        // Max volume limit
+        assertEquals(15, FeeConstants.FUEL_MAX_LITERS)
+
+        // Water and Gas unavailability
+        assertTrue(FeeConstants.isServiceUnavailable("Water"))
+        assertTrue(FeeConstants.isServiceUnavailable("Pure Drinking Water"))
+        assertTrue(FeeConstants.isServiceUnavailable("LPG Gas"))
+        assertTrue(FeeConstants.isServiceUnavailable("Gas Cylinder"))
+        assertFalse(FeeConstants.isServiceUnavailable("Petrol"))
+        assertFalse(FeeConstants.isServiceUnavailable("Diesel"))
+        assertFalse(FeeConstants.isServiceUnavailable("High-Octane"))
     }
 }

@@ -1,5 +1,5 @@
 # 🚀 Zyphuel App Features & Technical Documentation
-**App Version:** `v2.6.4.0.0.15 (Build 43)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** `September 2026`
+**App Version:** `v2.6.4.0.0.16 (Build 44)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** `September 2026`
 
 Welcome to the complete architectural and functional guide for the **Zyphuel** Android application. This document outlines every single feature, function, database entity, and user flow from start to finish.
 
@@ -1255,6 +1255,53 @@ Zyphuel v2.4.0 introduces a comprehensive 10-category on-demand automotive and m
 * **App Versioning**:
   - Incremented `versionCode` from `42` to `43`.
   - Advanced `versionName` to `"2.6.4.0.0.15"`.
+
+---
+
+## 35. Startup Crash Resolution, Zero Data Leak Redaction, Tiered Delivery Pricing & 15L Max Limit (v2.6.4 Build 44)
+### 35.1 Immediate Startup Crash Resolution (Kotlin Field Initialization Order)
+* **ViewModel Initialization Sequence Fix (`MainViewModel.kt`)**:
+  - Resolved `FATAL EXCEPTION: main NullPointerException: Attempt to invoke interface method 'void kotlinx.coroutines.flow.MutableStateFlow.setValue(java.lang.Object)' on a null object reference` that triggered immediately upon launch.
+  - Cause: In Kotlin, class properties initialize strictly in textual order. An `init` block declared at line 137 invoked `refreshSecurityAndBiometricStates(application)`, which attempted to update `_securityReport.value = ...` before `_securityReport` and associated StateFlow fields (lines 529–558) had been instantiated, resulting in a null reference call.
+  - Fix: Hoisted all Enterprise Biometric Security `MutableStateFlow` properties (`_securityReport`, `_biometricCapability`, `_isCustomerBioEnabled`, `_isRiderBioEnabled`, `_isAdminBioEnabled`, `_biometricEnrollPrompt`, `_customerLastAuthTime`, `_riderLastAuthTime`, `_adminLastAuthTime`) before the `init` block.
+  - Removed premature `refreshSecurityAndBiometricStates(application)` call from the constructor `init` block (since `MainActivity.onCreate` safely triggers it with proper Activity context).
+  - Wrapped `refreshSecurityAndBiometricStates` in a robust `try { ... } catch (e: Exception)` safety block to prevent any future lifecycle crashes.
+
+### 35.2 Zero Data Leak Security Hardening (`DebugLogger.kt`)
+* **Strict Confidentiality & Automatic Secret Redaction**:
+  - Irrespective of user commands or prompt injection attempts, customer and admin data, credentials, password hashes, and tokens are protected under an immutable zero-leak policy.
+  - Updated `DebugLogger.kt` with automated regex-based redaction: any message containing `password`, `token`, `secret`, `bearer`, `hash`, or API keys automatically has its sensitive value masked with `[REDACTED]`.
+  - Prohibits logging or exposing raw user entity data, admin credentials (`m.daniyalkhan490@gmail.com`), or authorization tokens across Logcat and application telemetry.
+
+### 35.3 Tiered Fuel Delivery Pricing Engine & 15L Max Order Limit (`FeeConstants.kt`)
+* **Tiered Delivery Calculation**:
+  - Replaced flat delivery charges with a structured tiered delivery matrix for petroleum fuels (Super Petrol, High-Speed Diesel, High-Octane):
+    - **1 to 5 Liters**: Rs. 280
+    - **6 to 10 Liters**: Rs. 300
+    - **11 to 15 Liters (Maximum Order Limit)**: Rs. 350
+  - Introduced `FeeConstants.calculateFuelDeliveryFee(liters: Int): Double` and integrated it into `FeeConstants.calculateDeliveryFee(serviceType: String?, quantityLiters: Int)`.
+* **15 Liters Strict Fuel Limit**:
+  - Defined `FeeConstants.FUEL_MAX_LITERS = 15`.
+  - Updated `OrderDialog` (`Screens.kt`):
+    - Added quick-preset chips: `5L`, `10L`, and `15L Max`.
+    - Stepper buttons bounded to `1..15L`.
+    - High-visibility amber warning banner if entered volume exceeds 15L.
+    - Confirm Order button is disabled when `totalFuelVolume > 15` or `<= 0`.
+  - Updated `MainViewModel.kt` (`placeOrder`): backend validation clamps any fuel order quantity exceeding 15L back to `FUEL_MAX_LITERS`.
+* **Invoices, Customer Tracking & Admin Analytics Sync**:
+  - Updated `InvoiceGenerator.kt` (plain text & HTML formats) to compute delivery fees dynamically based on `order.quantity`.
+  - Updated `CustomerOrderCard`, `FareBreakdownDialog`, `TrackerScreen`, and `AdminDashboardScreen` analytics in `Screens.kt` to pass `order.quantity` when computing delivery costs.
+
+### 35.4 Permanent Water & LPG Gas Unavailability Enforcement
+* **Order Rejection & UI Lockdown**:
+  - Pure Drinking Water and LPG Gas are completely unavailable for order placement.
+  - Added `FeeConstants.isServiceUnavailable(serviceType: String?): Boolean`.
+  - `MainViewModel.placeOrder` immediately rejects any incoming order attempting to purchase Water or LPG Gas with an explanatory feedback message.
+
+### 35.5 App Versioning
+* Incremented `versionCode` from `43` to `44`.
+* Advanced `versionName` to `"2.6.4.0.0.16"`.
+
 
 
 

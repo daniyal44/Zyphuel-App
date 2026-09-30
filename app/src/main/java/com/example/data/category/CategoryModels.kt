@@ -126,7 +126,7 @@ object CategoryCatalogSeed {
                 supportedVehicleTypes = listOf(VehicleType.BIKE, VehicleType.CAR, VehicleType.SUV, VehicleType.VAN, VehicleType.COMMERCIAL),
                 locationCoverage = listOf("All Lahore Operational Zones", "Gulberg", "DHA", "Model Town", "Johar Town", "Bahria Town"),
                 estimatedResponseTime = "Direct Dispatch",
-                pricingConfig = PricingConfig(deliveryFee = 250.0, isDynamicFuelRate = true, unitLabel = "L"),
+                pricingConfig = PricingConfig(deliveryFee = 280.0, isDynamicFuelRate = true, unitLabel = "L"),
                 backendServiceMapping = "fuel_delivery_v1",
                 subcategories = listOf(
                     // Petrol (2 subcategories)

@@ -318,7 +318,7 @@ private fun TermsContent() {
     LegalCard(
         icon = Icons.Filled.Payments,
         title = "4. Transparent Pricing & Cash on Delivery (COD)",
-        description = "All fuel rates strictly track notified retail pump prices. A flat delivery fee of Rs. 250 applies per dispatch. All transactions are settled via 100% Cash on Delivery (COD) upon direct doorstep verification. No hidden charges apply."
+        description = "All fuel rates strictly track notified retail pump prices. Fuel delivery follows official tiered delivery charges: Rs. 280 for up to 5 Liters, Rs. 300 for up to 10 Liters, and Rs. 350 for up to 15 Liters (maximum order limit). All transactions are settled via 100% Cash on Delivery (COD) upon direct doorstep verification. No hidden charges apply."
     )
 
     LegalCard(

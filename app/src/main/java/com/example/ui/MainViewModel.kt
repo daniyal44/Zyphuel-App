@@ -134,9 +134,39 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _currentLanguage = MutableStateFlow(AppLanguageManager.loadSavedLanguage(application))
     val currentLanguage: StateFlow<AppLanguage> = _currentLanguage.asStateFlow()
 
+    // --- Enterprise Biometric Security States ---
+    private val _securityReport = MutableStateFlow<SecurityReport?>(null)
+    val securityReport: StateFlow<SecurityReport?> = _securityReport.asStateFlow()
+
+    private val _biometricCapability = MutableStateFlow(BiometricCapabilityStatus.NOT_SUPPORTED)
+    val biometricCapability: StateFlow<BiometricCapabilityStatus> = _biometricCapability.asStateFlow()
+
+    private val _isCustomerBioEnabled = MutableStateFlow(false)
+    val isCustomerBioEnabled: StateFlow<Boolean> = _isCustomerBioEnabled.asStateFlow()
+
+    private val _isRiderBioEnabled = MutableStateFlow(false)
+    val isRiderBioEnabled: StateFlow<Boolean> = _isRiderBioEnabled.asStateFlow()
+
+    private val _isAdminBioEnabled = MutableStateFlow(false)
+    val isAdminBioEnabled: StateFlow<Boolean> = _isAdminBioEnabled.asStateFlow()
+
+    // Post-login "Enable fingerprint login?" auto-offer. Non-null = show the prompt for that module.
+    private val _biometricEnrollPrompt = MutableStateFlow<AppModule?>(null)
+    val biometricEnrollPrompt: StateFlow<AppModule?> = _biometricEnrollPrompt.asStateFlow()
+    // Set true right before a biometric login calls completeLogin, so it does not re-offer enrollment.
+    private var suppressBiometricOffer = false
+
+    private val _customerLastAuthTime = MutableStateFlow(0L)
+    val customerLastAuthTime: StateFlow<Long> = _customerLastAuthTime.asStateFlow()
+
+    private val _riderLastAuthTime = MutableStateFlow(0L)
+    val riderLastAuthTime: StateFlow<Long> = _riderLastAuthTime.asStateFlow()
+
+    private val _adminLastAuthTime = MutableStateFlow(0L)
+    val adminLastAuthTime: StateFlow<Long> = _adminLastAuthTime.asStateFlow()
+
     init {
         com.example.auth.FirebaseAuthProvider.getInstance(application).ensureAuthSession()
-        refreshSecurityAndBiometricStates(application)
     }
 
     fun setAppLanguage(language: AppLanguage) {
@@ -525,49 +555,22 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // --- Enterprise Biometric Security States ---
-    private val _securityReport = MutableStateFlow<SecurityReport?>(null)
-    val securityReport: StateFlow<SecurityReport?> = _securityReport.asStateFlow()
-
-    private val _biometricCapability = MutableStateFlow(BiometricCapabilityStatus.NOT_SUPPORTED)
-    val biometricCapability: StateFlow<BiometricCapabilityStatus> = _biometricCapability.asStateFlow()
-
-    private val _isCustomerBioEnabled = MutableStateFlow(false)
-    val isCustomerBioEnabled: StateFlow<Boolean> = _isCustomerBioEnabled.asStateFlow()
-
-    private val _isRiderBioEnabled = MutableStateFlow(false)
-    val isRiderBioEnabled: StateFlow<Boolean> = _isRiderBioEnabled.asStateFlow()
-
-    private val _isAdminBioEnabled = MutableStateFlow(false)
-    val isAdminBioEnabled: StateFlow<Boolean> = _isAdminBioEnabled.asStateFlow()
-
-    // Post-login "Enable fingerprint login?" auto-offer. Non-null = show the prompt for that module.
-    private val _biometricEnrollPrompt = MutableStateFlow<AppModule?>(null)
-    val biometricEnrollPrompt: StateFlow<AppModule?> = _biometricEnrollPrompt.asStateFlow()
-    // Set true right before a biometric login calls completeLogin, so it does not re-offer enrollment.
-    private var suppressBiometricOffer = false
-
-    private val _customerLastAuthTime = MutableStateFlow(0L)
-    val customerLastAuthTime: StateFlow<Long> = _customerLastAuthTime.asStateFlow()
-
-    private val _riderLastAuthTime = MutableStateFlow(0L)
-    val riderLastAuthTime: StateFlow<Long> = _riderLastAuthTime.asStateFlow()
-
-    private val _adminLastAuthTime = MutableStateFlow(0L)
-    val adminLastAuthTime: StateFlow<Long> = _adminLastAuthTime.asStateFlow()
-
     fun refreshSecurityAndBiometricStates(context: Context = getApplication()) {
         viewModelScope.launch {
-            _securityReport.value = RootAndSecurityDetector.getSecurityReport(context)
-            _biometricCapability.value = BiometricSecurityManager.checkBiometricCapability(context)
+            try {
+                _securityReport.value = RootAndSecurityDetector.getSecurityReport(context)
+                _biometricCapability.value = BiometricSecurityManager.checkBiometricCapability(context)
 
-            _isCustomerBioEnabled.value = SecureStorageManager.isBiometricEnabled(context, AppModule.CUSTOMER)
-            _isRiderBioEnabled.value = SecureStorageManager.isBiometricEnabled(context, AppModule.RIDER)
-            _isAdminBioEnabled.value = SecureStorageManager.isBiometricEnabled(context, AppModule.ADMIN)
+                _isCustomerBioEnabled.value = SecureStorageManager.isBiometricEnabled(context, AppModule.CUSTOMER)
+                _isRiderBioEnabled.value = SecureStorageManager.isBiometricEnabled(context, AppModule.RIDER)
+                _isAdminBioEnabled.value = SecureStorageManager.isBiometricEnabled(context, AppModule.ADMIN)
 
-            _customerLastAuthTime.value = SecureStorageManager.getLastAuthTime(context, AppModule.CUSTOMER)
-            _riderLastAuthTime.value = SecureStorageManager.getLastAuthTime(context, AppModule.RIDER)
-            _adminLastAuthTime.value = SecureStorageManager.getLastAuthTime(context, AppModule.ADMIN)
+                _customerLastAuthTime.value = SecureStorageManager.getLastAuthTime(context, AppModule.CUSTOMER)
+                _riderLastAuthTime.value = SecureStorageManager.getLastAuthTime(context, AppModule.RIDER)
+                _adminLastAuthTime.value = SecureStorageManager.getLastAuthTime(context, AppModule.ADMIN)
+            } catch (e: Exception) {
+                DebugLogger.w("MainViewModel", "Could not refresh security/biometric states: ${e.message}")
+            }
         }
     }
 
@@ -2256,7 +2259,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             else -> rawAddress
         }
 
-        val safeQuantity = quantity.coerceAtLeast(1)
+        if (com.example.util.FeeConstants.isServiceUnavailable(serviceType)) {
+            _uiMessage.value = "Water and LPG Gas delivery are currently unavailable in Lahore."
+            return
+        }
+
+        val isFuel = serviceType.contains("petrol", true) || serviceType.contains("diesel", true) || serviceType.contains("octane", true)
+        val safeQuantity = if (isFuel) quantity.coerceIn(1, com.example.util.FeeConstants.FUEL_MAX_LITERS) else quantity.coerceAtLeast(1)
         val safeServiceType = if (serviceType.isNotBlank()) serviceType else "Super Petrol"
         val safePrice = if (totalPrice > 0) totalPrice else 500.0
 

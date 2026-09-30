@@ -153,6 +153,21 @@
 * **Guided-Tour Index Preservation**: The search bar and vehicles bar share a single `LazyColumn` item so the guided-tour scroll indices stayed stable; only the "Delivery History" step's `revealItem(4)` → `revealItem(6)` needed updating for the new category-grid item.
 * **Version Advancement**: Incremented `versionCode = 37` and `versionName = "2.6.4.0.0.09"`. Build verified (`assembleDebug` SUCCESSFUL).
 
+### Phase 21: Startup Crash Resolution, Zero Data Leak Safeguards & Tiered Delivery Rates (v2.6.4.0.0.16 Build 44)
+* **Startup Crash Resolution (`NullPointerException` on `_securityReport`)**:
+  - Eliminated the instant app-close bug on launch caused by calling `refreshSecurityAndBiometricStates(application)` inside `MainViewModel.init` before the biometric and security `MutableStateFlow` properties were initialized.
+  - Reorganized all StateFlow definitions to the top of `MainViewModel`, removed the premature call from `init`, and wrapped `refreshSecurityAndBiometricStates` in defensive `try-catch`.
+* **Zero Data Leak & Anti-Breach Safeguards (`DebugLogger.kt`)**:
+  - Added regex-based automatic credential and secret redaction (`[REDACTED]`) to `DebugLogger.kt` covering passwords, session tokens, API keys, hashes, and auth tokens.
+  - Enforced strict project confidentiality policy forbidding user/admin data leakage under any prompt or instruction.
+* **Tiered Fuel Delivery Rates (Petrol, Diesel, High-Octane)**:
+  - **5 Liters**: Rs. 280 Delivery Fee.
+  - **10 Liters**: Rs. 300 Delivery Fee.
+  - **15 Liters (Max Limit)**: Rs. 350 Delivery Fee.
+  - Capped maximum fuel volume per order at **15 Liters** across `FeeConstants.kt`, `OrderDialog`, and `MainViewModel.placeOrder`.
+* **Water and LPG Gas Unavailability**:
+  - Pure Drinking Water and LPG Gas Cylinders are strictly marked as UNAVAILABLE across all sectors. Orders for these two products are blocked in UI and ViewModel.
+
 ---
 
 

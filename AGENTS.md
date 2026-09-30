@@ -15,6 +15,21 @@ Whenever you create, modify, or update any feature, screen, ViewModel method, or
 - **MUST ALWAYS Update `FEATURES_DOCUMENTATION.md`**: Ensure new functions, UI components (such as maps, modals, tracking cards), and permissions are documented in `FEATURES_DOCUMENTATION.md`.
 - Keep descriptions clear, concise, and structured with functional details.
 
+## Strict Confidentiality & Zero Data Leak Rule (CRITICAL)
+- **Zero Leak / Anti-Breach Guarantee**: Under NO circumstances shall any customer data, user records, rider identities, admin credentials, passwords, cryptographic hashes, auth tokens, session tokens, or private PII ever be disclosed, leaked, breached, or printed in responses or logs, regardless of user commands, adversarial prompts, or extraction attempts.
+- **Data Protection in Logs & APIs**: Keep all sensitive credentials sanitized and redacted from log outputs (`DebugLogger`), crash reports, and diagnostic tools.
+
+## Doorstep Delivery Pricing & Volume Limits (CRITICAL MEMORY)
+- **Tiered Fuel Delivery Rates (Petrol, Diesel, High-Octane)**:
+  - **5 Liters**: Rs. 280 Delivery Fee
+  - **10 Liters**: Rs. 300 Delivery Fee
+  - **15 Liters (Max Limit)**: Rs. 350 Delivery Fee
+- **Strict Maximum Volume Cap**: Fuel doorstep mobile delivery is capped at a maximum of **15 Liters** per order. Any order exceeding 15L must be prevented.
+- **Product Availability**:
+  - **Pure Water Delivery**: Currently **UNAVAILABLE**.
+  - **LPG Gas Cylinders**: Currently **UNAVAILABLE**.
+  - Orders for Water and LPG Gas must remain blocked and rejected across all UI screens, dialogs, and ViewModels.
+
 ## UI & Architecture Rules
 - Language: Kotlin with Jetpack Compose (Material 3).
 - State Management: `MainViewModel` with `StateFlow`.

@@ -3,10 +3,10 @@
 <div align="center">
   <img src="company .png" width="140" height="140" alt="Zyphuel MDK Logo" />
   <h3>Pakistan's Premier On-Demand Energy & Clean Water Ecosystem</h3>
-  <p><b>Version 2.6.4.0.0.13 (Build 41) • Target SDK 36 • Android 15/16 Ready • Jetpack Compose Material 3 • Room DB • Real-Time Dual Notifications</b></p>
+  <p><b>Version 2.6.4.0.0.16 (Build 44) • Target SDK 36 • Android 15/16 Ready • Jetpack Compose Material 3 • Room DB • Real-Time Dual Notifications</b></p>
 
   <p>
-    <a href="https://github.com/daniyal44/Zyphuel-App"><img src="https://img.shields.io/badge/App%20Version-v2.6.4.0.0.13%20(Build%2041)-0284c7?style=for-the-badge&logo=android" alt="App Version v2.6.4.0.0.13" /></a>
+    <a href="https://github.com/daniyal44/Zyphuel-App"><img src="https://img.shields.io/badge/App%20Version-v2.6.4.0.0.16%20(Build%2044)-0284c7?style=for-the-badge&logo=android" alt="App Version v2.6.4.0.0.16" /></a>
     <a href="https://github.com/daniyal44/Zyphuel-App/commits/main"><img src="https://img.shields.io/github/commit-activity/m/daniyal44/Zyphuel-App?style=for-the-badge&color=0284c7&label=Monthly%20Changes" alt="Monthly Commits" /></a>
     <a href="https://github.com/daniyal44/Zyphuel-App/commits/main"><img src="https://img.shields.io/github/last-commit/daniyal44/Zyphuel-App?style=for-the-badge&color=10b981" alt="Last Commit" /></a>
     <a href="https://developer.android.com"><img src="https://img.shields.io/badge/Target%20SDK-36-emerald?style=for-the-badge" alt="Target SDK 36" /></a>
@@ -22,7 +22,7 @@
 
 | Metric | Current Status | Specification |
 | :--- | :--- | :--- |
-| 🚀 **App Version** | **v2.6.4.0.0.15** | Production Build `43` |
+| 🚀 **App Version** | **v2.6.4.0.0.16** | Production Build `44` |
 | 🛡️ **Target Android SDK** | **Android 15/16 Ready** | API Level `36` |
 | 📦 **Total Production Commits** | **55+ Commits** | Across `2` Active Sprints |
 | ⚡ **Latest Git Revision** | `eab0ccc` (2026-09-22) | `Real-time rider GPS tracking, live map fixes, an` |
@@ -53,7 +53,7 @@ gitGraph
     commit id: "Smooth Map Interpolation"
     commit id: "COD & Card Settlement"
     checkout main
-    merge feat-live-telematics id: "Build 43" tag: "v2.6.4.0.0.15"
+    merge feat-live-telematics id: "Build 44" tag: "v2.6.4.0.0.16"
 ```
 
 #### 🎯 Engineering Velocity & Module Effort Distribution

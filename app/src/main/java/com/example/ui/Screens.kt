@@ -8580,18 +8580,22 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
 
     val isMultiItemOrder = selectedTypesCount >= 2
 
-    // Delivery charges & multi-item discount
+    // Delivery charges based on tiered volume (5L: Rs. 280, 10L: Rs. 300, 15L Max: Rs. 350)
+    val totalFuelVolume = (if (petrolSelected) petrolQty else 0) +
+            (if (dieselSelected) dieselQty else 0) +
+            (if (octaneSelected) octaneQty else 0)
+
+    val isFuelExceeded = totalFuelVolume > com.example.util.FeeConstants.FUEL_MAX_LITERS
+
     val hasFuelOrGas = petrolSelected || dieselSelected || octaneSelected || lpgSelected
     val hasWaterOnly = waterSelected && !hasFuelOrGas
     val baseDeliveryCharge = when {
-        hasFuelOrGas -> com.example.util.FeeConstants.FUEL_DELIVERY_FEE
+        hasFuelOrGas -> com.example.util.FeeConstants.calculateFuelDeliveryFee(totalFuelVolume)
         hasWaterOnly -> com.example.util.FeeConstants.WATER_DELIVERY_FEE
         else -> 0.0
     }
 
-    // 50% delivery fee discount when customer orders 2 or more items together
-    val multiItemDeliveryDiscount = if (isMultiItemOrder && baseDeliveryCharge > 0) baseDeliveryCharge * 0.50 else 0.0
-    val deliveryCharge = (baseDeliveryCharge - multiItemDeliveryDiscount).coerceAtLeast(0.0)
+    val deliveryCharge = baseDeliveryCharge
 
     val promoDiscount = if (isPromoApplied) 200.0 else 0.0
     val totalPrice = (subtotal + deliveryCharge - promoDiscount).coerceAtLeast(0.0)
@@ -8623,12 +8627,6 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
 
     val combinedServiceType = if (selectedSummaryParts.isEmpty()) "Custom Fuel Combo" else selectedSummaryParts.joinToString(" + ")
 
-    // Check if WhatsApp redirection required (30L+ for fuel)
-    val totalFuelVolume = (if (petrolSelected) petrolQty else 0) +
-            (if (dieselSelected) dieselQty else 0) +
-            (if (octaneSelected) octaneQty else 0)
-    val requiresWhatsApp = totalFuelVolume >= 30
-
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
@@ -8650,37 +8648,60 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                 modifier = Modifier.verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                if (isMultiItemOrder) {
+                // Tiered Delivery Pricing Information Banner
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF0FDF4)),
+                    border = BorderStroke(1.dp, Color(0xFF86EFAC)),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.LocalShipping,
+                            contentDescription = "Tiered Delivery Rates",
+                            tint = Color(0xFF16A34A),
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                "Doorstep Fuel Delivery Rates (Max 15L)",
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF166534),
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                            Text(
+                                "• 5L: Rs. 280  • 10L: Rs. 300  • 15L Max: Rs. 350",
+                                color = Color(0xFF15803D),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+                }
+
+                if (isFuelExceeded) {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = ZyphuelBlueLight),
-                        border = BorderStroke(1.dp, ZyphuelBluePrimary),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFFEE2E2)),
+                        border = BorderStroke(1.dp, Color(0xFFEF4444)),
                         shape = RoundedCornerShape(10.dp)
                     ) {
                         Row(
                             modifier = Modifier.padding(10.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = Icons.Filled.LocalOffer,
-                                contentDescription = "Delivery Discount",
-                                tint = ZyphuelBluePrimary,
-                                modifier = Modifier.size(18.dp)
-                            )
+                            Icon(Icons.Filled.Warning, contentDescription = null, tint = Color(0xFFDC2626))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Column {
-                                Text(
-                                    "🎉 Multi-Item Delivery Discount Applied!",
-                                    fontWeight = FontWeight.Bold,
-                                    color = ZyphuelBlueDark,
-                                    style = MaterialTheme.typography.bodySmall
-                                )
-                                Text(
-                                    "You save ${viewModel.formatPrice(multiItemDeliveryDiscount)} (50% off delivery) for combining $selectedTypesCount items in one order!",
-                                    color = ZyphuelBluePrimary,
-                                    style = MaterialTheme.typography.labelSmall
-                                )
-                            }
+                            Text(
+                                "Maximum delivery limit is 15 Liters per order. Please adjust quantity to 15L or below.",
+                                color = Color(0xFF991B1B),
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
                 }
@@ -8715,19 +8736,45 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                             }
                         }
                         if (petrolSelected) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                IconButton(
-                                    onClick = { if (petrolQty > 5) petrolQty-- },
-                                    modifier = Modifier.size(28.dp).background(ZyphuelBlueSecondary.copy(alpha = 0.15f), CircleShape)
-                                ) {
-                                    Icon(Icons.Filled.Remove, contentDescription = "Decrease", tint = ZyphuelBluePrimary, modifier = Modifier.size(16.dp))
+                            Column(horizontalAlignment = Alignment.End) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    IconButton(
+                                        onClick = { if (petrolQty > 1) petrolQty-- },
+                                        modifier = Modifier.size(28.dp).background(ZyphuelBlueSecondary.copy(alpha = 0.15f), CircleShape)
+                                    ) {
+                                        Icon(Icons.Filled.Remove, contentDescription = "Decrease", tint = ZyphuelBluePrimary, modifier = Modifier.size(16.dp))
+                                    }
+                                    Text(" $petrolQty L ", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
+                                    IconButton(
+                                        onClick = {
+                                            val otherFuel = (if (dieselSelected) dieselQty else 0) + (if (octaneSelected) octaneQty else 0)
+                                            if (petrolQty < 15 && (petrolQty + 1 + otherFuel) <= 15) petrolQty++
+                                        },
+                                        modifier = Modifier.size(28.dp).background(ZyphuelBlueSecondary.copy(alpha = 0.15f), CircleShape)
+                                    ) {
+                                        Icon(Icons.Filled.Add, contentDescription = "Increase", tint = ZyphuelBluePrimary, modifier = Modifier.size(16.dp))
+                                    }
                                 }
-                                Text(" $petrolQty L ", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
-                                IconButton(
-                                    onClick = { petrolQty++ },
-                                    modifier = Modifier.size(28.dp).background(ZyphuelBlueSecondary.copy(alpha = 0.15f), CircleShape)
-                                ) {
-                                    Icon(Icons.Filled.Add, contentDescription = "Increase", tint = ZyphuelBluePrimary, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    listOf(5, 10, 15).forEach { preset ->
+                                        Surface(
+                                            shape = RoundedCornerShape(6.dp),
+                                            color = if (petrolQty == preset) ZyphuelBluePrimary else ZyphuelBlueLight,
+                                            modifier = Modifier.clickable {
+                                                val otherFuel = (if (dieselSelected) dieselQty else 0) + (if (octaneSelected) octaneQty else 0)
+                                                if (preset + otherFuel <= 15) petrolQty = preset
+                                            }
+                                        ) {
+                                            Text(
+                                                text = if (preset == 15) "15L Max" else "${preset}L",
+                                                color = if (petrolQty == preset) Color.White else ZyphuelBluePrimary,
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -8759,19 +8806,45 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                             }
                         }
                         if (dieselSelected) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                IconButton(
-                                    onClick = { if (dieselQty > 5) dieselQty-- },
-                                    modifier = Modifier.size(28.dp).background(ZyphuelBlueSecondary.copy(alpha = 0.15f), CircleShape)
-                                ) {
-                                    Icon(Icons.Filled.Remove, contentDescription = "Decrease", tint = ZyphuelBluePrimary, modifier = Modifier.size(16.dp))
+                            Column(horizontalAlignment = Alignment.End) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    IconButton(
+                                        onClick = { if (dieselQty > 1) dieselQty-- },
+                                        modifier = Modifier.size(28.dp).background(ZyphuelBlueSecondary.copy(alpha = 0.15f), CircleShape)
+                                    ) {
+                                        Icon(Icons.Filled.Remove, contentDescription = "Decrease", tint = ZyphuelBluePrimary, modifier = Modifier.size(16.dp))
+                                    }
+                                    Text(" $dieselQty L ", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
+                                    IconButton(
+                                        onClick = {
+                                            val otherFuel = (if (petrolSelected) petrolQty else 0) + (if (octaneSelected) octaneQty else 0)
+                                            if (dieselQty < 15 && (dieselQty + 1 + otherFuel) <= 15) dieselQty++
+                                        },
+                                        modifier = Modifier.size(28.dp).background(ZyphuelBlueSecondary.copy(alpha = 0.15f), CircleShape)
+                                    ) {
+                                        Icon(Icons.Filled.Add, contentDescription = "Increase", tint = ZyphuelBluePrimary, modifier = Modifier.size(16.dp))
+                                    }
                                 }
-                                Text(" $dieselQty L ", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
-                                IconButton(
-                                    onClick = { dieselQty++ },
-                                    modifier = Modifier.size(28.dp).background(ZyphuelBlueSecondary.copy(alpha = 0.15f), CircleShape)
-                                ) {
-                                    Icon(Icons.Filled.Add, contentDescription = "Increase", tint = ZyphuelBluePrimary, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    listOf(5, 10, 15).forEach { preset ->
+                                        Surface(
+                                            shape = RoundedCornerShape(6.dp),
+                                            color = if (dieselQty == preset) ZyphuelBluePrimary else ZyphuelBlueLight,
+                                            modifier = Modifier.clickable {
+                                                val otherFuel = (if (petrolSelected) petrolQty else 0) + (if (octaneSelected) octaneQty else 0)
+                                                if (preset + otherFuel <= 15) dieselQty = preset
+                                            }
+                                        ) {
+                                            Text(
+                                                text = if (preset == 15) "15L Max" else "${preset}L",
+                                                color = if (dieselQty == preset) Color.White else ZyphuelBluePrimary,
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -8803,19 +8876,45 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                             }
                         }
                         if (octaneSelected) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                IconButton(
-                                    onClick = { if (octaneQty > 5) octaneQty-- },
-                                    modifier = Modifier.size(28.dp).background(ZyphuelBlueSecondary.copy(alpha = 0.15f), CircleShape)
-                                ) {
-                                    Icon(Icons.Filled.Remove, contentDescription = "Decrease", tint = ZyphuelBluePrimary, modifier = Modifier.size(16.dp))
+                            Column(horizontalAlignment = Alignment.End) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    IconButton(
+                                        onClick = { if (octaneQty > 1) octaneQty-- },
+                                        modifier = Modifier.size(28.dp).background(ZyphuelBlueSecondary.copy(alpha = 0.15f), CircleShape)
+                                    ) {
+                                        Icon(Icons.Filled.Remove, contentDescription = "Decrease", tint = ZyphuelBluePrimary, modifier = Modifier.size(16.dp))
+                                    }
+                                    Text(" $octaneQty L ", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
+                                    IconButton(
+                                        onClick = {
+                                            val otherFuel = (if (petrolSelected) petrolQty else 0) + (if (dieselSelected) dieselQty else 0)
+                                            if (octaneQty < 15 && (octaneQty + 1 + otherFuel) <= 15) octaneQty++
+                                        },
+                                        modifier = Modifier.size(28.dp).background(ZyphuelBlueSecondary.copy(alpha = 0.15f), CircleShape)
+                                    ) {
+                                        Icon(Icons.Filled.Add, contentDescription = "Increase", tint = ZyphuelBluePrimary, modifier = Modifier.size(16.dp))
+                                    }
                                 }
-                                Text(" $octaneQty L ", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
-                                IconButton(
-                                    onClick = { octaneQty++ },
-                                    modifier = Modifier.size(28.dp).background(ZyphuelBlueSecondary.copy(alpha = 0.15f), CircleShape)
-                                ) {
-                                    Icon(Icons.Filled.Add, contentDescription = "Increase", tint = ZyphuelBluePrimary, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    listOf(5, 10, 15).forEach { preset ->
+                                        Surface(
+                                            shape = RoundedCornerShape(6.dp),
+                                            color = if (octaneQty == preset) ZyphuelBluePrimary else ZyphuelBlueLight,
+                                            modifier = Modifier.clickable {
+                                                val otherFuel = (if (petrolSelected) petrolQty else 0) + (if (dieselSelected) dieselQty else 0)
+                                                if (preset + otherFuel <= 15) octaneQty = preset
+                                            }
+                                        ) {
+                                            Text(
+                                                text = if (preset == 15) "15L Max" else "${preset}L",
+                                                color = if (octaneQty == preset) Color.White else ZyphuelBluePrimary,
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -8897,35 +8996,6 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                     shape = RoundedCornerShape(12.dp)
                 )
 
-                // Large order WhatsApp instruction Warning
-                if (requiresWhatsApp) {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFFBEB)),
-                        border = BorderStroke(1.dp, Color(0xFFFCD34D)),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Row(modifier = Modifier.padding(12.dp)) {
-                            Icon(Icons.Filled.Warning, contentDescription = "Warning", tint = Color(0xFFD97706))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Column {
-                                Text(
-                                    "Large Bulk Order Alert",
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF92400E),
-                                    style = MaterialTheme.typography.bodySmall
-                                )
-                                Text(
-                                    "Fuel orders of 30L or more require advance payment coordination via WhatsApp.",
-                                    color = Color(0xFFB45309),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    lineHeight = 16.sp
-                                )
-                            }
-                        }
-                    }
-                }
-
                 // Order summary breakdown
                 Column(
                     modifier = Modifier
@@ -8956,35 +9026,15 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Delivery Charges:", style = MaterialTheme.typography.bodyMedium.copy(color = Color.Gray))
-                        if (isMultiItemOrder && multiItemDeliveryDiscount > 0) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    viewModel.formatPrice(baseDeliveryCharge),
-                                    style = MaterialTheme.typography.bodySmall.copy(
-                                        color = Color.Gray,
-                                        textDecoration = TextDecoration.LineThrough
-                                    ),
-                                    modifier = Modifier.padding(end = 4.dp)
-                                )
-                                Text(
-                                    viewModel.formatPrice(deliveryCharge),
-                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark)
-                                )
-                            }
-                        } else {
-                            Text(viewModel.formatPrice(deliveryCharge), style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold, color = ZyphuelBlueDark))
-                        }
+                        Text("Delivery Charges (${totalFuelVolume}L Tier):", style = MaterialTheme.typography.bodyMedium.copy(color = Color.Gray))
+                        Text(viewModel.formatPrice(deliveryCharge), style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark))
                     }
-                    if (isMultiItemOrder && multiItemDeliveryDiscount > 0) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text("Multi-Item Delivery Discount (50% OFF):", style = MaterialTheme.typography.bodyMedium.copy(color = Color(0xFF059669), fontWeight = FontWeight.Bold))
-                            Text("-${viewModel.formatPrice(multiItemDeliveryDiscount)}", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, color = Color(0xFF059669)))
-                        }
-                    }
+                    Text(
+                        text = "• Delivery Rates: 5L = Rs. 280 | 10L = Rs. 300 | 15L Max = Rs. 350",
+                        fontSize = 10.sp,
+                        color = Color(0xFF0369A1),
+                        fontWeight = FontWeight.Medium
+                    )
                     if (isPromoApplied) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -9031,7 +9081,7 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                         onDismiss()
                     }
                 },
-                enabled = !isPlacingOrder,
+                enabled = !isPlacingOrder && !isFuelExceeded && totalFuelVolume > 0 && selectedSummaryParts.isNotEmpty(),
                 modifier = Modifier.testTag("dialog_confirm_btn"),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = ZyphuelBluePrimary,
@@ -9090,7 +9140,7 @@ fun InvoiceDialog(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
-    val deliveryFee = com.example.util.FeeConstants.calculateDeliveryFee(order.serviceType)
+    val deliveryFee = com.example.util.FeeConstants.calculateDeliveryFee(order.serviceType, order.quantity)
     val subtotal = (order.totalPrice - deliveryFee).coerceAtLeast(0.0)
     val dateStr = java.text.SimpleDateFormat("dd MMM yyyy, hh:mm a", java.util.Locale.US).format(java.util.Date(order.createdAt))
 
@@ -9405,7 +9455,7 @@ fun OrderSummaryCard(order: OrderEntity, viewModel: MainViewModel) {
             )
             Spacer(modifier = Modifier.height(8.dp))
 
-            val deliveryFee = com.example.util.FeeConstants.calculateDeliveryFee(order.serviceType)
+            val deliveryFee = com.example.util.FeeConstants.calculateDeliveryFee(order.serviceType, order.quantity)
             val subtotal = (order.totalPrice - deliveryFee).coerceAtLeast(0.0)
 
             Row(
@@ -10553,7 +10603,7 @@ fun TrackerScreen(viewModel: MainViewModel) {
     // 3. Fare Breakdown & Surge Pricing Modal
     var showInvoiceModalForTracking by remember { mutableStateOf(false) }
     if (showFareBreakdownDialog) {
-        val baseFare = com.example.util.FeeConstants.calculateDeliveryFee(trackingOrder!!.serviceType)
+        val baseFare = com.example.util.FeeConstants.calculateDeliveryFee(trackingOrder!!.serviceType, trackingOrder!!.quantity)
         val total = trackingOrder!!.totalPrice
         val volumeFare = (total - baseFare).coerceAtLeast(0.0)
 
@@ -14463,7 +14513,7 @@ fun AdminDashboardScreen(viewModel: MainViewModel) {
     val totalRevenue = remember(orders) { orders.filter { it.status == "Completed" }.sumOf { it.totalPrice } }
     val totalProfit = remember(orders) {
         orders.filter { it.status == "Completed" }
-            .sumOf { com.example.util.FeeConstants.calculateDeliveryFee(it.serviceType) }
+            .sumOf { com.example.util.FeeConstants.calculateDeliveryFee(it.serviceType, it.quantity) }
     }
     val completedOrdersCount = remember(orders) { orders.filter { it.status == "Completed" }.size }
     val pendingOrdersCount = remember(orders) { orders.filter { it.status == "Pending" }.size }
