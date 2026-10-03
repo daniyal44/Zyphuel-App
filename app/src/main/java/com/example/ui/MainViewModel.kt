@@ -781,13 +781,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _highOctanePrice = MutableStateFlow(sharedPrefs.getFloat("high_octane", 325.00f))
     val highOctanePrice = _highOctanePrice.asStateFlow()
 
-    private val _lpgGasPrice = MutableStateFlow(sharedPrefs.getFloat("lpg_gas", 258.65f))
-    val lpgGasPrice = _lpgGasPrice.asStateFlow()
-
-    private val _waterPrice = MutableStateFlow(sharedPrefs.getFloat("water", 50.0f))
-    val waterPrice = _waterPrice.asStateFlow()
-
-    // --- Retail Petrol Pump Rates (Base OGRA Rate + Rs. 2.50/L Petrol Pump Surcharge) ---
+    // --- Retail Petrol Pump Rates (Base OGRA Rate + Rs. 5.00/L Petrol Pump Margin) ---
     val petrolPumpPrice: StateFlow<Float> = _petrolPrice
         .map { it + com.example.util.FeeConstants.PETROL_PUMP_RATE_SURCHARGE_FLOAT }
         .stateIn(viewModelScope, SharingStarted.Eagerly, _petrolPrice.value + com.example.util.FeeConstants.PETROL_PUMP_RATE_SURCHARGE_FLOAT)
@@ -805,8 +799,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             serviceType.contains("Diesel", ignoreCase = true) -> dieselPumpPrice.value
             serviceType.contains("Octane", ignoreCase = true) || serviceType.contains("HOBB", ignoreCase = true) -> highOctanePumpPrice.value
             serviceType.contains("Petrol", ignoreCase = true) -> petrolPumpPrice.value
-            serviceType.contains("LPG", ignoreCase = true) || serviceType.contains("Gas", ignoreCase = true) -> lpgGasPrice.value
-            serviceType.contains("Water", ignoreCase = true) -> waterPrice.value
             else -> petrolPumpPrice.value
         }
     }
@@ -945,21 +937,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val smtpConfig: StateFlow<com.example.security.SmtpConfig> = _smtpConfig.asStateFlow()
 
     init {
-        // Enforce Official OGRA Pakistan Fuel & Gas Rates (e.g. Base Petrol Rs. 289.38 -> Petrol Pump Rate Rs. 291.88)
+        // Enforce Official OGRA Pakistan Fuel Rates (e.g. Base Petrol Rs. 289.38 -> Petrol Pump Rate Rs. 294.38)
         sharedPrefs.edit()
             .putFloat("petrol", 289.38f)
             .putFloat("diesel", 289.84f)
             .putFloat("high_octane", 325.00f)
-            .putFloat("lpg_gas", 258.65f)
-            .putFloat("water", 50.0f)
             .putString("last_sync_time", "Official OGRA Pakistan Feed")
             .apply()
         
         _petrolPrice.value = 289.38f
         _dieselPrice.value = 289.84f
         _highOctanePrice.value = 325.00f
-        _lpgGasPrice.value = 258.65f
-        _waterPrice.value = 50.00f
         _lastPriceSyncTime.value = "Official OGRA Pakistan Feed"
 
         viewModelScope.launch {
@@ -1296,9 +1284,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         repository.categoryRepository.syncLiveFuelPrices(
             _petrolPrice.value,
             _dieselPrice.value,
-            _highOctanePrice.value,
-            _lpgGasPrice.value,
-            _waterPrice.value
+            _highOctanePrice.value
         )
 
         // Initialize security and biometric state for registered device profiles
@@ -2260,7 +2246,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
 
         if (com.example.util.FeeConstants.isServiceUnavailable(serviceType)) {
-            _uiMessage.value = "Water and LPG Gas delivery are currently unavailable in Lahore."
+            _uiMessage.value = "Selected service is permanently unavailable. Zyphuel exclusively delivers Super Euro-V Petrol, High-Speed Diesel, and High-Octane fuel."
             return
         }
 
@@ -3379,8 +3365,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         petrol: Float,
         diesel: Float,
         octane: Float,
-        lpg: Float,
-        water: Float,
+        source: String,
+        method: String // "AI Search Engine Sync" or "Manual Admin Adjust"
+    ) = updateFuelPrices(petrol, diesel, octane, 0f, 0f, source, method)
+
+    fun updateFuelPrices(
+        petrol: Float,
+        diesel: Float,
+        octane: Float,
+        lpg: Float = 0f,
+        water: Float = 0f,
         source: String,
         method: String // "AI Search Engine Sync" or "Manual Admin Adjust"
     ) {
@@ -3388,26 +3382,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val oldPetrol = _petrolPrice.value
             val oldDiesel = _dieselPrice.value
             val oldOctane = _highOctanePrice.value
-            val oldLpg = _lpgGasPrice.value
-            val oldWater = _waterPrice.value
 
             // Update local flows
             _petrolPrice.value = petrol
             _dieselPrice.value = diesel
             _highOctanePrice.value = octane
-            _lpgGasPrice.value = lpg
-            _waterPrice.value = water
 
             // Sync live rates into the Category architecture
-            repository.categoryRepository.syncLiveFuelPrices(petrol, diesel, octane, lpg, water)
+            repository.categoryRepository.syncLiveFuelPrices(petrol, diesel, octane)
 
             // Save to SharedPreferences
             sharedPrefs.edit()
                 .putFloat("petrol", petrol)
                 .putFloat("diesel", diesel)
                 .putFloat("high_octane", octane)
-                .putFloat("lpg_gas", lpg)
-                .putFloat("water", water)
                 .putString("last_sync_time", SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault()).format(Date()))
                 .apply()
 
@@ -3418,12 +3406,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 AuditLogEntity(
                     action = "PRICE_UPDATED",
                     performedBy = _currentUser.value?.email ?: "System",
-                    details = "Prices updated via $method. Petrol: Rs.$petrol, Diesel: Rs.$diesel, Octane: Rs.$octane, LPG: Rs.$lpg, Water: Rs.$water. Source: $source"
+                    details = "Prices updated via $method. Petrol: Rs.$petrol, Diesel: Rs.$diesel, Octane: Rs.$octane. Source: $source"
                 )
             )
 
             // Broadcast App Notifications only if actual rate changes exist
-            val isChanged = (petrol != oldPetrol) || (diesel != oldDiesel) || (octane != oldOctane) || (lpg != oldLpg) || (water != oldWater)
+            val isChanged = (petrol != oldPetrol) || (diesel != oldDiesel) || (octane != oldOctane)
 
             if (isChanged) {
                 repository.notificationDao.insertNotification(
@@ -3490,16 +3478,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                                     <td style="padding: 10px; border: 1px solid #cbd5e1; font-size: 14px;">High-Octane</td>
                                     <td style="text-align: right; padding: 10px; border: 1px solid #cbd5e1; color: #94a3b8; font-size: 14px;">Rs. $oldOctane/L</td>
                                     <td style="text-align: right; padding: 10px; border: 1px solid #cbd5e1; font-weight: bold; color: #10b981; font-size: 14px;">Rs. $octane/L</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 10px; border: 1px solid #cbd5e1; font-size: 14px;">LPG Gas</td>
-                                    <td style="text-align: right; padding: 10px; border: 1px solid #cbd5e1; color: #94a3b8; font-size: 14px;">Rs. $oldLpg/kg</td>
-                                    <td style="text-align: right; padding: 10px; border: 1px solid #cbd5e1; font-weight: bold; color: #10b981; font-size: 14px;">Rs. $lpg/kg</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 10px; border: 1px solid #cbd5e1; font-size: 14px;">Drinking Water</td>
-                                    <td style="text-align: right; padding: 10px; border: 1px solid #cbd5e1; color: #94a3b8; font-size: 14px;">Rs. $oldWater/Gal</td>
-                                    <td style="text-align: right; padding: 10px; border: 1px solid #cbd5e1; font-weight: bold; color: #10b981; font-size: 14px;">Rs. $water/Gal</td>
                                 </tr>
                             </table>
 
@@ -3805,7 +3783,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun triggerFourHourPriceUpdateBroadcast() {
         viewModelScope.launch(Dispatchers.IO) {
             val timestamp = java.text.SimpleDateFormat("hh:mm a", java.util.Locale.US).format(java.util.Date())
-            val msg = "⚡ [4-Hour Rate Update - $timestamp] Live Rates: Petrol Rs.${_petrolPrice.value}/L, Diesel Rs.${_dieselPrice.value}/L, LPG Rs.${_lpgGasPrice.value}/kg, Octane Rs.${_highOctanePrice.value}/L."
+            val msg = "⚡ [4-Hour Rate Update - $timestamp] Live Rates: Petrol Rs.${_petrolPrice.value}/L, Diesel Rs.${_dieselPrice.value}/L, High-Octane Rs.${_highOctanePrice.value}/L."
 
             // Send in-app broadcast notification
             repository.notificationDao.insertNotification(
@@ -3834,10 +3812,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         • Petrol (E10): Rs. ${_petrolPrice.value} / Litre
                         • High-Speed Diesel: Rs. ${_dieselPrice.value} / Litre
                         • High Octane (HOBC 97): Rs. ${_highOctanePrice.value} / Litre
-                        • LPG Gas Cylinder: Rs. ${_lpgGasPrice.value} / Kg
-                        • Clean Water Tanker: Rs. ${_waterPrice.value} / Gallon
 
-                        Need emergency fuel or water delivery in Lahore? Open the Zyphuel App to order instantly!
+                        Need emergency fuel delivery in Lahore? Open the Zyphuel App to order instantly!
 
                         Best regards,
                         Zyphuel Operations Team
@@ -3867,16 +3843,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 val petrol = trackmateResult.petrol.roundTo(2)
                 val diesel = trackmateResult.diesel.roundTo(2)
                 val octane = trackmateResult.highOctane.roundTo(2)
-                val lpg = trackmateResult.lpgGas.roundTo(2)
-                val water = trackmateResult.water.roundTo(2)
 
                 val dateInfo = if (trackmateResult.effectiveDate != null) " [Effective: ${trackmateResult.effectiveDate}]" else ""
                 updateFuelPrices(
                     petrol = petrol,
                     diesel = diesel,
                     octane = octane,
-                    lpg = lpg,
-                    water = water,
                     source = "Official Fuel Market API$dateInfo",
                     method = "Live Price Sync"
                 )
@@ -3895,15 +3867,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         1. Petrol (Motor Spirit / Super petrol)
                         2. Diesel (High Speed Diesel)
                         3. High-Octane (Hi-Octane / HOBC / RON 97)
-                        And a typical competitive rate for LPG gas (per kg) and clean 20L drinking water gallon.
                         
                         Return ONLY a valid JSON block containing exactly these keys with positive numeric float values:
                         {
                           "petrol": <float>,
                           "diesel": <float>,
                           "high_octane": <float>,
-                          "lpg_gas": <float>,
-                          "water": <float>,
                           "source": "<string representing where the price was fetched or a reputable news site, e.g. OGRA, Dawn News, Geo News>"
                         }
                         No other text, no explanation, no markdown ```json formatting. Just raw JSON.
@@ -3965,32 +3934,24 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     val basePetrol = pricesObj.getDouble("petrol").toFloat()
                     val baseDiesel = pricesObj.getDouble("diesel").toFloat()
                     val baseOctane = pricesObj.getDouble("high_octane").toFloat()
-                    val baseLpg = pricesObj.optDouble("lpg_gas", 350.0).toFloat()
-                    val baseWater = pricesObj.optDouble("water", 50.0).toFloat()
                     val source = pricesObj.optString("source", "OGRA Pakistan / Dawn News")
 
                     val petrol = basePetrol.roundTo(2)
                     val diesel = baseDiesel.roundTo(2)
                     val octane = baseOctane.roundTo(2)
-                    val lpg = baseLpg.roundTo(2)
-                    val water = baseWater.roundTo(2)
 
-                    updateFuelPrices(petrol, diesel, octane, lpg, water, source, "AI Search Engine Sync")
+                    updateFuelPrices(petrol, diesel, octane, source = source, method = "AI Search Engine Sync")
 
                 } catch (e: Exception) {
                     // Fallback 2: Official OGRA Pakistan retail rates
                     val simPetrol = 275.60f
                     val simDiesel = 284.20f
                     val simOctane = 325.00f
-                    val simLpg = 258.65f
-                    val simWater = 50.0f
                     
                     updateFuelPrices(
                         petrol = simPetrol,
                         diesel = simDiesel,
                         octane = simOctane,
-                        lpg = simLpg,
-                        water = simWater,
                         source = "Official OGRA Pakistan Feed",
                         method = "OGRA Tariff Service"
                     )
@@ -4016,7 +3977,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     // --- Support Chat Functionality ---
     private val _supportChatHistory = MutableStateFlow<List<SupportChatMessage>>(listOf(
-        SupportChatMessage("bot", "🟢 *Zyphuel Gemini AI Live Support* Verified ✔️\n\nSalam! Welcome to Zyphuel Live Support & Help Center. I am your 24/7 AI-powered support assistant. How can I assist you with your fuel, gas, or water delivery today?\n\nType or tap a keyword below:\n• *Price List* / *Pricing*\n• *Order Status*\n• *Areas Served*\n• *Safety Rules*")
+        SupportChatMessage("bot", "🟢 *Zyphuel Gemini AI Live Support* Verified ✔️\n\nSalam! Welcome to Zyphuel Live Support & Help Center. I am your 24/7 AI-powered support assistant. How can I assist you with your fuel delivery today?\n\nType or tap a keyword below:\n• *Price List* / *Pricing*\n• *Order Status*\n• *Areas Served*\n• *Safety Rules*")
     ))
     val supportChatHistory: StateFlow<List<SupportChatMessage>> = _supportChatHistory.asStateFlow()
 
@@ -4042,7 +4003,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 try {
                     val systemPrompt = """
                         You are Zyphuel AI Support Agent, an intelligent, empathetic, and professional 24/7 Live Support & Help Center representative for Zyphuel — Pakistan's premier doorstep delivery platform operating in Lahore.
-                        Zyphuel delivers Petrol (Super Euro-V), Diesel (High Speed), High-Octane (HOBC), LPG Gas Cylinders (11.8kg domestic tanks), and Clean Drinking Water (19L Gallons).
+                        Zyphuel delivers Petrol (Super Euro-V), Diesel (High Speed), and High-Octane (HOBC 97) doorstep fuel in Lahore.
 
                         Key Instructions:
                         1. Provide accurate, clear, and helpful assistance regarding fuel rates, order status, delivery coverage in Lahore (DHA, Gulberg, Johar Town, Model Town, Cantt, Bahria Town, etc.), safety guidelines, and live support options.
@@ -4117,14 +4078,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         val p = String.format(java.util.Locale.US, "%.2f", _petrolPrice.value)
                         val d = String.format(java.util.Locale.US, "%.2f", _dieselPrice.value)
                         val o = String.format(java.util.Locale.US, "%.2f", _highOctanePrice.value)
-                        val lpgRate = String.format(java.util.Locale.US, "%.2f", _lpgGasPrice.value)
-                        val lpgCyl = String.format(java.util.Locale.US, "%.2f", _lpgGasPrice.value * 11.8f)
                         "💰 *Official OGRA Pakistan Energy & Fuel Rates (Lahore)*:\n\n" +
                         "⛽ *Petrol (Super Euro-V)*: Rs. $p per Liter\n" +
                         "🚜 *Diesel (High Speed)*: Rs. $d per Liter\n" +
-                        "🛢️ *High-Octane (HOBC 97)*: Rs. $o per Liter\n" +
-                        "🔥 *LPG Gas*: Rs. $lpgRate/Kg (11.8kg Sealed Cylinder: Rs. $lpgCyl)\n" +
-                        "💧 *Pure Drinking Water*: Rs. 180.00 (19L Bottle) / Rs. 3,200.00 (1000L Bowser)\n\n" +
+                        "🛢️ *High-Octane (HOBC 97)*: Rs. $o per Liter\n\n" +
                         "_Rates are strictly synchronized with official OGRA Pakistan notifications. Transparent pricing, no hidden surcharges!_"
                     }
                     query.contains("order") || query.contains("track") || query.contains("delivery") || query.contains("status") -> {
@@ -4142,9 +4099,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         "• Bahria Town, Valencia Town, Lake City\n" +
                         "• Lahore Mall Road, Shadman, Samanabad"
                     }
-                    query.contains("safety") || query.contains("hazard") || query.contains("lpg") || query.contains("guideline") || query.contains("rule") -> {
-                        "⚠️ *Zyphuel Fuel & LPG Safety Rules*:\n\n" +
-                        "1. Keep LPG cylinders upright in highly ventilated areas.\n" +
+                    query.contains("safety") || query.contains("hazard") || query.contains("guideline") || query.contains("rule") -> {
+                        "⚠️ *Zyphuel Fuel Safety Rules*:\n\n" +
+                        "1. Turn off your vehicle ignition before fueling begins.\n" +
                         "2. Avoid using electrical sockets, switches, or open flames near fuel unloading.\n" +
                         "3. Strictly NO smoking or mobile phone usage in the immediate delivery perimeter.\n" +
                         "4. Clear all access pathways for the delivery rider before arrival."
@@ -4185,7 +4142,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun clearSupportChat() {
         _supportChatHistory.value = listOf(
-            SupportChatMessage("bot", "🟢 *Zyphuel Gemini AI Live Support* Verified ✔️\n\nSalam! Welcome to Zyphuel Live Support & Help Center. I am your 24/7 AI-powered support assistant. How can I assist you with your fuel, gas, or water delivery today?\n\nType or tap a keyword below:\n• *Price List* / *Pricing*\n• *Order Status*\n• *Areas Served*\n• *Safety Rules*")
+            SupportChatMessage("bot", "🟢 *Zyphuel Gemini AI Live Support* Verified ✔️\n\nSalam! Welcome to Zyphuel Live Support & Help Center. I am your 24/7 AI-powered support assistant. How can I assist you with your fuel delivery today?\n\nType or tap a keyword below:\n• *Price List* / *Pricing*\n• *Order Status*\n• *Areas Served*\n• *Safety Rules*")
         )
     }
 

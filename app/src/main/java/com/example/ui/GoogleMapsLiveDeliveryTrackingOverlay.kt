@@ -46,7 +46,7 @@ import kotlin.math.*
 
 /**
  * Native Google Maps SDK Live Delivery Tracking Overlay for Zyphuel.
- * Renders the real-time position of the assigned delivery vehicle (Fuel Bowser / Water Tanker / Express Rider),
+ * Renders the real-time position of the assigned delivery vehicle (Fuel Bowser / Express Rider),
  * transit polyline corridor, central depot origin, customer destination, and interactive telematics.
  */
 @Composable
@@ -176,7 +176,7 @@ fun GoogleMapsLiveDeliveryTrackingOverlay(
     // Rider details
     val driverName = assignedRider?.name ?: order?.riderName ?: if (order?.status == "Pending") "Assigning nearest driver..." else "Assigned Delivery Driver"
     val driverPhone = assignedRider?.phoneNumber ?: "+92 323 0112464"
-    val vehicleType = assignedRider?.vehicleType ?: if (order?.serviceType?.contains("Water", ignoreCase = true) == true) "Water Tanker" else "${order?.serviceType ?: "Fuel"} Delivery"
+    val vehicleType = assignedRider?.vehicleType ?: "${order?.serviceType ?: "Fuel"} Bowser Delivery"
     val vehiclePlate = assignedRider?.vehicleNo ?: if (assignedRider != null) "Verified Vehicle" else "En Route"
 
 
@@ -552,11 +552,7 @@ fun GoogleMapsLiveDeliveryTrackingOverlay(
 
                 // --- LIVE ORDER / FUEL SUMMARY CHIP ---
                 if (order != null) {
-                    val unitLabel = when {
-                        order.serviceType.contains("LPG", ignoreCase = true) -> "kg"
-                        order.serviceType.contains("Water", ignoreCase = true) -> "L"
-                        else -> "L"
-                    }
+                    val unitLabel = "L"
                     val unitPrice = if (order.quantity > 0) order.totalPrice / order.quantity else 0.0
                     Row(
                         modifier = Modifier

@@ -10,7 +10,7 @@ package com.example.util
  * - Up to 10 Liters: Rs. 300.00
  * - Up to 15 Liters (Max Limit): Rs. 350.00
  *
- * Note: Pure Water and LPG Gas are currently UNAVAILABLE across all sectors.
+ * Zyphuel exclusively provides Euro-V Petrol, High-Speed Diesel, and High-Octane 97 fuel delivery.
  */
 object FeeConstants {
     const val FUEL_MAX_LITERS = 15
@@ -20,14 +20,13 @@ object FeeConstants {
 
     // Backward compatibility base fee
     const val FUEL_DELIVERY_FEE = 280.0
-    const val WATER_DELIVERY_FEE = 50.0
 
     /**
-     * Petrol pump retail rate surcharge (+Rs. 2.50/L) added to official base rates
+     * Petrol pump retail rate margin/surcharge (+Rs. 5.00/L) added to official base rates
      * for Petrol, Diesel, and High-Octane.
      */
-    const val PETROL_PUMP_RATE_SURCHARGE = 2.50
-    const val PETROL_PUMP_RATE_SURCHARGE_FLOAT = 2.50f
+    const val PETROL_PUMP_RATE_SURCHARGE = 5.00
+    const val PETROL_PUMP_RATE_SURCHARGE_FLOAT = 5.00f
 
     /**
      * Determines whether the given service type is eligible for the petrol pump retail surcharge.
@@ -39,7 +38,7 @@ object FeeConstants {
     }
 
     /**
-     * Computes the final petrol pump price by adding the +Rs. 2.50/L pump rate offset.
+     * Computes the final petrol pump price by adding the +Rs. 5.00/L pump rate offset.
      */
     fun getPumpRate(basePrice: Double, serviceType: String?): Double {
         return if (isPumpRateApplicable(serviceType)) basePrice + PETROL_PUMP_RATE_SURCHARGE else basePrice
@@ -65,21 +64,15 @@ object FeeConstants {
     }
 
     /**
-     * Calculates the delivery fee based on the service item or combination.
-     * Petrol, Diesel, and High-Octane use tiered pricing based on volume (quantityLiters).
-     * Pure Water delivery uses light fee (Rs. 50.00).
+     * Calculates the delivery fee based on fuel volume (quantityLiters).
+     * Petrol, Diesel, and High-Octane use tiered pricing based on volume:
+     * - 1 to 5 Liters:   Rs. 280.00
+     * - 6 to 10 Liters:  Rs. 300.00
+     * - 11 to 15 Liters: Rs. 350.00
      */
     @JvmOverloads
     fun calculateDeliveryFee(serviceType: String?, quantityLiters: Int = 5): Double {
-        if (serviceType.isNullOrBlank()) return calculateFuelDeliveryFee(quantityLiters)
-
-        val isWaterOnly = serviceType.contains("Water", ignoreCase = true) &&
-                !serviceType.contains("Petrol", ignoreCase = true) &&
-                !serviceType.contains("Diesel", ignoreCase = true) &&
-                !serviceType.contains("Octane", ignoreCase = true) &&
-                !serviceType.contains("LPG", ignoreCase = true)
-
-        return if (isWaterOnly) WATER_DELIVERY_FEE else calculateFuelDeliveryFee(quantityLiters)
+        return calculateFuelDeliveryFee(quantityLiters)
     }
 
     /**

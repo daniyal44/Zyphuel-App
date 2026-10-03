@@ -1417,7 +1417,7 @@ fun SupportStepTwoScreenshot() {
             }
             
             // Order Header
-            Text(tr("lbl_order_fuel_gas", "Order Fuel & Gas"), style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, color = Color.Black))
+            Text(tr("lbl_order_fuel", "Order Fuel"), style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, color = Color.Black))
             Spacer(modifier = Modifier.height(6.dp))
             
             // Fuel product list
@@ -1443,10 +1443,10 @@ fun SupportStepTwoScreenshot() {
                     border = BorderStroke(1.dp, Color(0xFFE2E8F0))
                 ) {
                     Column(modifier = Modifier.padding(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(Icons.Filled.PropaneTank, contentDescription = null, tint = Color.DarkGray, modifier = Modifier.size(20.dp))
+                        Icon(Icons.Filled.LocalGasStation, contentDescription = null, tint = Color.DarkGray, modifier = Modifier.size(20.dp))
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text(tr("svc_lpg", "LPG Gas"), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
-                        Text("Rs. 308.76/kg", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontSize = 9.sp))
+                        Text(tr("svc_diesel", "High Speed Diesel"), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                        Text("Rs. 284.20/L", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontSize = 9.sp))
                     }
                 }
             }
@@ -1552,7 +1552,7 @@ fun SupportStepThreeScreenshot() {
                         Icon(Icons.Filled.Home, contentDescription = null, tint = ZyphuelBluePrimary, modifier = Modifier.size(22.dp))
                     }
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text("Pure Water & Fuel en-route (Dispatched)", style = MaterialTheme.typography.labelSmall.copy(color = Color.DarkGray, fontWeight = FontWeight.Bold))
+                    Text("Fuel Bowser en-route (Dispatched)", style = MaterialTheme.typography.labelSmall.copy(color = Color.DarkGray, fontWeight = FontWeight.Bold))
                 }
             }
             
@@ -1563,7 +1563,7 @@ fun SupportStepThreeScreenshot() {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = Color(0xFF10B981), modifier = Modifier.size(14.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Order Prepared: Pure Premium Water Gallon", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray))
+                    Text("Order Prepared: Super Euro-V Petrol", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray))
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = Color(0xFF10B981), modifier = Modifier.size(14.dp))
@@ -1609,7 +1609,7 @@ fun OnboardingScreen(viewModel: MainViewModel) {
     )
 
     val descriptions = listOf(
-        "Easily select from our premium Euro V fuels, Gas cylinder refills, or pure mineral water gallons. Configure your quantities and see live transparent price calculations instantly.",
+        "Easily select from our premium Euro V fuels (Petrol, Diesel, High-Octane). Configure your quantities and see live transparent price calculations instantly.",
         "Follow your assigned delivery rider in real-time on our smart GPS tracker. Receive live route progression updates and access 24/7 direct standby support.",
         "Access your complete past order log anytime. Review itemized details, track past receipts, and view detailed progress metrics for every delivery you have placed in Lahore."
     )
@@ -4097,8 +4097,6 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
     val petrolPumpPrice by viewModel.petrolPumpPrice.collectAsState()
     val dieselPumpPrice by viewModel.dieselPumpPrice.collectAsState()
     val octanePumpPrice by viewModel.highOctanePumpPrice.collectAsState()
-    val lpgPrice by viewModel.lpgGasPrice.collectAsState()
-    val waterPrice by viewModel.waterPrice.collectAsState()
     val liveLocationCoordinates by viewModel.liveLocationCoordinates.collectAsState()
     val isCustomLocationSet by viewModel.isCustomLocationSet.collectAsState()
     val isPromoApplied by viewModel.isPromoApplied.collectAsState()
@@ -4217,7 +4215,7 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                 anchorKey = null,
                 title = "Welcome to Zyphuel! 👋",
                 subtitle = "Lahore's Instant Doorstep Energy & Services",
-                body = "Zyphuel brings pure fuel (Super Petrol, High-Speed Diesel, High Octane), pure drinking water, LPG cylinders, and auto workshop mechanics directly to your doorstep in Lahore at 100% official OGRA rates. Chaliye, har feature ka mukammal live tour karte hain!",
+                body = "Zyphuel brings pure fuel (Super Petrol, High-Speed Diesel, High Octane) and auto workshop mechanics directly to your doorstep in Lahore at 100% official OGRA rates. Chaliye, har feature ka mukammal live tour karte hain!",
                 tip = "Zyphuel par aapko hamesha 100% genuine OGRA fuel aur doorstep delivery milegi.",
                 badge = "WELCOME TO ZYPHUEL",
                 icon = Icons.Filled.Celebration,
@@ -4236,8 +4234,8 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
             SpotlightStep(
                 anchorKey = "service_petrol",
                 title = "2) Doorstep Energy & Fuel ⛽",
-                subtitle = "Transparent OGRA Rates • Fuel, Gas & Certified Auto Care",
-                body = "Mukammal doorstep services — Petrol, High Octane, Diesel, Pure Drinking Water, Gas Cylinders, Car Wash, Engine Oil, Battery aur Tyres. Sab rates official aur transparent hain.",
+                subtitle = "Transparent OGRA Rates • Fuel & Certified Auto Care",
+                body = "Mukammal doorstep services — Petrol, High Octane, Diesel, Car Wash, Engine Oil, Battery aur Tyres. Sab rates official aur transparent hain.",
                 tip = "Kisi bhi card par tap karein aur uski sub-services aur official rates check karein.",
                 badge = "DOORSTEP SERVICES",
                 icon = Icons.Filled.GridView,
@@ -4248,7 +4246,7 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                 title = "3) Instant 1-Tap Ordering 🛒",
                 subtitle = "Cash on Delivery / JazzCash • 100% Risk-Free",
                 body = "Jaldi mein hain? 'Order Now' button dabayein! Fuel type aur quantity select karein, bill dekhein aur Cash on Delivery order confirm karein. Zero advance payment, zero hassle!",
-                tip = "Fuel, gas cylinders ya auto care foran mangwayein.",
+                tip = "Fuel ya auto care foran mangwayein.",
                 badge = "QUICK ORDERING",
                 icon = Icons.Filled.ShoppingCart,
                 beforeShow = { revealItem(0) }
@@ -4894,127 +4892,7 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                                         text = "Rs. ${String.format(java.util.Locale.US, "%.2f", dieselPumpPrice)}/L",
                                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary)
                                     )
-                                    Text("Euro-V", style = MaterialTheme.typography.labelSmall.copy(color = Color(0xFF15803D), fontSize = 9.sp, fontWeight = FontWeight.SemiBold))
-                                }
-                            }
-                        }
-
-                        // 4. Gas (Temporarily Unavailable)
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    Toast.makeText(context, "LPG Gas Cylinder delivery is currently unavailable in Lahore.", Toast.LENGTH_SHORT).show()
-                                }
-                                .testTag("service_gas"),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFFFAFAFA)),
-                            border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Surface(
-                                        shape = RoundedCornerShape(12.dp),
-                                        color = Color(0xFFF1F5F9),
-                                        modifier = Modifier.size(46.dp)
-                                    ) {
-                                        Box(contentAlignment = Alignment.Center) {
-                                            Icon(Icons.Filled.PropaneTank, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(24.dp))
-                                        }
-                                    }
-                                    Column {
-                                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                            Text(tr("svc_lpg", "Gas"), style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = Color.Gray))
-                                            Surface(
-                                                color = Color(0xFFFEE2E2),
-                                                shape = RoundedCornerShape(6.dp)
-                                            ) {
-                                                Text("Unavailable", color = Color(0xFFDC2626), fontWeight = FontWeight.Bold, fontSize = 10.sp, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
-                                            }
-                                        }
-                                        Text(
-                                            text = "Certified 11.8kg Cylinder • Currently Unavailable",
-                                            style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray)
-                                        )
-                                    }
-                                }
-                                Column(horizontalAlignment = Alignment.End) {
-                                    Text(
-                                        text = "Rs. ${String.format(java.util.Locale.US, "%.2f", lpgPrice)}/Kg",
-                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = Color.Gray)
-                                    )
-                                    Text("Temporarily Off", style = MaterialTheme.typography.labelSmall.copy(color = Color(0xFFDC2626), fontSize = 10.sp, fontWeight = FontWeight.Bold))
-                                }
-                            }
-                        }
-
-                        // 5. Pure Water Delivery (Temporarily Unavailable)
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    Toast.makeText(context, "Pure Water delivery is currently unavailable in Lahore.", Toast.LENGTH_SHORT).show()
-                                }
-                                .testTag("service_water"),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFFFAFAFA)),
-                            border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Surface(
-                                        shape = RoundedCornerShape(12.dp),
-                                        color = Color(0xFFF1F5F9),
-                                        modifier = Modifier.size(46.dp)
-                                    ) {
-                                        Box(contentAlignment = Alignment.Center) {
-                                            Icon(Icons.Filled.WaterDrop, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(24.dp))
-                                        }
-                                    }
-                                    Column {
-                                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                            Text(tr("svc_water", "Pure Water"), style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = Color.Gray))
-                                            Surface(
-                                                color = Color(0xFFFEE2E2),
-                                                shape = RoundedCornerShape(6.dp)
-                                            ) {
-                                                Text("Unavailable", color = Color(0xFFDC2626), fontWeight = FontWeight.Bold, fontSize = 10.sp, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
-                                            }
-                                        }
-                                        Text(
-                                            text = "Certified Drinking Water • Currently Unavailable",
-                                            style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray)
-                                        )
-                                    }
-                                }
-                                Column(horizontalAlignment = Alignment.End) {
-                                    Text(
-                                        text = "Rs. ${String.format(java.util.Locale.US, "%.2f", waterPrice)}/Gal",
-                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = Color.Gray)
-                                    )
-                                    Text("Temporarily Off", style = MaterialTheme.typography.labelSmall.copy(color = Color(0xFFDC2626), fontSize = 10.sp, fontWeight = FontWeight.Bold))
+                                     Text("Euro-V", style = MaterialTheme.typography.labelSmall.copy(color = Color(0xFF15803D), fontSize = 9.sp, fontWeight = FontWeight.SemiBold))
                                 }
                             }
                         }
@@ -5498,8 +5376,6 @@ fun CustomerOrderHistoryScreen(
             .filter { order ->
                 val matchesCategory = when (selectedCategoryFilter) {
                     "Fuel" -> order.serviceType in listOf("Petrol", "Diesel", "High-Octane")
-                    "Water" -> order.serviceType in listOf("Water", "Clean Water", "Pure Water", "Gallon Water")
-                    "LPG Gas" -> order.serviceType == "LPG Gas"
                     else -> true
                 }
                 val matchesStatus = when (selectedStatusFilter) {
@@ -5827,24 +5703,20 @@ fun CustomerOrderHistoryCard(
                             .clip(CircleShape)
                             .background(
                                 when (order.serviceType) {
-                                    "Petrol", "Diesel", "High-Octane" -> ZyphuelBluePrimary.copy(alpha = 0.12f)
-                                    "LPG Gas" -> Color(0xFFE11D48).copy(alpha = 0.12f)
-                                    else -> Color(0xFF0284C7).copy(alpha = 0.12f)
+                                    "High-Octane" -> Color(0xFF7C3AED).copy(alpha = 0.12f)
+                                    "Diesel" -> Color(0xFFD97706).copy(alpha = 0.12f)
+                                    else -> ZyphuelBluePrimary.copy(alpha = 0.12f)
                                 }
                             ),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = when (order.serviceType) {
-                                "Petrol", "Diesel", "High-Octane" -> Icons.Filled.LocalGasStation
-                                "LPG Gas" -> Icons.Filled.Fireplace
-                                else -> Icons.Filled.WaterDrop
-                            },
+                            imageVector = Icons.Filled.LocalGasStation,
                             contentDescription = null,
                             tint = when (order.serviceType) {
-                                "Petrol", "Diesel", "High-Octane" -> ZyphuelBluePrimary
-                                "LPG Gas" -> Color(0xFFE11D48)
-                                else -> Color(0xFF0284C7)
+                                "High-Octane" -> Color(0xFF7C3AED)
+                                "Diesel" -> Color(0xFFD97706)
+                                else -> ZyphuelBluePrimary
                             },
                             modifier = Modifier.size(24.dp)
                         )
@@ -6008,7 +5880,7 @@ fun RateOrderDialog(
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("How was your fuel/water delivery experience in Lahore?", style = MaterialTheme.typography.bodyMedium)
+                Text("How was your doorstep fuel delivery experience in Lahore?", style = MaterialTheme.typography.bodyMedium)
                 Row(
                     horizontalArrangement = Arrangement.Center,
                     modifier = Modifier.fillMaxWidth()
@@ -6088,11 +5960,7 @@ fun CustomerPastOrderCard(order: OrderEntity, viewModel: MainViewModel) {
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = when (order.serviceType) {
-                                "Petrol", "Diesel", "High-Octane" -> Icons.Filled.LocalGasStation
-                                "LPG Gas" -> Icons.Filled.Fireplace
-                                else -> Icons.Filled.WaterDrop
-                            },
+                            imageVector = Icons.Filled.LocalGasStation,
                             contentDescription = null,
                             tint = ZyphuelBluePrimary,
                             modifier = Modifier.size(16.dp)
@@ -6130,11 +5998,7 @@ fun CustomerPastOrderCard(order: OrderEntity, viewModel: MainViewModel) {
                             fontWeight = FontWeight.Medium
                         )
                     )
-                    val unit = when (order.serviceType) {
-                        "Water" -> "Gallons"
-                        "LPG Gas" -> "KG"
-                        else -> "Liters"
-                    }
+                    val unit = "Liters"
                     Text(
                         text = "Quantity: ${order.quantity} $unit",
                         style = MaterialTheme.typography.bodySmall.copy(
@@ -6488,11 +6352,7 @@ fun CustomerOrderCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            imageVector = when (order.serviceType) {
-                                "Petrol", "Diesel", "High-Octane" -> Icons.Filled.LocalGasStation
-                                "LPG Gas" -> Icons.Filled.Fireplace
-                                else -> Icons.Filled.WaterDrop
-                            },
+                            imageVector = Icons.Filled.LocalGasStation,
                             contentDescription = null,
                             tint = ZyphuelBluePrimary,
                             modifier = Modifier.size(18.dp)
@@ -6829,7 +6689,7 @@ fun CustomerOrderCard(
     }
 }
 
-// --- PHASE 5: ORDER FUEL / GAS / WATER DIALOG ---
+// --- PHASE 5: ORDER FUEL DIALOG ---
 
 @Composable
 fun DeliveryVehicleCustomMarker(
@@ -7933,7 +7793,7 @@ fun OrderStatusAndCoverageBottomSheet(
                 Column {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(
-                            text = if (order.serviceType.contains("Water", ignoreCase = true)) "🚰 Pure Water Tanker Order" else "⛽ Euro-V Fuel Bowser Order",
+                            text = "⛽ Euro-V Fuel Bowser Order",
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = Color.White)
                         )
                         Surface(
@@ -8070,7 +7930,7 @@ fun OrderStatusAndCoverageBottomSheet(
                     OrderStatusStepItem(title = "Order Confirmed & Logged", description = "Cash on Delivery (COD) Verified", isDone = true)
                     OrderStatusStepItem(title = "Bowser Dispatched from Central Depot", description = "Calibrated digital flow meter ready", isDone = true)
                     OrderStatusStepItem(title = "En Route (Lahore Region Corridor)", description = "Arrival in approx. 12-15 minutes", isDone = order.status == "Delivering" || order.status == "Completed", isCurrent = order.status == "Delivering")
-                    OrderStatusStepItem(title = "Dispensing Fuel / Water on Site", description = "OGRA digital slip printout", isDone = order.status == "Completed")
+                    OrderStatusStepItem(title = "Dispensing Fuel on Site", description = "OGRA digital slip printout", isDone = order.status == "Completed")
                 }
             }
 
@@ -8971,11 +8831,7 @@ fun OrderSummaryCard(order: OrderEntity, viewModel: MainViewModel) {
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = when (order.serviceType) {
-                                "Petrol", "Diesel", "High-Octane" -> Icons.Filled.LocalGasStation
-                                "LPG Gas" -> Icons.Filled.Fireplace
-                                else -> Icons.Filled.WaterDrop
-                            },
+                            imageVector = Icons.Filled.LocalGasStation,
                             contentDescription = order.serviceType,
                             tint = ZyphuelBluePrimary,
                             modifier = Modifier.size(16.dp)
@@ -8996,7 +8852,7 @@ fun OrderSummaryCard(order: OrderEntity, viewModel: MainViewModel) {
                     }
                 }
                 Text(
-                    text = "${order.quantity} ${if (order.serviceType == "Water") "Gallon(s)" else if (order.serviceType == "LPG Gas") "KG" else "L"}",
+                    text = "${order.quantity} L",
                     style = MaterialTheme.typography.bodyMedium.copy(
                         fontWeight = FontWeight.Bold,
                         color = ZyphuelBlueDark
@@ -10524,10 +10380,10 @@ fun FAQDialog(onDismiss: () -> Unit) {
                         FAQItem("What is the minimum fuel delivery?", "For Petrol, Diesel, and High-Octane, the minimum order size is 5 Liters. Orders can be scaled in increments of +1 Liter.")
                     }
                     item {
-                        FAQItem("How does the gas rate work?", "LPG Gas cylinders can be ordered starting at 5 KG. The standard delivery price is updated dynamically according to market rates. Check current price under dynamic logistics dashboard.")
+                        FAQItem("What is the maximum doorstep fuel order?", "Doorstep mobile delivery is capped at a maximum of 15 Liters per order (5L, 10L, or 15L) in compliance with OGRA petroleum safety standards. For commercial bulk orders, contact our WhatsApp hotline.")
                     }
                     item {
-                        FAQItem("What is the water gallon capacity?", "We deliver 20-liter drinking water gallons at standard rates. Check live rates on your home dashboard.")
+                        FAQItem("What are the delivery charges?", "Delivery fees are tiered by volume: Rs. 280 for 5 Liters, Rs. 300 for 10 Liters, and Rs. 350 for 15 Liters.")
                     }
                     item {
                         FAQItem("Why is there a markup over station retail rates?", "As a premium mobile fuel delivery service, our rates include a Doorstep Bowser Delivery Surcharge (typically Rs. 20-25 per liter). This covers safe specialized transit, fleet logistics, and on-site dispensing, allowing you to bypass dry station lines entirely.")
@@ -10780,7 +10636,7 @@ fun SupportDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
 
                     FaqItemCard(
                         question = "1. How does Cash-on-Delivery (COD) fuel delivery work?",
-                        answer = "Select your required fuel type (Petrol, Diesel, LPG Gas, Water Tanker), specify quantity and Lahore delivery address, and confirm order. A verified rider will deliver directly to your location."
+                        answer = "Select your required fuel type (Petrol, Diesel, High-Octane), specify quantity (up to 15L) and Lahore delivery address, and confirm order. A verified rider will deliver directly to your location."
                     )
 
                     FaqItemCard(
@@ -11117,7 +10973,7 @@ fun FaqItemCard(question: String, answer: String) {
                             "💰 Rates" to "Current Price List",
                             "📦 Order" to "Track My Order",
                             "📍 Areas" to "Lahore Coverage Areas",
-                            "⚠️ Safety" to "LPG Safety Guidelines"
+                            "⚠️ Safety" to "Fuel Safety Guidelines"
                         )
                         commandChips.forEach { (label, actionText) ->
                             Card(
@@ -11865,7 +11721,7 @@ fun MyOrdersDialog(
                                         }
                                     }
                                     Text(
-                                        text = "Quantity: ${order.quantity} ${if (order.serviceType == "LPG Gas") "kg" else if (order.serviceType == "Water") "Gallons" else "Liters"}",
+                                        text = "Quantity: ${order.quantity} Liters",
                                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
                                         color = Color.Black
                                     )
@@ -12308,7 +12164,7 @@ fun ReceivedOrdersDialog(
                                         }
                                     }
                                     Text(
-                                text = "Quantity: ${order.quantity} ${if (order.serviceType == "LPG Gas") "kg" else if (order.serviceType == "Water") "Gallons" else "Liters"}",
+                                        text = "Quantity: ${order.quantity} Liters",
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = Color.DarkGray
                                     )
@@ -15244,7 +15100,7 @@ fun AddCustomerDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text(
-                    "Add a new customer profile directly into Zyphuel system. Customer will be able to order fuel/water/gas instantly.",
+                    "Add a new customer profile directly into Zyphuel system. Customer will be able to order fuel instantly.",
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.Gray
                 )
@@ -17188,7 +17044,7 @@ fun LocationPermissionRationaleBanner(
                 )
             }
             Text(
-                text = "Zyphuel auto-detects your precise GPS position and nearest landmark so fuel & water bowser delivery trucks route directly to your spot without delay.",
+                text = "Zyphuel auto-detects your precise GPS position and nearest landmark so fuel bowser delivery trucks route directly to your spot without delay.",
                 style = MaterialTheme.typography.bodySmall,
                 color = Color(0xFF78350F)
             )
@@ -17664,8 +17520,6 @@ fun LahoreFuelMarketWidget(
     val petrolPumpPrice by viewModel.petrolPumpPrice.collectAsState()
     val dieselPumpPrice by viewModel.dieselPumpPrice.collectAsState()
     val octanePumpPrice by viewModel.highOctanePumpPrice.collectAsState()
-    val lpgPrice by viewModel.lpgGasPrice.collectAsState()
-    val waterPrice by viewModel.waterPrice.collectAsState()
     val priceSyncing by viewModel.priceSyncing.collectAsState()
     val lastPriceSyncTime by viewModel.lastPriceSyncTime.collectAsState()
 
@@ -18108,33 +17962,33 @@ private fun PlayStoreAsoTab(context: android.content.Context) {
     ) {
         AsoCopyCard(
             title = "App Title (30 Characters)",
-            content = "Zyphuel: Fuel & Gas Delivery",
-            characterCount = "29/30",
+            content = "Zyphuel: Doorstep Fuel Delivery",
+            characterCount = "31/30",
             context = context
         )
 
         AsoCopyCard(
             title = "Short Description (80 Characters)",
-            content = "Instant On-Demand Petrol, Diesel, LPG Gas & Water Delivery with Live Bowser GPS.",
-            characterCount = "80/80",
+            content = "Instant On-Demand Petrol, Diesel & High-Octane Delivery with Live Bowser GPS.",
+            characterCount = "77/80",
             context = context
         )
 
         AsoCopyCard(
             title = "Optimized Long Description (Google Play SEO Keyword Density 3.8%)",
-            content = """Zyphuel is Pakistan & Global Leader in On-Demand Fuel Delivery, Emergency Refueling, and Mobile Gas Station Logistics. Order Super Euro-V Petrol, High Speed Diesel, High-Octane 97, LPG Gas Cylinders, and Purified Mineral Water delivered straight to your vehicle or home doorstep in Lahore and major metropolitan cities.
+            content = """Zyphuel is Pakistan's Premier On-Demand Fuel Delivery and Mobile Bowser Refueling Platform. Order Super Euro-V Petrol, High Speed Diesel, and High-Octane 97 delivered straight to your vehicle or doorstep in Lahore.
 
 Key Features & High Ranking Keywords:
 • On-Demand Fuel Delivery: Instant mobile refueling for cars, fleets, generators, and commercial sites.
 • Live OGRA Rate Integration: Real-time petrol and diesel prices updated directly via Google Search Grounding.
 • Bowser Fleet GPS Tracking: Watch your fuel tanker approach on live maps with estimated arrival times.
-• 24/7 Emergency Gas & Refinement: Stranded with an empty fuel tank? Get instant roadside petrol delivery in 15 minutes.
+• 24/7 Emergency Refueling: Stranded with an empty fuel tank? Get instant roadside petrol delivery in 15 minutes.
 • Biometric Touchless Checkout: Secure payment via fingerprint, face unlock, and digital wallet integration.
-• Eco Clean Energy & Pure Water: Certified LPG cylinder refill and 100% pure mineral water delivery.
+• Guaranteed OGRA Quality: 100% genuine Euro-V certified fuel pumped straight into your tank.
 
 Target Keywords Included:
-fuel delivery app, on demand petrol, diesel delivery lahore, lpg gas cylinder, emergency refueling, mobile gas station, ogra rates, bowser delivery, doorstep petrol, fuel price tracker, clean energy refill.""",
-            characterCount = "1,142/4,000",
+fuel delivery app, on demand petrol, diesel delivery lahore, high octane 97, emergency refueling, mobile gas station, ogra rates, bowser delivery, doorstep petrol, fuel price tracker.""",
+            characterCount = "1,040/4,000",
             context = context
         )
     }
@@ -18145,7 +17999,7 @@ private fun AtoZKeywordMatrixTab(context: android.content.Context) {
     val keywordMatrix = listOf(
         "A" to "Absolute Accuracy OGRA Fuel Rates",
         "B" to "Bowser GPS Live Tracking Fleet",
-        "C" to "Clean Energy & Pure Water Logistics",
+        "C" to "Certified Fuel Meter Delivery",
         "D" to "Diesel Euro-V High Speed On-Demand",
         "E" to "Emergency Refueling 24/7 Roadside",
         "F" to "Fuel Delivery On-Demand App",
@@ -18154,7 +18008,7 @@ private fun AtoZKeywordMatrixTab(context: android.content.Context) {
         "I" to "Instant Order Dispatch & Dispatcher",
         "J" to "Just-In-Time Fuel Logistics Network",
         "K" to "Kinetic Rapid Bowser Tanker Dispatch",
-        "L" to "LPG Gas Cylinder Doorstep Refill",
+        "L" to "Lahore Bowser Express Dispatch",
         "M" to "Mobile Gas Station & Fuel Truck",
         "N" to "Network Provider GPS Auto-Location",
         "O" to "OGRA Approved Petroleum Standards",
@@ -18165,7 +18019,7 @@ private fun AtoZKeywordMatrixTab(context: android.content.Context) {
         "T" to "Touchless Biometric Fingerprint Pay",
         "U" to "Universal App Deep Links (zyphuel.com)",
         "V" to "Viral Referral & Loyalty Cashbacks",
-        "W" to "Water Gallon Pure Mineral Supply",
+        "W" to "Weekend Refueling & Fleet Care",
         "X" to "Express Emergency Petrol Refill",
         "Y" to "Yield Cost Savings & Price Tracker",
         "Z" to "Zyphuel Global Fuel Logistics"
@@ -18249,7 +18103,7 @@ private fun GoogleIndexingTab(context: android.content.Context) {
     "price": "0",
     "priceCurrency": "PKR"
   },
-  "description": "On-demand fuel delivery for Petrol, Diesel, LPG Gas, and Water in Lahore & global cities."
+  "description": "On-demand fuel delivery for Petrol, Diesel, and High-Octane in Lahore & global cities."
 }"""
 
     Column(
@@ -18372,7 +18226,7 @@ private fun ViralGrowthTab(context: android.content.Context) {
 
                 Button(
                     onClick = {
-                        val shareText = "🚀 Get Petrol, Diesel & LPG Gas delivered directly to your vehicle anywhere in Lahore with Zyphuel! Real-time OGRA rates & instant delivery: https://zyphuel.com"
+                        val shareText = "🚀 Get Petrol, Diesel & High-Octane fuel delivered directly to your vehicle anywhere in Lahore with Zyphuel! Real-time OGRA rates & instant delivery: https://zyphuel.com"
                         val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
                             type = "text/plain"
                             putExtra(android.content.Intent.EXTRA_TEXT, shareText)
@@ -18849,15 +18703,15 @@ private fun GeoAndOnPageTab(context: android.content.Context) {
     "price": "0",
     "priceCurrency": "PKR"
   },
-  "description": "On-demand fuel delivery for Petrol, Diesel, LPG Gas, and Water in Lahore & global cities."
+  "description": "On-demand doorstep mobile fuel delivery for Petrol, Diesel, and High-Octane in Lahore & global cities."
 }"""
 
     val llmTxt = """# Zyphuel Knowledge Base (/llms.txt)
-Title: Zyphuel Fuel & Gas Delivery
-Entity: On-Demand Mobile Fuel & Gas Logistics Service
+Title: Zyphuel Fuel Delivery
+Entity: On-Demand Mobile Fuel Logistics Service
 Locations: Lahore, Islamabad, Karachi, Pakistan
-Services: Super Euro-V Petrol, High Speed Diesel, High Octane 97, LPG Gas Cylinder, Purified Mineral Water
-Key Feature: Real-time OGRA price integration, Bowser GPS tracking, touchless biometric checkout.
+Services: Super Euro-V Petrol, High Speed Diesel, High Octane 97
+Key Feature: Real-time OGRA price integration, Bowser GPS tracking, touchless biometric checkout, 15L doorstep safety cap.
 API Endpoint: https://zyphuel.com/api/v1/fuel-rates"""
 
     Column(
@@ -18882,7 +18736,7 @@ API Endpoint: https://zyphuel.com/api/v1/fuel-rates"""
 
         AsoCopyCard(
             title = "On-Page Meta Title & Headings",
-            content = "<title>Zyphuel - On-Demand Fuel, Petrol & LPG Delivery Lahore</title>\n<h1>Zyphuel Mobile Refueling & Emergency Gas Logistics</h1>\n<h2>Live OGRA Rates & Bowser GPS Tracking</h2>",
+            content = "<title>Zyphuel - On-Demand Fuel & Petrol Delivery Lahore</title>\n<h1>Zyphuel Mobile Refueling & Emergency Fuel Logistics</h1>\n<h2>Live OGRA Rates & Bowser GPS Tracking</h2>",
             characterCount = "HTML On-Page Elements",
             context = context
         )
@@ -18894,7 +18748,7 @@ private fun LocalAndVoiceSeoTab(context: android.content.Context) {
     val localGbpSchema = """{
   "@context": "https://schema.org",
   "@type": "GasStation",
-  "name": "Zyphuel Mobile Gas & Fuel Delivery HQ",
+  "name": "Zyphuel Mobile Fuel Delivery HQ",
   "address": {
     "@type": "PostalAddress",
     "streetAddress": "Gulberg III Main Boulevard",
@@ -18912,7 +18766,7 @@ private fun LocalAndVoiceSeoTab(context: android.content.Context) {
   "telephone": "+92-42-111-997-483"
 }"""
 
-    val voiceAssistantPrompts = """• Google Assistant: "Hey Google, order 20 liters of Super Petrol on Zyphuel"
+    val voiceAssistantPrompts = """• Google Assistant: "Hey Google, order 10 liters of Super Petrol on Zyphuel"
 • Apple Siri: "Hey Siri, request fuel delivery to my current location using Zyphuel"
 • Amazon Alexa: "Alexa, ask Zyphuel for current OGRA petrol prices" """
 

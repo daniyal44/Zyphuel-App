@@ -1,8 +1,8 @@
 # Terms and Conditions of Service (Zyphuel)
 
-**Effective Date:** September 2026  
-**Last Updated:** September 2026  
-**Application Version:** 2.6.4.0.0.11 (Build 39)  
+**Effective Date:** October 2026  
+**Last Updated:** October 2026  
+**Application Version:** 2.6.4.0.0.21 (Build 49)  
 **Package Name:** `com.aistudio.zyphuel.appv2`  
 **Official Website:** [https://www.zyphuel.com/](https://www.zyphuel.com/)  
 **Terms of Use URL:** [https://www.zyphuel.com/terms-of-use](https://www.zyphuel.com/terms-of-use)  
@@ -24,34 +24,39 @@ By downloading, installing, registering an account, or placing an order on the *
 
 ## 2. Service Description & Geographical Coverage
 Zyphuel provides an on-demand marketplace and logistics coordination platform connecting customers with authorized delivery riders and bowser vehicles for the doorstep delivery of energy and fuel products:
-* **1. Fuel & Energy**: Euro-V Super Petrol, HOBC 97 Octane, High-Speed Diesel (HSD), Commercial Generator Backup Refueling, and OGRA-certified 11.8kg Sealed LPG Domestic Cylinders.
-* **2. Pure Drinking Water**: Premium filtered 19-Liter Drinking Water bottles and dispenser units.
+* **1. Fuel Delivery**: Certified Super Euro-V Petrol, High-Octane 97 (HOBC), and High-Speed Diesel (HSD) delivered directly to your vehicle tank.
+* **2. Product Availability Notice**: Pure Drinking Water Delivery and LPG Gas Cylinders are currently **UNAVAILABLE** and strictly blocked across all order flows and dialogs.
 * **3. Emergency Roadside Support**: Rapid 5L Emergency Fuel top-up delivery and high-amperage battery booster jumpstarts.
-* **4. Fleet & Commercial Logistics**: Scheduled diesel logistics and generator refueling contracts for commercial establishments and corporate fleets.
 
-**Geographical Coverage:** Services are currently operated within the municipal limits of **Lahore, Punjab, Pakistan** (including Gulberg, DHA, Bahria Town, Model Town, Johar Town, Cantt, Wapda Town, and surrounding zones within a 45 km radius of the central hub). Out-of-zone requests are automatically assessed via GPS coverage telemetry.
+**Strict Fuel Delivery Volume Limit:** Mobile doorstep fuel delivery is subject to a **strict maximum cap of 15 Liters per order** in accordance with petroleum safety guidelines. Any order exceeding 15 Liters is strictly blocked and rejected.
+
+**Geographical Coverage:** Services are currently operated within the municipal limits of **Lahore, Punjab, Pakistan** (including Gulberg, DHA, Bahria Town, Model Town, Johar Town, Cantt, Wapda Town, Green Town, and surrounding Lahore zones). Out-of-zone requests are automatically assessed via GPS coverage telemetry.
 
 ---
 
 ## 3. Eligibility & Account Responsibilities
-* **Age Requirement:** You must be at least 18 years of age to open an account and order petroleum or LPG gas products.
+* **Age Requirement:** You must be at least 18 years of age to open an account and order petroleum products.
 * **Account Credential Security:** You are solely responsible for maintaining the confidentiality of your account credentials. You agree to immediately notify Zyphuel if you detect any unauthorized access.
 * **Identity Verification:** Riders must provide authentic government-issued identity documents (CNIC, Driving License, Vehicle Registration) and emergency contact credentials. Supplying falsified documents will result in permanent account termination and referral to law enforcement.
 
 ---
 
 ## 4. Safety & Hazardous Materials Compliance (OGRA / Civil Defense)
-Petroleum products and LPG cylinders are hazardous and flammable materials regulated under Pakistani law:
+Petroleum products are hazardous and flammable materials regulated under Pakistani law:
 1. **Dispensing Environment:** Customers must ensure a safe delivery environment free from open flames, running electrical generators, or lit cigarettes during fuel dispensing.
 2. **Safety Perimeter:** A strict 3-meter safety radius must be observed around delivery bowsers during mobile refueling operations.
+3. **Safety Volume Cap:** Doorstep mobile fueling is capped at a strict 15 Liters maximum per order.
 
 ---
 
-## 5. Pricing, Peak Surge & Payment Policies
-* **Fuel Pricing & Petrol Pump Retail Rates:** Petroleum product prices are based on official notified rates established by the **Oil & Gas Regulatory Authority (OGRA)** of Pakistan. In accordance with petroleum retail distribution in Lahore, retail rates for Super Petrol, High-Speed Diesel, and High-Octane include a standard petrol pump rate adjustment of Rs. 2.50 per liter over official OGRA ex-depot base notifications, transparently calculated on checkout.
-* **Service & Delivery Charges:** Platform convenience and distance delivery fees are transparently itemized on the order confirmation checkout screen before order placement.
+## 5. Pricing, Tiered Delivery Fees & Payment Policies
+* **Fuel Pricing & Petrol Pump Retail Rates:** Petroleum product prices are based on official notified rates established by the **Oil & Gas Regulatory Authority (OGRA)** of Pakistan. In accordance with petroleum retail distribution in Lahore, retail rates for Super Petrol, High-Speed Diesel, and High-Octane include a fixed petrol pump retail margin of Rs. 5.00 per liter over official OGRA ex-depot base notifications, transparently calculated on checkout.
+* **Tiered Doorstep Delivery Rates:** Fuel doorstep mobile delivery follows official tiered delivery charges:
+  - **1 to 5 Liters**: Rs. 280.00
+  - **6 to 10 Liters**: Rs. 300.00
+  - **11 to 15 Liters (Maximum Cap)**: Rs. 350.00
 * **Peak-Hour Surge:** During severe weather conditions or high-demand delivery windows, a dynamic surge fee may apply, clearly disclosed before confirmation.
-* **Payment Methods:** Customers may pay via Cash on Delivery (COD), JazzCash, EasyPaisa, or supported bank card transfers. Orders exceeding 30 Liters / bulk quantities may require advance digital confirmation.
+* **Payment Methods:** Customers may pay via Cash on Delivery (COD), JazzCash, EasyPaisa, or supported bank card transfers. Orders cannot exceed the 15-liter maximum cap.
 
 ---
 

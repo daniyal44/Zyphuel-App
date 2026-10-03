@@ -11,8 +11,8 @@ data class FuelPriceFetchResult(
     val petrol: Float,
     val diesel: Float,
     val highOctane: Float,
-    val lpgGas: Float,
-    val water: Float = 50.0f,
+    val lpgGas: Float = 0f,
+    val water: Float = 0f,
     val source: String,
     val effectiveDate: String? = null
 )
@@ -46,7 +46,6 @@ object TrackmateFuelApiService {
         var foundPetrol: Float? = null
         var foundDiesel: Float? = null
         var foundOctane: Float? = null
-        var foundLpg: Float? = null
         var effectiveDateStr: String? = null
 
         // Loop through prices array to pick official values
@@ -79,25 +78,17 @@ object TrackmateFuelApiService {
                         foundOctane = pricePkr
                     }
                 }
-                "lpg" -> {
-                    if (foundLpg == null || source == "pso") {
-                        foundLpg = pricePkr
-                    }
-                }
             }
         }
 
         val petrol = foundPetrol ?: 275.60f
         val diesel = foundDiesel ?: 284.20f
         val octane = foundOctane ?: 325.00f
-        val lpg = foundLpg ?: 258.65f
 
         FuelPriceFetchResult(
             petrol = petrol,
             diesel = diesel,
             highOctane = octane,
-            lpgGas = lpg,
-            water = 50.0f,
             source = "Trackmate Fuel API (PSO / Shell / PakWheels)",
             effectiveDate = effectiveDateStr
         )

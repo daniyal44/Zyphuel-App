@@ -269,7 +269,7 @@ object InvoiceGenerator {
                     <tr>
                         <td>
                             <div class="brand-title">⚡ ZYPHUEL</div>
-                            <div class="brand-tagline">On-Demand Doorstep Fuel & Clean Water</div>
+                            <div class="brand-tagline">On-Demand Doorstep Fuel Delivery</div>
                             <div style="font-size: 11px; color: #64748b; margin-top: 4px;">
                                 Central Operations: Green Town HQ / Model Town, Lahore<br/>
                                 Helpline: +92 323 0112464 • NTN: 8941203-7

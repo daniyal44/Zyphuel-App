@@ -28,12 +28,10 @@ class FuelPriceWorker(
         try {
             val sharedPrefs = appContext.getSharedPreferences("zyphuel_prices", Context.MODE_PRIVATE)
             val oldPetrol = sharedPrefs.getFloat("price_petrol", 275.60f)
-            val oldLpg = sharedPrefs.getFloat("price_lpg_gas", 258.65f)
 
             var newPetrol = oldPetrol
             var newDiesel = sharedPrefs.getFloat("price_diesel", 284.20f)
             var newOctane = sharedPrefs.getFloat("price_high_octane", 325.00f)
-            var newLpg = oldLpg
             var sourceName = "Official Fuel Market API"
 
             try {
@@ -41,7 +39,6 @@ class FuelPriceWorker(
                 newPetrol = trackmateResult.petrol
                 newDiesel = trackmateResult.diesel
                 newOctane = trackmateResult.highOctane
-                newLpg = trackmateResult.lpgGas
                 sourceName = trackmateResult.source
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -54,7 +51,7 @@ class FuelPriceWorker(
 
                 if (apiKey.isNotBlank()) {
                     try {
-                        val promptText = "Query current OGRA Pakistan official fuel retail rates (petrol, diesel, high_octane, lpg_gas) in PKR per liter and per KG. Respond in raw JSON format only with keys: petrol, diesel, high_octane, lpg_gas, source."
+                        val promptText = "Query current OGRA Pakistan official fuel retail rates (petrol, diesel, high_octane) in PKR per liter. Respond in raw JSON format only with keys: petrol, diesel, high_octane, source."
                         val jsonPayload = JSONObject().apply {
                             put("contents", org.json.JSONArray().put(
                                 JSONObject().apply {
@@ -85,7 +82,6 @@ class FuelPriceWorker(
                                     newPetrol = pricesObj.optDouble("petrol", oldPetrol.toDouble()).toFloat()
                                     newDiesel = pricesObj.optDouble("diesel", newDiesel.toDouble()).toFloat()
                                     newOctane = pricesObj.optDouble("high_octane", newOctane.toDouble()).toFloat()
-                                    newLpg = pricesObj.optDouble("lpg_gas", oldLpg.toDouble()).toFloat()
                                     sourceName = pricesObj.optString("source", "OGRA Pakistan / Live Market")
                                 }
                             }
@@ -101,7 +97,6 @@ class FuelPriceWorker(
                 .putFloat("price_petrol", newPetrol)
                 .putFloat("price_diesel", newDiesel)
                 .putFloat("price_high_octane", newOctane)
-                .putFloat("price_lpg_gas", newLpg)
                 .putLong("price_last_updated", System.currentTimeMillis())
                 .putString("price_source", sourceName)
                 .apply()
@@ -124,7 +119,7 @@ class FuelPriceWorker(
 
             val title = "⛽ Real-time Fuel Price Update"
             val displaySource = if (sourceName.contains("Trackmate", ignoreCase = true) || sourceName.contains("API", ignoreCase = true)) "Official Rates" else sourceName
-            val message = "Petrol: Rs. $newPetrol/L  •  High Octane: Rs. $newOctane/L  •  LPG: Rs. $newLpg/KG  ($displaySource)"
+            val message = "Petrol: Rs. $newPetrol/L  •  Diesel: Rs. $newDiesel/L  •  High Octane: Rs. $newOctane/L  ($displaySource)"
 
             if (allowSending) {
                 notifPrefs.edit().putString("last_sent_price_notif_date", todayDateStr).apply()

@@ -45,7 +45,7 @@ fun MyVehiclesDialog(
     var fuelDropdownExpanded by remember { mutableStateOf(false) }
 
     val vehicleTypes = listOf("Motorcycle / Bike", "Car", "SUV / 4x4", "Van", "Commercial Vehicle", "EV")
-    val fuelTypes = listOf("Petrol", "Diesel", "High-Octane", "Electric", "Hybrid", "LPG")
+    val fuelTypes = listOf("Petrol", "Diesel", "High-Octane", "Electric", "Hybrid")
 
     AlertDialog(
         onDismissRequest = onDismiss,

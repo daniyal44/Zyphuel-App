@@ -1,8 +1,8 @@
 # Privacy Policy for Zyphuel
 
-**Effective Date:** September 2026  
-**Last Updated:** September 2026  
-**Application Version:** 2.6.4.0.0.11 (Build 39)  
+**Effective Date:** October 2026  
+**Last Updated:** October 2026  
+**Application Version:** 2.6.4.0.0.21 (Build 49)  
 **Package Name:** `com.aistudio.zyphuel.appv2`  
 **Official Website:** [https://www.zyphuel.com/](https://www.zyphuel.com/)  
 **Privacy Policy URL:** [https://www.zyphuel.com/privacy](https://www.zyphuel.com/privacy)  
@@ -19,7 +19,7 @@
 ---
 
 ## 1. Introduction
-Welcome to **Zyphuel** ("we", "our", or "us"). Zyphuel is an early-stage on-demand fuel delivery, clean energy, and vehicle support startup operating in Lahore, Pakistan. We are committed to protecting the privacy, confidentiality, and security of our customers, service technicians, riders, and administrative personnel.
+Welcome to **Zyphuel** ("we", "our", or "us"). Zyphuel is an early-stage on-demand fuel delivery and vehicle support startup operating in Lahore, Pakistan. We are committed to protecting the privacy, confidentiality, and security of our customers, service technicians, riders, and administrative personnel.
 
 This Privacy Policy explains how we collect, use, disclose, and safeguard your personal information when you access or use the Zyphuel Android application and our online services. By installing, creating an account on, or using Zyphuel, you consent to the practices described in this Privacy Policy.
 
@@ -30,7 +30,7 @@ This Privacy Policy explains how we collect, use, disclose, and safeguard your p
 ### A. Location Information (Prominent Disclosure)
 Zyphuel requires access to device location services to fulfill on-demand doorstep deliveries and emergency roadside dispatch:
 * **Precise GPS Location (`ACCESS_FINE_LOCATION`) & Approximate Location (`ACCESS_COARSE_LOCATION`)**:
-  - **For Customers**: Collected when you search for nearby service coverage, mark drop-off locations, or place orders for Fuel Delivery (Euro-V Regular Petrol, HOBC 97 Octane, High-Speed Diesel), Sealed LPG Cylinders, Emergency Battery Boost, or Pure Drinking Water.
+  - **For Customers**: Collected when you search for nearby service coverage, mark drop-off locations, or place orders for Doorstep Fuel Delivery (Euro-V Regular Petrol, HOBC 97 Octane, High-Speed Diesel). Orders are strictly capped at 15 Liters per order for public safety. Note: Pure Drinking Water and LPG Gas Cylinders are currently unavailable and blocked across all services.
   - **For Riders & Field Technicians**: Collected during active service shifts to calculate optimal driving routes, navigate to customer coordinates, and trigger geofenced customer notifications (e.g., "Rider is 1 km away").
 * **Foreground Service Location (`FOREGROUND_SERVICE_LOCATION`)**:
   - Used by delivery riders and roadside technicians via `RiderLocationForegroundService` exclusively while active on dispatch assignments to provide live telematic tracking to the customer and dispatch console. A persistent notification is displayed whenever this service is operating.
@@ -42,7 +42,7 @@ Zyphuel requires access to device location services to fulfill on-demand doorste
 * **Emergency Contacts**: For delivery fleet safety, riders provide an emergency contact name, relationship, and contact number.
 
 ### C. Financial & Transaction Data
-* Orders placed, quantities ordered (Liters / Kilograms / Units), order timestamps, discount vouchers applied, payment methods selected (Cash on Delivery, JazzCash, EasyPaisa, or direct bank transfer), and automated electronic tax invoice records.
+* Orders placed, fuel quantities ordered (in Liters, up to a maximum of 15L), order timestamps, discount vouchers applied, payment methods selected (Cash on Delivery, JazzCash, EasyPaisa, or direct bank transfer), and automated electronic tax invoice records.
 * **Payment Security**: Zyphuel never collects, processes, or stores raw credit/debit card numbers or CVV codes on our servers. Transaction confirmations and references are stored for accounting and invoice reconciliation.
 
 ### D. Device and Technical Data
@@ -52,9 +52,9 @@ Zyphuel requires access to device location services to fulfill on-demand doorste
 
 ## 3. How We Use Your Information
 We process your personal information strictly for legitimate operational purposes:
-1. **Order Processing & Doorstep Delivery**: Connecting customers with nearby authorized fuel and energy dispatch riders.
+1. **Order Processing & Doorstep Delivery**: Connecting customers with nearby authorized fuel dispatch riders.
 2. **Real-Time Live Telematics**: Displaying real-time rider progression on live Google Maps to ensure route accuracy and prompt delivery.
-3. **Safety & Regulatory Compliance**: Adhering to Oil & Gas Regulatory Authority (OGRA) and civil safety guidelines concerning the secure transportation and handling of petroleum and LPG products.
+3. **Safety & Regulatory Compliance**: Adhering to Oil & Gas Regulatory Authority (OGRA) and civil safety guidelines concerning the secure transportation and handling of petroleum products (capped at a strict 15-liter maximum volume for mobile doorstep refueling).
 4. **Order Status Notifications**: Dispatching real-time status updates via push notifications, transactional emails, and SMS alerts.
 5. **Fraud Prevention & Account Security**: Enforcing rate limits, brute-force protection, biometric authentication, and audit logs.
 

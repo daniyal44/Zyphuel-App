@@ -22,7 +22,7 @@ data class VehicleEntity(
     val model: String, // e.g. "Corolla", "CD 70", "Civic", "Model 3"
     val year: Int, // e.g. 2022
     val registrationNumber: String, // e.g. "LEA-22-1234"
-    val fuelType: String, // "Petrol", "Diesel", "High-Octane", "Electric", "Hybrid", "LPG"
+    val fuelType: String, // "Petrol", "Diesel", "High-Octane", "Electric", "Hybrid"
     val isEv: Boolean = false,
     val preferredServices: String = "", // Comma-separated tags
     val isDefault: Boolean = false,

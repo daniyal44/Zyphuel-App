@@ -205,38 +205,6 @@ object AppLanguageManager {
             "zh" to "高辛烷值汽油 (RON 97)",
             "ru" to "Высокооктановый (RON 97)"
         ),
-        "service_water" to mapOf(
-            "en" to "Pure Drinking Water",
-            "ur" to "پینے کا صاف پانی",
-            "pa" to "پین دا صاف پانی",
-            "sd" to "پيئڻ جو صاف پاڻي",
-            "ps" to "د څښاک پاکې اوبه",
-            "ar" to "مياه نقية للشرب",
-            "es" to "Agua Potable Pura",
-            "fr" to "Eau Potable Pure",
-            "de" to "Reines Trinkwasser",
-            "tr" to "Saf İçme Suyu",
-            "fa" to "آب آشامیدنی خالص",
-            "hi" to "शुद्ध पीने का पानी",
-            "zh" to "纯净饮用水",
-            "ru" to "Чистая питьевая вода"
-        ),
-        "service_lpg" to mapOf(
-            "en" to "LPG Gas Cylinder",
-            "ur" to "ایل پی جی گیس سلنڈر",
-            "pa" to "ایل پی جی سلنڈر",
-            "sd" to "ايل پي جي گئس سلنڊر",
-            "ps" to "ایل پی جی ګاز سلنډر",
-            "ar" to "أسطوانة غاز نفطي مسال",
-            "es" to "Cilindro de Gas GLP",
-            "fr" to "Bouteille de Gaz GPL",
-            "de" to "LPG-Gasflasche",
-            "tr" to "LPG Gaz Tüpü",
-            "fa" to "سیلندر گاز ال‌پی‌جی",
-            "hi" to "एलपीजी गैस सिलेंडर",
-            "zh" to "液化石油气钢瓶",
-            "ru" to "Газовый баллон LPG"
-        ),
         "btn_place_order" to mapOf(
             "en" to "Place Order (Cash on Delivery)",
             "ur" to "آرڈر بک کریں (کیش آن ڈیلیوری)",
@@ -434,11 +402,11 @@ object AppLanguageManager {
         ),
 
         // Order dialog
-        "lbl_order_fuel_gas" to mapOf(
-            "en" to "Order Fuel & Gas",
-            "ur" to "ایندھن اور گیس آرڈر کریں",
-            "pa" to "تیل تے گیس آرڈر کرو",
-            "ar" to "اطلب الوقود والغاز"
+        "lbl_order_fuel" to mapOf(
+            "en" to "Order Fuel",
+            "ur" to "ایندھن آرڈر کریں",
+            "pa" to "تیل آرڈر کرو",
+            "ar" to "اطلب الوقود"
         ),
         "dlg_order_title" to mapOf(
             "en" to "Place Your Order",
@@ -497,22 +465,6 @@ object AppLanguageManager {
             "sd" to "هاءِ آڪٽين",
             "ps" to "های اوکټین",
             "ar" to "أوكتان عالي"
-        ),
-        "svc_water" to mapOf(
-            "en" to "Water",
-            "ur" to "پانی",
-            "pa" to "پانی",
-            "sd" to "پاڻي",
-            "ps" to "اوبه",
-            "ar" to "ماء"
-        ),
-        "svc_lpg" to mapOf(
-            "en" to "LPG Gas",
-            "ur" to "ایل پی جی گیس",
-            "pa" to "ایل پی جی گیس",
-            "sd" to "ايل پي جي گئس",
-            "ps" to "ایل پی جی ګاز",
-            "ar" to "غاز LPG"
         ),
 
         // Order statuses (display-only; logic keeps English via order.status).

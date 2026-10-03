@@ -90,8 +90,8 @@ data class OrderEntity(
     val customerEmail: String,
     val customerName: String,
     val customerPhone: String,
-    val serviceType: String, // "Petrol", "Diesel", "High-Octane", "LPG Gas", "Water"
-    val quantity: Int, // Liters, KGs, or Gallons
+    val serviceType: String, // "Petrol", "Diesel", "High-Octane"
+    val quantity: Int, // Volume in Liters
     val totalPrice: Double,
     val deliveryAddress: String,
     val paymentMethod: String = "Cash on Delivery",

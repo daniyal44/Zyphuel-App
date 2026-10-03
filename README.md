@@ -22,10 +22,10 @@
 
 | Metric | Current Status | Specification |
 | :--- | :--- | :--- |
-| 🚀 **App Version** | **v2.6.4.0.0.16** | Production Build `44` |
+| 🚀 **App Version** | **v2.6.4.0.0.21** | Production Build `49` |
 | 🛡️ **Target Android SDK** | **Android 15/16 Ready** | API Level `36` |
-| 📦 **Total Production Commits** | **57+ Commits** | Across `2` Active Sprints |
-| ⚡ **Latest Git Revision** | `3a9f364` (2026-09-30) | `Real-time rider GPS tracking, live map fixes, an` |
+| 📦 **Total Production Commits** | **58+ Commits** | Across `3` Active Sprints |
+| ⚡ **Latest Git Revision** | `0bcb816` (2026-10-03) | `feat: eradicate gas and water, show all active o` |
 | 🟢 **System Build Health** | **100% Operational** | Dual SMTP Gateway • Biometric Auth • Live GPS |
 
 #### 🌳 Native Git Commit & Branch Lifecycle Graph
@@ -53,14 +53,14 @@ gitGraph
     commit id: "Smooth Map Interpolation"
     commit id: "COD & Card Settlement"
     checkout main
-    merge feat-live-telematics id: "Build 44" tag: "v2.6.4.0.0.16"
+    merge feat-live-telematics id: "Build 49" tag: "v2.6.4.0.0.21"
 ```
 
 #### 🎯 Engineering Velocity & Module Effort Distribution
 ```mermaid
 pie title Engineering Distribution by Domain
     "Features & Order Flow" : 12
-    "Rider GPS & Live Telematics" : 17
+    "Rider GPS & Live Telematics" : 18
     "UI/UX & High-Contrast Typography" : 19
     "Security, Biometrics & Room DB" : 1
     "Releases, Legal & ASO Compliance" : 8
@@ -73,6 +73,7 @@ pie title Engineering Distribution by Domain
 ========================================================================================
 Aug '26   : [████░░░░░░░░░░░░░░░░░░]   8 commits
 Sep '26   : [██████████████████████]  49 commits (🔥 Peak Velocity)
+Oct '26   : [█░░░░░░░░░░░░░░░░░░░░░]   1 commits
 ========================================================================================
 Status: 🟢 Continuous Delivery Active | Sync Engine: GitHub Actions Telemetry Bot
 ```
@@ -83,6 +84,7 @@ Status: 🟢 Continuous Delivery Active | Sync Engine: GitHub Actions Telemetry 
 ##### 📅 Recent Active Days Commit Frequency
 | Date | Commits | Activity Meter | Sprint Status |
 | :--- | :---: | :--- | :--- |
+| `2026-10-03` | **1** | `[██░░░░░░░░░░]` | Active Sprint Delivery |
 | `2026-09-30` | **1** | `[██░░░░░░░░░░]` | Active Sprint Delivery |
 | `2026-09-22` | **2** | `[████░░░░░░░░]` | Active Sprint Delivery |
 | `2026-09-21` | **6** | `[████████████]` | Active Sprint Delivery |
@@ -92,16 +94,15 @@ Status: 🟢 Continuous Delivery Active | Sync Engine: GitHub Actions Telemetry 
 | `2026-09-11` | **1** | `[██░░░░░░░░░░]` | Active Sprint Delivery |
 | `2026-09-10` | **1** | `[██░░░░░░░░░░]` | Active Sprint Delivery |
 | `2026-09-09` | **6** | `[████████████]` | Active Sprint Delivery |
-| `2026-09-08` | **2** | `[████░░░░░░░░]` | Active Sprint Delivery |
 
 ##### 📝 Latest Verified Revisions
 | SHA | Date | Message |
 | :--- | :--- | :--- |
+| `0bcb816` | 2026-10-03 | feat: eradicate gas and water, show all active orders in sid... |
 | `3a9f364` | 2026-09-30 | Real-time rider GPS tracking, live map fixes, and COD paymen... |
 | `eab0ccc` | 2026-09-22 | Real-time rider GPS tracking, live map fixes, and COD paymen... |
 | `4c38f01` | 2026-09-22 | Real-time rider GPS tracking, live map fixes, and COD paymen... |
 | `d77e41a` | 2026-09-21 | Real-time rider GPS tracking, live map fixes, and COD paymen... |
-| `4f3db84` | 2026-09-21 | Real-time rider GPS tracking, live map fixes, and COD paymen... |
 
 </details>
 
@@ -110,7 +111,7 @@ Status: 🟢 Continuous Delivery Active | Sync Engine: GitHub Actions Telemetry 
 ---
 
 ## 📌 About Zyphuel
-Zyphuel is Pakistan's premier on-demand doorstep delivery platform for **Super Petrol, High-Speed Diesel, High-Octane, LPG Gas Cylinders, and Pure Mineral Drinking Water** across Lahore, Punjab. The platform delivers seamless consumer, rider, and admin operations backed by real-time dual email dispatch, biometric security, and 0ms instantaneous order processing.
+Zyphuel is Pakistan's premier on-demand doorstep delivery platform for **Super Euro-V Petrol, High-Speed Diesel, and High-Octane 97** across Lahore, Punjab. The platform delivers seamless consumer, rider, and admin operations backed by real-time dual email dispatch, biometric security, and 0ms instantaneous order processing.
 
 ---
 

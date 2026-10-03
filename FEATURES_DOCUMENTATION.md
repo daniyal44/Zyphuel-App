@@ -1,5 +1,5 @@
 # 🚀 Zyphuel App Features & Technical Documentation
-**App Version:** `v2.6.4.0.0.17 (Build 45)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** `October 2026`
+**App Version:** `v2.6.4.0.0.21 (Build 49)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** `October 2026`
 
 Welcome to the complete architectural and functional guide for the **Zyphuel** Android application. This document outlines every single feature, function, database entity, and user flow from start to finish.
 
@@ -1402,9 +1402,75 @@ Zyphuel v2.4.0 introduces a comprehensive 10-category on-demand automotive and m
 * **Localization Manager (`AppLanguageManager.kt`)**:
   - Removed `nav_switch_rider` key mapping across all supported languages.
 
-### 37.5 App Versioning & Release Verification
-* **Incremented `versionCode`**: `45` -> `46`.
-* **Advanced `versionName`**: `"2.6.4.0.0.17"` -> `"2.6.4.0.0.18"`.
+
+---
+
+## 38. Fixed Fuel Price Retail Pump Margin Update to Rs. 5.00/L (v2.6.4.0.0.19 Build 47)
+
+### 38.1 Fixed Fuel Pump Retail Margin Increase (Rs. 2.50 ➔ Rs. 5.00)
+* **Standardized Rate Constants ([`FeeConstants.kt`](file:///d:/Games/New%20folder-web/Claude/app/src/main/java/com/example/util/FeeConstants.kt))**:
+  - Updated `PETROL_PUMP_RATE_SURCHARGE` from `2.50` to **`5.00`** (Double).
+  - Updated `PETROL_PUMP_RATE_SURCHARGE_FLOAT` from `2.50f` to **`5.00f`** (Float).
+  - Updated helper calculation functions `getPumpRate(basePrice, serviceType)` to compute retail fuel rates using the fixed Rs. 5.00/L margin.
+* **Eligible Fuel Types**:
+  - **Petrol**: Base OGRA notified rate + Rs. 5.00/L.
+  - **Diesel**: Base OGRA notified rate + Rs. 5.00/L.
+  - **High-Octane (RON 97)**: Base OGRA notified rate + Rs. 5.00/L.
+  - Gas and Water remain completely excluded and blocked from pump margin calculations.
+* **StateFlow & Dynamic Synchronization ([`MainViewModel.kt`](file:///d:/Games/New%20folder-web/Claude/app/src/main/java/com/example/ui/MainViewModel.kt), [`CategoryRepository.kt`](file:///d:/Games/New%20folder-web/Claude/app/src/main/java/com/example/data/category/CategoryRepository.kt))**:
+  - `petrolPumpPrice`, `dieselPumpPrice`, and `highOctanePumpPrice` reactive streams automatically reflect the updated +Rs. 5.00/L margin over the live OGRA base rate.
+  - `CategoryRepository.syncLiveFuelPrices()` synchronizes subcategory prices with the exact Rs. 5.00 margin.
+* **UI Components & Hero Showcase ([`CategoryComponents.kt`](file:///d:/Games/New%20folder-web/Claude/app/src/main/java/com/example/ui/CategoryComponents.kt))**:
+  - Updated fallback live rates to reflect Rs. 5.00 margin: Petrol (Rs. 294.38/L), Diesel (Rs. 294.84/L), High-Octane (Rs. 330.00/L).
+  - Replaced legacy Gas chip with High-Octane in the hero fuel showcase card.
+
+### 38.2 App Versioning & Release Verification
+* **Incremented `versionCode`**: `46` ➔ **`47`**.
+* **Advanced `versionName`**: `"2.6.4.0.0.18"` ➔ **`"2.6.4.0.0.19"`**.
+
+---
+
+## 39. Strict 15L Fuel Cap Enforcement, Tiered Delivery Pricing & Final Gas/Water Deprecation (v2.6.4.0.0.21 Build 49)
+
+### 39.1 Strict 15 Liters Maximum Volume Cap for Fuel Delivery
+* **Safety & Regulatory Compliance**:
+  - In strict compliance with OGRA mobile refueling transport and safety regulations, doorstep fuel delivery (Super Euro-V Petrol, High-Speed Diesel, High-Octane 97) is strictly capped at a maximum of **15 Liters per order**.
+  - Any order exceeding 15L is strictly blocked and prevented across the UI (`OrderDialog`, steppers, full-tank presets), ViewModel input validation (`MainViewModel.placeOrder`), and backend guard checks.
+* **Tiered Doorstep Delivery Fee Structure**:
+  - **1 to 5 Liters**: Rs. 280.00 Delivery Fee (`FUEL_DELIVERY_FEE_5L`)
+  - **6 to 10 Liters**: Rs. 300.00 Delivery Fee (`FUEL_DELIVERY_FEE_10L`)
+  - **11 to 15 Liters (Max Cap)**: Rs. 350.00 Delivery Fee (`FUEL_DELIVERY_FEE_15L`)
+  - Unified across [`FeeConstants.kt`](file:///d:/Games/New%20folder-web/Claude/app/src/main/java/com/example/util/FeeConstants.kt), `MainViewModel.calculateDeliveryFee()`, `InvoiceGenerator`, `FareBreakdownDialog`, and order history summaries.
+
+### 39.2 Complete Deprecation & Removal of Pure Water and LPG Gas
+* **Complete Product Block**:
+  - **Pure Water Delivery**: Completely **UNAVAILABLE** and decommissioned across all customer-facing surfaces.
+  - **LPG Gas Cylinders**: Completely **UNAVAILABLE** and decommissioned across all customer-facing surfaces.
+  - Hard guards in `FeeConstants.isServiceUnavailable()` and `MainViewModel.placeOrder` immediately reject any order containing Water or Gas.
+* **UI Cleanups in [`Screens.kt`](file:///d:/Games/New%20folder-web/Claude/app/src/main/java/com/example/ui/Screens.kt)**:
+  - Removed Card 4 (LPG Gas Cylinder) and Card 5 (Pure Drinking Water) warning placeholders from `HomeScreen`.
+  - Removed `lpgPrice` and `waterPrice` StateFlow observers and collectors from `LivePriceBanner` and `HomeScreen`.
+  - Updated Phone Mockup Previews, Onboarding walkthrough slides, and Order Tracking step text (`"Dispensing Fuel on Site"`, `"Euro-V Fuel Bowser Order"`).
+  - Updated Customer Past Order Cards and Active Delivery Cards to enforce `"Liters"` unit exclusively.
+  - Updated ASO Marketing, SEO JSON-LD schemas, and Generative Engine Optimization (`/llms.txt`) files to strictly feature Euro-V Petrol, High Speed Diesel, and High-Octane 97.
+  - Updated viral share text: `"🚀 Get Petrol, Diesel & High-Octane fuel delivered directly to your vehicle anywhere in Lahore with Zyphuel!"`.
+  - Updated Voice Assistant trigger prompts to comply with the 15L cap (`"Hey Google, order 10 liters of Super Petrol on Zyphuel"`).
+* **AI Support Agent Cleanups in [`MainViewModel.kt`](file:///d:/Games/New%20folder-web/Claude/app/src/main/java/com/example/ui/MainViewModel.kt)**:
+  - Gemini AI system prompt, offline fallback rules, greeting messages, and price quotation algorithms purged of all water/gas mentions.
+  - Exclusively handles real-time rates and safety guidelines for Euro-V Petrol, High Speed Diesel, and High-Octane 97 with the 15L maximum limit.
+
+### 39.3 Legal & Documentation Synchronization
+* **In-App Legal Dialog ([`TermsAndPrivacyDialog.kt`](file:///d:/Games/New%20folder-web/Claude/app/src/main/java/com/example/ui/components/TermsAndPrivacyDialog.kt))**:
+  - Enforces the 15L volume cap, Rs. 280 / Rs. 300 / Rs. 350 tiered pricing, Play Store compliance, and explicit fuel-only scope.
+* **[`PRIVACY_POLICY.md`](file:///d:/Games/New%20folder-web/Claude/PRIVACY_POLICY.md) & [`TERMS_AND_CONDITIONS.md`](file:///d:/Games/New%20folder-web/Claude/TERMS_AND_CONDITIONS.md)**:
+  - Synchronized to version 2.6.4.0.0.21 (Build 49).
+  - Noted permanent unavailability and rejection of Water and LPG Gas orders.
+  - Prominently detailed the 15L maximum volume cap and tiered delivery fee schedule.
+
+### 39.4 App Versioning & Release Verification
+* **Incremented `versionCode`**: `48` ➔ **`49`**.
+* **Advanced `versionName`**: `"2.6.4.0.0.20"` ➔ **`"2.6.4.0.0.21"`**.
+* **Zero Compilation Errors & Green Test Suite**: Full Kotlin compilation passed with zero errors (`./gradlew compileDebugKotlin`).
 
 
 

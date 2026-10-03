@@ -305,8 +305,8 @@ private fun TermsContent() {
 
     LegalCard(
         icon = Icons.Filled.LocalGasStation,
-        title = "2. Available Fuel Products & Unavailability Notice",
-        description = "Zyphuel provides doorstep delivery for Super Euro-V Petrol, High-Octane 97, and High-Speed Diesel (Regular & Generator).\n\n⚠️ Operational Notice: Water Delivery and LPG Gas Cylinders are currently TEMPORARILY UNAVAILABLE across all sectors. Orders for these two items cannot be placed at this time."
+        title = "2. Available Fuel Products",
+        description = "Zyphuel exclusively provides doorstep delivery for certified Super Euro-V Petrol, High-Octane 97, and High-Speed Diesel (Regular & Generator) in Lahore."
     )
 
     LegalCard(
@@ -386,7 +386,7 @@ private fun HowItWorksContent() {
     StepCard(
         stepNumber = "1",
         title = "Select Fuel Product & Quantity",
-        description = "Choose Super Euro-V Petrol, High-Octane 97, or High-Speed Diesel. Adjust volume with precision 1-liter steppers or full-tank presets. (Water and Gas are currently unavailable)."
+        description = "Choose Super Euro-V Petrol, High-Octane 97, or High-Speed Diesel. Adjust volume with precision 1-liter steppers or full-tank presets."
     )
 
     StepCard(

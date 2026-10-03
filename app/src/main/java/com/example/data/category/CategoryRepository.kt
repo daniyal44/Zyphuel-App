@@ -61,7 +61,7 @@ class CategoryRepository(private val context: Context) {
     /**
      * Synchronizes live dynamic fuel prices into the Fuel & Energy category & subcategories.
      */
-    fun syncLiveFuelPrices(petrol: Float, diesel: Float, octane: Float, lpg: Float, water: Float) {
+    fun syncLiveFuelPrices(petrol: Float, diesel: Float, octane: Float, lpg: Float = 0f, water: Float = 0f) {
         val pumpPetrol = petrol.toDouble() + com.example.util.FeeConstants.PETROL_PUMP_RATE_SURCHARGE
         val pumpOctane = octane.toDouble() + com.example.util.FeeConstants.PETROL_PUMP_RATE_SURCHARGE
         val pumpDiesel = diesel.toDouble() + com.example.util.FeeConstants.PETROL_PUMP_RATE_SURCHARGE

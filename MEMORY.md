@@ -205,6 +205,41 @@
   - Removed LPG Gas from `PortalSelectScreen` description.
 * **Version Advancement**: Incremented `versionCode = 46` and advanced `versionName = "2.6.4.0.0.18"`.
 
+### Phase 24: Fixed Retail Fuel Price Pump Margin Update to Rs. 5.00/L (v2.6.4.0.0.19 Build 47)
+* **Pump Surcharge / Margin Adjustment (Rs. 2.50/L ➔ Rs. 5.00/L)**:
+  - Updated `FeeConstants.PETROL_PUMP_RATE_SURCHARGE` to `5.00` (Double).
+  - Updated `FeeConstants.PETROL_PUMP_RATE_SURCHARGE_FLOAT` to `5.00f` (Float).
+  - Updated `FeeConstants.getPumpRate(baseRate)` to consistently add Rs. 5.00/L across all fuel types (Petrol, Diesel, High-Octane).
+  - Synchronized `CategoryRepository.syncLiveFuelPrices()` to add the fixed Rs. 5.00/L retail margin over base OGRA rates for Petrol, Diesel, and High-Octane.
+* **UI & Showcase Card Synchronization**:
+  - Updated fallback live fuel rates in `CategoryComponents.kt`:
+    - Petrol: Rs. 294.38/L (Base 289.38 + 5.00)
+    - Diesel: Rs. 294.84/L (Base 289.84 + 5.00)
+    - High-Octane: Rs. 330.00/L (Base 325.00 + 5.00)
+  - Replaced legacy Gas chip in hero fuel showcase with High-Octane chip displaying `liveOctane`.
+* **Unit Testing & Verification**:
+  - Updated unit tests in `FuelPumpPricingTest.kt` validating that `getPumpRate` adds Rs. 5.00/L and grand total calculations accurately reflect the Rs. 5.00 margin.
+### Phase 25: Strict 15L Delivery Cap, Tiered Delivery Pricing & Final Gas/Water Removal (v2.6.4.0.0.21 Build 49)
+* **Strict 15 Liters Maximum Volume Cap**:
+  - Enforced a hard limit of 15 Liters for doorstep fuel delivery (Petrol, Diesel, High-Octane) across `OrderDialog`, steppers, full-tank presets, and `MainViewModel.placeOrder()`.
+  - All orders exceeding 15 Liters are strictly prevented and rejected.
+* **Tiered Doorstep Delivery Rates**:
+  - Standardized delivery fee structure in `FeeConstants.kt`:
+    - Up to 5 Liters: Rs. 280.00 (`FUEL_DELIVERY_FEE_5L`)
+    - Up to 10 Liters: Rs. 300.00 (`FUEL_DELIVERY_FEE_10L`)
+    - Up to 15 Liters: Rs. 350.00 (`FUEL_DELIVERY_FEE_15L`)
+  - Integrated across `MainViewModel`, `InvoiceGenerator`, and order history summaries.
+* **Complete Deprecation & Blocking of Pure Water and LPG Gas**:
+  - Pure Water and LPG Gas are permanently unavailable and rejected.
+  - Purged all residual references in `Screens.kt` (hero banners, service cards, tour guides, ASO marketing metadata, Schema JSON-LD, `/llms.txt`, and viral share copy).
+  - Purged AI Support Gemini prompts and offline fallback rules in `MainViewModel.kt` to focus exclusively on Euro-V Petrol, High Speed Diesel, and High-Octane 97.
+* **Legal & Compliance Synchronization**:
+  - Updated `PRIVACY_POLICY.md` and `TERMS_AND_CONDITIONS.md` to Build 49 with prominent disclosures of the 15L safety cap and unavailability of Water/LPG.
+  - Verified `TermsAndPrivacyDialog.kt` alignment.
+* **Version Advancement & Verification**:
+  - Incremented `versionCode = 49` and advanced `versionName = "2.6.4.0.0.21"` in `app/build.gradle.kts`.
+  - Full project compilation (`compileDebugKotlin`) and unit tests (`testDebugUnitTest`) verified green.
+
 ---
 
 

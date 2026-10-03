@@ -67,8 +67,6 @@ object CategoryIconHelper {
     fun getCategoryColor(id: String): Color {
         return when (id) {
             "fuel_energy" -> ZyphuelBluePrimary       // Electric Cobalt Blue (Logo Primary)
-            "gas_cylinder" -> ZyphuelBlueSecondary    // Cyan Flame Accent (Logo Highlight)
-            "water_delivery" -> Color(0xFF0284C7)     // Ocean Blue
             "auto_repair" -> ZyphuelBlueDark          // Deep Royal Blue
             "roadside_assistance" -> ZyphuelBluePrimary
             "auto_detailing" -> ZyphuelBluePrimary
@@ -397,9 +395,9 @@ fun CategoryGridSection(
 ) {
     var selectedTab by remember { mutableIntStateOf(0) } // 0: All Services, 1: Emergency & Fuel, 2: Care & Maintenance
 
-    val livePetrol = viewModel?.petrolPumpPrice?.collectAsState()?.value ?: 291.88f
-    val liveDiesel = viewModel?.dieselPumpPrice?.collectAsState()?.value ?: 292.34f
-    val liveLpg = viewModel?.lpgGasPrice?.collectAsState()?.value ?: 258.65f
+    val livePetrol = viewModel?.petrolPumpPrice?.collectAsState()?.value ?: 294.38f
+    val liveDiesel = viewModel?.dieselPumpPrice?.collectAsState()?.value ?: 294.84f
+    val liveOctane = viewModel?.highOctanePumpPrice?.collectAsState()?.value ?: 330.00f
 
     val displayedCategories = when (selectedTab) {
         0 -> categories
@@ -571,8 +569,8 @@ fun CategoryGridSection(
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 6.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Text("Gas", style = MaterialTheme.typography.labelSmall, color = Color(0xFFD1FAE5), fontSize = 10.sp)
-                                Text("Rs. ${String.format(java.util.Locale.US, "%.2f", liveLpg)}/Kg", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = Color.White, fontSize = 11.sp)
+                                Text("Octane", style = MaterialTheme.typography.labelSmall, color = Color(0xFFD1FAE5), fontSize = 10.sp)
+                                Text("Rs. ${String.format(java.util.Locale.US, "%.2f", liveOctane)}/L", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = Color.White, fontSize = 11.sp)
                             }
                         }
                     }
@@ -740,13 +738,12 @@ fun CategoryDetailModal(
     val deviceLng by viewModel.deviceLongitude.collectAsState()
     val liveLocationAddr by viewModel.liveLocationCoordinates.collectAsState()
 
-    // Dynamic Live Petrol Pump Rates from ViewModel (OGRA notified + Rs. 2.50/L pump rate)
+    // Dynamic Live Petrol Pump Rates from ViewModel (OGRA notified + Rs. 5.00/L pump rate)
     val livePetrol by viewModel.petrolPumpPrice.collectAsState()
     val liveDiesel by viewModel.dieselPumpPrice.collectAsState()
     val liveOctane by viewModel.highOctanePumpPrice.collectAsState()
-    val liveLpg by viewModel.lpgGasPrice.collectAsState()
 
-    val getEffectivePrice = remember(category.id, livePetrol, liveDiesel, liveOctane, liveLpg) {
+    val getEffectivePrice = remember(category.id, livePetrol, liveDiesel, liveOctane) {
         { sub: Subcategory ->
             if (category.id != "fuel_energy") {
                 sub.basePrice
@@ -755,7 +752,6 @@ fun CategoryDetailModal(
                     "petrol_regular" -> livePetrol.toDouble()
                     "petrol_octane" -> liveOctane.toDouble()
                     "diesel_regular", "diesel_generator" -> liveDiesel.toDouble()
-                    "lpg_sealed_cylinder" -> liveLpg.toDouble()
                     else -> sub.basePrice
                 }
             }
@@ -956,9 +952,6 @@ fun CategoryDetailModal(
                                 Surface(color = Color.White, shape = RoundedCornerShape(6.dp), border = BorderStroke(1.dp, Color(0xFFBBF7D0))) {
                                     Text("Octane: Rs. ${String.format(java.util.Locale.US, "%.2f", liveOctane)}/L", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = Color(0xFF15803D), modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp))
                                 }
-                                Surface(color = Color.White, shape = RoundedCornerShape(6.dp), border = BorderStroke(1.dp, Color(0xFFBBF7D0))) {
-                                    Text("Gas: Rs. ${String.format(java.util.Locale.US, "%.2f", liveLpg)}/Kg", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = Color(0xFF15803D), modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp))
-                                }
                             }
                         }
                     }
@@ -1151,13 +1144,9 @@ fun CategoryDetailModal(
                         color = ZyphuelBlueDark
                     )
 
-                    // Quick Volume Preset Chips for Fuel & LPG
-                    if (activeSub.unit in listOf("L", "Kg")) {
-                        val presets = if (activeSub.unit == "L") {
-                            listOf(5 to "5 Litres", 10 to "10 Litres", 20 to "20 Litres", 30 to "30 Litres", 40 to "40 Litres", 50 to "Full (50L)")
-                        } else {
-                            listOf(12 to "11.8 Kg (1 Cylinder)", 24 to "23.6 Kg (2 Cylinders)")
-                        }
+                    // Quick Volume Preset Chips for Fuel
+                    if (activeSub.unit == "L") {
+                        val presets = listOf(5 to "5 Litres", 10 to "10 Litres", 15 to "15 Litres (Max)")
 
                         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Text(
