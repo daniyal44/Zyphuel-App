@@ -408,12 +408,6 @@ object AppLanguageManager {
             "pa" to "شرطاں تے پرائیویسی پالیسی",
             "ar" to "الشروط وسياسة الخصوصية"
         ),
-        "nav_switch_rider" to mapOf(
-            "en" to "Switch as Rider",
-            "ur" to "رائیڈر کے طور پر جائیں",
-            "pa" to "رائیڈر بن کے جاؤ",
-            "ar" to "التبديل كسائق"
-        ),
         "nav_switch_customer" to mapOf(
             "en" to "Switch as Customer",
             "ur" to "کسٹمر کے طور پر جائیں",

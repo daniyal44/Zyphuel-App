@@ -1330,7 +1330,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun switchToPlatform(targetScreen: String, platformDisplayName: String? = null) {
         viewModelScope.launch {
             val name = platformDisplayName ?: when (targetScreen) {
-                "rider_home", "login_rider", "register_rider" -> "Rider Platform"
+                "rider_home", "register_rider" -> "Rider Platform"
                 "customer_home", "login_customer", "register_customer" -> "Customer Portal"
                 "admin_dashboard" -> "Admin Dashboard"
                 else -> "Zyphuel Platform"
@@ -2146,7 +2146,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun logout() {
         viewModelScope.launch {
             val user = _currentUser.value
-            val targetScreen = if (user?.role == "rider") "login_rider" else "login_customer"
+            val targetScreen = "login_customer"
             if (user != null) {
                 val module = when (user.role) {
                     "rider" -> AppModule.RIDER

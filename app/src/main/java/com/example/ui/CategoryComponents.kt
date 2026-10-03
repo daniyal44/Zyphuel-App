@@ -236,8 +236,9 @@ fun QuickActionsBar(
 ) {
     val actions = listOf(
         Triple("Order Fuel ⛽", Icons.Filled.LocalGasStation, "fuel_energy"),
-        Triple("Gas Cylinders 🔥", Icons.Filled.PropaneTank, "gas_cylinder"),
-        Triple("Pure Water 🚰", Icons.Filled.WaterDrop, "water_delivery")
+        Triple("Auto Repair 🔧", Icons.Filled.Build, "auto_repair"),
+        Triple("Roadside SOS 🚨", Icons.Filled.CarCrash, "roadside_assistance"),
+        Triple("Battery Jump ⚡", Icons.Filled.BatteryChargingFull, "battery_services")
     )
 
     Column(modifier = modifier.fillMaxWidth()) {
@@ -403,7 +404,7 @@ fun CategoryGridSection(
     val displayedCategories = when (selectedTab) {
         0 -> categories
         1 -> categories.filter { it.id in listOf("fuel_energy", "roadside_assistance", "battery_services", "tyres_wheels") }
-        2 -> categories.filter { it.id in listOf("auto_repair", "auto_detailing", "lubricants_fluids", "ev_services", "water_delivery", "fleet_business") }
+        2 -> categories.filter { it.id in listOf("auto_repair", "auto_detailing", "lubricants_fluids", "ev_services", "fleet_business") }
         else -> categories
     }
 

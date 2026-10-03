@@ -29,9 +29,9 @@ class CategoryAndVehicleArchitectureTest {
     }
 
     @Test
-    fun `test CategoryCatalogSeed has exactly 10 production categories`() {
+    fun `test CategoryCatalogSeed has exactly 9 production categories`() {
         val seed = CategoryCatalogSeed.getDefaultCategories()
-        assertEquals(10, seed.size)
+        assertEquals(9, seed.size)
 
         val expectedIds = setOf(
             "fuel_energy",
@@ -42,7 +42,6 @@ class CategoryAndVehicleArchitectureTest {
             "battery_services",
             "lubricants_fluids",
             "ev_services",
-            "water_delivery",
             "fleet_business"
         )
         val actualIds = seed.map { it.id }.toSet()
@@ -144,7 +143,7 @@ class CategoryAndVehicleArchitectureTest {
     }
 
     @Test
-    fun `test featured 7 categories are correctly resolved from catalog seed`() {
+    fun `test featured 6 categories are correctly resolved from catalog seed`() {
         val seed = CategoryCatalogSeed.getDefaultCategories()
         val featuredIds = listOf(
             "fuel_energy",
@@ -152,11 +151,10 @@ class CategoryAndVehicleArchitectureTest {
             "roadside_assistance",
             "auto_detailing",
             "tyres_wheels",
-            "battery_services",
-            "water_delivery"
+            "battery_services"
         )
         val featuredCategories = seed.filter { it.id in featuredIds }
-        assertEquals("Must resolve exactly 7 featured categories", 7, featuredCategories.size)
+        assertEquals("Must resolve exactly 6 featured categories", 6, featuredCategories.size)
         assertTrue(featuredCategories.any { it.id == "fuel_energy" })
 
         // Verify remaining categories count is 3
@@ -173,8 +171,8 @@ class CategoryAndVehicleArchitectureTest {
         assertNotNull(fuelCat)
         assertTrue("Fuel category pricing must have isDynamicFuelRate flag true", fuelCat.pricingConfig.isDynamicFuelRate)
 
-        // Verify exactly 5 total subcategories in Fuel & Energy: 2 Petrol, 2 Diesel, 1 Gas
-        assertEquals(5, fuelCat.subcategories.size)
+        // Verify exactly 4 total subcategories in Fuel & Energy: 2 Petrol, 2 Diesel
+        assertEquals(4, fuelCat.subcategories.size)
 
         // Verify Petrol (exactly 2)
         val petrolSubs = fuelCat.subcategories.filter { it.serviceGroup == "PETROL" }
@@ -186,10 +184,9 @@ class CategoryAndVehicleArchitectureTest {
         assertEquals(2, dieselSubs.size)
         assertEquals(listOf("diesel_regular", "diesel_generator"), dieselSubs.map { it.id })
 
-        // Verify Gas (exactly 1 single option under GAS)
+        // Verify Gas is completely removed
         val gasSubs = fuelCat.subcategories.filter { it.serviceGroup == "GAS" }
-        assertEquals(1, gasSubs.size)
-        assertEquals(listOf("lpg_sealed_cylinder"), gasSubs.map { it.id })
+        assertEquals(0, gasSubs.size)
 
         // Verify FUEL ADD-ONS is completely removed
         val addOns = fuelCat.subcategories.filter { it.serviceGroup?.contains("ADD-ON", ignoreCase = true) == true }

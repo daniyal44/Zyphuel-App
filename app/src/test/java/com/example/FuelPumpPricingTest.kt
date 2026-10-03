@@ -115,9 +115,8 @@ class FuelPumpPricingTest {
         val dieselGenSub = fuelCategory.subcategories.first { it.id == "diesel_generator" }
         assertEquals(289.84 + 2.50, dieselGenSub.basePrice, 0.001)
 
-        // LPG must not have pump surcharge added
-        val lpgSub = fuelCategory.subcategories.first { it.id == "lpg_sealed_cylinder" }
-        assertEquals(258.65, lpgSub.basePrice, 0.001)
+        // LPG is permanently removed from subcategories
+        assertTrue(fuelCategory.subcategories.none { it.id == "lpg_sealed_cylinder" })
     }
 
     @Test

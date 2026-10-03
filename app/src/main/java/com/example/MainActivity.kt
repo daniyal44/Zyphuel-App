@@ -147,7 +147,11 @@ class MainActivity : FragmentActivity() {
                                             "onboarding" -> OnboardingScreen(viewModel)
                                             "login_customer" -> AuthScreen(viewModel, isRegister = false, isRider = false)
                                             "register_customer" -> AuthScreen(viewModel, isRegister = true, isRider = false)
-                                            "login_rider" -> AuthScreen(viewModel, isRegister = false, isRider = true)
+                                            "login_rider" -> {
+                                                LaunchedEffect(Unit) {
+                                                    viewModel.navigateTo("login_customer")
+                                                }
+                                            }
                                             "register_rider" -> AuthScreen(viewModel, isRegister = true, isRider = true)
                                             "customer_home" -> CustomerHomeScreen(viewModel)
                                             "customer_order_history" -> CustomerOrderHistoryScreen(viewModel, onBack = { viewModel.navigateTo("customer_home") })

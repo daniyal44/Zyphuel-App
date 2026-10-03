@@ -73,15 +73,8 @@ class CategoryRepository(private val context: Context) {
                         "petrol_regular" -> sub.copy(basePrice = pumpPetrol)
                         "petrol_octane" -> sub.copy(basePrice = pumpOctane)
                         "diesel_regular", "diesel_generator" -> sub.copy(basePrice = pumpDiesel)
-                        "lpg_sealed_cylinder" -> sub.copy(basePrice = lpg.toDouble())
                         else -> sub
                     }
-                }
-                category.copy(subcategories = updatedSubcats)
-            } else if (category.id == "water_delivery") {
-                val updatedSubcats = category.subcategories.map { sub ->
-                    if (sub.id == "water_drinking") sub.copy(basePrice = (water * 3.6).coerceAtLeast(180.0))
-                    else sub
                 }
                 category.copy(subcategories = updatedSubcats)
             } else {

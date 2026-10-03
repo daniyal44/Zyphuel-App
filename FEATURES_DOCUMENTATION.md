@@ -1,5 +1,5 @@
 # 🚀 Zyphuel App Features & Technical Documentation
-**App Version:** `v2.6.4.0.0.16 (Build 44)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** `September 2026`
+**App Version:** `v2.6.4.0.0.17 (Build 45)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** `October 2026`
 
 Welcome to the complete architectural and functional guide for the **Zyphuel** Android application. This document outlines every single feature, function, database entity, and user flow from start to finish.
 
@@ -1301,6 +1301,110 @@ Zyphuel v2.4.0 introduces a comprehensive 10-category on-demand automotive and m
 ### 35.5 App Versioning
 * Incremented `versionCode` from `43` to `44`.
 * Advanced `versionName` to `"2.6.4.0.0.16"`.
+
+---
+
+## 36. Permanent Removal of Rider Login & Switch to/as Rider (v2.6.4.0.0.17 Build 45)
+### 36.1 Permanent Elimination of Rider Login
+* **Portal Selection Screen Cleaned (`PortalSelectScreen` in `Screens.kt`)**:
+  - Removed "Button 2: Rider Portal" Card (`portal_select_rider_btn`) and the dedicated "Rider Login" button (`rider_login_portal_btn`).
+  - Removed Rider Biometric Quick Login button (`portal_bio_login_rider_btn`) and state checking (`hasRegisteredRiderBio`).
+  - Updated subtitle text from "Select your portal to login and continue" to "Login to your account and continue".
+* **Direct Startup Routing (`SplashScreen` in `Screens.kt`)**:
+  - Unauthenticated launch directly routes to `login_customer` instead of intermediate portal selection, providing immediate, seamless access to the customer authentication form.
+* **Routing Lockdown & Fallback (`MainActivity.kt` & `Screens.kt`)**:
+  - Direct route `"login_rider"` in `MainActivity` now executes an immediate redirect via `LaunchedEffect(Unit) { viewModel.navigateTo("login_customer") }`.
+  - Unauthenticated `RiderCompleteProfileScreen` redirects directly to `login_customer`.
+* **Universal Customer Logout Routing (`MainViewModel.kt`)**:
+  - `MainViewModel.logout()` now unconditionally sets `targetScreen = "login_customer"` for all users, completely preventing navigation to rider login upon sign-out.
+  - Removed `login_rider` from `switchToPlatform`.
+
+### 36.2 Permanent Removal of "Switch as Rider" / "Switch to Rider" Across App
+* **Customer Login Top-Bar (`AuthScreen` in `Screens.kt`)**:
+  - Permanently removed the top quick-switch surface button (`switch_as_rider_top_btn`) displaying the motorcycle icon and "Switch as Rider" label.
+* **Auth Navigation Drawer (`AuthSidebarContent` in `Screens.kt`)**:
+  - Permanently removed the "Switch as Rider" Fleet card (`sidebar_switch_as_rider`) and sidebar item (`auth_sidebar_switch_as_rider_item`).
+  - Restricted the "SWITCH PLATFORM" drawer section so it never appears for customer accounts.
+* **Main In-App Customer Drawer (`DrawerContent` in `Screens.kt`)**:
+  - Permanently removed the standalone role switch button (`sidebar_switch_as_rider`) displaying "Switch as Rider" and "Fleet 🏍️" badge from the customer drawer under "ACCOUNT & SETTINGS".
+  - Retained `sidebar_switch_as_customer` only when `currentUser.role == "rider"`.
+* **Rider Registration Callback & Bottom Links (`Screens.kt`)**:
+  - Updated rider registration completion callback to navigate directly to `login_customer`.
+  - Updated rider registration form bottom link (`login_as_rider_link`) to redirect to `login_customer` with updated copy "Already have an account? Sign In".
+
+
+---
+
+## 37. Complete Gas & Water Removal, Sidebar Active Orders & Admin Rider Eradication (v2.6.4.0.0.18 Build 46)
+
+### 37.1 Permanent Removal of Gas & Water Delivery
+* **Category Catalog System (`CategoryModels.kt`)**:
+  - Permanently removed `lpg_sealed_cylinder` from `fuel_energy` subcategories.
+  - Permanently removed Category 9 (`water_delivery`) completely from the catalog.
+  - Re-indexed `fleet_business` sortOrder to 9.
+  - Updated category count assertions from 10 to 9 in unit tests.
+* **Category Repository Sync (`CategoryRepository.kt`)**:
+  - Removed dynamic price syncing for LPG and Water subcategories.
+* **Quick Actions Bar & Chips (`CategoryComponents.kt`)**:
+  - Replaced Gas and Water quick action chips with active automotive services ("Auto Repair", "Roadside SOS", "Battery Jump").
+  - Removed `water_delivery` tab filter from displayed categories.
+* **Order Creation Dialog (`OrderDialog` in `Screens.kt`)**:
+  - Completely removed LPG and Water state variables (`lpgSelected`, `waterSelected`, `lpgPrice`, `waterPrice`, `lpgSubtotal`, `waterSubtotal`).
+  - Removed delivery fee calculation and order creation logic for Gas and Water.
+  - Removed Card 4 (LPG Gas Cylinder Unavailable) and Card 5 (Pure Drinking Water Unavailable) warning cards.
+* **Customer Home Screen (`HomeScreen` in `Screens.kt`)**:
+  - Removed LPG Cylinder and Water Gallon compact price ticker cards, retaining High-Octane (RON 97), Petrol, and Diesel.
+* **Portal Select Screen (`PortalSelectScreen` in `Screens.kt`)**:
+  - Updated description text to remove LPG Gas, highlighting Petrol, Diesel & High-Octane Fuel delivery.
+* **Admin Fuel Prices Management Tab (`Screens.kt`)**:
+  - Removed LPG Gas Price and Water Gallon Price input fields (`lpgInput`, `watInput`).
+  - Updated override dispatch handler to only update automotive fuel rates.
+
+### 37.2 Customer Navigation Drawer "Active Orders" (All Orders Visibility)
+* **Drawer Renaming (`DrawerContent` in `Screens.kt`)**:
+  - Renamed drawer item label from "My Active Orders" to **"Active Orders"** (`nav_active_orders`).
+  - Shows real-time badge count representing all system orders (`allOrders.size`).
+  - Displays subtitle "View all active customer deliveries & progress".
+* **Orders Dialog (`MyOrdersDialog` in `Screens.kt`)**:
+  - Switched from customer-filtered orders (`userOrders`) to all system orders (`val orders by viewModel.allOrders.collectAsState()`).
+  - Updated title to **"Active Orders"**.
+  - Updated order counter badge to "Total Orders: ${orders.size}".
+  - Updated empty state text to "No active orders found."
+
+### 37.3 Complete Eradication of Riders from Admin Dashboard
+* **Admin Statistics Bar (`AdminDashboardScreen` in `Screens.kt`)**:
+  - Removed "Riders" stat card, updating the overview grid to display Total Profit, Revenue, Completed Orders, Active Orders, Customers, Canceled Orders, Downloads, Total Users (customers only), and Google Auth Users.
+* **Removal of Riders Management Tab**:
+  - Completely deleted Tab 1 ("Riders"), including the rider approval list, verification toggles, and `AddRiderDialog`.
+  - Re-indexed the 8 active tabs:
+    0. Analytics
+    1. Customers
+    2. Orders
+    3. Feedback
+    4. Fuel Prices
+    5. Email Gateway 📧
+    6. Audit Logs
+    7. Categories
+* **Customer Feedback Tab**:
+  - Removed the rider delivery attribution line (`Delivered by: ...`).
+* **Admin Analytics Dashboard (`AdminAnalyticsDashboard`)**:
+  - Updated fuel consumption categories to 3 items: Petrol, Diesel, High-Octane.
+  - Replaced "Registered Riders" and "Rider Not Available" metric cards with "Completed Orders" and "Canceled Orders".
+  - Updated user breakdown to exclusively count registered customers.
+* **Email Gateway Banner**:
+  - Updated dispatch notice to "Dispatches real emails directly to User & Admin Gmail inboxes".
+
+### 37.4 Eradication of Rider Login & Switch as/to Rider
+* **Navigation Drawer Role Switch (`DrawerContent` in `Screens.kt`)**:
+  - Completely removed the `if (currentUser.role == "rider")` switch block from the main customer navigation drawer.
+* **Auth Navigation Drawer (`AuthSidebarContent` in `Screens.kt`)**:
+  - Completely removed the `if (isRider)` switch block.
+* **Localization Manager (`AppLanguageManager.kt`)**:
+  - Removed `nav_switch_rider` key mapping across all supported languages.
+
+### 37.5 App Versioning & Release Verification
+* **Incremented `versionCode`**: `45` -> `46`.
+* **Advanced `versionName`**: `"2.6.4.0.0.17"` -> `"2.6.4.0.0.18"`.
 
 
 

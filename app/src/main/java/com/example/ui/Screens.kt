@@ -862,7 +862,7 @@ fun SplashScreen(viewModel: MainViewModel) {
                 else -> viewModel.navigateTo("customer_home")
             }
         } else {
-            viewModel.navigateTo("portal_select")
+            viewModel.navigateTo("login_customer")
         }
     }
 
@@ -953,11 +953,8 @@ fun PortalSelectScreen(viewModel: MainViewModel) {
     }
 
     val isCustBio by viewModel.isCustomerBioEnabled.collectAsState()
-    val isRiderBio by viewModel.isRiderBioEnabled.collectAsState()
     val registeredCustEmail = com.example.security.SecureStorageManager.getRegisteredEmail(context, com.example.security.AppModule.CUSTOMER)
-    val registeredRiderEmail = com.example.security.SecureStorageManager.getRegisteredEmail(context, com.example.security.AppModule.RIDER)
     val hasRegisteredCustBio = isCustBio && !registeredCustEmail.isNullOrBlank()
-    val hasRegisteredRiderBio = isRiderBio && !registeredRiderEmail.isNullOrBlank()
 
     Box(
         modifier = Modifier
@@ -987,14 +984,14 @@ fun PortalSelectScreen(viewModel: MainViewModel) {
             )
             Spacer(modifier = Modifier.height(6.dp))
             Text(
-                text = "Select your portal to login and continue",
+                text = "Login to your account and continue",
                 style = MaterialTheme.typography.bodyLarge.copy(
                     color = Color.Gray
                 )
             )
 
             // --- QUICK BIOMETRIC LOGIN CARD (Only shown to registered users who enabled biometrics) ---
-            if (hasRegisteredCustBio || hasRegisteredRiderBio) {
+            if (hasRegisteredCustBio) {
                 Spacer(modifier = Modifier.height(20.dp))
                 Card(
                     modifier = Modifier
@@ -1091,54 +1088,6 @@ fun PortalSelectScreen(viewModel: MainViewModel) {
                                 Text("Customer Login ($registeredCustEmail)", fontWeight = FontWeight.Bold, color = Color.White)
                             }
                         }
-
-                        if (hasRegisteredRiderBio && registeredRiderEmail != null) {
-                            Button(
-                                onClick = {
-                                    val performBioLogin = {
-                                        viewModel.loginWithBiometrics(
-                                            context = context,
-                                            module = com.example.security.AppModule.RIDER,
-                                            userEmailInput = registeredRiderEmail,
-                                            onSuccess = { user ->
-                                                Toast.makeText(context, "Welcome back, Rider ${user.name}! 🛵", Toast.LENGTH_SHORT).show()
-                                                viewModel.navigateTo("rider_home")
-                                            },
-                                            onError = { err -> Toast.makeText(context, err, Toast.LENGTH_LONG).show() }
-                                        )
-                                    }
-                                    if (fragmentActivity != null) {
-                                        com.example.security.BiometricSecurityManager.showBiometricPrompt(
-                                            activity = fragmentActivity,
-                                            title = "Rider Biometric Login",
-                                            subtitle = "Scan fingerprint to enter Rider Portal",
-                                            description = "Account: $registeredRiderEmail",
-                                            onSuccess = { performBioLogin() },
-                                            onError = { code, errStr ->
-                                                val userCancelled = code == androidx.biometric.BiometricPrompt.ERROR_USER_CANCELED ||
-                                                    code == androidx.biometric.BiometricPrompt.ERROR_NEGATIVE_BUTTON ||
-                                                    code == androidx.biometric.BiometricPrompt.ERROR_CANCELED
-                                                if (!userCancelled) {
-                                                    Toast.makeText(context, errStr.toString(), Toast.LENGTH_LONG).show()
-                                                }
-                                            },
-                                            onFailed = {
-                                                Toast.makeText(context, "Fingerprint not recognized. Try again.", Toast.LENGTH_SHORT).show()
-                                            }
-                                        )
-                                    } else {
-                                        performBioLogin()
-                                    }
-                                },
-                                modifier = Modifier.fillMaxWidth().testTag("portal_bio_login_rider_btn"),
-                                colors = ButtonDefaults.buttonColors(containerColor = ZyphuelBlueDark),
-                                shape = RoundedCornerShape(10.dp)
-                            ) {
-                                Icon(Icons.Filled.TwoWheeler, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text("Rider Login ($registeredRiderEmail)", fontWeight = FontWeight.Bold, color = Color.White)
-                            }
-                        }
                     }
                 }
             }
@@ -1186,7 +1135,7 @@ fun PortalSelectScreen(viewModel: MainViewModel) {
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "Order Petrol, Diesel, Octane & LPG Gas delivered to your location",
+                                text = "Order Petrol, Diesel & High-Octane Fuel delivered to your location",
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     color = Color.Gray
                                 )
@@ -1211,78 +1160,6 @@ fun PortalSelectScreen(viewModel: MainViewModel) {
                         Icon(Icons.Filled.Login, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.White)
                         Spacer(modifier = Modifier.width(6.dp))
                         Text("Customer Login", fontWeight = FontWeight.Bold, color = Color.White)
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Button 2: Rider Portal
-            Card(
-                onClick = { viewModel.navigateTo("login_rider") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("portal_select_rider_btn"),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-            ) {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(52.dp)
-                                .clip(CircleShape)
-                                .background(ZyphuelBluePrimary.copy(alpha = 0.12f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.TwoWheeler,
-                                contentDescription = "Rider Portal",
-                                tint = ZyphuelBluePrimary,
-                                modifier = Modifier.size(28.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(14.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Rider Login",
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = ZyphuelBlueDark
-                                )
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = "Accept fuel delivery orders, track routes & manage deliveries",
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    color = Color.Gray
-                                )
-                            )
-                        }
-                        Icon(
-                            imageVector = Icons.Filled.ChevronRight,
-                            contentDescription = null,
-                            tint = ZyphuelBluePrimary
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Button(
-                        onClick = { viewModel.navigateTo("login_rider") },
-                        colors = ButtonDefaults.buttonColors(containerColor = ZyphuelBluePrimary),
-                        shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("rider_login_portal_btn")
-                    ) {
-                        Icon(Icons.Filled.Login, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.White)
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Rider Login", fontWeight = FontWeight.Bold, color = Color.White)
                     }
                 }
             }
@@ -2166,173 +2043,7 @@ fun AuthDrawerContent(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Switch Platform Section
-            Text(
-                text = "SWITCH PLATFORM",
-                style = MaterialTheme.typography.labelSmall.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black,
-                    letterSpacing = 1.sp
-                ),
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-            )
 
-            if (!isRider) {
-                // Prominent Switch as Rider Card
-                Card(
-                    onClick = onNavigateToRiderLogin,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp)
-                        .testTag("sidebar_switch_as_rider"),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = CardDefaults.cardColors(containerColor = ZyphuelBluePrimary.copy(alpha = 0.08f)),
-                    border = BorderStroke(1.5.dp, ZyphuelBluePrimary.copy(alpha = 0.4f))
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(14.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(44.dp)
-                                .background(ZyphuelBluePrimary, RoundedCornerShape(12.dp)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.TwoWheeler,
-                                contentDescription = "Rider Icon",
-                                tint = Color.White,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    text = "Switch as Rider",
-                                    style = MaterialTheme.typography.bodyLarge.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        color = ZyphuelBlueDark
-                                    )
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Surface(
-                                    shape = RoundedCornerShape(6.dp),
-                                    color = Color(0xFF10B981).copy(alpha = 0.2f)
-                                ) {
-                                    Text(
-                                        text = "🏍️ Fleet",
-                                        style = MaterialTheme.typography.labelSmall.copy(
-                                            color = Color(0xFF047857),
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 10.sp
-                                        ),
-                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.dp)
-                                    )
-                                }
-                            }
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = "Sign in to deliver fuel & earn with Zyphuel Fleet",
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    color = Color.DarkGray,
-                                    fontSize = 11.sp
-                                )
-                            )
-                        }
-                        Icon(
-                            imageVector = Icons.Filled.ChevronRight,
-                            contentDescription = "Go",
-                            tint = ZyphuelBluePrimary,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
-                }
-
-                SidebarItem(
-                    icon = Icons.Filled.TwoWheeler,
-                    label = tr("nav_switch_rider", "Switch as Rider"),
-                    badgeText = "Fleet 🏍️",
-                    badgeColor = ZyphuelBluePrimary,
-                    modifier = Modifier.testTag("auth_sidebar_switch_as_rider_item"),
-                    onClick = onNavigateToRiderLogin
-                )
-            } else {
-                // Switch as Customer Card
-                Card(
-                    onClick = onNavigateToCustomerLogin,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp)
-                        .testTag("sidebar_switch_as_customer"),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF1F5F9)),
-                    border = BorderStroke(1.dp, Color(0xFFCBD5E1))
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(14.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(44.dp)
-                                .background(ZyphuelBlueDark, RoundedCornerShape(12.dp)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Store,
-                                contentDescription = "Customer Icon",
-                                tint = Color.White,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Switch as Customer",
-                                style = MaterialTheme.typography.bodyLarge.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = ZyphuelBlueDark
-                                )
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = "Order Petrol, Diesel & LPG to your doorstep",
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    color = Color.DarkGray,
-                                    fontSize = 11.sp
-                                )
-                            )
-                        }
-                        Icon(
-                            imageVector = Icons.Filled.ChevronRight,
-                            contentDescription = "Go",
-                            tint = Color.Gray,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
-                }
-
-                SidebarItem(
-                    icon = Icons.Filled.Store,
-                    label = tr("nav_switch_customer", "Switch as Customer"),
-                    badgeText = "Customer 🛒",
-                    badgeColor = ZyphuelBluePrimary,
-                    modifier = Modifier.testTag("auth_sidebar_switch_as_customer_item"),
-                    onClick = onNavigateToCustomerLogin
-                )
-            }
-
-            HorizontalDivider(
-                modifier = Modifier.padding(vertical = 12.dp),
-                color = Color(0xFFF1F5F9),
-                thickness = 1.dp
-            )
 
             // General Navigation
             Text(
@@ -2467,7 +2178,7 @@ fun AuthScreen(viewModel: MainViewModel, isRegister: Boolean, isRider: Boolean) 
                 onNavigateToRiderLogin = {
                     scope.launch {
                         drawerState.close()
-                        viewModel.navigateTo("login_rider")
+                        viewModel.navigateTo("login_customer")
                     }
                 },
                 onNavigateToCustomerLogin = {
@@ -2522,53 +2233,27 @@ fun AuthScreen(viewModel: MainViewModel, isRegister: Boolean, isRider: Boolean) 
                                 modifier = Modifier.size(24.dp)
                             )
                         }
-                        Spacer(modifier = Modifier.width(2.dp))
-                        TextButton(
-                            onClick = { viewModel.navigateTo("portal_select") },
-                            colors = ButtonDefaults.textButtonColors(contentColor = ZyphuelBluePrimary)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.ArrowBack,
-                                contentDescription = "Back",
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = "Back",
-                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
-                            )
-                        }
-                    }
-
-                    if (!isRider) {
-                        Surface(
-                            onClick = { viewModel.navigateTo("login_rider") },
-                            shape = RoundedCornerShape(12.dp),
-                            color = ZyphuelBluePrimary.copy(alpha = 0.1f),
-                            border = BorderStroke(1.dp, ZyphuelBluePrimary.copy(alpha = 0.35f)),
-                            modifier = Modifier.testTag("switch_as_rider_top_btn")
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                        if (isRegister) {
+                            Spacer(modifier = Modifier.width(2.dp))
+                            TextButton(
+                                onClick = { viewModel.navigateTo("login_customer") },
+                                colors = ButtonDefaults.textButtonColors(contentColor = ZyphuelBluePrimary)
                             ) {
                                 Icon(
-                                    imageVector = Icons.Filled.TwoWheeler,
-                                    contentDescription = "Switch as Rider",
-                                    tint = ZyphuelBluePrimary,
-                                    modifier = Modifier.size(16.dp)
+                                    imageVector = Icons.Filled.ArrowBack,
+                                    contentDescription = "Back",
+                                    modifier = Modifier.size(18.dp)
                                 )
-                                Spacer(modifier = Modifier.width(6.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
                                 Text(
-                                    text = "Switch as Rider",
-                                    style = MaterialTheme.typography.labelSmall.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        color = ZyphuelBluePrimary
-                                    )
+                                    text = "Back",
+                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
                                 )
                             }
                         }
-                    } else {
+                    }
+
+                    if (isRider) {
                         Surface(
                             onClick = { viewModel.navigateTo("login_customer") },
                             shape = RoundedCornerShape(12.dp),
@@ -2620,7 +2305,7 @@ fun AuthScreen(viewModel: MainViewModel, isRegister: Boolean, isRider: Boolean) 
                 ) {
                     item {
                         Text(
-                            text = if (isRegister) (if (isRider) "Rider Sign up Form" else "Customer Sign up Form") else (if (isRider) "Rider Login Form" else "Customer Login Form"),
+                            text = if (isRegister) (if (isRider) "Rider Sign up Form" else "Customer Sign up Form") else "Customer Login Form",
                             style = MaterialTheme.typography.titleLarge.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = ZyphuelBlueDark
@@ -3358,7 +3043,7 @@ fun AuthScreen(viewModel: MainViewModel, isRegister: Boolean, isRider: Boolean) 
                                                 termsAccepted = termsAccepted,
                                                 declarationAccepted = declarationAccepted
                                             ) {
-                                                viewModel.navigateTo("login_rider")
+                                                viewModel.navigateTo("login_customer")
                                             }
                                         }
                                     } else {
@@ -3742,11 +3427,11 @@ fun AuthScreen(viewModel: MainViewModel, isRegister: Boolean, isRider: Boolean) 
                         }
                     } else {
                         TextButton(
-                            onClick = { viewModel.navigateTo("login_rider") },
+                            onClick = { viewModel.navigateTo("login_customer") },
                             modifier = Modifier.testTag("login_as_rider_link")
                         ) {
                             Text(
-                                text = "Already a registered rider? Sign In",
+                                text = "Already have an account? Sign In",
                                 color = ZyphuelBluePrimary,
                                 fontWeight = FontWeight.Bold,
                                 style = MaterialTheme.typography.bodySmall
@@ -4012,36 +3697,24 @@ fun DrawerContent(
 
             // Collapsible Section: Orders
             CollapsibleSidebarSection(title = tr("sec_orders_deliveries", "ORDERS & DELIVERIES")) {
-                if (currentUser.role != "rider") {
-                    SidebarItem(
-                        icon = Icons.Filled.ShoppingCart,
-                        label = tr("nav_active_orders", "My Active Orders"),
-                        modifier = Modifier.testTag("sidebar_my_orders"),
-                        onClick = {
-                            onOpenOrders()
-                            onClose()
-                        }
-                    )
-                    SidebarItem(
-                        icon = Icons.Filled.History,
-                        label = tr("nav_order_history", "Customer Order History"),
-                        modifier = Modifier.testTag("sidebar_customer_order_history"),
-                        onClick = {
-                            onClose()
-                            viewModel.navigateTo("customer_order_history")
-                        }
-                    )
-                } else {
-                    SidebarItem(
-                        icon = Icons.Filled.ListAlt,
-                        label = tr("nav_received_orders", "Received Orders"),
-                        modifier = Modifier.testTag("sidebar_received_orders"),
-                        onClick = {
-                            onOpenOrders()
-                            onClose()
-                        }
-                    )
-                }
+                SidebarItem(
+                    icon = Icons.Filled.ShoppingCart,
+                    label = tr("nav_active_orders", "Active Orders"),
+                    modifier = Modifier.testTag("sidebar_my_orders"),
+                    onClick = {
+                        onOpenOrders()
+                        onClose()
+                    }
+                )
+                SidebarItem(
+                    icon = Icons.Filled.History,
+                    label = tr("nav_order_history", "Customer Order History"),
+                    modifier = Modifier.testTag("sidebar_customer_order_history"),
+                    onClick = {
+                        onClose()
+                        viewModel.navigateTo("customer_order_history")
+                    }
+                )
             }
 
             HorizontalDivider(
@@ -4119,30 +3792,7 @@ fun DrawerContent(
                 thickness = 1.dp
             )
 
-            // ─── Rider/Customer Role Switch (permanently relocated · standalone · no category · bold + highlighted) ───
-            if (currentUser.role != "rider") {
-                SidebarRoleSwitchButton(
-                    icon = Icons.Filled.TwoWheeler,
-                    label = tr("nav_switch_rider", "Switch as Rider"),
-                    badgeText = "Fleet 🏍️",
-                    modifier = Modifier.testTag("sidebar_switch_as_rider"),
-                    onClick = {
-                        onClose()
-                        viewModel.navigateTo("login_rider")
-                    }
-                )
-            } else {
-                SidebarRoleSwitchButton(
-                    icon = Icons.Filled.Store,
-                    label = tr("nav_switch_customer", "Switch as Customer"),
-                    badgeText = "Customer 🛒",
-                    modifier = Modifier.testTag("sidebar_switch_as_customer"),
-                    onClick = {
-                        onClose()
-                        viewModel.navigateTo("login_customer")
-                    }
-                )
-            }
+
 
             Spacer(modifier = Modifier.height(10.dp))
 
@@ -8522,8 +8172,6 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
     val petrolPumpPrice by viewModel.petrolPumpPrice.collectAsState()
     val dieselPumpPrice by viewModel.dieselPumpPrice.collectAsState()
     val octanePumpPrice by viewModel.highOctanePumpPrice.collectAsState()
-    val lpgPrice by viewModel.lpgGasPrice.collectAsState()
-    val waterPrice by viewModel.waterPrice.collectAsState()
     val selectedCurrency by viewModel.selectedCurrency.collectAsState()
     val isPromoApplied by viewModel.isPromoApplied.collectAsState()
     val permanentMarkedLocations by viewModel.markedLocationsForCurrentUser.collectAsState()
@@ -8534,7 +8182,7 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
     val initialOctane = serviceType == "High-Octane" || serviceType.contains("Octane", ignoreCase = true)
     val initialPetrol = serviceType == "Petrol" || serviceType.isBlank() || serviceType == "all" || serviceType.contains("Petrol", ignoreCase = true) || (!initialDiesel && !initialOctane)
 
-    // Support multi-item selection state (Petrol, Diesel, High-Octane) — Gas and Water are unavailable
+    // Support multi-item selection state (Petrol, Diesel, High-Octane)
     var petrolSelected by remember { mutableStateOf(initialPetrol) }
     var petrolQty by remember { mutableIntStateOf(5) }
 
@@ -8543,12 +8191,6 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
 
     var octaneSelected by remember { mutableStateOf(initialOctane) }
     var octaneQty by remember { mutableIntStateOf(5) }
-
-    var lpgSelected by remember { mutableStateOf(false) }
-    var lpgQty by remember { mutableIntStateOf(5) }
-
-    var waterSelected by remember { mutableStateOf(false) }
-    var waterQty by remember { mutableIntStateOf(1) }
 
     val liveLocationCoordinates by viewModel.liveLocationCoordinates.collectAsState()
     val savedAddresses by viewModel.savedAddresses.collectAsState()
@@ -8566,17 +8208,13 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
     val petrolSubtotal = if (petrolSelected) petrolQty * petrolPumpPrice.toDouble() else 0.0
     val dieselSubtotal = if (dieselSelected) dieselQty * dieselPumpPrice.toDouble() else 0.0
     val octaneSubtotal = if (octaneSelected) octaneQty * octanePumpPrice.toDouble() else 0.0
-    val lpgSubtotal = if (lpgSelected) lpgQty * lpgPrice.toDouble() else 0.0
-    val waterSubtotal = if (waterSelected) waterQty * waterPrice.toDouble() else 0.0
 
-    val subtotal = petrolSubtotal + dieselSubtotal + octaneSubtotal + lpgSubtotal + waterSubtotal
+    val subtotal = petrolSubtotal + dieselSubtotal + octaneSubtotal
 
     // Count selected distinct product types for multi-item discount
     val selectedTypesCount = (if (petrolSelected) 1 else 0) +
             (if (dieselSelected) 1 else 0) +
-            (if (octaneSelected) 1 else 0) +
-            (if (lpgSelected) 1 else 0) +
-            (if (waterSelected) 1 else 0)
+            (if (octaneSelected) 1 else 0)
 
     val isMultiItemOrder = selectedTypesCount >= 2
 
@@ -8587,13 +8225,7 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
 
     val isFuelExceeded = totalFuelVolume > com.example.util.FeeConstants.FUEL_MAX_LITERS
 
-    val hasFuelOrGas = petrolSelected || dieselSelected || octaneSelected || lpgSelected
-    val hasWaterOnly = waterSelected && !hasFuelOrGas
-    val baseDeliveryCharge = when {
-        hasFuelOrGas -> com.example.util.FeeConstants.calculateFuelDeliveryFee(totalFuelVolume)
-        hasWaterOnly -> com.example.util.FeeConstants.WATER_DELIVERY_FEE
-        else -> 0.0
-    }
+    val baseDeliveryCharge = if (totalFuelVolume > 0) com.example.util.FeeConstants.calculateFuelDeliveryFee(totalFuelVolume) else 0.0
 
     val deliveryCharge = baseDeliveryCharge
 
@@ -8615,14 +8247,6 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
     if (octaneSelected) {
         selectedSummaryParts.add("High-Octane (${octaneQty}L)")
         totalQuantity += octaneQty
-    }
-    if (lpgSelected) {
-        selectedSummaryParts.add("Gas (${lpgQty}KG)")
-        totalQuantity += lpgQty
-    }
-    if (waterSelected) {
-        selectedSummaryParts.add("Water (${waterQty} Gal)")
-        totalQuantity += waterQty
     }
 
     val combinedServiceType = if (selectedSummaryParts.isEmpty()) "Custom Fuel Combo" else selectedSummaryParts.joinToString(" + ")
@@ -8921,67 +8545,7 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                     }
                 }
 
-                // 4. Gas (Unavailable)
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
-                    border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
-                    shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier.padding(10.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                            Checkbox(
-                                checked = false,
-                                onCheckedChange = null,
-                                enabled = false
-                            )
-                            Column {
-                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                    Text(tr("svc_lpg", "Gas"), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-                                    Surface(color = Color(0xFFFEE2E2), shape = RoundedCornerShape(4.dp)) {
-                                        Text("Unavailable", color = Color(0xFFDC2626), fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp))
-                                    }
-                                }
-                                Text("LPG Cylinder is temporarily unavailable", style = MaterialTheme.typography.labelSmall, color = Color.LightGray)
-                            }
-                        }
-                    }
-                }
 
-                // 5. Water (Unavailable)
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
-                    border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
-                    shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier.padding(10.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                            Checkbox(
-                                checked = false,
-                                onCheckedChange = null,
-                                enabled = false
-                            )
-                            Column {
-                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                    Text(tr("svc_water", "Pure Water"), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-                                    Surface(color = Color(0xFFFEE2E2), shape = RoundedCornerShape(4.dp)) {
-                                        Text("Unavailable", color = Color(0xFFDC2626), fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp))
-                                    }
-                                }
-                                Text("Drinking water is temporarily unavailable", style = MaterialTheme.typography.labelSmall, color = Color.LightGray)
-                            }
-                        }
-                    }
-                }
 
                 // Delivery address input
 
@@ -12179,7 +11743,7 @@ fun MyOrdersDialog(
     viewModel: MainViewModel,
     onDismiss: () -> Unit
 ) {
-    val orders by viewModel.customerOrders.collectAsState()
+    val orders by viewModel.allOrders.collectAsState()
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -12196,7 +11760,7 @@ fun MyOrdersDialog(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "My Order History",
+                    text = "Active Orders",
                     style = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight.Bold,
                         color = ZyphuelBlueDark
@@ -12209,7 +11773,7 @@ fun MyOrdersDialog(
                     modifier = Modifier.testTag("orders_count_badge")
                 ) {
                     Text(
-                        text = "Total Orders Placed: ${orders.size}",
+                        text = "Total Orders: ${orders.size}",
                         style = MaterialTheme.typography.labelLarge.copy(
                             fontWeight = FontWeight.Bold,
                             color = ZyphuelBluePrimary
@@ -12241,7 +11805,7 @@ fun MyOrdersDialog(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "You haven't placed any orders yet.",
+                            text = "No active orders found.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color.Gray
                         )
@@ -12947,7 +12511,7 @@ fun RiderCompleteProfileScreen(viewModel: MainViewModel) {
 
     if (currentUser == null) {
         LaunchedEffect(Unit) {
-            viewModel.navigateTo("login_rider")
+            viewModel.navigateTo("login_customer")
         }
         return
     }
@@ -13688,16 +13252,14 @@ fun AdminAnalyticsDashboard(
     val finalVolumes = remember(realOrderCounts) { realOrderCounts }
 
     // Top Categories data
-    val categories = listOf("Petrol", "Diesel", "High-Octane", "LPG Gas", "Water")
+    val categories = listOf("Petrol", "Diesel", "High-Octane")
     val categoryColors = listOf(
         ZyphuelBluePrimary,
         Color(0xFF0EA5E9), // Sky Blue
-        Color(0xFF3B82F6), // Royal Blue
-        Color(0xFFF97316), // Orange
-        Color(0xFF14B8A6)  // Teal
+        Color(0xFF3B82F6)  // Royal Blue
     )
     val realCounts = remember(orders) {
-        val counts = FloatArray(5) { 0f }
+        val counts = FloatArray(3) { 0f }
         orders.forEach { order ->
             val idx = categories.indexOf(order.serviceType)
             if (idx != -1) {
@@ -13749,7 +13311,7 @@ fun AdminAnalyticsDashboard(
                             )
                         )
                         Text(
-                            text = "Real-time user/rider registrations, order delivery trends & 4-hour rate alerts.",
+                            text = "Real-time customer registrations, order delivery trends & 4-hour rate alerts.",
                             style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray)
                         )
                     }
@@ -13761,8 +13323,7 @@ fun AdminAnalyticsDashboard(
 
                 // Operations metric badges
                 val canceledCount = remember(orders) { orders.count { it.status == "Canceled" || it.status == "Cancelled" } }
-                val canceledNoRider = remember(orders) { orders.count { (it.status == "Canceled" || it.status == "Cancelled") && it.riderName == null } }
-                val verifiedRidersCount = remember(riders) { riders.count { it.adminApprovalStatus == "Approved" || it.isVerified } }
+                val completedCount = remember(orders) { orders.count { it.status == "Completed" } }
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -13773,19 +13334,19 @@ fun AdminAnalyticsDashboard(
                         Text("${customers.size} Users", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark))
                     }
                     Column {
-                        Text("Registered Riders", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray))
-                        Text("${riders.size} Riders", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary))
+                        Text("Completed Orders", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray))
+                        Text("$completedCount Orders", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary))
                     }
                     Column(horizontalAlignment = Alignment.End) {
-                        Text("Rider Not Available", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray))
-                        Text("$canceledNoRider Canceled", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = Color.Red))
+                        Text("Canceled Orders", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray))
+                        Text("$canceledCount Canceled", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = Color.Red))
                     }
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))
 
                 // Google vs Email User Breakdown + App Downloads
-                val allUsers = customers + riders
+                val allUsers = customers
                 val googleUsersCount = remember(allUsers) { allUsers.count { it.authProvider.equals("Google", ignoreCase = true) } }
                 val emailUsersCount = remember(allUsers) { allUsers.count { !it.authProvider.equals("Google", ignoreCase = true) } }
                 val appDownloads = viewModel?.appDownloadCount?.collectAsState()?.value ?: 0L
@@ -14126,7 +13687,7 @@ fun AdminAnalyticsDashboard(
                     )
                 )
                 Text(
-                    text = "Material demand breakout in volume (Liters, KG, and Gallons)",
+                    text = "Material demand breakout in volume (Liters)",
                     style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray)
                 )
 
@@ -14147,9 +13708,9 @@ fun AdminAnalyticsDashboard(
                                     val leftPadding = 35.dp.toPx()
                                     val rightPadding = 15.dp.toPx()
                                     val chartWidth = w - leftPadding - rightPadding
-                                    val barWidth = chartWidth / 5f
+                                    val barWidth = chartWidth / categories.size.toFloat()
                                     
-                                    val clickedIndex = ((offset.x - leftPadding) / barWidth).toInt().coerceIn(0, 4)
+                                    val clickedIndex = ((offset.x - leftPadding) / barWidth).toInt().coerceIn(0, categories.size - 1)
                                     selectedCategoryIndex = if (selectedCategoryIndex == clickedIndex) null else clickedIndex
                                 }
                             }
@@ -14190,7 +13751,7 @@ fun AdminAnalyticsDashboard(
                         }
 
                         // Draw bars
-                        val barCount = 5
+                        val barCount = categories.size
                         val barWidth = chartW / barCount
                         val barPaddingFraction = 0.35f
 
@@ -14235,7 +13796,6 @@ fun AdminAnalyticsDashboard(
                             // Category Label at the bottom
                             val abbrevLabel = when (categories[i]) {
                                 "High-Octane" -> "Octane"
-                                "LPG Gas" -> "LPG"
                                 else -> categories[i]
                             }
                             drawContext.canvas.nativeCanvas.drawText(
@@ -14251,11 +13811,7 @@ fun AdminAnalyticsDashboard(
                 // Bar Category Interactive Tooltip
                 selectedCategoryIndex?.let { index ->
                     Spacer(modifier = Modifier.height(12.dp))
-                    val itemUnit = when (categories[index]) {
-                        "Water" -> "Gallons"
-                        "LPG Gas" -> "KG"
-                        else -> "Liters"
-                    }
+                    val itemUnit = "Liters"
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(containerColor = categoryColors[index].copy(alpha = 0.1f)),
@@ -14504,7 +14060,6 @@ fun AdminDashboardScreen(viewModel: MainViewModel) {
     val logs by viewModel.auditLogs.collectAsState()
 
     var activeTab by remember { mutableIntStateOf(0) }
-    var showAddRiderDialog by remember { mutableStateOf(false) }
     var showAddCustomerDialog by remember { mutableStateOf(false) }
     var showFcmDialog by remember { mutableStateOf(false) }
     var showAsoDialog by remember { mutableStateOf(false) }
@@ -14592,8 +14147,8 @@ fun AdminDashboardScreen(viewModel: MainViewModel) {
             // Stats Row Summary
             val canceledOrdersCount = remember(orders) { orders.count { it.status == "Canceled" } }
             val appDownloadCount by viewModel.appDownloadCount.collectAsState()
-            val googleUsersCount = remember(customers, riders) {
-                (customers + riders).count { it.authProvider.equals("Google", ignoreCase = true) }
+            val googleUsersCount = remember(customers) {
+                customers.count { it.authProvider.equals("Google", ignoreCase = true) }
             }
 
             // Refresh download count when Admin Dashboard opens
@@ -14617,16 +14172,16 @@ fun AdminDashboardScreen(viewModel: MainViewModel) {
                 ) {
                     AdminStatCard(title = "Active Orders", value = "$pendingOrdersCount", modifier = Modifier.weight(1f))
                     AdminStatCard(title = "Customers", value = "${customers.size}", modifier = Modifier.weight(1f))
-                    AdminStatCard(title = "Riders", value = "${riders.size}", modifier = Modifier.weight(1f))
+                    AdminStatCard(title = "Canceled", value = "$canceledOrdersCount", modifier = Modifier.weight(1f))
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    AdminStatCard(title = "Canceled", value = "$canceledOrdersCount", modifier = Modifier.weight(1f))
                     AdminStatCard(title = "📥 Downloads", value = "$appDownloadCount", modifier = Modifier.weight(1f))
-                    AdminStatCard(title = "Total Users", value = "${customers.size + riders.size}", modifier = Modifier.weight(1f))
+                    AdminStatCard(title = "Total Users", value = "${customers.size}", modifier = Modifier.weight(1f))
+                    AdminStatCard(title = "Google Auth", value = "$googleUsersCount", modifier = Modifier.weight(1f))
                 }
             }
 
@@ -14638,7 +14193,7 @@ fun AdminDashboardScreen(viewModel: MainViewModel) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 12.dp, vertical = 4.dp)
-                        .clickable { activeTab = 6 },
+                        .clickable { activeTab = 5 },
                     colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF2F2)),
                     border = BorderStroke(1.dp, Color(0xFFFCA5A5)),
                     shape = RoundedCornerShape(10.dp)
@@ -14651,7 +14206,7 @@ fun AdminDashboardScreen(viewModel: MainViewModel) {
                         Spacer(modifier = Modifier.width(8.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text("Real-Time Email Gateway Inactive", fontWeight = FontWeight.Bold, color = Color(0xFF991B1B), style = MaterialTheme.typography.labelSmall)
-                            Text("Tap here to configure Google App Password so customers, riders & admin receive real emails.", style = MaterialTheme.typography.bodySmall.copy(color = Color(0xFFB91C1C), fontSize = 10.sp))
+                            Text("Tap here to configure Google App Password so customers & admin receive real emails.", style = MaterialTheme.typography.bodySmall.copy(color = Color(0xFFB91C1C), fontSize = 10.sp))
                         }
                         Icon(Icons.Filled.ArrowForward, contentDescription = null, tint = Color(0xFFDC2626), modifier = Modifier.size(16.dp))
                     }
@@ -14664,27 +14219,24 @@ fun AdminDashboardScreen(viewModel: MainViewModel) {
                     Text("Analytics", modifier = Modifier.padding(12.dp), fontWeight = FontWeight.Bold)
                 }
                 Tab(selected = activeTab == 1, onClick = { activeTab = 1 }) {
-                    Text("Riders (${riders.size})", modifier = Modifier.padding(12.dp), fontWeight = FontWeight.Bold)
-                }
-                Tab(selected = activeTab == 2, onClick = { activeTab = 2 }) {
                     Text("Customers (${customers.size})", modifier = Modifier.padding(12.dp), fontWeight = FontWeight.Bold)
                 }
-                Tab(selected = activeTab == 3, onClick = { activeTab = 3 }) {
+                Tab(selected = activeTab == 2, onClick = { activeTab = 2 }) {
                     Text("Orders (${orders.size})", modifier = Modifier.padding(12.dp), fontWeight = FontWeight.Bold)
                 }
-                Tab(selected = activeTab == 4, onClick = { activeTab = 4 }) {
+                Tab(selected = activeTab == 3, onClick = { activeTab = 3 }) {
                     Text("Feedback", modifier = Modifier.padding(12.dp), fontWeight = FontWeight.Bold)
                 }
-                Tab(selected = activeTab == 5, onClick = { activeTab = 5 }) {
+                Tab(selected = activeTab == 4, onClick = { activeTab = 4 }) {
                     Text("Fuel Prices", modifier = Modifier.padding(12.dp), fontWeight = FontWeight.Bold)
                 }
-                Tab(selected = activeTab == 6, onClick = { activeTab = 6 }) {
+                Tab(selected = activeTab == 5, onClick = { activeTab = 5 }) {
                     Text("Email Gateway 📧", modifier = Modifier.padding(12.dp), fontWeight = FontWeight.Bold)
                 }
-                Tab(selected = activeTab == 7, onClick = { activeTab = 7 }) {
+                Tab(selected = activeTab == 6, onClick = { activeTab = 6 }) {
                     Text("Audit Logs", modifier = Modifier.padding(12.dp), fontWeight = FontWeight.Bold)
                 }
-                Tab(selected = activeTab == 8, onClick = { activeTab = 8 }) {
+                Tab(selected = activeTab == 7, onClick = { activeTab = 7 }) {
                     Text("Categories", modifier = Modifier.padding(12.dp), fontWeight = FontWeight.Bold)
                 }
             }
@@ -14705,53 +14257,7 @@ fun AdminDashboardScreen(viewModel: MainViewModel) {
                             viewModel = viewModel
                         )
                     }
-                    1 -> { // Riders List & Approval
-                        Column(modifier = Modifier.fillMaxSize()) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(bottom = 12.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    "Registered Riders (${riders.size})",
-                                    fontWeight = FontWeight.Bold,
-                                    style = MaterialTheme.typography.titleSmall,
-                                    color = ZyphuelBlueDark
-                                )
-                                Button(
-                                    onClick = { showAddRiderDialog = true },
-                                    colors = ButtonDefaults.buttonColors(containerColor = ZyphuelBluePrimary),
-                                    shape = RoundedCornerShape(10.dp),
-                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                                    modifier = Modifier.testTag("admin_add_riders_btn")
-                                ) {
-                                    Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.White)
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text("Add Riders", color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium)
-                                }
-                            }
-
-                            LazyColumn(
-                                modifier = Modifier.weight(1f),
-                                verticalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                if (riders.isEmpty()) {
-                                    item { Text("No riders registered yet.") }
-                                } else {
-                                    items(riders) { rider ->
-                                        AdminRiderCard(rider = rider, viewModel = viewModel)
-                                    }
-                                }
-                            }
-                        }
-
-                        if (showAddRiderDialog) {
-                            AddRiderDialog(viewModel = viewModel, onDismiss = { showAddRiderDialog = false })
-                        }
-                    }
-                    2 -> { // Registered Customers List
+                    1 -> { // Registered Customers List
                         Column(modifier = Modifier.fillMaxSize()) {
                             Row(
                                 modifier = Modifier
@@ -14793,7 +14299,7 @@ fun AdminDashboardScreen(viewModel: MainViewModel) {
                             AddCustomerDialog(viewModel = viewModel, onDismiss = { showAddCustomerDialog = false })
                         }
                     }
-                    3 -> { // Orders list with status filtering & Cancelled deletion
+                    2 -> { // Orders list with status filtering & Cancelled deletion
                         var orderStatusFilter by remember { mutableStateOf("All") }
                         val filteredOrders = remember(orders, orderStatusFilter) {
                             when (orderStatusFilter) {
@@ -14883,7 +14389,7 @@ fun AdminDashboardScreen(viewModel: MainViewModel) {
                             }
                         }
                     }
-                    4 -> { // Customer Feedback Tab
+                    3 -> { // Customer Feedback Tab
                         val ordersWithFeedback = orders.filter { it.rating != null }
                         LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             if (ordersWithFeedback.isEmpty()) {
@@ -14951,32 +14457,22 @@ fun AdminDashboardScreen(viewModel: MainViewModel) {
                                                     fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
                                                 )
                                             )
-                                            
-                                            Spacer(modifier = Modifier.height(8.dp))
-                                            Text(
-                                                text = "Delivered by: ${order.riderName ?: "Unassigned Rider"}",
-                                                style = MaterialTheme.typography.labelSmall.copy(color = ZyphuelBluePrimary, fontWeight = FontWeight.SemiBold)
-                                            )
                                         }
                                     }
                                 }
                             }
                         }
                     }
-                    5 -> { // Dynamic Fuel Prices Control Center
+                    4 -> { // Dynamic Fuel Prices Control Center
                         val petrolPrice by viewModel.petrolPrice.collectAsState()
                         val dieselPrice by viewModel.dieselPrice.collectAsState()
                         val octanePrice by viewModel.highOctanePrice.collectAsState()
-                        val lpgPrice by viewModel.lpgGasPrice.collectAsState()
-                        val waterPrice by viewModel.waterPrice.collectAsState()
                         val priceSyncing by viewModel.priceSyncing.collectAsState()
                         val lastSyncTime by viewModel.lastPriceSyncTime.collectAsState()
 
                         var petInput by remember(petrolPrice) { mutableStateOf(petrolPrice.toString()) }
                         var dieInput by remember(dieselPrice) { mutableStateOf(dieselPrice.toString()) }
                         var octInput by remember(octanePrice) { mutableStateOf(octanePrice.toString()) }
-                        var lpgInput by remember(lpgPrice) { mutableStateOf(lpgPrice.toString()) }
-                        var watInput by remember(waterPrice) { mutableStateOf(waterPrice.toString()) }
 
                         Column(
                             modifier = Modifier
@@ -15108,40 +14604,6 @@ fun AdminDashboardScreen(viewModel: MainViewModel) {
                                             unfocusedBorderColor = Color.LightGray
                                         )
                                     )
-                                    Spacer(modifier = Modifier.height(8.dp))
-
-                                    OutlinedTextField(
-                                        value = lpgInput,
-                                        onValueChange = { lpgInput = it },
-                                        label = { Text("LPG Gas Price (Rs./kg)") },
-                                        modifier = Modifier.fillMaxWidth(),
-                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            focusedTextColor = Color.Black,
-                                            unfocusedTextColor = Color.Black,
-                                            focusedLabelColor = ZyphuelBluePrimary,
-                                            unfocusedLabelColor = Color.DarkGray,
-                                            focusedBorderColor = ZyphuelBluePrimary,
-                                            unfocusedBorderColor = Color.LightGray
-                                        )
-                                    )
-                                    Spacer(modifier = Modifier.height(8.dp))
-
-                                    OutlinedTextField(
-                                        value = watInput,
-                                        onValueChange = { watInput = it },
-                                        label = { Text("Water Gallon Price (Rs.)") },
-                                        modifier = Modifier.fillMaxWidth(),
-                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            focusedTextColor = Color.Black,
-                                            unfocusedTextColor = Color.Black,
-                                            focusedLabelColor = ZyphuelBluePrimary,
-                                            unfocusedLabelColor = Color.DarkGray,
-                                            focusedBorderColor = ZyphuelBluePrimary,
-                                            unfocusedBorderColor = Color.LightGray
-                                        )
-                                    )
                                     Spacer(modifier = Modifier.height(16.dp))
 
                                     Button(
@@ -15149,10 +14611,8 @@ fun AdminDashboardScreen(viewModel: MainViewModel) {
                                             val pet = petInput.toFloatOrNull() ?: petrolPrice
                                             val die = dieInput.toFloatOrNull() ?: dieselPrice
                                             val oct = octInput.toFloatOrNull() ?: octanePrice
-                                            val lpg = lpgInput.toFloatOrNull() ?: lpgPrice
-                                            val wat = watInput.toFloatOrNull() ?: waterPrice
 
-                                            viewModel.updateFuelPrices(pet, die, oct, lpg, wat, "Admin Panel", "Manual Admin Override")
+                                            viewModel.updateFuelPrices(pet, die, oct, 0f, 0f, "Admin Panel", "Manual Admin Override")
                                         },
                                         modifier = Modifier.fillMaxWidth(),
                                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981))
@@ -15165,7 +14625,7 @@ fun AdminDashboardScreen(viewModel: MainViewModel) {
                             }
                         }
                     }
-                    6 -> { // Real-Time Email Gateway & Admin Mailbox
+                    5 -> { // Real-Time Email Gateway & Admin Mailbox
                         val sentEmails by viewModel.sentEmails.collectAsState()
                         val smtpConfig by viewModel.smtpConfig.collectAsState()
                         val currentContext = androidx.compose.ui.platform.LocalContext.current
@@ -15200,7 +14660,7 @@ fun AdminDashboardScreen(viewModel: MainViewModel) {
                                     Spacer(modifier = Modifier.width(12.dp))
                                     Column {
                                         Text("Real-Time Email Gateway", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium, color = ZyphuelBlueDark)
-                                        Text("Dispatches real emails directly to User, Rider & Admin Gmail inboxes", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                                        Text("Dispatches real emails directly to User & Admin Gmail inboxes", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                                     }
                                 }
                             }
@@ -15504,7 +14964,7 @@ fun AdminDashboardScreen(viewModel: MainViewModel) {
                             }
                         }
                     }
-                    7 -> { // Audit Log records
+                    6 -> { // Audit Log records
                         LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             if (logs.isEmpty()) {
                                 item { Text("No audit logs yet.") }
@@ -15515,7 +14975,7 @@ fun AdminDashboardScreen(viewModel: MainViewModel) {
                             }
                         }
                     }
-                    8 -> { // Category & Services Management
+                    7 -> { // Category & Services Management
                         AdminCategoryManagementTab(viewModel = viewModel)
                     }
                 }
@@ -17221,7 +16681,6 @@ fun AdminOrderCard(order: OrderEntity, viewModel: MainViewModel? = null) {
                 }
             }
             Text("Address: ${order.deliveryAddress}", style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray))
-            Text("Rider: ${order.riderName ?: "Unassigned"}", style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray))
             Spacer(modifier = Modifier.height(6.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -18328,28 +17787,16 @@ fun LahoreFuelMarketWidget(
                 )
             }
 
-            // Compact Grid for High-Octane, LPG, Water
+            // Compact Rate for High-Octane (RON 97)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 CompactFuelRateItem(
-                    label = "High-Octane",
+                    label = "High-Octane (RON 97)",
                     rate = viewModel.formatUnitPrice(octanePumpPrice, "L"),
                     accentColor = Color(0xFF7C3AED),
-                    modifier = Modifier.weight(1f)
-                )
-                CompactFuelRateItem(
-                    label = "LPG (Off)",
-                    rate = "Unavailable",
-                    accentColor = Color(0xFF94A3B8),
-                    modifier = Modifier.weight(1f)
-                )
-                CompactFuelRateItem(
-                    label = "Water (Off)",
-                    rate = "Unavailable",
-                    accentColor = Color(0xFF94A3B8),
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
 

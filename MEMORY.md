@@ -168,6 +168,43 @@
 * **Water and LPG Gas Unavailability**:
   - Pure Drinking Water and LPG Gas Cylinders are strictly marked as UNAVAILABLE across all sectors. Orders for these two products are blocked in UI and ViewModel.
 
+### Phase 22: Permanent Removal of Rider Login & Switch as/to Rider (v2.6.4.0.0.17 Build 45)
+* **Permanent Elimination of Rider Login**:
+  - Removed "Button 2: Rider Portal" and "Rider Login" button (`portal_select_rider_btn`, `rider_login_portal_btn`) from `PortalSelectScreen`.
+  - Removed Rider Biometric Login button (`portal_bio_login_rider_btn`) from `PortalSelectScreen`.
+  - Configured `SplashScreen` to route directly to `login_customer` on startup when unauthenticated.
+  - Locked down routing: `"login_rider"` in `MainActivity` redirects directly to `login_customer`.
+  - Hardened `logout()` in `MainViewModel` to strictly route to `login_customer` for all roles.
+* **Permanent Removal of Switch as Rider**:
+  - Removed "Switch as Rider" card (`sidebar_switch_as_rider`) and sidebar item (`auth_sidebar_switch_as_rider_item`) from `AuthSidebarContent`.
+  - Removed "Switch as Rider" quick switch chip button (`switch_as_rider_top_btn`) from `AuthScreen` top bar.
+  - Removed "Switch as Rider" role switcher button (`sidebar_switch_as_rider`) from the main customer in-app navigation drawer (`DrawerContent`).
+  - Updated all rider register callback and bottom links to navigate to customer login.
+
+### Phase 23: Complete Gas & Water Removal, Sidebar Active Orders & Admin Rider Eradication (v2.6.4.0.0.18 Build 46)
+* **Permanent Eradication of LPG Gas & Pure Water**:
+  - Removed `lpg_sealed_cylinder` from `CategoryModels.kt` subcategories.
+  - Removed Category 9 (`water_delivery`) completely from catalog and dynamic pricing sync.
+  - Removed Gas/Water chips from `QuickActionsBar`, replacing with Auto Repair, Roadside SOS, Battery Jump.
+  - Removed LPG/Water state and warning cards from `OrderDialog`.
+  - Removed LPG/Water price ticker cards from `HomeScreen`.
+  - Removed LPG/Water input fields from `AdminDashboardScreen` fuel pricing tab.
+* **Customer Sidebar "Active Orders" (All Orders Visibility)**:
+  - Renamed drawer item label from "My Active Orders" to **"Active Orders"** (`nav_active_orders`).
+  - Switched `MyOrdersDialog` to collect `viewModel.allOrders`, displaying all active orders in the app.
+  - Updated title to "Active Orders" and badge to "Total Orders: ${orders.size}".
+* **Complete Eradication of Riders from Admin Dashboard**:
+  - Removed "Riders" stat card and rider approval/management tab (Tab 1).
+  - Re-indexed 8 tabs: Analytics, Customers, Orders, Feedback, Fuel Prices, Email Gateway, Audit Logs, Categories.
+  - Removed rider delivery attribution from Customer Feedback cards.
+  - Updated Analytics dashboard to show Completed Orders and Canceled Orders instead of rider counters.
+  - Updated Email Gateway banner to remove rider dispatch mentions.
+* **Rider Login & Switch as/to Rider Cleanups**:
+  - Removed rider role switch block from `DrawerContent` and `AuthSidebarContent`.
+  - Removed `nav_switch_rider` from `AppLanguageManager.kt`.
+  - Removed LPG Gas from `PortalSelectScreen` description.
+* **Version Advancement**: Incremented `versionCode = 46` and advanced `versionName = "2.6.4.0.0.18"`.
+
 ---
 
 
