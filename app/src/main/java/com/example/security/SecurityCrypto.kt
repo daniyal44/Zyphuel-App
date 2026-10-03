@@ -21,12 +21,11 @@ object SecurityCrypto {
     }
 
     /**
-     * Precomputed secure hash for the master admin account ("REDACTED_ADMIN_SECRET").
-     * Stored as a cryptographic hash rather than plaintext string in decompiled code.
+     * Precomputed secure cryptographic hash for the master admin account.
+     * Stored as a one-way irreversible salted SHA-256 hash so plaintext credentials
+     * are never exposed in source code, repositories, or decompiled bytecode.
      */
-    val MASTER_ADMIN_HASH: String by lazy {
-        hashPassword("REDACTED_ADMIN_SECRET")
-    }
+    const val MASTER_ADMIN_HASH: String = "9c16c5decc45c872ee18e857d659bd6786c3f3e5de7220cb07935048a22b9e7f"
 
     /**
      * Verifies raw user input against stored password hash.
@@ -40,7 +39,7 @@ object SecurityCrypto {
         // 2. Legacy fallback for accounts created before hashing
         if (rawInput == storedHash) return true
         // 3. Admin hash equivalence check
-        if (rawInput == "REDACTED_ADMIN_SECRET" && storedHash.equals(MASTER_ADMIN_HASH, ignoreCase = true)) return true
+        if (computedHash.equals(MASTER_ADMIN_HASH, ignoreCase = true) && storedHash.equals(MASTER_ADMIN_HASH, ignoreCase = true)) return true
         return false
     }
 }

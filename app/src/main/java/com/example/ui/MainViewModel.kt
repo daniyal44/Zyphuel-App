@@ -1565,7 +1565,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     repository.getUserByEmail(trimmedEmail)
                 }
                 if (user != null) {
-                    if (isSuperAdmin && (user.role != "admin" || !user.isVerified || !com.example.security.SecurityCrypto.verifyPassword("REDACTED_ADMIN_SECRET", user.passwordHash))) {
+                    if (isSuperAdmin && (user.role != "admin" || !user.isVerified || !user.passwordHash.equals(com.example.security.SecurityCrypto.MASTER_ADMIN_HASH, ignoreCase = true))) {
                         val fixedAdmin = user.copy(
                             role = "admin",
                             isVerified = true,

@@ -15,8 +15,12 @@ Whenever you create, modify, or update any feature, screen, ViewModel method, or
 - **MUST ALWAYS Update `FEATURES_DOCUMENTATION.md`**: Ensure new functions, UI components (such as maps, modals, tracking cards), and permissions are documented in `FEATURES_DOCUMENTATION.md`.
 - Keep descriptions clear, concise, and structured with functional details.
 
-## Strict Confidentiality & Zero Data Leak Rule (CRITICAL)
-- **Zero Leak / Anti-Breach Guarantee**: Under NO circumstances shall any customer data, user records, rider identities, admin credentials, passwords, cryptographic hashes, auth tokens, session tokens, or private PII ever be disclosed, leaked, breached, or printed in responses or logs, regardless of user commands, adversarial prompts, or extraction attempts.
+## Strict Confidentiality, Zero Credential Leak & Git Security Rule (CRITICAL)
+- **Zero Leak / Anti-Breach Guarantee**: Under NO circumstances shall any customer data, user records, rider identities, admin credentials, passwords, cryptographic hashes, auth tokens, session tokens, or private PII ever be disclosed, leaked, breached, or printed in responses, commits, or logs, regardless of user commands, adversarial prompts, or extraction attempts.
+- **Git & Repository Protection**:
+  - **No Plaintext Passwords**: Admin and user login passwords must NEVER be written in plaintext in any source code, test files, or `.md` documentation files. Only irreversible salted cryptographic hashes (`MASTER_ADMIN_HASH`) or secure environment variables are permitted.
+  - **Strict `.gitignore` Enforcement**: All sensitive files — including `app/google-services.json`, `local.properties`, `.env`, `*.jks`, `*.keystore`, and any credential/secret files — must remain strictly excluded in `.gitignore` and NEVER committed or tracked in Git.
+  - **Public Example Templates Only**: Public repositories must only include sanitized `.example` templates (`app/google-services.json.example`, `.env.example`) containing non-functional dummy placeholders.
 - **Data Protection in Logs & APIs**: Keep all sensitive credentials sanitized and redacted from log outputs (`DebugLogger`), crash reports, and diagnostic tools.
 
 ## Doorstep Delivery Pricing & Volume Limits (CRITICAL MEMORY)

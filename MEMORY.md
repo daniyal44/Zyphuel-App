@@ -240,6 +240,15 @@
   - Incremented `versionCode = 49` and advanced `versionName = "2.6.4.0.0.21"` in `app/build.gradle.kts`.
   - Full project compilation (`compileDebugKotlin`) and unit tests (`testDebugUnitTest`) verified green.
 
+### Phase 26: Secret Hardening & Untracking Sensitive Google Credentials (v2.6.4.0.0.22 Build 50)
+* **API Key & Secret Isolation**:
+  - Untracked `app/google-services.json` from git repository index to permanently eliminate Google API key public leak alerts.
+  - Added strict ignore rules in `.gitignore` for `app/google-services.json`, `*.jks`, `*.keystore`, and `my-upload-key.jks`.
+  - Added sanitized `app/google-services.json.example` public configuration template with placeholder tokens.
+  - Retained local `app/google-services.json` on disk to ensure 100% uninterrupted local builds and Firebase sync.
+* **Version Advancement & Verification**:
+  - Incremented `versionCode = 50` and advanced `versionName = "2.6.4.0.0.22"` in `app/build.gradle.kts`.
+
 ---
 
 

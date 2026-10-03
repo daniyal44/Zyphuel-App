@@ -161,11 +161,9 @@ class ZyphuelComprehensiveAppTest {
     @Test
     fun `test Super Admin Protection - Root Admin Account Immutability`() {
         val superAdminEmail = "m.daniyalkhan490@gmail.com"
-        val superAdminPass = "REDACTED_ADMIN_SECRET"
-
         val rootAdmin = UserEntity(
             email = superAdminEmail,
-            passwordHash = sha256(superAdminPass),
+            passwordHash = com.example.security.SecurityCrypto.MASTER_ADMIN_HASH,
             role = "admin",
             name = "M. Daniyal Khan (Super Admin)",
             phoneNumber = "+92 323 0112464",

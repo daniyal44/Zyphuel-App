@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "488422345846",
+    "project_id": "ai-420",
+    "storage_bucket": "ai-420.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:488422345846:android:0000000000000000000000",
+        "android_client_info": {
+          "package_name": "com.aistudio.zyphuel.appv2"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "488422345846-placeholder.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.aistudio.zyphuel.appv2",
+            "certificate_hash": "c7f710f22d43d1f331d222ab351bc44701eec7e5"
+          }
+        },
+        {
+          "client_id": "488422345846-placeholder.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "YOUR_FIREBASE_API_KEY_HERE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

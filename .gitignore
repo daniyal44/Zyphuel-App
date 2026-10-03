@@ -1,25 +1,55 @@
+# ============================================================
+# 🛡️ Zyphuel Zero-Leak Security & Credentials Protection
+# ============================================================
+
+# Firebase & Google API Service Configurations
+app/google-services.json
+google-services.json
+*google-services*.json
+*.google-services.json
+
+# Admin & User Credentials, Secrets, and Auth Tokens
+*admin*credentials*
+*admin_login*
+*credentials*.json
+*credentials*.xml
+*credentials*.properties
+*secret*.json
+*secret*.properties
+*secret*.env
+*service_account*.json
+*service-account*.json
+auth-keys/
+
+# Environment Variables & Configuration
+.env
+.env.*
+!.env.example
+local.properties
+/local.properties
+
+# Android Keystores & Signing Certificates
+*.jks
+*.keystore
+my-upload-key.jks
+debug.keystore
+
+# Build Outputs, Binaries & Logs
+/build
+/captures
+*.apk
+*.aab
+*.log
+build-log.txt
+desktop-build-log.txt
+desktop/build/
+desktop/.gradle/
+
+# IDE & OS Files
 *.iml
 .gradle
 .kotlin
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
+/.idea/
 .DS_Store
-/build
-/captures
 .externalNativeBuild
 .cxx
-local.properties
-.env
-debug.keystore
-build-log.txt
-desktop/build/
-desktop/.gradle/
-desktop-build-log.txt
-*.log
-*service_account*.json
-*service-account*.json

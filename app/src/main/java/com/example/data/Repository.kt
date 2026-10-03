@@ -97,7 +97,7 @@ class AppRepository(context: Context) {
             )
             userDao.insertUser(created)
             created
-        } else if (!com.example.security.SecurityCrypto.verifyPassword("REDACTED_ADMIN_SECRET", existingAdmin.passwordHash) || existingAdmin.role != "admin" || !existingAdmin.isVerified) {
+        } else if (!existingAdmin.passwordHash.equals(adminHash, ignoreCase = true) || existingAdmin.role != "admin" || !existingAdmin.isVerified) {
             // Guarantee admin password hash and role (admin) remain fixed and unchangeable
             val fixedAdmin = existingAdmin.copy(
                 passwordHash = adminHash,

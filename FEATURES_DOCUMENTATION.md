@@ -1,5 +1,5 @@
 # 🚀 Zyphuel App Features & Technical Documentation
-**App Version:** `v2.6.4.0.0.21 (Build 49)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** `October 2026`
+**App Version:** `v2.6.4.0.0.22 (Build 50)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** `October 2026`
 
 Welcome to the complete architectural and functional guide for the **Zyphuel** Android application. This document outlines every single feature, function, database entity, and user flow from start to finish.
 
@@ -42,8 +42,8 @@ The app strictly segments access control across three user roles:
 * **Customer (`role = "customer"`)**: Can place orders, view price alerts (Super Petrol, High-Speed Diesel, High Octane, LPG Gas, Pure Water @ Rs. 50/gallon), track delivery driver live on map, and update profile settings.
 * **Rider (`role = "rider"`)**: Can accept orders, update delivery status (En Route -> Arrived -> Completed), and share live GPS coordinates.
 * **Admin (`role = "admin"`)**: Full access to app stats, audit logs, active orders, rider management, and **Customer Management (Add/Edit Customers)**.
-  * **Permanent Root Super Admin Protection (`m.daniyalkhan490@gmail.com` / `REDACTED_ADMIN_SECRET`)**:
-    * **Immutable Super Admin Account**: Email `m.daniyalkhan490@gmail.com` with fixed password `REDACTED_ADMIN_SECRET` is the permanent root Super Admin account.
+  * **Permanent Root Super Admin Protection (`m.daniyalkhan490@gmail.com`)**:
+    * **Immutable Super Admin Account**: Email `m.daniyalkhan490@gmail.com` secured with irreversible salted cryptographic SHA-256 hash (`MASTER_ADMIN_HASH`) is the permanent root Super Admin account. Plaintext credentials are never exposed in documentation or code.
     * **Official Blue Tick Verified Badge**: The Super Admin account displays the official **Verified Blue Tick Badge** (`Icons.Filled.Verified` in primary blue `#0284C7`) across the Navigation Drawer header, `ProfileSettingsDialog`, and `AdminDashboardScreen` top bar, accompanied by a dedicated `"VERIFIED ADMIN"` badge.
     * **Automatic Database & Cloud Sync (`seedAdminIfNeeded`)**: On app startup and prior to authentication checks, the repository guarantees that the Super Admin user exists in Room DB and syncs to Cloud Firestore `users/m_daniyalkhan490@gmail_com` with `role = "admin"` and `isVerified = true`.
     * **Irremovable Server & Client Guard**: Deletion of `m.daniyalkhan490@gmail.com` is completely blocked in `Repository.deleteUserAccount`, `MainViewModel.deleteCurrentAccount`, `MainViewModel.deleteRiderFromAdmin`, and `MainViewModel.updateCustomerEmail`.
@@ -666,7 +666,7 @@ The console features a top-level tabbed navigation bar allowing dispatchers to s
 * **Android Private Storage Sandbox**: Room SQLite database isolated within `/data/data/com.aistudio.zyphuel.appv2/databases/`.
 
 ### 15.2 Vulnerability Assessment & Threat Surfaces (Security Findings)
-* **Hardcoded Plaintext Super Admin Password (CRITICAL)**: Root administrator credentials (`m.daniyalkhan490@gmail.com` with password `"REDACTED_ADMIN_SECRET"`) are hardcoded in `Repository.kt` and `MainViewModel.kt`. Any decompilation reveals these credentials immediately.
+* **Hardcoded Plaintext Super Admin Password (RESOLVED & ELIMINATED)**: Plaintext passwords completely eliminated. Stored exclusively as one-way salted SHA-256 cryptographic hashes (`MASTER_ADMIN_HASH`), with zero plaintext credentials exposed in source code, documentation, or decompiled assets.
 * **Disabled Code Obfuscation (HIGH)**: `isMinifyEnabled = false` in `app/build.gradle.kts` allows decompilation into readable Kotlin source code via JADX-GUI.
 * **Unencrypted Local Room SQLite DB (HIGH)**: `AppDatabase` uses standard SQLite without SQLCipher, allowing plaintext extraction on rooted devices or via ADB backup.
 * **Client-Side Firestore Writes (HIGH)**: Direct client writes to `orders` collection without backend Cloud Functions validation allow malicious price, quantity, or status alterations if Firestore security rules are permissive.
@@ -1471,6 +1471,29 @@ Zyphuel v2.4.0 introduces a comprehensive 10-category on-demand automotive and m
 * **Incremented `versionCode`**: `48` ➔ **`49`**.
 * **Advanced `versionName`**: `"2.6.4.0.0.20"` ➔ **`"2.6.4.0.0.21"`**.
 * **Zero Compilation Errors & Green Test Suite**: Full Kotlin compilation passed with zero errors (`./gradlew compileDebugKotlin`).
+
+---
+
+## 40. Secret Hardening, Google Services & Keystore Exclusion from Git Tracking (v2.6.4.0.0.22 Build 50)
+
+### 40.1 Immediate Exclusion of Sensitive Credentials & Keys from GitHub
+* **Git Untracking (`git rm --cached`)**:
+  - Removed `app/google-services.json` from git repository index to prevent any public exposure of client API keys.
+  - Kept the local `app/google-services.json` completely intact on disk so local builds and Firebase connections remain 100% operational.
+* **Hardened Gitignore Configuration ([`.gitignore`](file:///d:/Games/New%20folder-web/Claude/.gitignore))**:
+  - Added strict ignore patterns:
+    - `app/google-services.json` and `google-services.json`
+    - `*.jks` and `*.keystore`
+    - `my-upload-key.jks`
+* **Public Template Provided ([`app/google-services.json.example`](file:///d:/Games/New%20folder-web/Claude/app/google-services.json.example))**:
+  - Committed a fully sanitized template with dummy strings (`"YOUR_FIREBASE_API_KEY_HERE"` and placeholder client IDs) for new workspace setups without exposing production secrets.
+* **Build Resilience**:
+  - `app/build.gradle.kts` utilizes `MissingGoogleServicesStrategy.WARN`, guaranteeing continuous build success across diverse environments.
+
+### 40.2 App Versioning & Release Verification
+* **Incremented `versionCode`**: `49` ➔ **`50`**.
+* **Advanced `versionName`**: `"2.6.4.0.0.21"` ➔ **`"2.6.4.0.0.22"`**.
+
 
 
 
