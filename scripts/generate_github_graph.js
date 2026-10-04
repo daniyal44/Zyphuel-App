@@ -45,15 +45,15 @@ function getAppVersionInfo() {
       const vnMatch = content.match(/versionName\s*=\s*"([^"]+)"/)
       const sdkMatch = content.match(/targetSdk\s*=\s*(\d+)/)
       return {
-        versionCode: vcMatch ? vcMatch[1] : '40',
-        versionName: vnMatch ? vnMatch[1] : '2.6.4.0.0.12',
+        versionCode: vcMatch ? vcMatch[1] : '51',
+        versionName: vnMatch ? vnMatch[1] : '2.6.4.0.0.23',
         targetSdk: sdkMatch ? sdkMatch[1] : '36'
       }
     }
   } catch (err) {
     console.warn('[DashboardGen] Could not read build.gradle.kts:', err.message)
   }
-  return { versionCode: '40', versionName: '2.6.4.0.0.12', targetSdk: '36' }
+  return { versionCode: '51', versionName: '2.6.4.0.0.23', targetSdk: '36' }
 }
 
 function generateProgressBar(count, max, length = 20) {

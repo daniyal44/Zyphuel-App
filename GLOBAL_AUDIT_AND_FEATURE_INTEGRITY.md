@@ -1,5 +1,5 @@
 # Zyphuel Master App Audit, Feature Analysis & Global Memory Record 🧠📋
-**Document Version:** 2.6.4.0.0.09 • **Build Code:** 37  
+**Document Version:** 2.6.4.0.0.23 • **Build Code:** 51  
 **Operating Region:** Lahore, Punjab, Pakistan  
 **Compliance Standard:** OGRA (Oil & Gas Regulatory Authority), Civil Defence Pakistan & Google Play Store Policies  
 
@@ -23,7 +23,7 @@
 | :--- | :--- | :--- |
 | **Authentication & Google Sign-In** | 🟢 100% Working | Multi-role (customer, rider, admin), SHA-256, Credential Manager, role isolation. |
 | **Biometric Security** | 🟢 100% Working | AndroidX BiometricPrompt fingerprint & face lock with hardware fallback. |
-| **Core Fuel & Water Ordering** | 🟢 100% Working | Petrol, Diesel, High-Octane, LPG Cylinder, Pure Drinking Water with live OGRA rates & COD. |
+| **Core Fuel Ordering (15L Cap)** | 🟢 100% Working | Super Petrol, HSD, High-Octane with tiered fees (5L: Rs. 280, 10L: Rs. 300, 15L: Rs. 350). Water/LPG unavailable. |
 | **PDF Invoicing & Receipts** | 🟢 100% Working | Native Android PrintManager 1-tap "Save as PDF" & WhatsApp text share. |
 | **Live Fuel Price Sync** | 🟢 100% Working | TrackmateFuelApiService (PSO/Shell rates), Gemini sync & WorkManager background alerts. |
 | **Multi-Channel Email Gateway** | 🟢 100% Working | SMTP SSL (465) / STARTTLS (587) + Google Apps Script Webhook with Firestore cross-device sync. |

@@ -17,7 +17,7 @@
 ## 2. App Versioning & Release Rule (CRITICAL)
 Whenever any modification, fix, security update, or feature is applied:
 - **Increment `versionCode`**: Always increment `versionCode` in `app/build.gradle.kts` (e.g., from 49 to 50, then 51...).
-- **Advance `versionName` with Sub-Version Format**: Format as `2.6.4.0.0.XX`, incrementing the trailing segment by `+0.0.0.0.01` on every change (`2.6.4.0.0.21` -> `2.6.4.0.0.22`...).
+- **Advance `versionName` with Sub-Version Format**: Format as `2.6.4.0.0.XX`, incrementing the trailing segment by `+0.0.0.0.01` on every change (`2.6.4.0.0.22` -> `2.6.4.0.0.23`...).
 - Never publish or push with stale version codes.
 
 ## 3. Play Store Compliance & Legal Documentation

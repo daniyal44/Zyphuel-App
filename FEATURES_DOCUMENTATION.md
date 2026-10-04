@@ -1,5 +1,5 @@
 # 🚀 Zyphuel App Features & Technical Documentation
-**App Version:** `v2.6.4.0.0.22 (Build 50)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** `October 2026`
+**App Version:** `v2.6.4.0.0.23 (Build 51)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** `October 2026`
 
 Welcome to the complete architectural and functional guide for the **Zyphuel** Android application. This document outlines every single feature, function, database entity, and user flow from start to finish.
 
@@ -1494,8 +1494,23 @@ Zyphuel v2.4.0 introduces a comprehensive 10-category on-demand automotive and m
 * **Incremented `versionCode`**: `49` ➔ **`50`**.
 * **Advanced `versionName`**: `"2.6.4.0.0.21"` ➔ **`"2.6.4.0.0.22"`**.
 
+---
 
+## 41. Universal Version Synchronization & Documentation Modernization (v2.6.4.0.0.23 Build 51)
 
+### 41.1 Comprehensive Repository & Markdown Synchronization
+* **README.md Telemetry & Header Refresh**:
+  - Standardized hero badges, project tags, and version subtitles to `Version 2.6.4.0.0.23 (Build 51)`.
+  - Re-aligned subtitle to *Pakistan's Premier On-Demand Fuel & Clean Energy Ecosystem*.
+  - Updated key feature descriptions with official tiered fuel delivery rates (5L: Rs. 280, 10L: Rs. 300, 15L Max Limit: Rs. 350) and reiterated strict 15L delivery volume cap.
+  - Formally noted across docs that Pure Drinking Water & LPG Gas cylinders remain currently unavailable.
+* **Dynamic Version Extraction in Deployment Scripts ([`github.bat`](file:///d:/Games/New%20folder-web/Claude/github.bat))**:
+  - Eliminated stale hardcoded version tags (`v2.6.4.0.0.21`) by parsing `versionName` dynamically from `app/build.gradle.kts`.
+* **Universal Compliance & Legal Document Alignment**:
+  - Synchronized [`PRIVACY_POLICY.md`](file:///d:/Games/New%20folder-web/Claude/PRIVACY_POLICY.md), [`TERMS_AND_CONDITIONS.md`](file:///d:/Games/New%20folder-web/Claude/TERMS_AND_CONDITIONS.md), and [`PLAY_STORE_DATA_SAFETY_AND_COMPLIANCE.md`](file:///d:/Games/New%20folder-web/Claude/PLAY_STORE_DATA_SAFETY_AND_COMPLIANCE.md) to `v2.6.4.0.0.23 (Build 51)`.
+  - Re-verified strict zero-credential leak enforcement, `.gitignore` exclusions, and sensitive secret protections.
 
-
-
+### 41.2 App Versioning & Release Verification
+* **Incremented `versionCode`**: `50` ➔ **`51`**.
+* **Advanced `versionName`**: `"2.6.4.0.0.22"` ➔ **`"2.6.4.0.0.23"`**.
+* **Green Verification**: Maintained 100% build health, Room DB entity integrity, and full documentation consistency across the entire codebase.

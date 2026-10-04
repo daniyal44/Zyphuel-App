@@ -9,43 +9,39 @@ This blueprint outlines the complete App Store Optimization (ASO), Search Engine
 The text below has been optimized with strict keyword densities to maximize indexing by the Google Play algorithm while maintaining a high conversion-to-install rate.
 
 ### A. App Title (Max 30 Characters)
-> **Zyphuel: Fuel & Water Delivery**
+> **Zyphuel: Doorstep Fuel Delivery**
 
-*Why it works:* Combines the brand name "Zyphuel" with the highest-volume search terms "Fuel Delivery" and "Water Delivery".
+*Why it works:* Combines the brand name "Zyphuel" with the highest-volume search term "Doorstep Fuel Delivery".
 
 ### B. Short Description (Max 80 Characters)
-> **On-demand petrol, LPG gas cylinders, & premium mineral water delivery in Lahore.**
+> **On-demand Super Petrol, Diesel & High-Octane 97 doorstep delivery in Lahore.**
 
-*Why it works:* Front-loads primary keyword categories ("petrol", "LPG gas", "mineral water") and localizes target market ("Lahore") to capture high-intent regional traffic.
+*Why it works:* Front-loads primary keyword categories ("Super Petrol", "Diesel", "High-Octane") and localizes target market ("Lahore") to capture high-intent regional traffic.
 
 ### C. Full Description (Max 4,000 Characters)
 Copy and paste this exact text into the Google Play Console:
 
 ```text
-Stuck on the road with an empty fuel tank? Need an emergency LPG gas cylinder refill for your kitchen? Or running low on pure premium drinking water gallons at your home or office? 
+Stuck on the road with an empty fuel tank? Need emergency refueling for your car, generator, or fleet?
 
-Welcome to Zyphuel – Pakistan’s elite, automated, high-speed on-demand logistics delivery platform. Designed with a gorgeous, Tesla-inspired fluid user interface, Zyphuel connects you instantly with verified dispatch riders to bring super petrol, high-octane fuel, LPG cylinders, and pure mineral water gallons straight to your exact GPS coordinates.
+Welcome to Zyphuel – Pakistan’s elite, automated, high-speed on-demand fuel logistics platform. Designed with a gorgeous, fluid Jetpack Compose Material 3 user interface, Zyphuel connects you instantly with verified dispatch riders to bring Super Euro-V Petrol, High-Speed Diesel, and High-Octane 97 straight to your exact GPS coordinates.
 
-Whether you are in Gulberg, DHA, Johar Town, or anywhere in Lahore, Zyphuel guarantees secure, direct hand-delivered satisfaction with 100% transparent pricing and 24/7 direct customer support.
+Whether you are in Gulberg, DHA, Johar Town, Bahria Town, or anywhere in Lahore, Zyphuel guarantees secure, direct hand-delivered satisfaction with 100% transparent pricing and 24/7 direct customer support.
 
 --- Why Choose Zyphuel? ---
 
 ⚡ INSTANT AUTOMATED ROUTING
 Our advanced logistics engine matches your order instantly with the closest emergency standby rider. No delays, no intermediate stops—just ultra-fast point-to-point delivery.
 
-🔥 FUEL & GAS ON-DEMAND
+🔥 FUEL ON-DEMAND (Strict 15L Cap)
 • Super Petrol (Euro V)
-• Premium High-Octane
-• Safe, sealed LPG Gas Cylinders (various sizes)
+• Premium High-Octane 97
+• High-Speed Diesel (HSD)
 • Secure roadside emergency refueling
-
-💧 PURE PREMIUM WATER DELIVERIES
-• Premium quality mineral water gallons
-• Multi-step verified filtration standards
-• Swift contactless delivery to homes, offices, and commercial sites
+• Transparent tiered delivery: 5L (Rs. 280), 10L (Rs. 300), 15L (Rs. 350)
 
 📍 ACTIVE REAL-TIME GPS TRACKING
-Watch your rider approach in real-time on our smart dynamic map. Know exactly when your petrol, water, or gas cylinder is arriving, down to the minute.
+Watch your rider approach in real-time on our smart dynamic map. Know exactly when your fuel is arriving, down to the minute.
 
 💬 24/7 LIVE SUPPORT HOTLINE
 Your satisfaction is our absolute priority. If you have any delivery status concerns, access our direct WhatsApp support or make a direct voice call to our Lahore coordination desk inside the app.
@@ -57,10 +53,10 @@ Your satisfaction is our absolute priority. If you have any delivery status conc
 • Real-time transparent pricing calculations with zero hidden fees.
 • Live timeline logs to track order preparing, dispatch, and completion.
 • Verified dispatch riders and Admin direct fulfillment support.
-• Fully offline-resilient local database caching for a smooth UI experience.
+• Fully offline-resilient Room database caching for a smooth UI experience.
 • Gorgeous modern Material Design 3 layout with dark/light themes.
 
-Download Zyphuel today and experience the future of smart on-demand logistics. Clean fuel, safe gas, and pure water—delivered directly, anytime, anywhere!
+Download Zyphuel today and experience the future of smart on-demand logistics. Certified fuel delivered directly, anytime, anywhere!
 ```
 
 ---

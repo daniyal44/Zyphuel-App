@@ -1,8 +1,8 @@
 # Google Play Console: Data Safety, Permissions & Store Compliance Guide
 
-**Application:** Zyphuel Doorstep Fuel & Drinking Water  
+**Application:** Zyphuel Doorstep Fuel & Energy Delivery  
 **Package Name:** `com.aistudio.zyphuel.appv2`  
-**Current Version:** 2.4.1 (Build 8)  
+**Current Version:** 2.6.4.0.0.23 (Build 51)  
 **Target SDK:** 36 (Android 16) | **Min SDK:** 24 (Android 7.0)  
 
 ---
@@ -75,11 +75,12 @@ Enter this URL in **Store presence > Store settings > Privacy Policy**:
   👉 Select: *Digital wallet / Payment checkout facilitation* (Cash on Delivery, JazzCash / EasyPaisa / Bank transfer invoice recording). Zyphuel does not issue credit or loans.
 
 ### D. Regulated Goods & Services
-* Petroleum fuel and LPG delivery are categorized under essential logistics. Ensure OGRA compliance and Rider Safety Declaration are active in the app.
+* Petroleum fuel delivery is categorized under essential logistics. Ensure OGRA compliance, strict 15L delivery cap, tiered delivery fees (5L: Rs. 280, 10L: Rs. 300, 15L: Rs. 350), and Rider Safety Declaration are active in the app. Note: Drinking Water and LPG Gas cylinders are currently unavailable and blocked across all ordering flows.
 
 ---
 
 ## 4. App Version History Log
+* **v2.6.4.0.0.23 (Build 51)**: Universal version synchronization, tiered delivery pricing (5L: Rs. 280, 10L: Rs. 300, 15L: Rs. 350 max cap), strict zero-credential leak security enforcement, and comprehensive repository documentation alignment.
 * **v2.4.1 (Build 8)**: Production release with 10-category marketplace architecture, Saved Vehicle Profiles ("My Vehicles"), Typo-Tolerant Search, and Real GPS Coverage Engine.
 * **v2.4.0 (Build 7)**: Initial rollout of 10 primary categories, vehicle compatibility models, and Admin category control console.
 * **v2.3.2 (Build 6)**: Performance optimizations and database stabilization.

@@ -1,6 +1,6 @@
 {
   "name": "Zyphuel",
-  "description": "Zyphuel: On-Demand Fuel & Gas Delivery | Instant Emergency Refueling, Live Petrol & Diesel Rates, LPG Cylinder, Pure Water Logistics & Bowser Fleet Tracking in Lahore & Global Fuel Markets.",
+  "description": "Zyphuel: On-Demand Doorstep Fuel Delivery | Instant Emergency Refueling, Live Petrol, Diesel & High-Octane Rates, and Bowser Fleet Tracking in Lahore.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

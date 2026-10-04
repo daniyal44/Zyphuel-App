@@ -39,7 +39,7 @@ if not errorlevel 1 (
 rem Set commit message
 set "COMMIT_MSG=%~1"
 if "%COMMIT_MSG%"=="" (
-    set "APP_VER=v2.6.4.0.0.22"
+    set "APP_VER=v2.6.4.0.0.23"
     if exist "app\build.gradle.kts" (
         for /f "tokens=2 delims==" %%i in ('findstr /i "versionName" app\build.gradle.kts 2^>nul') do (
             set "TEMP_VER=%%~i"
