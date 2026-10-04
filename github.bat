@@ -39,7 +39,16 @@ if not errorlevel 1 (
 rem Set commit message
 set "COMMIT_MSG=%~1"
 if "%COMMIT_MSG%"=="" (
-    set "COMMIT_MSG=chore: direct push update - %date% %time% (v2.6.4.0.0.21)"
+    set "APP_VER=v2.6.4.0.0.22"
+    if exist "app\build.gradle.kts" (
+        for /f "tokens=2 delims==" %%i in ('findstr /i "versionName" app\build.gradle.kts 2^>nul') do (
+            set "TEMP_VER=%%~i"
+            set "TEMP_VER=!TEMP_VER:"=!"
+            set "TEMP_VER=!TEMP_VER: =!"
+            if not "!TEMP_VER!"=="" set "APP_VER=v!TEMP_VER!"
+        )
+    )
+    set "COMMIT_MSG=chore: direct push update - %date% %time% (!APP_VER!)"
 )
 
 echo [1/3] Files stage kar rahe hain (git add -A)...
