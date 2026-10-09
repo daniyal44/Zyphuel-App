@@ -126,10 +126,11 @@ This document provides a comprehensive architectural catalog of all key function
 
 <font color="#10b981"><b>Added in Build 52 (2026-10-09)</b></font>
 
-### `generateTradingStyleCommitGraph()`
-- **Purpose**: Analyzes complete git history (`%h|%ad|%at|%s`) and computes:
+### `generateCodebaseTradingDashboard()`
+- **Purpose**: Pure code-based velocity engine (Zero SVG files) that inspects the codebase using `git log --numstat` and computes:
+  - Code churn metrics: additions (+), deletions (-), files changed, and net delta.
+  - Scale of change classification: **Major Shift**, **Moderate Shift**, or **Minor Shift**.
   - Exact push timestamps and intervals between consecutive pushes.
   - Multi-timeframe velocity tracking across **Daily (1D)**, **Weekly (1W)**, and **Monthly (1M)** buckets.
-  - Incline/decline trend arrows (Bullish surge vs. consolidation/cooldown).
-  - High-res vector SVG trading terminal chart output at `.github/assets/repo-activity-chart.svg`.
-  - Synchronized Markdown telemetry block in `README.md`.
+  - Incline/decline trend momentum (Bullish surge vs. consolidation/cooldown).
+  - Dynamically injects native GitHub Mermaid `xychart-beta`, Mermaid `gitGraph`, and interactive ASCII/Unicode Trading Terminal directly into `README.md`.

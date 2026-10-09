@@ -23,5 +23,6 @@
   - 14 Liters: <font color="#10b981"><b>Rs. 380.00</b></font>
   - 15 Liters (Strict Max Cap): <font color="#10b981"><b>Rs. 400.00</b></font>
 
-### 4. Deprecated Static / Non-Trading Git Charts (<font color="#10b981"><b>2026-10-09</b></font>)
-- **Deprecated Static SVG Graphs:** Deprecated uninformative static activity diagrams in favor of the real-time **Trading-Style Movement Engine** ([`.github/assets/repo-activity-chart.svg`](file:///d:/Games/New%20folder-web/Claude/.github/assets/repo-activity-chart.svg)) tracking movements across Daily (1D), Weekly (1W), and Monthly (1M) timeframes, commit volumes, push timing, push intervals, and incline/decline trends.
+### 4. Deprecated Static Image Charts & SVG Files (<font color="#10b981"><b>2026-10-09</b></font>)
+- **Deprecated Static SVG Assets:** Completely removed all static `.svg` chart files (`repo-activity-chart.svg`) in favor of a 100% codebase-driven dynamic visualization engine.
+- **Code Churn & Scale of Change Engine:** The graph logic now lives entirely within the codebase, dynamically parsing git churn (`git log --numstat`), evaluating additions/deletions, and classifying updates as Major Shifts vs Minor Shifts rendered via native GitHub Mermaid `xychart-beta`, Mermaid `gitGraph`, and ASCII/Unicode Trading Terminal in [`README.md`](file:///d:/Games/New%20folder-web/Claude/README.md).

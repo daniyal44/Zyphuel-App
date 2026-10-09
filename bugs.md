@@ -109,9 +109,9 @@ This document tracks all detected, reported, and resolved bugs within the **Zyph
     - **Fix Applied**: Updated `calculateFuelDeliveryFee(liters)` in [`FeeConstants.kt`](file:///d:/Games/New%20folder-web/Claude/app/src/main/java/com/example/util/FeeConstants.kt) using linear step logic `300.00 + (liters - 10) * 20.00` for 11..15L. Standardized `PUMP_RATE_MARKUP = 5.00` Rs./L running silently in the background with zero visible debug labels.
     - **Verification**: Verified via `FuelPumpPricingTest.kt` testing every single liter volume from 1L to 15L.
 
-16. <font color="#059669"><b>[FIXED - GREEN] Trading-Style Multi-Timeframe Velocity & Incline/Decline Telemetry Resolution (<font color="#10b981"><b>2026-10-09</b></font>)</b></font>
-    - **Issue**: Standard static Git diagrams failed to display movement trends across 1D (Daily), 1W (Weekly), and 1M (Monthly) timeframes, commit volumes, push timing, and intervals between pushes.
-    - **Fix Applied**: Built [`scripts/generate_github_graph.js`](file:///d:/Games/New%20folder-web/Claude/scripts/generate_github_graph.js) generating a dark-mode vector SVG trading chart ([`.github/assets/repo-activity-chart.svg`](file:///d:/Games/New%20folder-web/Claude/.github/assets/repo-activity-chart.svg)) and synchronized Markdown telemetry tables with green highlighted dates, automated on git commit and push.
+16. <font color="#059669"><b>[FIXED - GREEN] Pure Code-Based Trading-Style Multi-Timeframe Velocity & Churn Engine (<font color="#10b981"><b>2026-10-09</b></font>)</b></font>
+    - **Issue**: Standard static Git diagrams or hardcoded `.svg` images failed to dynamically evaluate actual codebase changes and scale of impact.
+    - **Fix Applied**: Built pure code-based [`scripts/generate_github_graph.js`](file:///d:/Games/New%20folder-web/Claude/scripts/generate_github_graph.js) (Zero SVG reliance) evaluating code churn (`git log --numstat`), classifying updates by scale (**Major Shift**, **Moderate Shift**, **Minor Shift**), and dynamically rendering native GitHub Mermaid `xychart-beta`, Mermaid `gitGraph`, and interactive ASCII/Unicode Trading Terminal directly in [`README.md`](file:///d:/Games/New%20folder-web/Claude/README.md).
     - **Verification**: Verified via local Node.js generation and git hook verification.
 
 ---

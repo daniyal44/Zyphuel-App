@@ -65,11 +65,13 @@ Whenever any modification, fix, security update, or feature is applied:
 
 ---
 
-## 6. Trading-Style Velocity Graph Maintenance Rule (CRITICAL — Updated <font color="#10b981"><b>2026-10-09</b></font>)
-- **Multi-Timeframe Trading Graph**: The repository activity graph on GitHub must follow the trading-style format:
+## 6. Trading-Style Codebase Velocity Graph Maintenance Rule (CRITICAL — Updated <font color="#10b981"><b>2026-10-09</b></font>)
+- **Pure Code-Based Trading Graph (Zero Static SVG Files)**: The repository activity graph on GitHub must be purely code-based:
+  - Driven directly by codebase churn analysis (`git log --numstat`), evaluating line additions/deletions and files modified.
+  - Dynamically classifies the scale of every update: **Major Shift**, **Moderate Shift**, or **Minor Shift**.
   - Tracking movement across **Daily (1D)**, **Weekly (1W)**, and **Monthly (1M)** timeframes.
   - Recording commit volume, timing of pushes, intervals between pushes, and incline/decline trends.
+  - Visualized via native GitHub Mermaid `xychart-beta`, Mermaid `gitGraph`, and interactive ASCII/Unicode Trading Terminal directly in [`README.md`](file:///d:/Games/New%20folder-web/Claude/README.md).
 - **Automatic Execution on Every Code Update**:
   - Maintained via [`scripts/generate_github_graph.js`](file:///d:/Games/New%20folder-web/Claude/scripts/generate_github_graph.js).
   - Triggered via Git pre-commit hook ([`.git/hooks/pre-commit`](file:///d:/Games/New%20folder-web/Claude/.git/hooks/pre-commit)), [`github.bat`](file:///d:/Games/New%20folder-web/Claude/github.bat), and GitHub Actions ([`.github/workflows/update-graph.yml`](file:///d:/Games/New%20folder-web/Claude/.github/workflows/update-graph.yml)).
-  - Vector SVG saved at [`.github/assets/repo-activity-chart.svg`](file:///d:/Games/New%20folder-web/Claude/.github/assets/repo-activity-chart.svg) and embedded into [`README.md`](file:///d:/Games/New%20folder-web/Claude/README.md).

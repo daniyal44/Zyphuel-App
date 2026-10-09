@@ -39,10 +39,11 @@
 ---
 
 ## 4. Real-Time Trading-Style Codebase Velocity & Movement Engine (<font color="#10b981"><b>2026-10-09</b></font>)
-- **Multi-Timeframe Movement Tracking**: Tracks velocity across **1D (Daily)**, **1W (Weekly)**, and **1M (Monthly Macro)** timeframes with vector SVG chart generation ([`.github/assets/repo-activity-chart.svg`](file:///d:/Games/New%20folder-web/Claude/.github/assets/repo-activity-chart.svg)).
+- **Pure Code-Based Dynamic Visualization (Zero Static SVG Files)**: Driven directly by the codebase and git commit churn analysis (`git log --numstat`), evaluating additions/deletions and categorizing updates by scale: **Major Shift**, **Moderate Shift**, or **Minor Shift**.
+- **Multi-Timeframe Movement Tracking**: Tracks velocity across **1D (Daily)**, **1W (Weekly)**, and **1M (Monthly Macro)** timeframes with native GitHub Mermaid `xychart-beta`, Mermaid `gitGraph`, and ASCII/Unicode Trading Terminal directly in [`README.md`](file:///d:/Games/New%20folder-web/Claude/README.md).
 - **Cadence & Push Interval Tracking**: Records the exact interval between pushes (e.g. ~1.8h–2.4h active sprint cadence vs. multi-day consolidation intervals).
-- **Incline / Decline Trend Indicators**: Surfaces velocity surges (`▲ +425% Peak Velocity`) and consolidation windows.
-- **Automated Sync Pipeline**: Automated execution via `.git/hooks/pre-commit`, `github.bat`, and GitHub Actions.
+- **Incline / Decline Trend Indicators**: Surfaces velocity surges (`▲ BULLISH SURGE`) and consolidation windows.
+- **Automated Sync Pipeline**: Automated execution on git commits via `.git/hooks/pre-commit`, `github.bat`, and GitHub Actions.
 
 ---
 

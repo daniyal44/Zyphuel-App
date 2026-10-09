@@ -286,8 +286,9 @@
   - Hard Guard in ViewModel: `MainViewModel.placeOrder()` checks `isDeliveryOpen` and rejects submissions with user-facing message if outside hours.
   - Live Status Banner: Renders open/closed status card with operational windows directly on `CustomerHomeScreen`.
 * **Trading-Style Codebase Movement Graph Engine (<font color="#10b981"><b>2026-10-09</b></font>)**:
-  - Upgraded `scripts/generate_github_graph.js` to parse the complete Git commit log from project inception (`2026-08-11`) through all active months to present.
-  - Generates dark-mode vector SVG trading chart at `.github/assets/repo-activity-chart.svg` tracking movement across Daily (1D), Weekly (1W), and Monthly (1M) timeframes, commit volumes, push timing, push intervals, and incline/decline trends.
+  - Upgraded `scripts/generate_github_graph.js` to pure code-based dynamic visualization (Zero static SVG files).
+  - Directly parses `git log --numstat` to evaluate code churn (+/- lines, files changed) and classifies each update as Major Shift, Moderate Shift, or Minor Shift.
+  - Dynamically renders native GitHub Mermaid `xychart-beta`, Mermaid `gitGraph`, and ASCII/Unicode Trading Terminal directly into `README.md`.
   - Automatically updates on every Git commit via `.git/hooks/pre-commit`, `github.bat`, and GitHub Actions.
 * **Testing & Verification (<font color="#10b981"><b>2026-10-09</b></font>)**:
   - Created unit tests in `FuelPumpPricingTest.kt` validating markup calculations, all per-liter tiered rates (5L, 7L, 10L, 11L, 12L, 13L, 14L, 15L), and all operating schedule boundaries across days of week and times of day.

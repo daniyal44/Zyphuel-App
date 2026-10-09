@@ -24,7 +24,7 @@
 | **Authentication & Google Sign-In** | 🟢 100% Working | Multi-role (customer, rider, admin), SHA-256, Credential Manager, role isolation. |
 | **Biometric Security** | 🟢 100% Working | AndroidX BiometricPrompt fingerprint & face lock with hardware fallback. |
 | **Core Fuel Ordering (15L Cap & Hours Gate)** | 🟢 100% Working | Super Petrol, HSD, High-Octane with tiered fees (<font color="#10b981"><b>1..10L: Rs. 300, 11L: Rs. 320 .. 15L: Rs. 400</b></font>). Silent OGRA markup (<font color="#10b981"><b>+Rs. 5.00/L</b></font>). Operating hours gate (<font color="#10b981"><b>Mon-Thu 8am-8pm, Fri 8am-1pm, Sat-Sun 10am-6pm PKT</b></font>). Water/LPG unavailable. |
-| **Trading-Style Movement Graph** | 🟢 100% Working | Multi-timeframe velocity engine (<font color="#10b981"><b>1D, 1W, 1M</b></font>) tracking volume, push intervals, and incline/decline trends with auto-sync on commit/push. |
+| **Trading-Style Codebase Movement Graph** | 🟢 100% Working | Pure code-based multi-timeframe velocity engine (<font color="#10b981"><b>1D, 1W, 1M</b></font>) tracking volume, push intervals, code churn, and shift magnitude (Major/Minor) rendered via native Mermaid & Trading Terminal directly in README.md (Zero SVG reliance). |
 | **PDF Invoicing & Receipts** | 🟢 100% Working | Native Android PrintManager 1-tap "Save as PDF" & WhatsApp text share. |
 | **Live Fuel Price Sync** | 🟢 100% Working | TrackmateFuelApiService (PSO/Shell rates), Gemini sync & WorkManager background alerts. |
 | **Multi-Channel Email Gateway** | 🟢 100% Working | SMTP SSL (465) / STARTTLS (587) + Google Apps Script Webhook with Firestore cross-device sync. |

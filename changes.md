@@ -35,11 +35,13 @@
 - **Live Status Card:** Added live open/closed status banner and schedule summary to [`CustomerHomeScreen`](file:///d:/Games/New%20folder-web/Claude/app/src/main/java/com/example/ui/Screens.kt).
 
 ### 4. Real-Time Trading-Style Codebase Movement Graph (<font color="#10b981"><b>2026-10-09</b></font>)
-- **Multi-Timeframe Telemetry Engine:** Built [`scripts/generate_github_graph.js`](file:///d:/Games/New%20folder-web/Claude/scripts/generate_github_graph.js) generating:
-  - Vector SVG Trading Terminal Chart ([`.github/assets/repo-activity-chart.svg`](file:///d:/Games/New%20folder-web/Claude/.github/assets/repo-activity-chart.svg)) tracking movements across **1D (Daily)**, **1W (Weekly)**, and **1M (Monthly Macro)** timeframes.
-  - Incline / Decline trend momentum indicators (`▲ BULLISH INCLINE`, `▼ CONSOLIDATION`).
-  - Exact push timing, cadence, and interval tracking (average active interval: ~1.8h–2.4h).
-- **Automated Update Pipeline:** Installed Git pre-commit hook ([`.git/hooks/pre-commit`](file:///d:/Games/New%20folder-web/Claude/.git/hooks/pre-commit)) and upgraded [`github.bat`](file:///d:/Games/New%20folder-web/Claude/github.bat) so the graph automatically regenerates and embeds into [`README.md`](file:///d:/Games/New%20folder-web/Claude/README.md) on every commit and push.
+- **Pure Code-Based Telemetry Engine:** Built [`scripts/generate_github_graph.js`](file:///d:/Games/New%20folder-web/Claude/scripts/generate_github_graph.js) generating:
+  - Dynamic code churn analysis (`git log --numstat`), evaluating line additions/deletions and categorizing changes by scale: **Major Shift**, **Moderate Shift**, or **Minor Shift**.
+  - Multi-timeframe tracking across **1D (Daily)**, **1W (Weekly)**, and **1M (Monthly Macro)** timeframes.
+  - Native GitHub Mermaid `xychart-beta`, Mermaid `gitGraph`, and interactive ASCII/Unicode Trading Terminal directly in [`README.md`](file:///d:/Games/New%20folder-web/Claude/README.md).
+  - Incline / Decline trend momentum indicators (`▲ BULLISH SURGE`, `◄ CONSOLIDATION`).
+  - Exact push timing, cadence, and interval tracking.
+- **Automated Update Pipeline:** Installed Git pre-commit hook ([`.git/hooks/pre-commit`](file:///d:/Games/New%20folder-web/Claude/.git/hooks/pre-commit)) and upgraded [`github.bat`](file:///d:/Games/New%20folder-web/Claude/github.bat) so the graph automatically regenerates and embeds into [`README.md`](file:///d:/Games/New%20folder-web/Claude/README.md) on every commit.
 
 ### 5. Application Micro-Versioning & Compliance (<font color="#10b981"><b>2026-10-09</b></font>)
 - **`app/build.gradle.kts`**:

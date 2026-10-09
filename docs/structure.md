@@ -80,6 +80,7 @@ app/
   - 1..10L: <font color="#10b981"><b>Rs. 300.00</b></font> | 11L: <font color="#10b981"><b>Rs. 320.00</b></font> | 12L: <font color="#10b981"><b>Rs. 340.00</b></font> | 13L: <font color="#10b981"><b>Rs. 360.00</b></font> | 14L: <font color="#10b981"><b>Rs. 380.00</b></font> | 15L (Strict Max Cap): <font color="#10b981"><b>Rs. 400.00</b></font>.
   - Retail Pump Markup: `PUMP_RATE_MARKUP = 5.00` Rs./L.
 
-### D. Trading-Style Codebase Movement Engine (`scripts/generate_github_graph.js`)
+### D. Pure Code-Based Trading-Style Velocity Engine (`scripts/generate_github_graph.js`)
+- Directly evaluates codebase churn (`git log --numstat`), additions, deletions, and classifies each update as Major, Moderate, or Minor Shift.
 - Tracks velocity across Daily (1D), Weekly (1W), and Monthly (1M) timeframes with exact push interval analysis.
-- Generates vector SVG chart at `.github/assets/repo-activity-chart.svg` and embeds live telemetry into `README.md`.
+- Dynamically generates native GitHub Mermaid `xychart-beta`, Mermaid `gitGraph`, and ASCII/Unicode Trading Terminal directly in `README.md` (Zero static SVG files).

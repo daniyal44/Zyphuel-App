@@ -37,7 +37,8 @@
 4. **App Versioning**:
    - Released: <font color="#10b981"><b>`versionCode = 52`</b></font>, <font color="#10b981"><b>`versionName = "2.6.4.0.0.24"`</b></font>.
 
-5. **Trading-Style GitHub Activity Graph**:
-   - Generates high-res vector SVG at `.github/assets/repo-activity-chart.svg`.
+5. **Pure Code-Based Trading-Style Activity Graph**:
+   - Analyzes codebase churn (`git log --numstat`), evaluating line additions/deletions and categorizing changes by scale (Major vs. Minor Shifts).
+   - Generates native GitHub Mermaid `xychart-beta`, Mermaid `gitGraph`, and ASCII/Unicode Trading Terminal directly into `README.md` (Zero static SVG files).
    - Embeds 1D, 1W, and 1M velocity and interval tracking directly into `README.md`.
    - Pre-commit hook `.git/hooks/pre-commit` and `github.bat` keep graph continuously updated.

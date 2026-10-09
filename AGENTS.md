@@ -61,12 +61,14 @@ Whenever you create, modify, or update any feature, screen, ViewModel method, or
 
 ---
 
-## Real-Time Trading-Style Velocity Graph Rule (CRITICAL — Updated <font color="#10b981"><b>2026-10-09</b></font>)
-- **Format Requirement**: GitHub repository activity graph must follow the trading-style format:
+## Real-Time Trading-Style Codebase Velocity Graph Rule (CRITICAL — Updated <font color="#10b981"><b>2026-10-09</b></font>)
+- **Format Requirement**: GitHub repository activity graph must follow the pure code-based trading-style format (Zero static SVG files):
+  - Driven directly by the codebase and git commit history (`git log --numstat`).
+  - Evaluates code churn (+/- lines, files changed) and automatically categorizes each update by scale: **Major Shift**, **Moderate Shift**, or **Minor Shift**.
   - Multi-timeframe movement tracking: **1D (Daily)**, **1W (Weekly)**, and **1M (Monthly Macro)**.
   - Tracking commit volume, timing of pushes, push intervals, and incline/decline momentum trends.
-  - Vector SVG chart saved at [`.github/assets/repo-activity-chart.svg`](file:///d:/Games/New%20folder-web/Claude/.github/assets/repo-activity-chart.svg) and embedded into [`README.md`](file:///d:/Games/New%20folder-web/Claude/README.md).
-- **Automated Update Pipeline**: Automatically executed on every Git commit via [`.git/hooks/pre-commit`](file:///d:/Games/New%20folder-web/Claude/.git/hooks/pre-commit), [`github.bat`](file:///d:/Games/New%20folder-web/Claude/github.bat), and GitHub Actions ([`.github/workflows/update-graph.yml`](file:///d:/Games/New%20folder-web/Claude/.github/workflows/update-graph.yml)).
+  - Rendered dynamically via native GitHub Mermaid `xychart-beta`, Mermaid `gitGraph`, and interactive ASCII/Unicode Trading Terminal embedded directly in [`README.md`](file:///d:/Games/New%20folder-web/Claude/README.md).
+- **Automated Update Pipeline**: Automatically executed on Git commits via [`.git/hooks/pre-commit`](file:///d:/Games/New%20folder-web/Claude/.git/hooks/pre-commit), [`github.bat`](file:///d:/Games/New%20folder-web/Claude/github.bat), and GitHub Actions ([`.github/workflows/update-graph.yml`](file:///d:/Games/New%20folder-web/Claude/.github/workflows/update-graph.yml)).
 
 ---
 

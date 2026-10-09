@@ -20,3 +20,8 @@
 ### 4. Database & Entity Retention Verification (<font color="#10b981"><b>2026-10-09</b></font>)
 - **Zero Deletion Safety Rule Compliance:** In accordance with `AGENTS.md`, core entity definitions for [`UserEntity`](file:///d:/Games/New%20folder-web/Claude/app/src/main/java/com/example/data/UserEntity.kt), [`OrderEntity`](file:///d:/Games/New%20folder-web/Claude/app/src/main/java/com/example/data/OrderEntity.kt), [`AuditLogEntity`](file:///d:/Games/New%20folder-web/Claude/app/src/main/java/com/example/data/AuditLogEntity.kt), and [`NotificationEntity`](file:///d:/Games/New%20folder-web/Claude/app/src/main/java/com/example/data/NotificationEntity.kt) remain intact with zero structural deletions.
 - **Account Deletion Protocol:** Permanent customer account erasure retains compliance via `userDao.deleteUser(user)` and `auditLogDao.insertLog("ACCOUNT_DELETED")` in compliance with Google Play Developer Policies.
+
+### 5. Deletion of Static SVG Chart Files (<font color="#10b981"><b>2026-10-09</b></font>)
+- **Purged Static Chart Images:** Removed obsolete static chart image files (`.github/assets/repo-activity-chart.svg`) and the `.github/assets` folder.
+- **Pure Code-Based Visualization:** Transitioned to 100% codebase-driven visualization rendered dynamically via native GitHub Mermaid `xychart-beta`, Mermaid `gitGraph`, and ASCII/Unicode Trading Terminal directly in [`README.md`](file:///d:/Games/New%20folder-web/Claude/README.md).
+

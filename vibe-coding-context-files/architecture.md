@@ -28,7 +28,7 @@
 | Pricing Grounding | Google Gemini 2.0 Flash + Trackmate API | Real-time OGRA Pakistan official retail prices with fallback AI grounding |
 | Communications | Authenticated SMTP / Webhook + FCM | Multi-channel transactional notifications & automated HTML invoices |
 | Security | Android Keystore + BiometricPrompt + RootDetector | Hardware-backed AES-256 GCM encryption, biometric auth, anti-tamper |
-| Git Telemetry | High-frequency Trading-Style Activity Graph | SVG vector rendering + 1D/1W/1M velocity analysis via git hooks |
+| Git Telemetry | Pure Code-Based Trading-Style Activity Engine | Code churn & shift magnitude analysis via Mermaid & Terminal in README (Zero SVG) |
 
 ---
 

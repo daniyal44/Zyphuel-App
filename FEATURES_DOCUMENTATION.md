@@ -1553,10 +1553,13 @@ Zyphuel v2.4.0 introduces a comprehensive 10-category on-demand automotive and m
   - `CustomerHomeScreen` features a real-time Operating Hours & Status Banner informing users of current status (🟢 Open / 🔴 Closed) and schedule.
 
 ### 42.4 Real-Time Trading-Style Codebase Velocity & Movement Engine — <font color="#10b981"><b>2026-10-09</b></font>
-* **Multi-Timeframe Movement Tracking (`scripts/generate_github_graph.js`)**:
-  - Automatically compiles Git commit logs with exact Unix timestamps to track velocity across **Daily (1D)**, **Weekly (1W)**, and **Monthly (1M Macro)** timeframes.
+* **Pure Code-Based Dynamic Visualization (Zero Static SVG Files)**:
+  - Decommissioned all static `.svg` files (`repo-activity-chart.svg`).
+  - Driven directly by the codebase and git commit history (`git log --numstat`), evaluating code churn (+/- lines, files changed).
+  - Dynamically categorizes each update: **Major Shift**, **Moderate Shift**, or **Minor Shift**.
+  - Multi-timeframe movement tracking across **Daily (1D)**, **Weekly (1W)**, and **Monthly (1M Macro)** timeframes.
   - Computes push cadence, interval durations between consecutive pushes, and volume curves.
-  - Renders a dark-theme vector SVG trading chart at [`.github/assets/repo-activity-chart.svg`](file:///d:/Games/New%20folder-web/Claude/.github/assets/repo-activity-chart.svg) embedded into [`README.md`](file:///d:/Games/New%20folder-web/Claude/README.md).
+  - Renders dynamically via native GitHub Mermaid `xychart-beta`, Mermaid `gitGraph`, and an interactive ASCII/Unicode Trading Terminal embedded directly in [`README.md`](file:///d:/Games/New%20folder-web/Claude/README.md).
   - Automatically updates on every Git commit via [`.git/hooks/pre-commit`](file:///d:/Games/New%20folder-web/Claude/.git/hooks/pre-commit), [`github.bat`](file:///d:/Games/New%20folder-web/Claude/github.bat), and GitHub Actions ([`.github/workflows/update-graph.yml`](file:///d:/Games/New%20folder-web/Claude/.github/workflows/update-graph.yml)).
 
 ### 42.5 App Versioning & Release Verification — <font color="#10b981"><b>2026-10-09</b></font>
