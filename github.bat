@@ -95,7 +95,7 @@ if "%COMMIT_MSG%"=="" (
     )
     set "COMMIT_MSG=chore: direct push update - %date% %time% (!APP_VER!) [skip ci]"
 ) else (
-    echo !COMMIT_MSG! | findstr /i "skip ci" >nul 2>&1
+    echo "!COMMIT_MSG!" | findstr /i "skip ci" >nul 2>&1
     if errorlevel 1 set "COMMIT_MSG=!COMMIT_MSG! [skip ci]"
 )
 
