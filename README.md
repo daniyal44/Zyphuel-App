@@ -24,10 +24,10 @@
 | :--- | :--- | :--- |
 | 🚀 **App Version** | **v2.6.4.0.0.24** | Production Build `52` |
 | 🛡️ **Target Android SDK** | **Android 15/16 Ready** | API Level `36` |
-| 📦 **Total Lifetime Commits** | **74+ Commits** | From Inception (`2026-08-11`) to Present |
+| 📦 **Total Lifetime Commits** | **75+ Commits** | From Inception (`2026-08-11`) to Present |
 | ⏱️ **Project Active Duration** | **59 Days** | `2026-08-11` to `2026-10-09` |
-| 📅 **Total Active Coding Days** | **23 Days** | `3.2` Avg Commits / Active Day |
-| ⚡ **Latest Git Revision** | `694801a` (2026-10-09) | `feat(release): bump to v2.6.4.0.0.24 (Build 52),` |
+| 📅 **Total Active Coding Days** | **23 Days** | `3.3` Avg Commits / Active Day |
+| ⚡ **Latest Git Revision** | `b835ce5` (2026-10-09) | `chore(dashboard): sync code-based velocity graph` |
 | 🟢 **System Build Health** | **100% Operational** | Operating Hours Gate • Silent Markup • Tiered Pricing |
 
 #### 🌳 Native Git Commit & Branch Lifecycle Graph
@@ -72,7 +72,7 @@ pie title Engineering Distribution by Domain
     "Rider GPS & Live Telematics" : 19
     "UI/UX & High-Contrast Typography" : 22
     "Security, Biometrics & Room DB" : 2
-    "Pricing, Hours & Play Compliance" : 21
+    "Pricing, Hours & Play Compliance" : 22
 ```
 
 #### 📈 Sprint Velocity Burndown (Project Inception to Present)
@@ -80,9 +80,9 @@ pie title Engineering Distribution by Domain
 ========================================================================================
 🚀 MONTHLY VELOCITY & COMMIT DISTRIBUTION (FROM PROJECT START TO PRESENT)
 ========================================================================================
-Aug '26   : [████░░░░░░░░░░░░░░░░░░]   8 commits (10.8%) | 5 Days
-Sep '26   : [██████████████████████]  50 commits (67.6%) | 15 Days (🔥 Peak Velocity)
-Oct '26   : [███████░░░░░░░░░░░░░░░]  16 commits (21.6%) | 3 Days
+Aug '26   : [████░░░░░░░░░░░░░░░░░░]   8 commits (10.7%) | 5 Days
+Sep '26   : [██████████████████████]  50 commits (66.7%) | 15 Days (🔥 Peak Velocity)
+Oct '26   : [███████░░░░░░░░░░░░░░░]  17 commits (22.7%) | 3 Days
 ========================================================================================
 Status: 🟢 Continuous Delivery Active | Sync Engine: GitHub Actions & Local Auto-Sync
 ```
@@ -93,14 +93,14 @@ Status: 🟢 Continuous Delivery Active | Sync Engine: GitHub Actions & Local Au
 ##### 🗓️ Monthly Commit Velocity & Sprint Milestones (Project Start to Present)
 | Month | Commits | % Share | Active Days | Velocity Meter | Sprint Focus & Core Milestones |
 | :--- | :---: | :---: | :---: | :--- | :--- |
-| `August 2026` | **8** | `10.8%` | **5 Days** | `[███░░░░░░░░░░░░░]` | 🚀 **Genesis & Architecture**: Core Android MVP, Multi-Role Auth (Customer/Rider/Admin), Room DB v11 & Initial Fuel Dispatch |
-| `September 2026` | **50** | `67.6%` | **15 Days** | `[████████████████]` | 🔥 **Marketplace & Telematics**: 10-Category Catalog, Live Rider GPS Telematics, Dual SMTP Email Gateway, PDF Invoices & Interactive Tour |
-| `October 2026` | **16** | `21.6%` | **3 Days** | `[█████░░░░░░░░░░░]` | ⚡ **Security & Operating Gate**: Secret Hardening, Tiered Per-Liter Delivery Fees (300-400 PKR), Silent OGRA Markup & Operating Hours Window Gate |
+| `August 2026` | **8** | `10.7%` | **5 Days** | `[███░░░░░░░░░░░░░]` | 🚀 **Genesis & Architecture**: Core Android MVP, Multi-Role Auth (Customer/Rider/Admin), Room DB v11 & Initial Fuel Dispatch |
+| `September 2026` | **50** | `66.7%` | **15 Days** | `[████████████████]` | 🔥 **Marketplace & Telematics**: 10-Category Catalog, Live Rider GPS Telematics, Dual SMTP Email Gateway, PDF Invoices & Interactive Tour |
+| `October 2026` | **17** | `22.7%` | **3 Days** | `[█████░░░░░░░░░░░]` | ⚡ **Security & Operating Gate**: Secret Hardening, Tiered Per-Liter Delivery Fees (300-400 PKR), Silent OGRA Markup & Operating Hours Window Gate |
 
 ##### 📅 Recent Active Days Commit Frequency
 | Date | Commits | Activity Meter | Sprint Status |
 | :--- | :---: | :--- | :--- |
-| `2026-10-09` | **1** | `[█░░░░░░░░░░░]` | Active Sprint Delivery |
+| `2026-10-09` | **2** | `[██░░░░░░░░░░]` | Active Sprint Delivery |
 | `2026-10-04` | **10** | `[████████████]` | Active Sprint Delivery |
 | `2026-10-03` | **5** | `[██████░░░░░░]` | Active Sprint Delivery |
 | `2026-09-30` | **2** | `[██░░░░░░░░░░]` | Active Sprint Delivery |
@@ -114,11 +114,11 @@ Status: 🟢 Continuous Delivery Active | Sync Engine: GitHub Actions & Local Au
 ##### 📝 Latest Verified Revisions
 | SHA | Date | Message |
 | :--- | :--- | :--- |
-| `694801a` | 2026-10-09 | feat(release): bump to v2.6.4.0.0.24 (Build 52), tiered deli... |
+| `b835ce5` | 2026-10-09 | chore(dashboard): sync code-based velocity graph with releas... |
+| `59e9fae` | 2026-10-09 | feat(release): bump to v2.6.4.0.0.24 (Build 52), tiered deli... |
 | `99afa56` | 2026-10-04 | chore(release): bump app to v2.6.4.0.0.23 (Build 51), sync d... |
 | `2356b81` | 2026-10-04 | chore(sync): update README dashboard telemetry and dynamic v... |
 | `ac9ebdc` | 2026-10-04 | chore: direct push update - Sun 10/04/2026  1:36:10.29 (v2.6... |
-| `7aef11f` | 2026-10-04 | chore: direct push update - Sun 10/04/2026  0:53:20.95 (v2.6... |
 
 </details>
 
