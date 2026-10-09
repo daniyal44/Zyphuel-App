@@ -1,6 +1,6 @@
 # 🛡️ Zyphuel Security, Architecture & Operational Rules (`rule.md`)
 
-**Last Updated:** <font color="#10b981"><b>2026-10-09</b></font> • **Application Version:** <font color="#10b981"><b>2.6.4.0.0.25 (Build 53)</b></font>
+**Last Updated:** <font color="#10b981"><b>2026-10-09</b></font> • **Application Version:** <font color="#10b981"><b>2.6.4.0.0.26 (Build 54)</b></font>
 
 ---
 
@@ -13,17 +13,18 @@
   - The following files must remain permanently excluded in `.gitignore` and must never be tracked in the repository:
     - `app/google-services.json` and any Google API configuration files.
     - `local.properties` and `/local.properties`.
+    - `app/admin-credentials.properties`, `admin_credentials.json`, `*admin*password*`, and any admin secret files.
     - `.env` and `.env.*` configuration files.
     - `*.jks`, `*.keystore`, and Android upload signing keys (`my-upload-key.jks`, `debug.keystore`).
     - Any file matching `*credentials*`, `*secret*`, `*admin_login*`, or `*service_account*`.
-  - For new clones and open-source contributors, provide only sanitized `.example` templates (e.g. `app/google-services.json.example`, `.env.example`) containing non-functional dummy placeholders.
+  - For new clones and open-source contributors, provide only sanitized `.example` templates (e.g. `app/google-services.json.example`, `app/admin-credentials.properties.example`, `.env.example`) containing non-functional dummy placeholders.
 
 ---
 
 ## 2. App Versioning & Release Rule (CRITICAL — Updated <font color="#10b981"><b>2026-10-09</b></font>)
 Whenever any modification, fix, security update, or feature is applied:
-- **MUST Increment `versionCode`**: Always increment `versionCode` in [`app/build.gradle.kts`](file:///d:/Games/New%20folder-web/Claude/app/build.gradle.kts) (currently at <font color="#10b981"><b>52</b></font>).
-- **MUST Advance `versionName` with Sub-Version Format**: Format as `2.6.4.0.0.XX`, incrementing the trailing segment by `+0.0.0.0.01` on every change (`2.6.4.0.0.24` -> <font color="#10b981"><b>2.6.4.0.0.25</b></font>).
+- **MUST Increment `versionCode`**: Always increment `versionCode` in [`app/build.gradle.kts`](file:///d:/Games/New%20folder-web/Claude/app/build.gradle.kts) (currently at <font color="#10b981"><b>54</b></font>).
+- **MUST Advance `versionName` with Sub-Version Format**: Format as `2.6.4.0.0.XX`, incrementing the trailing segment by `+0.0.0.0.01` on every change (`2.6.4.0.0.25` -> <font color="#10b981"><b>2.6.4.0.0.26</b></font>).
 - Never publish or push with stale version codes.
 
 ---

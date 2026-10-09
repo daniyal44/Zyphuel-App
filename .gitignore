@@ -8,9 +8,25 @@ google-services.json
 *google-services*.json
 *.google-services.json
 
-# Admin & User Credentials, Secrets, and Auth Tokens
+# Admin & User Credentials, Secrets, Passwords, and Auth Tokens
 *admin*credentials*
+*admin*password*
+*admin*secret*
 *admin_login*
+*admin_pass*
+*admin_auth*
+admin-credentials.properties
+app/admin-credentials.properties
+!app/admin-credentials.properties.example
+admin_credentials.json
+app/admin_credentials.json
+!app/admin_credentials.json.example
+admin.properties
+app/admin.properties
+.admin.env
+admin.env
+admin_password.txt
+admin_pass.txt
 *credentials*.json
 *credentials*.xml
 *credentials*.properties

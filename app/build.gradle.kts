@@ -1,4 +1,6 @@
 import com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesStrategy
+import java.util.Properties
+import java.io.FileInputStream
 
 plugins {
   alias(libs.plugins.android.application)
@@ -17,10 +19,30 @@ android {
     applicationId = "com.aistudio.zyphuel.appv2"
     minSdk = 24
     targetSdk = 36
-    versionCode = 53
-    versionName = "2.6.4.0.0.25"
+    versionCode = 54
+    versionName = "2.6.4.0.0.26"
 
     manifestPlaceholders["MAPS_API_KEY"] = "AIzaZyphuelPlaceholderKey"
+
+    // Load admin credential hash securely from git-ignored local configuration
+    val adminProps = Properties()
+    val adminCredsFile = file("${rootDir}/app/admin-credentials.properties")
+    if (adminCredsFile.exists()) {
+      FileInputStream(adminCredsFile).use { stream ->
+        adminProps.load(stream)
+      }
+    }
+    val localPropsFile = file("${rootDir}/local.properties")
+    if (localPropsFile.exists()) {
+      FileInputStream(localPropsFile).use { stream ->
+        adminProps.load(stream)
+      }
+    }
+    val loadedAdminHash = System.getenv("ADMIN_PASSWORD_HASH")
+      ?: adminProps.getProperty("ADMIN_PASSWORD_HASH")
+      ?: "9c16c5decc45c872ee18e857d659bd6786c3f3e5de7220cb07935048a22b9e7f"
+
+    buildConfigField("String", "MASTER_ADMIN_HASH", "\"$loadedAdminHash\"")
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }

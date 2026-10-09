@@ -1,5 +1,8 @@
 # Zyphuel Deprecations & Removals (`remove.md`)
 
+## Version 2.6.4.0.0.26 Removals & Deprecations — <font color="#10b981"><b>2026-10-09</b></font>
+- **Deprecated Plaintext Credentials in Repository Files**: Deprecated committing any admin login password files to Git; moved to `.gitignore` exclusion.
+
 ## Version 2.6.4.0.0.25 Removals & Deprecations — <font color="#10b981"><b>2026-10-09</b></font>
 - **Deprecated Manual Conflict Intervention for Auto-Generated Files**: Deprecated standard git rebase halts on `README.md` velocity graphs; automated with `merge=ours` and authoritative regeneration.
 - **Deprecated Unsafe Pre-Commit Amend SHA Drift**: Removed SHA race condition causing cyclic GitHub Actions bot commits.

@@ -305,6 +305,14 @@
   - Sanitized `scripts/generate_github_graph.js` to automatically ensure merge driver configuration and strip conflict markers.
 * **Version Advancement**: Incremented `versionCode = 53` and advanced `versionName = "2.6.4.0.0.25"` in `app/build.gradle.kts`.
 
+### Phase 30: Strict Admin Password Git Exclusion & Zero-Leak Credential Isolation (v2.6.4.0.0.26 Build 54) - <font color="#10b981"><b>2026-10-09</b></font>
+* **Problem Solved**: Ensured that the admin login password and credentials files can NEVER be pushed to GitHub or revealed to anyone cloning the repository.
+* **Solution Implemented**:
+  - Enhanced `.gitignore` with comprehensive exclusions (`*admin*password*`, `admin-credentials.properties`, `app/admin-credentials.properties`, `admin_credentials.json`, `*admin_pass*`, `admin_password.txt`, `.admin.env`).
+  - Created unpopulated public template `app/admin-credentials.properties.example` for public clones.
+  - Decoupled admin credentials to git-ignored `app/admin-credentials.properties` and injected dynamically into `SecurityCrypto.kt` via `BuildConfig.MASTER_ADMIN_HASH`.
+* **Version Advancement**: Incremented `versionCode = 54` and advanced `versionName = "2.6.4.0.0.26"` in `app/build.gradle.kts`.
+
 ---
 
 

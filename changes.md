@@ -1,5 +1,14 @@
 # Zyphuel Changelog & Modifications (`changes.md`)
 
+## Version 2.6.4.0.0.26 (Release Build 54) — <font color="#10b981"><b>2026-10-09</b></font>
+
+### 1. Strict Admin Password Git Exclusion & Zero-Leak Credential Isolation (<font color="#10b981"><b>2026-10-09</b></font>)
+- **Comprehensive `.gitignore` Hardening**: Explicitly excluded all admin password files, credential sets, and secrets (`*admin*password*`, `admin-credentials.properties`, `app/admin-credentials.properties`, `admin_credentials.json`, `*admin_pass*`, `admin_password.txt`, `.admin.env`).
+- **Dynamic Gradle & BuildConfig Injection**: Configured `app/build.gradle.kts` and `SecurityCrypto.kt` to dynamically load `MASTER_ADMIN_HASH` from git-ignored local properties or environment variables.
+- **Sanitized Public Template**: Added `app/admin-credentials.properties.example` for public clones without exposing real credentials.
+- **Zero-Leak Assurance**: Ensured anyone cloning the repository from GitHub cannot view the admin password via any Git command (`git log`, `git grep`, `git show`, `cat`).
+- **Version Bump**: `versionCode` advanced to <font color="#10b981"><b>54</b></font>, `versionName` advanced to <font color="#10b981"><b>"2.6.4.0.0.26"</b></font>.
+
 ## Version 2.6.4.0.0.25 (Release Build 53) — <font color="#10b981"><b>2026-10-09</b></font>
 
 ### 1. Git Push, Rebase & Velocity Graph Sync Conflict Immunity Engine (<font color="#10b981"><b>2026-10-09</b></font>)

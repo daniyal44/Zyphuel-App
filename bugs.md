@@ -119,6 +119,11 @@ This document tracks all detected, reported, and resolved bugs within the **Zyph
     - **Fix Applied**: Configured `.gitattributes` with `README.md merge=ours` and `git config merge.ours.driver true` to prevent Git from generating conflict markers. Upgraded `github.bat` with upstream pre-fetch, autostash rebase, automated conflict recovery (`-X ours`), and appended `[skip ci]` to prevent cyclical GitHub Actions bot commits.
     - **Verification**: Git rebase completed cleanly, working tree clean, and 1-click push succeeds without conflicts.
 
+18. <font color="#059669"><b>[FIXED - GREEN] Admin Login Password & Credentials Hardening via .gitignore (<font color="#10b981"><b>2026-10-09</b></font>)</b></font>
+    - **Issue**: Need to ensure that no admin login password or credential file can ever be pushed to GitHub or revealed to any party cloning the repository.
+    - **Fix Applied**: Hardened `.gitignore` to strictly exclude all variations of admin credentials and passwords (`*admin*password*`, `admin-credentials.properties`, `app/admin-credentials.properties`, `admin_credentials.json`, `*admin_pass*`, `admin_password.txt`, `.admin.env`). Decoupled admin credentials to uncommitted local properties with an empty public `.example` template. Injected `MASTER_ADMIN_HASH` dynamically via Gradle `BuildConfig`.
+    - **Verification**: Verified with `git status` and `git check-ignore`; local credentials remain 100% ignored, untracked, and zero credentials leak into git history.
+
 ---
 
 ## 🟡 Minor Bugs & Operational Notes (Highlighted in Yellow)

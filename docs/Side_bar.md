@@ -1,6 +1,6 @@
 # Zyphuel Application - Sidebar & Navigation Architecture (`docs/Side_bar.md`)
 
-> **Current App Version:** `2.6.4.0.0.25 (Build 53)`  
+> **Current App Version:** `2.6.4.0.0.26 (Build 54)`  
 > **Last Synchronized:** <font color="#10b981"><b>2026-10-09</b></font>  
 > **Status:** <font color="#10b981"><b>Production Verified (100% Tests Passing)</b></font>
 
@@ -25,7 +25,7 @@ Zyphuel App Sidebar Drawer
  │    ├── Terms of Service & Privacy Policy (Play Store Compliance)
  │    ├── Permanent Account Deletion (Google Play User Data Policy)
  │    └── Support Hotline (WhatsApp Direct)
- └── Footer Section (App Version v2.6.4.0.0.25 Build 53, Logout Action)
+ └── Footer Section (App Version v2.6.4.0.0.26 Build 53, Logout Action)
 ```
 
 ---
@@ -63,4 +63,4 @@ Zyphuel App Sidebar Drawer
   - <font color="#10b981"><b>Mon–Thu:</b> 08:00 AM – 08:00 PM PKT</font>
   - <font color="#10b981"><b>Fri:</b> 08:00 AM – 01:00 PM PKT</font>
   - <font color="#10b981"><b>Sat–Sun:</b> 10:00 AM – 06:00 PM PKT</font>
-- **Version Footer**: Displays current release version <font color="#10b981"><b>`v2.6.4.0.0.25 (Build 53)`</b></font>.
+- **Version Footer**: Displays current release version <font color="#10b981"><b>`v2.6.4.0.0.26 (Build 54)`</b></font>.

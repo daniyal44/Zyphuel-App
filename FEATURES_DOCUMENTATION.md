@@ -1,5 +1,5 @@
 # 🚀 Zyphuel App Features & Technical Documentation
-**App Version:** `v2.6.4.0.0.25 (Build 53)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** <font color="#10b981"><b>2026-10-09</b></font>
+**App Version:** `v2.6.4.0.0.26 (Build 54)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** <font color="#10b981"><b>2026-10-09</b></font>
 
 Welcome to the complete architectural and functional guide for the **Zyphuel** Android application. This document outlines every single feature, function, database entity, and user flow from start to finish.
 
@@ -1577,4 +1577,13 @@ Zyphuel v2.4.0 introduces a comprehensive 10-category on-demand automotive and m
     4. **`[skip ci]` Loop Breaker**: Appended `[skip ci]` to routine automated commits created by `github.bat`, preventing GitHub Actions from spinning unnecessary trailing bot commits.
 * **Incremented `versionCode`**: `52` ➔ <font color="#10b981"><b>53</b></font>.
 * **Advanced `versionName`**: `"2.6.4.0.0.24"` ➔ <font color="#10b981"><b>"2.6.4.0.0.25"</b></font>.
+
+### 42.7 Strict Admin Password Git Exclusion & Zero-Leak Credential Isolation — <font color="#10b981"><b>2026-10-09</b></font>
+* **Zero Credential Leak & Anti-Breach Guarantee**:
+  - **Git Exclusion**: Enforced comprehensive `.gitignore` coverage excluding all admin passwords, login secrets, and credentials files (`*admin*password*`, `admin-credentials.properties`, `app/admin-credentials.properties`, `admin_credentials.json`, `*admin_pass*`, `admin_password.txt`, `.admin.env`).
+  - **Local Configuration Architecture**: Decoupled admin credentials into local, uncommitted `app/admin-credentials.properties` with an unpopulated public template (`app/admin-credentials.properties.example`).
+  - **Dynamic In-Memory & BuildConfig Injection**: Gradle and `SecurityCrypto.kt` dynamically ingest `MASTER_ADMIN_HASH` from uncommitted local properties or environment variables, guaranteeing that anyone cloning the repository cannot view, extract, or search the admin password via any Git command (`git log`, `git grep`, `git show`).
+* **Incremented `versionCode`**: `53` ➔ <font color="#10b981"><b>54</b></font>.
+* **Advanced `versionName`**: `"2.6.4.0.0.25"` ➔ <font color="#10b981"><b>"2.6.4.0.0.26"</b></font>.
+
 

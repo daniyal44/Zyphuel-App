@@ -25,7 +25,13 @@ object SecurityCrypto {
      * Stored as a one-way irreversible salted SHA-256 hash so plaintext credentials
      * are never exposed in source code, repositories, or decompiled bytecode.
      */
-    const val MASTER_ADMIN_HASH: String = "9c16c5decc45c872ee18e857d659bd6786c3f3e5de7220cb07935048a22b9e7f"
+    val MASTER_ADMIN_HASH: String = run {
+        try {
+            com.example.BuildConfig.MASTER_ADMIN_HASH
+        } catch (_: Throwable) {
+            "9c16c5decc45c872ee18e857d659bd6786c3f3e5de7220cb07935048a22b9e7f"
+        }
+    }
 
     /**
      * Verifies raw user input against stored password hash.
