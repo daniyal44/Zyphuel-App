@@ -1,5 +1,15 @@
 # Zyphuel Changelog & Modifications (`changes.md`)
 
+## Version 2.6.4.0.0.25 (Release Build 53) — <font color="#10b981"><b>2026-10-09</b></font>
+
+### 1. Git Push, Rebase & Velocity Graph Sync Conflict Immunity Engine (<font color="#10b981"><b>2026-10-09</b></font>)
+- **Root Cause Resolution**: Solved merge/rebase conflicts between GitHub Actions bot commits and local `github.bat` commits on `README.md`.
+- **Merge Driver Immunity (`.gitattributes`)**: Configured `README.md merge=ours` and registered `git config merge.ours.driver true`. Git now automatically resolves 3-way conflicts in `README.md` cleanly without conflict markers.
+- **Pre-Push Remote Sync in [`github.bat`](file:///d:/Games/New%20folder-web/Claude/github.bat)**: Upgraded `github.bat` to fetch and rebase on upstream changes before committing local files, avoiding fast-forward rejections.
+- **Auto-Resolution Fallback**: Added automated `-X ours` rebase, dashboard regeneration, and staging if a remote race condition occurs during push.
+- **Loop Breaker**: Appended `[skip ci]` flag to automatic `github.bat` commits to prevent GitHub Actions from creating duplicate trailing commits.
+- **Version Bump**: `versionCode` advanced to <font color="#10b981"><b>53</b></font>, `versionName` advanced to <font color="#10b981"><b>"2.6.4.0.0.25"</b></font>.
+
 ## Version 2.6.4.0.0.24 (Release Build 52) — <font color="#10b981"><b>2026-10-09</b></font>
 
 ### 1. Per-Liter Tiered Fuel Delivery Pricing Engine (<font color="#10b981"><b>2026-10-09</b></font>)

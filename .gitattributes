@@ -1,0 +1,3 @@
+# Zyphuel Git Attributes Configuration
+# Ensure README.md merge conflicts are automatically prevented by preserving current branch during 3-way merge
+README.md merge=ours

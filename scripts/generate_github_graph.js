@@ -34,6 +34,21 @@ if (fs.existsSync(obsoleteSvgPath)) {
   }
 }
 
+// Ensure Git merge driver for README.md is permanently configured
+try {
+  execSync('git config merge.ours.driver true', { stdio: 'ignore' })
+} catch (e) {
+  // ignore
+}
+const gitattributesPath = path.resolve(__dirname, '../.gitattributes')
+if (!fs.existsSync(gitattributesPath)) {
+  try {
+    fs.writeFileSync(gitattributesPath, '# Zyphuel Git Attributes Configuration\nREADME.md merge=ours\n', 'utf8')
+  } catch (e) {
+    // ignore
+  }
+}
+
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 const FULL_MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -548,6 +563,9 @@ ${dailyPushTable}
         console.log('[CodeGraphEngine] ✅ Inserted code-based trading dashboard before About Zyphuel in README.md.')
       }
     }
+
+    // Strip any git conflict markers that might exist
+    readme = readme.replace(/<<<<<<< [^\n]+\n/g, '').replace(/=======\s*\n/g, '').replace(/>>>>>>> [^\n]+\n/g, '')
 
     fs.writeFileSync(readmePath, readme, 'utf8')
     console.log('[CodeGraphEngine] ✅ README.md successfully updated with code-based trading graph!')

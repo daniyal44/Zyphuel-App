@@ -114,6 +114,11 @@ This document tracks all detected, reported, and resolved bugs within the **Zyph
     - **Fix Applied**: Built pure code-based [`scripts/generate_github_graph.js`](file:///d:/Games/New%20folder-web/Claude/scripts/generate_github_graph.js) (Zero SVG reliance) evaluating code churn (`git log --numstat`), classifying updates by scale (**Major Shift**, **Moderate Shift**, **Minor Shift**), and dynamically rendering native GitHub Mermaid `xychart-beta`, Mermaid `gitGraph`, and interactive ASCII/Unicode Trading Terminal directly in [`README.md`](file:///d:/Games/New%20folder-web/Claude/README.md).
     - **Verification**: Verified via local Node.js generation and git hook verification.
 
+17. <font color="#059669"><b>[FIXED - GREEN] Git Direct Push Rebase Merge Conflict on Auto-Generated README.md (<font color="#10b981"><b>2026-10-09</b></font>)</b></font>
+    - **Issue**: Running 1-click push script `github.bat` resulted in `CONFLICT (content): Merge conflict in README.md` during `git pull --rebase` because remote GitHub Actions and local commits concurrently updated velocity tables in `README.md`.
+    - **Fix Applied**: Configured `.gitattributes` with `README.md merge=ours` and `git config merge.ours.driver true` to prevent Git from generating conflict markers. Upgraded `github.bat` with upstream pre-fetch, autostash rebase, automated conflict recovery (`-X ours`), and appended `[skip ci]` to prevent cyclical GitHub Actions bot commits.
+    - **Verification**: Git rebase completed cleanly, working tree clean, and 1-click push succeeds without conflicts.
+
 ---
 
 ## 🟡 Minor Bugs & Operational Notes (Highlighted in Yellow)

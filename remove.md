@@ -1,5 +1,9 @@
 # Zyphuel Deprecations & Removals (`remove.md`)
 
+## Version 2.6.4.0.0.25 Removals & Deprecations — <font color="#10b981"><b>2026-10-09</b></font>
+- **Deprecated Manual Conflict Intervention for Auto-Generated Files**: Deprecated standard git rebase halts on `README.md` velocity graphs; automated with `merge=ours` and authoritative regeneration.
+- **Deprecated Unsafe Pre-Commit Amend SHA Drift**: Removed SHA race condition causing cyclic GitHub Actions bot commits.
+
 ## Version 2.6.4.0.0.24 Removals & Deprecations — <font color="#10b981"><b>2026-10-09</b></font>
 
 ### 1. Deprecated Off-Hour Order Placement (<font color="#10b981"><b>2026-10-09</b></font>)

@@ -1,5 +1,10 @@
 # Zyphuel Deletion & Purge Audit Log (`delete.md`)
 
+## Version 2.6.4.0.0.25 Deletions & Purge Audit — <font color="#10b981"><b>2026-10-09</b></font>
+- **Eliminated Manual Rebase Conflicts**: Purged unhandled `git pull --rebase` conflict failures from `github.bat`.
+- **Purged Fragile Fast-Forward Assumptions**: Replaced blind `git push` with upstream pre-sync check and automated merge driver resolution.
+- **Retained Room Database Entities**: Retained `UserEntity`, `OrderEntity`, `AuditLogEntity`, and `NotificationEntity` in full compliance with zero-deletion rules.
+
 ## Version 2.6.4.0.0.24 Deletions, Suppressions & Cleanups — <font color="#10b981"><b>2026-10-09</b></font>
 
 ### 1. Off-Hours UI Button Suppression (<font color="#10b981"><b>2026-10-09</b></font>)

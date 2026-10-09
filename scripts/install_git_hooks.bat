@@ -27,4 +27,11 @@ echo exit 0
 ) > ".git\hooks\pre-commit"
 
 echo [OK] Git pre-commit hook installed successfully at .git\hooks\pre-commit
+
+rem Configure ours merge driver to permanently prevent merge conflicts on README.md
+git config merge.ours.driver true
+if not exist ".gitattributes" (
+    echo README.md merge=ours> ".gitattributes"
+)
+echo [OK] Git merge driver configured: README.md merge=ours
 endlocal

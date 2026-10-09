@@ -296,6 +296,15 @@
 * **Version Advancement & Release Sync (<font color="#10b981"><b>2026-10-09</b></font>)**:
   - Incremented `versionCode = 52` and advanced `versionName = "2.6.4.0.0.24"` in `app/build.gradle.kts`.
 
+### Phase 29: Git Push, Rebase & Velocity Graph Sync Conflict Immunity Engine (v2.6.4.0.0.25 Build 53) - <font color="#10b981"><b>2026-10-09</b></font>
+* **Problem Solved**: GitHub Actions bot commits to `main` caused race conditions with local `github.bat` commits, triggering merge conflicts in `README.md` on every rebase.
+* **Solution Implemented**:
+  - Configured `.gitattributes` with `README.md merge=ours` and registered `git config merge.ours.driver true`.
+  - Upgraded `github.bat` with upstream pre-fetch, automatic stash and rebase before committing, and automated `-X ours` recovery on push failures.
+  - Added `[skip ci]` flag to automatic `github.bat` commits to break the CI commit loop.
+  - Sanitized `scripts/generate_github_graph.js` to automatically ensure merge driver configuration and strip conflict markers.
+* **Version Advancement**: Incremented `versionCode = 53` and advanced `versionName = "2.6.4.0.0.25"` in `app/build.gradle.kts`.
+
 ---
 
 

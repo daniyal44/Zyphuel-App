@@ -1,5 +1,5 @@
 # 🚀 Zyphuel App Features & Technical Documentation
-**App Version:** `v2.6.4.0.0.23 (Build 51)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** `October 2026`
+**App Version:** `v2.6.4.0.0.25 (Build 53)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** <font color="#10b981"><b>2026-10-09</b></font>
 
 Welcome to the complete architectural and functional guide for the **Zyphuel** Android application. This document outlines every single feature, function, database entity, and user flow from start to finish.
 
@@ -1566,3 +1566,15 @@ Zyphuel v2.4.0 introduces a comprehensive 10-category on-demand automotive and m
 * **Incremented `versionCode`**: `51` ➔ <font color="#10b981"><b>52</b></font>.
 * **Advanced `versionName`**: `"2.6.4.0.0.23"` ➔ <font color="#10b981"><b>"2.6.4.0.0.24"</b></font>.
 * **Green Verification**: `FuelPumpPricingTest`, `CategoryAndVehicleArchitectureTest`, and `ZyphuelComprehensiveAppTest` verified 100% passing.
+
+### 42.6 Permanent Git Push, Rebase & Graph Sync Conflict Immunity Engine — <font color="#10b981"><b>2026-10-09</b></font>
+* **Root Cause Elimination**:
+  - **The Issue**: GitHub Actions runner and local `github.bat` both regenerated `README.md` velocity tables concurrently. When GitHub Actions committed an auto-update to remote `origin/main`, local commits were rejected upon push, and subsequent `git pull --rebase` triggered fatal merge conflicts in `README.md`.
+  - **Architectural Solution**:
+    1. **Git Driver Immunity (`.gitattributes`)**: Configured `README.md merge=ours` alongside `git config merge.ours.driver true`. During 3-way merges and rebases, Git automatically preserves the current working version without ever injecting conflict markers (`<<<<<<<`).
+    2. **Remote Pre-Sync in [`github.bat`](file:///d:/Games/New%20folder-web/Claude/github.bat)**: Upgraded push workflow to fetch and auto-rebase (with autostash) *before* committing local work. This ensures local is always on top of remote, guaranteeing clean fast-forward pushes.
+    3. **Automated Recovery & Conflict Auto-Resolver**: If a concurrent push ever occurs, `github.bat` executes an automatic rebase with `-X ours`, regenerates the dashboard from authoritative `git log`, stages `README.md`, and finishes rebase without stopping.
+    4. **`[skip ci]` Loop Breaker**: Appended `[skip ci]` to routine automated commits created by `github.bat`, preventing GitHub Actions from spinning unnecessary trailing bot commits.
+* **Incremented `versionCode`**: `52` ➔ <font color="#10b981"><b>53</b></font>.
+* **Advanced `versionName`**: `"2.6.4.0.0.24"` ➔ <font color="#10b981"><b>"2.6.4.0.0.25"</b></font>.
+
