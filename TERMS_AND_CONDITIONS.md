@@ -1,8 +1,8 @@
 # Terms and Conditions of Service (Zyphuel)
 
-**Effective Date:** October 2026  
-**Last Updated:** October 2026  
-**Application Version:** 2.6.4.0.0.24 (Build 52)  
+**Effective Date:** <font color="#10b981"><b>2026-10-09</b></font> (October 2026)  
+**Last Updated:** <font color="#10b981"><b>2026-10-09</b></font>  
+**Application Version:** <font color="#10b981"><b>2.6.4.0.0.24 (Build 52)</b></font>  
 **Package Name:** `com.aistudio.zyphuel.appv2`  
 **Official Website:** [https://www.zyphuel.com/](https://www.zyphuel.com/)  
 **Terms of Use URL:** [https://www.zyphuel.com/terms-of-use](https://www.zyphuel.com/terms-of-use)  

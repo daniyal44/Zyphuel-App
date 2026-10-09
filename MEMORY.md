@@ -260,35 +260,39 @@
   - Incremented `versionCode = 51` and advanced `versionName = "2.6.4.0.0.23"` in `app/build.gradle.kts`.
   - Maintained zero leak guarantee, `.gitignore` secret isolation, and Room DB schema integrity.
 
-### Phase 28: Per-Liter Tiered Delivery Rates, Pump Rate Markup Constant & Operating Hours Window Gate (v2.6.4.0.0.24 Build 52)
-* **Tiered Doorstep Delivery Rates per Liter**:
+### Phase 28: Per-Liter Tiered Delivery Rates, Pump Rate Markup Constant, Operating Hours Gate & Trading-Style Graph (v2.6.4.0.0.24 Build 52) — <font color="#10b981"><b>2026-10-09</b></font>
+* **Tiered Doorstep Delivery Rates per Liter (<font color="#10b981"><b>2026-10-09</b></font>)**:
   - Configured in `FeeConstants.kt` and `calculateFuelDeliveryFee()`:
-    - 1 to 10 Liters (including 5L, 7L, 10L): Flat **Rs. 300.00**
-    - 11 Liters: **Rs. 320.00**
-    - 12 Liters: **Rs. 340.00**
-    - 13 Liters: **Rs. 360.00**
-    - 14 Liters: **Rs. 380.00**
-    - 15 Liters (Strict Max Cap): **Rs. 400.00**
+    - 1 to 10 Liters (including 5L, 7L, 10L): Flat <font color="#10b981"><b>Rs. 300.00</b></font>
+    - 11 Liters: <font color="#10b981"><b>Rs. 320.00</b></font>
+    - 12 Liters: <font color="#10b981"><b>Rs. 340.00</b></font>
+    - 13 Liters: <font color="#10b981"><b>Rs. 360.00</b></font>
+    - 14 Liters: <font color="#10b981"><b>Rs. 380.00</b></font>
+    - 15 Liters (Strict Max Cap): <font color="#10b981"><b>Rs. 400.00</b></font>
   - Linear formula: `300.00 + (liters - 10) * 20.00` for liters in 11..15.
   - Enforced consistently in `FeeConstants`, `MainViewModel`, `Screens.kt` (`OrderDialog`), and `TermsAndPrivacyDialog.kt`.
-* **Standardized Pump Rate Markup Constant**:
+* **Standardized Pump Rate Markup Constant (<font color="#10b981"><b>2026-10-09</b></font>)**:
   - Defined `FeeConstants.PUMP_RATE_MARKUP = 5.00` (Double) and `FeeConstants.PUMP_RATE_MARKUP_FLOAT = 5.00f` (Float).
   - Applied directly over official OGRA ex-depot base rates for Super Euro-V Petrol, Euro-V Diesel, and High-Octane 97 (`finalRate = ograBase + 5.00`).
   - Zero debug text or markup surcharge labels rendered to customers; UI displays strictly the final pump rate.
-* **Delivery Operating Hours & Order Placement Gate**:
+* **Delivery Operating Hours & Order Placement Gate (<font color="#10b981"><b>2026-10-09</b></font>)**:
   - Created `DeliveryOperatingHoursManager.kt` using Pakistan Standard Time (`Asia/Karachi`, UTC+5):
-    - **Monday – Thursday**: 08:00 AM – 08:00 PM
-    - **Friday**: 08:00 AM – 01:00 PM
-    - **Saturday – Sunday**: 10:00 AM – 06:00 PM
+    - **Monday – Thursday**: <font color="#10b981"><b>08:00 AM – 08:00 PM PKT</b></font>
+    - **Friday**: <font color="#10b981"><b>08:00 AM – 01:00 PM PKT</b></font>
+    - **Saturday – Sunday**: <font color="#10b981"><b>10:00 AM – 06:00 PM PKT</b></font>
   - UI Gate: Hides "Order Now" FloatingActionButton (`home_fab`) and modal confirmation buttons (`confirmButton`) when outside operating hours.
   - Order History: Hides "Reorder 🔁" button on past orders when outside operating hours.
   - Category Cards: Toast prompt informing customer of operational hours if attempting to click fuel products when closed.
   - Hard Guard in ViewModel: `MainViewModel.placeOrder()` checks `isDeliveryOpen` and rejects submissions with user-facing message if outside hours.
   - Live Status Banner: Renders open/closed status card with operational windows directly on `CustomerHomeScreen`.
-* **Testing & Verification**:
+* **Trading-Style Codebase Movement Graph Engine (<font color="#10b981"><b>2026-10-09</b></font>)**:
+  - Upgraded `scripts/generate_github_graph.js` to parse the complete Git commit log from project inception (`2026-08-11`) through all active months to present.
+  - Generates dark-mode vector SVG trading chart at `.github/assets/repo-activity-chart.svg` tracking movement across Daily (1D), Weekly (1W), and Monthly (1M) timeframes, commit volumes, push timing, push intervals, and incline/decline trends.
+  - Automatically updates on every Git commit via `.git/hooks/pre-commit`, `github.bat`, and GitHub Actions.
+* **Testing & Verification (<font color="#10b981"><b>2026-10-09</b></font>)**:
   - Created unit tests in `FuelPumpPricingTest.kt` validating markup calculations, all per-liter tiered rates (5L, 7L, 10L, 11L, 12L, 13L, 14L, 15L), and all operating schedule boundaries across days of week and times of day.
   - 100% test pass verified across full suite.
-* **Version Advancement & Release Sync**:
+* **Version Advancement & Release Sync (<font color="#10b981"><b>2026-10-09</b></font>)**:
   - Incremented `versionCode = 52` and advanced `versionName = "2.6.4.0.0.24"` in `app/build.gradle.kts`.
 
 ---

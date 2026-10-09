@@ -1,10 +1,14 @@
 # 05. Rider / Bowser Driver Portal Documentation 🚚
 
+> **Current App Version:** `2.6.4.0.0.24 (Build 52)`  
+> **Last Synchronized:** <font color="#10b981"><b>2026-10-09</b></font>  
+> **Status:** <font color="#10b981"><b>Production Verified (100% Tests Passing)</b></font>
+
 ## 📌 Category
 **Driver Fleet Operations**
 
 ## 🎯 Purpose & Overview
-The Rider Portal equips bowser drivers with an intuitive mobile workflow to manage assigned doorstep fuel and water deliveries across Lahore. Drivers can view delivery destinations, tap to update order status, call customers, and broadcast live GPS coordinates.
+The Rider Portal equips bowser drivers with an intuitive mobile workflow to manage assigned <font color="#10b981"><b>doorstep fuel deliveries (Super Euro-V Petrol, Euro-V Diesel, High-Octane 97 capped at 15L; Water & LPG unavailable)</b></font> across Lahore. Drivers can view delivery destinations, tap to update order status, call customers, and broadcast live GPS coordinates.
 
 ---
 
@@ -19,8 +23,8 @@ The Rider Portal equips bowser drivers with an intuitive mobile workflow to mana
 ## 📱 Driver Portal Screens & Components
 1. **Rider Duty Queue (`RiderHomeScreen`)**: Displays assigned orders with customer name, phone number, volume (L), total PKR, and address.
 2. **One-Tap Status Buttons**:
-   * `Reached Location 📍`: Changes status to `Arrived` and triggers high-priority push notification.
-   * `Mark Delivered 🎉`: Finalizes delivery and opens COD receipt dialog.
+   * <font color="#10b981"><b>`Reached Location 📍`</b></font>: Changes status to `Arrived` and triggers high-priority push notification.
+   * <font color="#10b981"><b>`Mark Delivered 🎉`</b></font>: Finalizes delivery and opens COD receipt dialog.
 3. **Navigation Launcher**: Deep-links to Google Maps / Waze for turn-by-turn navigation in Lahore.
 4. **Customer Call CTA**: Direct dial button (`tel:customerPhone`).
 
@@ -37,4 +41,4 @@ The Rider Portal equips bowser drivers with an intuitive mobile workflow to mana
 1. **Assignment**: Driver receives push notification of new order assignment.
 2. **En Route**: Driver taps "Start Delivery" (`Delivering`), initiating live GPS map tracking for customer.
 3. **Arrival**: Driver reaches customer premises and taps "Reached Location 📍" (`Arrived`).
-4. **Fuel Dispensed & Payment**: Driver dispenses fuel/water, collects cash, and taps "Mark Delivered 🎉".
+4. **Fuel Dispensed & Payment**: Driver dispenses certified fuel, collects cash, and taps "Mark Delivered 🎉".

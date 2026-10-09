@@ -2,8 +2,9 @@
 
 **Application:** Zyphuel Doorstep Fuel & Energy Delivery  
 **Package Name:** `com.aistudio.zyphuel.appv2`  
-**Current Version:** 2.6.4.0.0.23 (Build 51)  
+**Current Version:** <font color="#10b981"><b>2.6.4.0.0.24 (Build 52)</b></font>  
 **Target SDK:** 36 (Android 16) | **Min SDK:** 24 (Android 7.0)  
+**Last Synchronized:** <font color="#10b981"><b>2026-10-09</b></font>
 
 ---
 
@@ -75,14 +76,15 @@ Enter this URL in **Store presence > Store settings > Privacy Policy**:
   👉 Select: *Digital wallet / Payment checkout facilitation* (Cash on Delivery, JazzCash / EasyPaisa / Bank transfer invoice recording). Zyphuel does not issue credit or loans.
 
 ### D. Regulated Goods & Services
-* Petroleum fuel delivery is categorized under essential logistics. Ensure OGRA compliance, strict 15L delivery cap, tiered delivery fees (5L: Rs. 280, 10L: Rs. 300, 15L: Rs. 350), and Rider Safety Declaration are active in the app. Note: Drinking Water and LPG Gas cylinders are currently unavailable and blocked across all ordering flows.
+* Petroleum fuel delivery is categorized under essential logistics. Ensure OGRA compliance, strict 15L delivery cap, <font color="#10b981"><b>tiered delivery fees (5L: Rs. 300, 7L: Rs. 300, 10L: Rs. 300, 11L: Rs. 320, 12L: Rs. 340, 13L: Rs. 360, 14L: Rs. 380, 15L: Rs. 400)</b></font>, official delivery operating hours (<font color="#10b981"><b>Mon–Thu 08:00 AM – 08:00 PM, Fri 08:00 AM – 01:00 PM, Sat–Sun 10:00 AM – 06:00 PM PKT</b></font>), and Rider Safety Declaration are active in the app. Note: Drinking Water and LPG Gas cylinders are currently unavailable and blocked across all ordering flows.
 
 ---
 
 ## 4. App Version History Log
-* **v2.6.4.0.0.23 (Build 51)**: Universal version synchronization, tiered delivery pricing (5L: Rs. 280, 10L: Rs. 300, 15L: Rs. 350 max cap), strict zero-credential leak security enforcement, and comprehensive repository documentation alignment.
-* **v2.4.1 (Build 8)**: Production release with 10-category marketplace architecture, Saved Vehicle Profiles ("My Vehicles"), Typo-Tolerant Search, and Real GPS Coverage Engine.
-* **v2.4.0 (Build 7)**: Initial rollout of 10 primary categories, vehicle compatibility models, and Admin category control console.
-* **v2.3.2 (Build 6)**: Performance optimizations and database stabilization.
-* **v2.3.1 (Build 5)**: Added Google Play Store Terms & Privacy in-app modal, tightened `GET_ACCOUNTS` maxSdkVersion=22, live version badge in Settings, complete account deletion workflow.
-* **v2.3.0 (Build 4)**: Live Google Maps telematics, clean order dialog, email gateway, multi-role security.
+
+* <font color="#10b981"><b>v2.6.4.0.0.24 (Build 52) — 2026-10-09</b></font>:
+  - Enforced official delivery operating hours window (Mon–Thu 08:00–20:00, Fri 08:00–13:00, Sat–Sun 10:00–18:00 PKT) with dynamic order action button hiding and database hard guards.
+  - Standardized `PUMP_RATE_MARKUP = 5.00` Rs./Litre silent markup on OGRA ex-depot base rates for Super Euro-V Petrol, Euro-V Diesel, and High-Octane 97.
+  - Updated per-liter tiered delivery fees: 5L–10L (Flat Rs. 300), 11L (Rs. 320), 12L (Rs. 340), 13L (Rs. 360), 14L (Rs. 380), 15L max cap (Rs. 400).
+  - Integrated high-frequency trading-style git activity graph engine generating vector SVG and 1D/1W/1M velocity telemetry tables.
+  - Confirmed 100% unit test success (`FuelPumpPricingTest`) and strict zero-credential leak compliance.

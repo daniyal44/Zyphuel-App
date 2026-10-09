@@ -1,5 +1,10 @@
 # Zyphuel: React Website Header Integration & Play Store Launch Guide
 
+> **Current App Version:** `2.6.4.0.0.24 (Build 52)`  
+> **Package Identifier:** `com.aistudio.zyphuel.appv2`  
+> **Last Synchronized:** <font color="#10b981"><b>2026-10-09</b></font>  
+> **Status:** <font color="#10b981"><b>Production Verified (100% Tests Passing)</b></font>
+
 This document contains the exact code snippets and architectural guidance to integrate the "App Launch Soon" functionality into your React JS website (`https://www.zyphuel.com/`) and navigate the Google Play Store deployment process without a developer account.
 
 ---
@@ -51,7 +56,7 @@ export default function Header() {
 
         {/* Google Play Button */}
         <a 
-          href="https://play.google.com/store/apps/details?id=com.aistudio.zyphuel" 
+          href="https://play.google.com/store/apps/details?id=com.aistudio.zyphuel.appv2" 
           target="_blank" 
           rel="noopener noreferrer" 
           style={styles.badgeBtn}
@@ -128,26 +133,11 @@ const styles = {
     display: 'block',
   }
 };
-
-// CSS Injection for Pulsing Animation
-if (typeof document !== 'undefined') {
-  const styleSheet = document.createElement("style");
-  styleSheet.innerText = `
-    @keyframes pulse {
-      0% { transform: scale(0.9); opacity: 0.6; }
-      50% { transform: scale(1.15); opacity: 1; box-shadow: 0 0 10px #EF4444; }
-      100% { transform: scale(0.9); opacity: 0.6; }
-    }
-  `;
-  document.head.appendChild(styleSheet);
-}
 ```
 
 ---
 
 ### Option B: Floating Header Banner (Best for maximum visibility)
-If you want a banner positioned *above* your navigation that spans the entire top of the viewport:
-
 ```jsx
 import React from 'react';
 
@@ -155,7 +145,7 @@ export default function LaunchBanner() {
   return (
     <div style={styles.banner}>
       <p style={styles.text}>
-        🚀 <strong>Zyphuel On-Demand App</strong> is launching soon in Lahore! Be the first to get access.
+        🚀 <strong>Zyphuel On-Demand Fuel App</strong> is launching soon in Lahore! Official Operating Hours: Mon–Thu 8am–8pm, Fri 8am–1pm, Sat–Sun 10am–6pm PKT.
       </p>
     </div>
   );
@@ -163,7 +153,7 @@ export default function LaunchBanner() {
 
 const styles = {
   banner: {
-    background: 'linear-gradient(90deg, #1E1B4B 0%, #311042 50%, #1E1B4B 100%)', // Elegant dark purple/violet gradient
+    background: 'linear-gradient(90deg, #1E1B4B 0%, #311042 50%, #1E1B4B 100%)',
     color: '#F4F4F5',
     textAlign: 'center',
     padding: '10px 20px',
@@ -217,11 +207,12 @@ To ensure the website and app are indexed and recommended by AI Search Engines (
    * Submit your `sitemap.xml` directly to force Google to crawl and index your pages within 4 hours.
 
 2. **Leverage AI Discovery (ChatGPT / Gemini Optimization):**
-   * Feed AI crawlers by publishing high-quality blog posts on Medium, Dev.to, or LinkedIn with structured keywords: *"Zyphuel: The New Tesla-Inspired Fuel and Water Delivery App in Lahore."*
+   * Feed AI crawlers by publishing high-quality blog posts on Medium, Dev.to, or LinkedIn with structured keywords: *"Zyphuel: The New Tesla-Inspired Fuel Delivery App in Lahore."*
    * Mention the official website link (`https://www.zyphuel.com/`) in these articles. Since LLMs scan fresh blogs, they will surface your site when users query AI about "fuel delivery apps in Pakistan".
 
 3. **Viral Social Campaigns:**
-   * Create short 15-second visual reels for TikTok and Instagram showing the live map tracking feature. Focus on the caption: *"Get petrol, LPG gas, or mineral water delivered instantly to your coordinates in Lahore! 🚀 Link in bio."*
+   * Create short 15-second visual reels for TikTok and Instagram showing the live map tracking feature. Focus on the caption: *"Get Super Euro-V Petrol, High-Octane 97, or Diesel delivered instantly to your coordinates in Lahore! 🚀 Link in bio."*
+   * *(Note: Pure Water and LPG Gas delivery are currently unavailable and not offered).*
 
 ---
 
@@ -254,6 +245,3 @@ function App() {
 
 export default App;
 ```
-
-This single inclusion automatically builds and refreshes all header metadata, allowing ChatGPT, Googlebot, Gemini, and social parsers to query the live page and display rich previews.
-

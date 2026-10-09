@@ -1,5 +1,9 @@
 # 01. User Roles & Authentication Feature Documentation 🔐
 
+> **Current App Version:** `2.6.4.0.0.24 (Build 52)`  
+> **Last Synchronized:** <font color="#10b981"><b>2026-10-09</b></font>  
+> **Status:** <font color="#10b981"><b>Production Verified (100% Tests Passing)</b></font>
+
 ## 📌 Category
 **Security & User Access Control**
 
@@ -11,9 +15,9 @@ The User Roles & Authentication module manages account creation, authentication,
 ## 🔑 User Roles & Permission Matrix
 | Role | Capabilities | Primary Entry Screen |
 | :--- | :--- | :--- |
-| **Customer** (`role = "customer"`) | Place fuel/water orders, view live GPS tracking, rate drivers, view order history. | `CustomerHomeScreen` |
+| **Customer** (`role = "customer"`) | <font color="#10b981"><b>Place fuel orders (Strict 15L cap, tiered fees, operating hours gate; Water & LPG unavailable)</b></font>, view live GPS tracking, rate drivers, view order history. | `CustomerHomeScreen` |
 | **Rider** (`role = "rider"`) | Accept assigned orders, update delivery status (En Route → Arrived → Completed), call customer. | `RiderHomeScreen` |
-| **Admin** (`role = "admin"`) | View system analytics, add/manage customers, add riders, assign orders, view audit logs. | `AdminDashboardScreen` |
+| **Admin** (`role = "admin"`) | View system analytics, add/manage customers, add riders, assign orders, monitor operating hours, view audit logs. | `AdminDashboardScreen` |
 
 ---
 
@@ -25,6 +29,7 @@ The User Roles & Authentication module manages account creation, authentication,
 * `logoutUser()` (`MainViewModel.kt`): Clears active user session state, terminates `FirebaseAuthProvider` session, clears biometric authentication state, and returns navigation to `LoginScreen`.
 * `loginWithBiometrics(context, module, userEmailInput)` (`MainViewModel.kt`): Biometric hardware authentication with instant profile lookup for fast 1-tap sign-in on both Customer and Rider login forms.
 * `addRiderFromAdmin(...)` (`MainViewModel.kt`): Admin registration of new drivers storing personal, legal (CNIC/License), vehicle, and address credentials.
+* <font color="#10b981"><b>`deleteAccountPermanently(context)`</b> (`MainViewModel.kt`): Enforces Google Play User Data policy by deleting user account, profile records, and stored credentials upon confirmed user request.</font>
 
 ---
 
@@ -33,7 +38,7 @@ The User Roles & Authentication module manages account creation, authentication,
 * **Social Auth Manager**: `app/src/main/java/com/example/auth/SocialAuthManager.kt`
 * **UI Screen**: `app/src/main/java/com/example/ui/Screens.kt` (`AuthScreen`)
 * **Vector Asset**: `app/src/main/res/drawable/ic_google.xml`
-* **State Management**: `app/src/main/java/com/example/ui/MainViewModel.kt` (`loginWithSocialAccount`, `logout`)
+* **State Management**: `app/src/main/java/com/example/ui/MainViewModel.kt` (`loginWithSocialAccount`, `logout`, `deleteAccountPermanently`)
 * **Data Entity**: `app/src/main/java/com/example/data/Models.kt` (`UserEntity.authProvider`)
 * **Security Helper**: `app/src/main/java/com/example/security/SecurityInputValidator.kt`
 
@@ -53,3 +58,4 @@ The User Roles & Authentication module manages account creation, authentication,
 * Native Google OAuth 2.0 single sign-on (SSO) integration via `CredentialManager` and `GoogleAuthManager`.
 * Rate limiting on login attempts via `SecurityRateLimiter`.
 * Biometric hardware token verification via `BiometricPrompt` API.
+* Permanent account deletion compliance.

@@ -1,53 +1,49 @@
 # Zyphuel Changelog & Modifications (`changes.md`)
 
-## Version 2.6.4.0.0.11 (Release Build 39) - September 2026
+## Version 2.6.4.0.0.24 (Release Build 52) — <font color="#10b981"><b>2026-10-09</b></font>
 
-### 1. Petrol Pump Rate Engine (+Rs. 2.50 / Litre)
-- **Petrol, Diesel & High-Octane Pump Rate Surcharge:** Implemented standard +Rs. 2.50 per litre petrol pump retail markup over official OGRA base prices.
-- **Consistent Application:** Regardless of whether official prices decrease, increase, or remain unchanged, the +Rs. 2.50/L petrol pump rate is consistently computed across all order calculations.
-- **LPG & Water Exemption:** Sealed LPG cylinders and pure drinking water remain strictly exempt from the petrol pump surcharge.
-- **`FeeConstants.kt` Enhancements:**
-  - Added `PETROL_PUMP_RATE_SURCHARGE = 2.50` (Double) and `PETROL_PUMP_RATE_SURCHARGE_FLOAT = 2.50f` (Float).
-  - Added `isPumpRateApplicable(serviceType)` to identify eligible fuels.
-  - Added `getPumpRate(basePrice, serviceType)` calculation helpers.
+### 1. Per-Liter Tiered Fuel Delivery Pricing Engine (<font color="#10b981"><b>2026-10-09</b></font>)
+- **Granular Per-Liter Tiered Rates:** Updated [`FeeConstants.kt`](file:///d:/Games/New%20folder-web/Claude/app/src/main/java/com/example/util/FeeConstants.kt) to enforce exact doorstep delivery charges:
+  - **1 to 10 Liters (including 5L, 7L, 10L)**: <font color="#10b981"><b>Rs. 300.00</b></font> (Flat Rs. 300 for up to 10L)
+  - **11 Liters**: <font color="#10b981"><b>Rs. 320.00</b></font>
+  - **12 Liters**: <font color="#10b981"><b>Rs. 340.00</b></font>
+  - **13 Liters**: <font color="#10b981"><b>Rs. 360.00</b></font>
+  - **14 Liters**: <font color="#10b981"><b>Rs. 380.00</b></font>
+  - **15 Liters (Strict Max Limit Cap)**: <font color="#10b981"><b>Rs. 400.00</b></font>
+- **Linear Step Formula:** Implemented in `calculateFuelDeliveryFee(liters)` as `300.00 + (liters - 10) * 20.00` for $11 \le \text{liters} \le 15$.
+- **Strict 15L Safety Cap:** Mobile doorstep delivery remains capped at a maximum of 15 Liters per order; orders exceeding 15L are rejected across all dialogs and ViewModels.
 
-### 2. Order Page & Dialog Updates (`OrderDialog`)
-- **Real-Time Petrol Pump Unit Rates:** Petrol, Diesel, and High-Octane cards now display the live retail petrol pump price (e.g. Rs. 291.88/L) with badge `(Pump Rate • incl. +Rs 2.5/L)`.
-- **Dynamic Subtotal Calculation:** Item subtotals for fuel now compute accurately as `quantity * pumpPrice`.
-- **Transparent Summary Breakdown:** Added explicit `Pump Rate Included (+Rs 2.50/L)` row in the order cost summary showing the total petrol pump surcharge included in the subtotal.
-- **Grand Total Consistency:** Total price passed to `placeOrder()` accurately reflects the petrol pump rates.
+### 2. Standardized Silent OGRA Pump Rate Markup Constant (<font color="#10b981"><b>2026-10-09</b></font>)
+- **Markup Constant Definition:** Defined `FeeConstants.PUMP_RATE_MARKUP = 5.00` (Double) and `FeeConstants.PUMP_RATE_MARKUP_FLOAT = 5.00f` (Float).
+- **Universal Application:** Applied uniformly over official OGRA ex-depot base notifications for:
+  - Super Euro-V Petrol (`finalRate = ograBase + 5.00`)
+  - Euro-V High-Speed Diesel (`finalRate = ograBase + 5.00`)
+  - High-Octane 97 HOBC (`finalRate = ograBase + 5.00`)
+- **Silent Background Execution:** The retail markup math executes silently in the background. UI screens, cards, dialogs, and invoice breakdowns display **strictly the final pump rate** without any debug labels or surcharge annotations.
 
-### 3. Customer Home & Fuel Market Widget Updates
-- **`CustomerHomeScreen` Quick Service Cards:** Petrol, Diesel, and High-Octane cards updated to display the petrol pump rates with `Pump Rate (+Rs 2.50)` labels.
-- **`LahoreFuelMarketWidget` / `RatesScreen`:** Primary cards for Petrol and Diesel display the Petrol Pump Rate, with base OGRA price comparison shown underneath.
+### 3. Delivery Operating Hours Window Enforcement & UI Gate (<font color="#10b981"><b>2026-10-09</b></font>)
+- **Operating Hours Manager:** Created [`DeliveryOperatingHoursManager.kt`](file:///d:/Games/New%20folder-web/Claude/app/src/main/java/com/example/util/DeliveryOperatingHoursManager.kt) calibrated to Pakistan Standard Time (`Asia/Karachi`, UTC+5):
+  - **Monday – Thursday**: <font color="#10b981"><b>08:00 AM – 08:00 PM PKT</b></font>
+  - **Friday**: <font color="#10b981"><b>08:00 AM – 01:00 PM PKT</b></font>
+  - **Saturday – Sunday**: <font color="#10b981"><b>10:00 AM – 06:00 PM PKT</b></font>
+- **UI Button Hiding When Closed:**
+  - **Home Screen FAB**: "Order Now" ExtendedFloatingActionButton (`home_fab`) is completely hidden when closed.
+  - **Order Dialog Confirmation Button**: "Place Delivery Order / Confirm Order COD" (`confirmButton`) is completely omitted from the layout when closed.
+  - **Customer Order Card**: "Reorder 🔁" button on past orders is hidden when closed.
+  - **Category Fuel Cards**: Clicking fuel cards while closed displays an informative Toast indicating operating hours.
+- **Backend & Database Hard Guard:** `MainViewModel.placeOrder()` enforces `isDeliveryOpen` check, blocking off-hours submissions and notifying the user.
+- **Live Status Card:** Added live open/closed status banner and schedule summary to [`CustomerHomeScreen`](file:///d:/Games/New%20folder-web/Claude/app/src/main/java/com/example/ui/Screens.kt).
 
-### 4. Category & ViewModel Reactive Data Layer
-- **`MainViewModel.kt` StateFlows:**
-  - Added `petrolPumpPrice: StateFlow<Float>`
-  - Added `dieselPumpPrice: StateFlow<Float>`
-  - Added `highOctanePumpPrice: StateFlow<Float>`
-  - Added `getEffectiveFuelPumpPrice(serviceType): Float`
-- **`CategoryRepository.kt`:**
-  - Updated `syncLiveFuelPrices()` to synchronize the +Rs. 2.50 pump surcharge into all fuel subcategories (`petrol_regular`, `petrol_octane`, `diesel_regular`, `diesel_generator`).
-- **`CategoryComponents.kt`:**
-  - Updated Category Dashboard and `CategoryDetailModal` to bind directly to petrol pump prices.
+### 4. Real-Time Trading-Style Codebase Movement Graph (<font color="#10b981"><b>2026-10-09</b></font>)
+- **Multi-Timeframe Telemetry Engine:** Built [`scripts/generate_github_graph.js`](file:///d:/Games/New%20folder-web/Claude/scripts/generate_github_graph.js) generating:
+  - Vector SVG Trading Terminal Chart ([`.github/assets/repo-activity-chart.svg`](file:///d:/Games/New%20folder-web/Claude/.github/assets/repo-activity-chart.svg)) tracking movements across **1D (Daily)**, **1W (Weekly)**, and **1M (Monthly Macro)** timeframes.
+  - Incline / Decline trend momentum indicators (`▲ BULLISH INCLINE`, `▼ CONSOLIDATION`).
+  - Exact push timing, cadence, and interval tracking (average active interval: ~1.8h–2.4h).
+- **Automated Update Pipeline:** Installed Git pre-commit hook ([`.git/hooks/pre-commit`](file:///d:/Games/New%20folder-web/Claude/.git/hooks/pre-commit)) and upgraded [`github.bat`](file:///d:/Games/New%20folder-web/Claude/github.bat) so the graph automatically regenerates and embeds into [`README.md`](file:///d:/Games/New%20folder-web/Claude/README.md) on every commit and push.
 
-### 5. Vibe Coding Context Files
-- Imported and tailored all 8 architecture context files into `vibe-coding-context-files/`:
-  - `README.md`
-  - `architecture.md`
-  - `database.md`
-  - `error-handling.md`
-  - `phases.md`
-  - `prompts.md`
-  - `security.md`
-  - `generator-prompt.md`
-
-### 6. App Versioning & Legal Terms
-- `app/build.gradle.kts`:
-  - `versionCode`: incremented from 38 to 39.
-  - `versionName`: advanced from `2.6.4.0.0.10` to `2.6.4.0.0.11`.
-- `TERMS_AND_CONDITIONS.md` & `PRIVACY_POLICY.md` & `TermsAndPrivacyDialog.kt`:
-  - Updated with petrol pump retail rate disclosure (+Rs. 2.50/L).
-- `FEATURES_DOCUMENTATION.md`:
-  - Comprehensive documentation added for the Petrol Pump Rate engine.
+### 5. Application Micro-Versioning & Compliance (<font color="#10b981"><b>2026-10-09</b></font>)
+- **`app/build.gradle.kts`**:
+  - `versionCode`: incremented from 51 to <font color="#10b981"><b>52</b></font>.
+  - `versionName`: advanced from `2.6.4.0.0.23` to <font color="#10b981"><b>2.6.4.0.0.24</b></font>.
+- **Legal Synchronization**: Updated [`TERMS_AND_CONDITIONS.md`](file:///d:/Games/New%20folder-web/Claude/TERMS_AND_CONDITIONS.md), [`PRIVACY_POLICY.md`](file:///d:/Games/New%20folder-web/Claude/PRIVACY_POLICY.md), and in-app legal viewer (`TermsAndPrivacyDialog.kt`) to reflect Build 52, tiered delivery pricing, and delivery operating hours.
+- **Test Suite**: Verified via `FuelPumpPricingTest.kt`, `ZyphuelComprehensiveAppTest`, and `CategoryAndVehicleArchitectureTest` with 100% test pass (0 failures).

@@ -1,5 +1,9 @@
 # 03. Real-Time GPS Driver Tracking Documentation 🗺️
 
+> **Current App Version:** `2.6.4.0.0.24 (Build 52)`  
+> **Last Synchronized:** <font color="#10b981"><b>2026-10-09</b></font>  
+> **Status:** <font color="#10b981"><b>Production Verified (100% Tests Passing)</b></font>
+
 ## 📌 Category
 **Logistics & Navigation**
 
@@ -19,8 +23,8 @@ The Real-Time GPS Driver Tracking system provides live visualization of the assi
 
 ## 🗺️ Map Visual Elements
 1. **Single Merged Map Engine**: Consolidates driver, customer destination, and HQ onto one single Google Map canvas.
-2. **Bowser Delivery Vehicle Marker 🚚**: Custom ride-sharing marker with live orientation heading ($0^\circ-360^\circ$), sonar radar pulse animation, and live driver speed tag (`driverLat`, `driverLng`).
-3. **Customer Delivery Destination Pin ("Where to Order From") 📍**: Interactive red marker showing customer delivery pin and landmark address in Lahore.
+2. <font color="#10b981"><b>Bowser Delivery Vehicle Marker 🚚</b></font>: Custom ride-sharing marker with live orientation heading ($0^\circ-360^\circ$), sonar radar pulse animation, and live driver speed tag (`driverLat`, `driverLng`).
+3. <font color="#10b981"><b>Customer Delivery Destination Pin ("Where to Order From") 📍</b></font>: Interactive red marker showing customer delivery pin and landmark address in Lahore.
 4. **Green Town Central HQ Origin 🏢**: Fixed dispatch origin hub marker at Green Town, Lahore ($31.4380, 74.3050$).
 5. **Combined Route Line 🛣️**: Polylines connecting Green Town HQ -> Driver Bowser -> Customer Destination Pin.
 6. **Floating Navigation Button 🗺️**: "Navigate in Google Maps App" floating CTA launching Google Maps driving directions with fallback chooser.
@@ -31,6 +35,7 @@ The Real-Time GPS Driver Tracking system provides live visualization of the assi
 ## 📁 Source Locations
 * **UI Component**: `app/src/main/java/com/example/ui/Screens.kt` (`DriverRealTimeTrackingMap`, `RealTimeOrderTrackingCard`)
 * **State Management**: `app/src/main/java/com/example/ui/MainViewModel.kt`
+* **Forecasting & Distance**: `app/src/main/java/com/example/util/DeliveryOperatingHoursManager.kt`
 
 ---
 

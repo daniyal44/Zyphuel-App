@@ -74,7 +74,7 @@ if errorlevel 1 (
     if not errorlevel 1 (
         if exist "scripts\generate_github_graph.js" (
             node scripts\generate_github_graph.js >nul 2>&1
-            git add README.md >nul 2>&1
+            git add README.md .github/assets/repo-activity-chart.svg >nul 2>&1
             git diff --cached --quiet >nul 2>&1
             if errorlevel 1 (
                 git commit --amend --no-edit >nul 2>&1

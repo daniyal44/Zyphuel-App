@@ -1,5 +1,9 @@
 # Zyphuel: Google Play Store Launch & Global ASO/SEO Blueprint
 
+> **Current App Version:** `2.6.4.0.0.24 (Build 52)`  
+> **Last Synchronized:** <font color="#10b981"><b>2026-10-09</b></font>  
+> **Status:** <font color="#10b981"><b>Production Verified (100% Tests Passing)</b></font>
+
 This blueprint outlines the complete App Store Optimization (ASO), Search Engine Optimization (SEO), and AI Search Engine (Gemini, ChatGPT, Grok) indexing strategy to launch **Zyphuel** internationally and dominate search rankings.
 
 ---
@@ -26,29 +30,36 @@ Stuck on the road with an empty fuel tank? Need emergency refueling for your car
 
 Welcome to Zyphuel – Pakistan’s elite, automated, high-speed on-demand fuel logistics platform. Designed with a gorgeous, fluid Jetpack Compose Material 3 user interface, Zyphuel connects you instantly with verified dispatch riders to bring Super Euro-V Petrol, High-Speed Diesel, and High-Octane 97 straight to your exact GPS coordinates.
 
-Whether you are in Gulberg, DHA, Johar Town, Bahria Town, or anywhere in Lahore, Zyphuel guarantees secure, direct hand-delivered satisfaction with 100% transparent pricing and 24/7 direct customer support.
+Whether you are in Gulberg, DHA, Johar Town, Bahria Town, or anywhere in Lahore, Zyphuel guarantees secure, direct hand-delivered satisfaction with 100% transparent pricing and direct customer support.
 
 --- Why Choose Zyphuel? ---
 
 ⚡ INSTANT AUTOMATED ROUTING
 Our advanced logistics engine matches your order instantly with the closest emergency standby rider. No delays, no intermediate stops—just ultra-fast point-to-point delivery.
 
-🔥 FUEL ON-DEMAND (Strict 15L Cap)
-• Super Petrol (Euro V)
+🔥 CERTIFIED FUEL ON-DEMAND (Strict 15L Cap)
+• Super Euro-V Petrol
 • Premium High-Octane 97
 • High-Speed Diesel (HSD)
 • Secure roadside emergency refueling
-• Transparent tiered delivery: 5L (Rs. 280), 10L (Rs. 300), 15L (Rs. 350)
+• Tiered delivery fee: 5L–10L (Rs. 300), 11L (Rs. 320), 12L (Rs. 340), 13L (Rs. 360), 14L (Rs. 380), 15L (Rs. 400)
+• Silent retail pump markup (+Rs. 5.00/L)
+
+⏰ OFFICIAL OPERATING HOURS
+• Mon–Thu: 08:00 AM – 08:00 PM PKT
+• Fri: 08:00 AM – 01:00 PM PKT
+• Sat–Sun: 10:00 AM – 06:00 PM PKT
+Orders are accepted exclusively during operating hours to guarantee safety and rapid fulfillment.
 
 📍 ACTIVE REAL-TIME GPS TRACKING
 Watch your rider approach in real-time on our smart dynamic map. Know exactly when your fuel is arriving, down to the minute.
 
-💬 24/7 LIVE SUPPORT HOTLINE
+💬 VERIFIED SUPPORT HOTLINE
 Your satisfaction is our absolute priority. If you have any delivery status concerns, access our direct WhatsApp support or make a direct voice call to our Lahore coordination desk inside the app.
 
 --- Key Features at a Glance: ---
 • Seamless, secure registration in seconds with Google Sign-In & Biometric Unlock.
-• Real-time transactional confirmation & invoice emails sent directly to your Gmail inbox.
+• Real-time transactional confirmation & invoice emails sent directly to your registered Gmail inbox.
 • One-tap smart location setting and native coordinate sharing.
 • Real-time transparent pricing calculations with zero hidden fees.
 • Live timeline logs to track order preparing, dispatch, and completion.
@@ -68,9 +79,9 @@ To rank on Google Search and play store algorithms globally, use these keyword g
 | Keyword Category | Primary Keywords (High Volume) | Secondary Keywords (Medium Volume) | Long-Tail Keywords (High Conversion) |
 | :--- | :--- | :--- | :--- |
 | **Fuel Delivery** | Fuel delivery app, order petrol, fuel delivery Lahore | Roadside assistance fuel, buy octane, petrol home delivery | How to get petrol delivered, emergency petrol delivery Lahore |
-| **LPG Gas** | LPG Gas delivery, gas cylinder refill, LPG cylinder | Safe gas cylinder Pakistan, buy LPG gas, cylinder home delivery | Fast gas cylinder delivery near me, gas cylinder refill app Lahore |
-| **Water Delivery** | Mineral water delivery, buy water gallons, pure water | Drinking water home delivery, water gallon supplier, clean water | On-demand water delivery Lahore, premium mineral water gallon price |
-| **Logistics & App** | Delivery app Lahore, on-demand logistics, track delivery | Delivery tracking app, instant courier Pakistan, smart logistics | Tesla quality logistics app Pakistan, direct home delivery app Lahore |
+| **Logistics & App** | Delivery app Lahore, on-demand logistics, track delivery | Delivery tracking app, instant courier Pakistan, smart logistics | High performance logistics app Pakistan, direct home delivery app Lahore |
+
+*(Note: Pure Water and LPG Gas delivery categories are currently unavailable and intentionally excluded from active campaign targets).*
 
 ---
 
@@ -110,7 +121,7 @@ Place this script block in the `<head>` of your website homepage to give LLMs st
     "price": "0.00",
     "priceCurrency": "PKR"
   },
-  "description": "Pakistan's premium on-demand delivery app for Super Petrol, LPG Gas cylinders, and Pure Mineral Water Gallons with automated real-time GPS tracking.",
+  "description": "Pakistan's premium on-demand fuel delivery app for Super Euro-V Petrol, Euro-V Diesel, and High-Octane 97 with automated real-time GPS tracking and tiered delivery pricing.",
   "aggregateRating": {
     "@type": "AggregateRating",
     "ratingValue": "4.9",
@@ -129,33 +140,22 @@ Place this script block in the `<head>` of your website homepage to give LLMs st
 </script>
 ```
 
-### C. Conversational Anchors (CSO - Conversational Search Optimization)
-To trigger recommendations when users ask AI engines like: *"What is the best app to get fuel or mineral water delivered in Lahore?"*:
-1. **Publish detailed case studies or press releases** with titles like: *"How Zyphuel is Revolutionizing On-Demand Fuel and Water Delivery in Pakistan."*
-2. **Backlink using specific keyword pairings**: Embed high-authority links matching the exact query: `Zyphuel on-demand fuel delivery app`.
-
 ---
 
 ## 4. Visual SEO Assets Blueprint
 
-To attract organic clicks, your Play Store screenshots must be visually striking and instantly state the value proposition.
-
 ### Screenshot 1: The Hook (First Impression)
-* **Visual:** The gorgeous main dashboard illustrating the automated delivery routing system.
-* **Top Caption:** "PAKISTAN'S PREMIUM ON-DEMAND LOGISTICS"
-* **Bottom Highlight:** Super Petrol, LPG Gas, & Pure Water Gallons.
+* **Top Caption:** "PAKISTAN'S PREMIUM ON-DEMAND FUEL LOGISTICS"
+* **Bottom Highlight:** Super Euro-V Petrol, Euro-V Diesel & High-Octane 97.
 
 ### Screenshot 2: On-Demand Products
-* **Visual:** The product selection interface with dynamic pricing and clear quantity adjustments.
-* **Top Caption:** "SELECT FUEL, LPG CYLINDERS, OR WATER"
-* **Bottom Highlight:** Transparent pricing with zero hidden charges.
+* **Top Caption:** "SELECT FUEL QUANTITY (UP TO 15L)"
+* **Bottom Highlight:** Transparent pricing with tiered delivery rates (Rs. 300–400).
 
 ### Screenshot 3: Interactive Tracking
-* **Visual:** Active real-time GPS map screen with dispatch rider en-route marker.
 * **Top Caption:** "TRACK YOUR ORDER IN REAL-TIME"
-* **Bottom Highlight:** 10-minute instant standby dispatch.
+* **Bottom Highlight:** Real-time bowser GPS movement on interactive map.
 
-### Screenshot 4: 24/7 Verified Support
-* **Visual:** Direct call options and the live verified WhatsApp support line interface.
-* **Top Caption:** "100% SATISFACTION GUARANTEED"
-* **Bottom Highlight:** Active customer care hotline and emergency re-routing.
+### Screenshot 4: Operating Hours & Direct Support
+* **Top Caption:** "OFFICIAL DELIVERY OPERATING HOURS"
+* **Bottom Highlight:** Rapid emergency response and verified WhatsApp support hotline.

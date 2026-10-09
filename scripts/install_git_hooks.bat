@@ -20,7 +20,7 @@ echo if command -v node ^>/dev/null 2^>^&1; then
 echo     if [ -f "scripts/generate_github_graph.js" ]; then
 echo         echo "[Git Hook] Automatically updating README code-based graph..."
 echo         node scripts/generate_github_graph.js
-echo         git add README.md
+echo         git add README.md .github/assets/repo-activity-chart.svg
 echo     fi
 echo fi
 echo exit 0

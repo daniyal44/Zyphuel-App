@@ -1,5 +1,5 @@
 # Zyphuel Master App Audit, Feature Analysis & Global Memory Record 🧠📋
-**Document Version:** 2.6.4.0.0.23 • **Build Code:** 51  
+**Document Version:** <font color="#10b981"><b>2.6.4.0.0.24</b></font> • **Build Code:** <font color="#10b981"><b>52</b></font> • **Last Audit:** <font color="#10b981"><b>2026-10-09</b></font>  
 **Operating Region:** Lahore, Punjab, Pakistan  
 **Compliance Standard:** OGRA (Oil & Gas Regulatory Authority), Civil Defence Pakistan & Google Play Store Policies  
 
@@ -23,7 +23,8 @@
 | :--- | :--- | :--- |
 | **Authentication & Google Sign-In** | 🟢 100% Working | Multi-role (customer, rider, admin), SHA-256, Credential Manager, role isolation. |
 | **Biometric Security** | 🟢 100% Working | AndroidX BiometricPrompt fingerprint & face lock with hardware fallback. |
-| **Core Fuel Ordering (15L Cap)** | 🟢 100% Working | Super Petrol, HSD, High-Octane with tiered fees (5L: Rs. 280, 10L: Rs. 300, 15L: Rs. 350). Water/LPG unavailable. |
+| **Core Fuel Ordering (15L Cap & Hours Gate)** | 🟢 100% Working | Super Petrol, HSD, High-Octane with tiered fees (<font color="#10b981"><b>1..10L: Rs. 300, 11L: Rs. 320 .. 15L: Rs. 400</b></font>). Silent OGRA markup (<font color="#10b981"><b>+Rs. 5.00/L</b></font>). Operating hours gate (<font color="#10b981"><b>Mon-Thu 8am-8pm, Fri 8am-1pm, Sat-Sun 10am-6pm PKT</b></font>). Water/LPG unavailable. |
+| **Trading-Style Movement Graph** | 🟢 100% Working | Multi-timeframe velocity engine (<font color="#10b981"><b>1D, 1W, 1M</b></font>) tracking volume, push intervals, and incline/decline trends with auto-sync on commit/push. |
 | **PDF Invoicing & Receipts** | 🟢 100% Working | Native Android PrintManager 1-tap "Save as PDF" & WhatsApp text share. |
 | **Live Fuel Price Sync** | 🟢 100% Working | TrackmateFuelApiService (PSO/Shell rates), Gemini sync & WorkManager background alerts. |
 | **Multi-Channel Email Gateway** | 🟢 100% Working | SMTP SSL (465) / STARTTLS (587) + Google Apps Script Webhook with Firestore cross-device sync. |

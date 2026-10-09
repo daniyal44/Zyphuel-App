@@ -16,109 +16,57 @@
 ---
 
 <!-- START_VELOCITY_DASHBOARD -->
-### 📊 Real-Time Engineering Velocity & Activity Dashboard (Auto-Updates on Push)
+### 📊 Real-Time Trading-Style Engineering Velocity & Activity Dashboard (Auto-Updates on Push)
 
-> **Repository Health & Architecture Telemetry** • Pure Code-Based Visualization • Zero Static Image Reliance
+> **Live Movement Telemetry** • Daily (1D), Weekly (1W) & Monthly (1M) Multi-Timeframe Velocity • Push Interval & Incline Tracking
+
+<p align="center">
+  <img src="./.github/assets/repo-activity-chart.svg" alt="Zyphuel Trading-Style Engineering Velocity & Movement Chart" width="100%" />
+</p>
 
 | Metric | Current Status | Specification |
 | :--- | :--- | :--- |
 | 🚀 **App Version** | **v2.6.4.0.0.24** | Production Build `52` |
 | 🛡️ **Target Android SDK** | **Android 15/16 Ready** | API Level `36` |
-| 📦 **Total Lifetime Commits** | **75+ Commits** | From Inception (`2026-08-11`) to Present |
-| ⏱️ **Project Active Duration** | **59 Days** | `2026-08-11` to `2026-10-09` |
-| 📅 **Total Active Coding Days** | **23 Days** | `3.3` Avg Commits / Active Day |
-| ⚡ **Latest Git Revision** | `4524b79` (2026-10-09) | `chore(dashboard): sync code-based velocity graph` |
+| 📦 **Total Lifetime Commits** | **78+ Commits** | Inception (<font color="#10b981"><b>2026-08-11</b></font>) to Present (<font color="#10b981"><b>2026-10-09</b></font>) |
+| ⏱️ **Push Cadence & Intervals** | **~18.7h Active Interval** | Min: `1m` • Max Cooldown: `8.9d` |
+| 📈 **Movement Momentum** | **▲ BULLISH INCLINE** | Multi-timeframe velocity acceleration across sprints |
+| 📅 **Total Active Coding Days** | **23 Days** | `3.4` Avg Commits / Active Day |
+| ⚡ **Latest Verified Push** | `09db93e` (<font color="#10b981"><b>2026-10-09</b></font> `23:21`) | `docs: synchronize all markdown files with green ` |
 | 🟢 **System Build Health** | **100% Operational** | Operating Hours Gate • Silent Markup • Tiered Pricing |
 
-#### 🌳 Native Git Commit & Branch Lifecycle Graph
-```mermaid
-gitGraph
-    commit id: "Init Engine" tag: "v2.0"
-    commit id: "Room DB v11"
-    branch feat-marketplace
-    checkout feat-marketplace
-    commit id: "10-Category Catalog"
-    commit id: "Typo Search & Vehicles"
-    checkout main
-    merge feat-marketplace id: "v2.4.1 Release" tag: "v2.4.1"
-    commit id: "13-Step Tour Guide"
-    branch feat-email-gateway
-    checkout feat-email-gateway
-    commit id: "Dual SMTP Relay"
-    commit id: "HTML Invoice Engine"
-    checkout main
-    merge feat-email-gateway id: "v2.6.2 Release" tag: "v2.6.2"
-    branch feat-live-telematics
-    checkout feat-live-telematics
-    commit id: "Biometrics & i18n"
-    commit id: "Rider Live GPS Service"
-    commit id: "Smooth Map Interpolation"
-    commit id: "COD & Card Settlement"
-    checkout main
-    merge feat-live-telematics id: "Build 51" tag: "v2.6.4.0.0.23"
-    branch feat-pricing-hours
-    checkout feat-pricing-hours
-    commit id: "Tiered Pricing 5L-15L"
-    commit id: "Silent OGRA Markup"
-    commit id: "Operating Hours Gate"
-    checkout main
-    merge feat-pricing-hours id: "Build 52" tag: "v2.6.4.0.0.24"
-```
-
-#### 🎯 Engineering Velocity & Module Effort Distribution
-```mermaid
-pie title Engineering Distribution by Domain
-    "Features & Order Engine" : 10
-    "Rider GPS & Live Telematics" : 19
-    "UI/UX & High-Contrast Typography" : 22
-    "Security, Biometrics & Room DB" : 2
-    "Pricing, Hours & Play Compliance" : 22
-```
-
-#### 📈 Sprint Velocity Burndown (Project Inception to Present)
-```text
-========================================================================================
-🚀 MONTHLY VELOCITY & COMMIT DISTRIBUTION (FROM PROJECT START TO PRESENT)
-========================================================================================
-Aug '26   : [████░░░░░░░░░░░░░░░░░░]   8 commits (10.7%) | 5 Days
-Sep '26   : [██████████████████████]  50 commits (66.7%) | 15 Days (🔥 Peak Velocity)
-Oct '26   : [███████░░░░░░░░░░░░░░░]  17 commits (22.7%) | 3 Days
-========================================================================================
-Status: 🟢 Continuous Delivery Active | Sync Engine: GitHub Actions & Local Auto-Sync
-```
-
 <details>
-<summary><b>🔍 View Full Project Monthly Ledger &amp; Commit History (Click to expand)</b></summary>
+<summary><b>🔍 View Detailed Multi-Timeframe Movement Ledger &amp; Push Intervals (Click to expand)</b></summary>
 
-##### 🗓️ Monthly Commit Velocity & Sprint Milestones (Project Start to Present)
+##### 🗓️ 1M Monthly Macro Volume & Sprint Milestones (Project Start to Present)
 | Month | Commits | % Share | Active Days | Velocity Meter | Sprint Focus & Core Milestones |
 | :--- | :---: | :---: | :---: | :--- | :--- |
-| `August 2026` | **8** | `10.7%` | **5 Days** | `[███░░░░░░░░░░░░░]` | 🚀 **Genesis & Architecture**: Core Android MVP, Multi-Role Auth (Customer/Rider/Admin), Room DB v11 & Initial Fuel Dispatch |
-| `September 2026` | **50** | `66.7%` | **15 Days** | `[████████████████]` | 🔥 **Marketplace & Telematics**: 10-Category Catalog, Live Rider GPS Telematics, Dual SMTP Email Gateway, PDF Invoices & Interactive Tour |
-| `October 2026` | **17** | `22.7%` | **3 Days** | `[█████░░░░░░░░░░░]` | ⚡ **Security & Operating Gate**: Secret Hardening, Tiered Per-Liter Delivery Fees (300-400 PKR), Silent OGRA Markup & Operating Hours Window Gate |
+| <font color="#10b981"><b>August 2026</b></font> | **8** | `10.3%` | **5 Days** | `[██░░░░░░░░░░░░]` | 🚀 **Genesis & Architecture**: Core Android MVP, Multi-Role Auth (Customer/Rider/Admin), Room DB v11 & Initial Fuel Dispatch |
+| <font color="#10b981"><b>September 2026</b></font> | **50** | `64.1%` | **15 Days** | `[██████████████]` | 🔥 **Marketplace & Telematics**: 10-Category Catalog, Live Rider GPS Telematics, Dual SMTP Email Gateway, PDF Invoices & Interactive Tour |
+| <font color="#10b981"><b>October 2026</b></font> | **20** | `25.6%` | **3 Days** | `[██████░░░░░░░░]` | ⚡ **Security & Operating Gate**: Secret Hardening, Tiered Per-Liter Delivery Fees (300-400 PKR), Silent OGRA Markup & Operating Hours Window Gate |
 
-##### 📅 Recent Active Days Commit Frequency
-| Date | Commits | Activity Meter | Sprint Status |
-| :--- | :---: | :--- | :--- |
-| `2026-10-09` | **2** | `[██░░░░░░░░░░]` | Active Sprint Delivery |
-| `2026-10-04` | **10** | `[████████████]` | Active Sprint Delivery |
-| `2026-10-03` | **5** | `[██████░░░░░░]` | Active Sprint Delivery |
-| `2026-09-30` | **2** | `[██░░░░░░░░░░]` | Active Sprint Delivery |
-| `2026-09-22` | **2** | `[██░░░░░░░░░░]` | Active Sprint Delivery |
-| `2026-09-21` | **6** | `[███████░░░░░]` | Active Sprint Delivery |
-| `2026-09-19` | **2** | `[██░░░░░░░░░░]` | Active Sprint Delivery |
-| `2026-09-17` | **1** | `[█░░░░░░░░░░░]` | Active Sprint Delivery |
-| `2026-09-16` | **3** | `[████░░░░░░░░]` | Active Sprint Delivery |
-| `2026-09-11` | **1** | `[█░░░░░░░░░░░]` | Active Sprint Delivery |
+##### 📅 1D Daily Push Cadence & Incline/Decline Trends
+| Date | Commits | Velocity Meter | Timing of Pushes | Movement Trend |
+| :--- | :---: | :--- | :--- | :--- |
+| <font color="#10b981"><b>2026-10-09</b></font> | **5** | `███░░░░░░░` | 23:21, 22:45, 22:42... | <font color="#0284c7"><b>▼ -50% Decline</b></font> |
+| <font color="#10b981"><b>2026-10-04</b></font> | **10** | `███████░░░` | 08:43, 13:44, 08:28... | <font color="#10b981"><b>▲ +100% Incline</b></font> |
+| <font color="#10b981"><b>2026-10-03</b></font> | **5** | `███░░░░░░░` | 19:07, 19:05, 19:00... | <font color="#10b981"><b>▲ +150% Incline</b></font> |
+| <font color="#10b981"><b>2026-09-30</b></font> | **2** | `█░░░░░░░░░` | 18:58, 23:59 | <font color="#10b981"><b>▲ +0% Incline</b></font> |
+| <font color="#10b981"><b>2026-09-22</b></font> | **2** | `█░░░░░░░░░` | 01:13, 00:01 | <font color="#0284c7"><b>▼ -67% Decline</b></font> |
+| <font color="#10b981"><b>2026-09-21</b></font> | **6** | `████░░░░░░` | 20:12, 19:00, 18:18... | <font color="#10b981"><b>▲ +200% Incline</b></font> |
+| <font color="#10b981"><b>2026-09-19</b></font> | **2** | `█░░░░░░░░░` | 18:30, 23:31 | <font color="#10b981"><b>▲ +100% Incline</b></font> |
+| <font color="#10b981"><b>2026-09-17</b></font> | **1** | `█░░░░░░░░░` | 01:26 | <font color="#0284c7"><b>▼ -67% Decline</b></font> |
+| <font color="#10b981"><b>2026-09-16</b></font> | **3** | `██░░░░░░░░` | 20:27, 22:16, 21:56 | <font color="#10b981"><b>▲ +200% Incline</b></font> |
+| <font color="#10b981"><b>2026-09-11</b></font> | **1** | `█░░░░░░░░░` | 00:18 | <font color="#10b981"><b>▲ +0% Incline</b></font> |
 
-##### 📝 Latest Verified Revisions
-| SHA | Date | Message |
-| :--- | :--- | :--- |
-| `4524b79` | 2026-10-09 | chore(dashboard): sync code-based velocity graph with releas... |
-| `59e9fae` | 2026-10-09 | feat(release): bump to v2.6.4.0.0.24 (Build 52), tiered deli... |
-| `99afa56` | 2026-10-04 | chore(release): bump app to v2.6.4.0.0.23 (Build 51), sync d... |
-| `2356b81` | 2026-10-04 | chore(sync): update README dashboard telemetry and dynamic v... |
-| `ac9ebdc` | 2026-10-04 | chore: direct push update - Sun 10/04/2026  1:36:10.29 (v2.6... |
+##### 📝 Latest Verified Push Revisions
+| SHA | Date | Time | Commit Message |
+| :--- | :--- | :--- | :--- |
+| `09db93e` | <font color="#10b981"><b>2026-10-09</b></font> | `23:21` | docs: synchronize all markdown files with green dates and ... |
+| `36d05a4` | <font color="#10b981"><b>2026-10-09</b></font> | `22:45` | chore(dashboard): sync code-based velocity graph with late... |
+| `4524b79` | <font color="#10b981"><b>2026-10-09</b></font> | `22:42` | chore(dashboard): sync code-based velocity graph with rele... |
+| `59e9fae` | <font color="#10b981"><b>2026-10-09</b></font> | `22:41` | feat(release): bump to v2.6.4.0.0.24 (Build 52), tiered de... |
+| `99afa56` | <font color="#10b981"><b>2026-10-04</b></font> | `13:44` | chore(release): bump app to v2.6.4.0.0.23 (Build 51), sync... |
 
 </details>
 

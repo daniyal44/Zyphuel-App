@@ -99,6 +99,21 @@ This document tracks all detected, reported, and resolved bugs within the **Zyph
       - **Diagnostic Error Alerts**: Displays instant on-screen feedback to administrators when credentials require configuration.
     - **Verification**: Verified via Robolectric unit test suite (`BUILD SUCCESSFUL in 1m 30s`) passing all email gateway assertions.
 
+14. <font color="#059669"><b>[FIXED - GREEN] Off-Hours Order Submission Loophole & Action Button Visibility (<font color="#10b981"><b>2026-10-09</b></font>)</b></font>
+    - **Issue**: Customers were able to open order modals and attempt fuel delivery submissions outside operational delivery windows.
+    - **Fix Applied**: Implemented [`DeliveryOperatingHoursManager.kt`](file:///d:/Games/New%20folder-web/Claude/app/src/main/java/com/example/util/DeliveryOperatingHoursManager.kt) enforcing strict operating hours (Mon–Thu 08:00 AM–08:00 PM, Fri 08:00 AM–01:00 PM, Sat–Sun 10:00 AM–06:00 PM PKT). Completely omitted "Order Now" FAB (`home_fab`), "Confirm Order COD" modal buttons (`confirmButton`), and "Reorder 🔁" buttons from the UI when closed. Added a hard guard in `MainViewModel.placeOrder()` rejecting off-hour requests.
+    - **Verification**: Verified via `FuelPumpPricingTest.kt` passing all operational window boundary assertions across every day of the week.
+
+15. <font color="#059669"><b>[FIXED - GREEN] Granular Tiered Delivery Rate Formula & Constant Alignment (<font color="#10b981"><b>2026-10-09</b></font>)</b></font>
+    - **Issue**: Doorstep delivery fee calculation required exact per-liter rates: 5L (Rs. 300), 7L (Rs. 300), 10L (Rs. 300), 11L (Rs. 320), 12L (Rs. 340), 13L (Rs. 360), 14L (Rs. 380), 15L (Rs. 400). Legacy code used flat bands.
+    - **Fix Applied**: Updated `calculateFuelDeliveryFee(liters)` in [`FeeConstants.kt`](file:///d:/Games/New%20folder-web/Claude/app/src/main/java/com/example/util/FeeConstants.kt) using linear step logic `300.00 + (liters - 10) * 20.00` for 11..15L. Standardized `PUMP_RATE_MARKUP = 5.00` Rs./L running silently in the background with zero visible debug labels.
+    - **Verification**: Verified via `FuelPumpPricingTest.kt` testing every single liter volume from 1L to 15L.
+
+16. <font color="#059669"><b>[FIXED - GREEN] Trading-Style Multi-Timeframe Velocity & Incline/Decline Telemetry Resolution (<font color="#10b981"><b>2026-10-09</b></font>)</b></font>
+    - **Issue**: Standard static Git diagrams failed to display movement trends across 1D (Daily), 1W (Weekly), and 1M (Monthly) timeframes, commit volumes, push timing, and intervals between pushes.
+    - **Fix Applied**: Built [`scripts/generate_github_graph.js`](file:///d:/Games/New%20folder-web/Claude/scripts/generate_github_graph.js) generating a dark-mode vector SVG trading chart ([`.github/assets/repo-activity-chart.svg`](file:///d:/Games/New%20folder-web/Claude/.github/assets/repo-activity-chart.svg)) and synchronized Markdown telemetry tables with green highlighted dates, automated on git commit and push.
+    - **Verification**: Verified via local Node.js generation and git hook verification.
+
 ---
 
 ## 🟡 Minor Bugs & Operational Notes (Highlighted in Yellow)

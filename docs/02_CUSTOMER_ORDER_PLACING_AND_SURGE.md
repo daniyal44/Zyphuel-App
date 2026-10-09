@@ -1,39 +1,64 @@
-# 02. Customer Order Placing & Surge Pricing Documentation ⛽
+# 02. Customer Order Placing & Operating Hours Gate Documentation ⛽
+
+**Last Updated:** <font color="#10b981"><b>2026-10-09</b></font> • **Application Version:** <font color="#10b981"><b>2.6.4.0.0.24 (Build 52)</b></font>
 
 ## 📌 Category
-**Customer Commerce & Order Management**
+**Customer Commerce & Order Management Engine**
 
 ## 🎯 Purpose & Overview
-The Order Placement engine allows customers to order doorstep fuel (Super Petrol, High-Speed Diesel), pure drinking water, and LPG cylinders in Lahore. It features dynamic volume calculation, surge pricing rules during peak hours, and automatic high-volume payment routing.
+The Order Placement engine allows customers to order doorstep fuel (Super Euro-V Petrol, High-Speed Diesel, and High-Octane 97) in Lahore, Punjab. It enforces a strict 15-liter public safety cap, a standardized silent OGRA retail pump markup, granular per-liter tiered delivery charges, and strict operational hours gate enforcement.
+
+---
+
+## 🕒 Official Delivery Operating Hours & Checkout Gate (<font color="#10b981"><b>2026-10-09</b></font>)
+Doorstep deliveries operate strictly during official delivery windows (Pakistan Standard Time, UTC+5):
+- **Monday – Thursday**: <font color="#10b981"><b>08:00 AM – 08:00 PM PKT</b></font>
+- **Friday**: <font color="#10b981"><b>08:00 AM – 01:00 PM PKT</b></font>
+- **Saturday – Sunday**: <font color="#10b981"><b>10:00 AM – 06:00 PM PKT</b></font>
+
+**UI Actions Suppressed Outside Operating Hours:**
+* **Floating Action Button**: The "Order Now" FAB (`home_fab`) on `CustomerHomeScreen` is completely omitted when closed.
+* **Modal Confirmation Button**: The "Confirm Order COD" button (`confirmButton`) in `OrderDialog` is hidden when closed.
+* **Past Order Reorder**: The "Reorder 🔁" button on `CustomerOrderCard` is hidden when closed.
+* **Hard Guard**: `MainViewModel.placeOrder()` enforces `isDeliveryOpen` check and rejects submissions outside operating hours.
+
+---
+
+## 💰 Per-Liter Tiered Delivery Pricing (<font color="#10b981"><b>2026-10-09</b></font>)
+Enforced in [`FeeConstants.kt`](file:///d:/Games/New%20folder-web/Claude/app/src/main/java/com/example/util/FeeConstants.kt) via `calculateFuelDeliveryFee(liters)`:
+- **1 to 10 Liters (including 5L, 7L, 10L)**: <font color="#10b981"><b>Rs. 300.00</b></font> (Flat Rs. 300 for up to 10L)
+- **11 Liters**: <font color="#10b981"><b>Rs. 320.00</b></font>
+- **12 Liters**: <font color="#10b981"><b>Rs. 340.00</b></font>
+- **13 Liters**: <font color="#10b981"><b>Rs. 360.00</b></font>
+- **14 Liters**: <font color="#10b981"><b>Rs. 380.00</b></font>
+- **15 Liters (Strict Max Cap)**: <font color="#10b981"><b>Rs. 400.00</b></font>
+- *Linear Step Formula:* `300.00 + (liters - 10) * 20.00` for $11 \le \text{liters} \le 15$.
+
+---
+
+## ⛽ Fuel Types & Silent OGRA Pump Markup (<font color="#10b981"><b>2026-10-09</b></font>)
+- **Markup Constant**: `PUMP_RATE_MARKUP = 5.00` (Rs./Litre) applied over official OGRA ex-depot base rates (`finalRate = ograBase + 5.00`).
+- **Silent Background Math**: Only the final pump rate is shown across UI screens without debug or surcharge labels.
+- **Available Products**:
+  - **Super Euro-V Petrol**: Retail pump rate calculated dynamically.
+  - **Euro-V High-Speed Diesel (HSD)**: Retail pump rate calculated dynamically.
+  - **High-Octane 97 (HOBC)**: Retail pump rate calculated dynamically.
+- **Unavailable Products**:
+  - **Pure Mineral Drinking Water**: Currently **UNAVAILABLE** (blocked across all screens).
+  - **LPG Gas Cylinders**: Currently **UNAVAILABLE** (blocked across all screens).
 
 ---
 
 ## ⚙️ Key Functions & ViewModel Methods
-* `placeOrder(serviceType, volumeLiters, deliveryAddress, customerEmail, customerName)` (`MainViewModel.kt`): Validates order input, applies rate limits, calculates base price + delivery fee + surge tax, and saves `OrderEntity` into local database.
-* `calculateSurgePrice(basePrice, peakHourMultiplier)` (`MainViewModel.kt`): Applies surge multipliers based on peak delivery hours and high demand zones in Lahore.
-* `checkHighVolumeOrder(volumeLiters)` (`Screens.kt`): Detects orders $\ge 30\text{L}$ and displays a WhatsApp advance payment coordination prompt to prevent fraud.
-
----
-
-## ⛽ Available Fuel & Service Types
-* **Super Petrol (92 Octane)**: Rs. 272.50 / Liter (Default doorstep fuel delivery)
-* **High-Speed Diesel (HSD)**: Rs. 283.00 / Liter (Commercial & heavy vehicle fuel)
-* **Pure Mineral Drinking Water**: Rs. 50.00 / Gallon (Pure Purified Drinking Water)
-* **LPG Gas Cylinders**: Standard household and commercial gas refill
+* `placeOrder(serviceType, volumeLiters, deliveryAddress, customerEmail, customerName)` ([`MainViewModel.kt`](file:///d:/Games/New%20folder-web/Claude/app/src/main/java/com/example/ui/MainViewModel.kt)): Validates operating hours (`isDeliveryOpen`), enforces the 15L cap, computes tiered delivery fees, and saves [`OrderEntity`](file:///d:/Games/New%20folder-web/Claude/app/src/main/java/com/example/data/Models.kt) to Room DB.
+* `calculateFuelDeliveryFee(liters)` ([`FeeConstants.kt`](file:///d:/Games/New%20folder-web/Claude/app/src/main/java/com/example/util/FeeConstants.kt)): Computes granular delivery charge.
+* `isDeliveryWindowOpen()` ([`DeliveryOperatingHoursManager.kt`](file:///d:/Games/New%20folder-web/Claude/app/src/main/java/com/example/util/DeliveryOperatingHoursManager.kt)): Returns boolean status based on PKT calendar time.
 
 ---
 
 ## 📁 Source Locations
-* **UI Screen**: `app/src/main/java/com/example/ui/Screens.kt` (`CustomerHomeScreen`, `OrderPlacementScreen`)
+* **UI Screens**: `app/src/main/java/com/example/ui/Screens.kt` (`CustomerHomeScreen`, `OrderDialog`)
 * **State Management**: `app/src/main/java/com/example/ui/MainViewModel.kt`
+* **Operating Hours**: `app/src/main/java/com/example/util/DeliveryOperatingHoursManager.kt`
+* **Pricing Utility**: `app/src/main/java/com/example/util/FeeConstants.kt`
 * **Data Model**: `app/src/main/java/com/example/data/Models.kt` (`OrderEntity`)
-
----
-
-## 🔄 User Flow
-1. **Service Selection**: Customer taps desired service card (Super Petrol / Diesel / Water).
-2. **Volume Slider / Counter**: Customer specifies volume (e.g., 10L, 20L, 50L).
-3. **Surge & Total Calculation**: Real-time summary displays fuel price, delivery fee (Rs. 150), and total PKR.
-4. **Address & Note Selection**: Selects saved home/work address or pinpoints on map.
-5. **High Volume Routing**: If volume $\ge 30\text{L}$, guides user to WhatsApp advance payment confirmation (`+92 323 0112464`).
-6. **Order Submission**: Order is logged to Room DB with status `Pending`, triggering notification to Admin and Riders.

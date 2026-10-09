@@ -1,5 +1,9 @@
 # Zyphuel Application - Codebase & Architecture Structure (`docs/structure.md`)
 
+**Last Updated:** <font color="#10b981"><b>2026-10-09</b></font> • **Application Version:** <font color="#10b981"><b>2.6.4.0.0.24 (Build 52)</b></font>
+
+---
+
 ## 1. High-Level Architecture Overview
 **Zyphuel** is an enterprise-grade Android application built with **Kotlin**, **Jetpack Compose (Material 3)**, **Room Local Database**, **Coroutines & Flow**, **WorkManager**, and **Firebase Cloud Messaging**. It follows clean **MVVM (Model-View-ViewModel)** architecture with unidirectional data flow (UDF).
 
@@ -10,64 +14,72 @@ app/
  │    │    ├── java/com/example/
  │    │    │    ├── MainActivity.kt                       # Single-activity launcher with Compose Navigation & Sidebars
  │    │    │    ├── data/
- │    │    │    │    ├── Models.kt                        # Room Entities (UserEntity, OrderEntity, AuditLogEntity, etc.)
- │    │    │    │    ├── Repository.kt                    # Data Access Objects (DAOs) & Repository pattern
+ │    │    │    │    ├── Models.kt                        # Room Entities (UserEntity, OrderEntity, AuditLogEntity, NotificationEntity)
+ │    │    │    │    ├── Repository.kt                    # Data Access Objects (DAOs) & Unified Repository pattern
+ │    │    │    │    ├── category/
+ │    │    │    │    │    ├── CategoryModels.kt           # 10-Category Catalog, Subcategories & Vehicle Models
+ │    │    │    │    │    └── CategoryRepository.kt       # Typo-tolerant Levenshtein search & catalog repository
  │    │    │    │    └── TrackmateFuelApiService.kt       # Fuel price API and network endpoints
  │    │    │    ├── ui/
- │    │    │    │    ├── MainViewModel.kt                 # Central StateFlow state manager & business logic
- │    │    │    │    ├── Screens.kt                       # Compose UI screens (Customer, Rider, Admin, Maps)
+ │    │    │    │    ├── MainViewModel.kt                 # Central StateFlow state manager, hours gate & business logic
+ │    │    │    │    ├── Screens.kt                       # Compose UI screens (Customer, Rider, Admin, OrderDialog, Maps)
+ │    │    │    │    ├── CategoryComponents.kt            # Marketplace grid, category modals & search components
  │    │    │    │    ├── SecuritySettingsScreen.kt        # Security & Biometrics management UI
+ │    │    │    │    ├── components/
+ │    │    │    │    │    └── TermsAndPrivacyDialog.kt    # In-App Legal Viewer (Terms & Privacy with Live Build Badge)
  │    │    │    │    └── theme/                           # Material 3 Color, Type, Theme definitions
  │    │    │    ├── security/
  │    │    │    │    ├── BiometricSecurityManager.kt      # BiometricPrompt integration
  │    │    │    │    ├── SecureStorageManager.kt          # EncryptedSharedPreferences
  │    │    │    │    ├── RootAndSecurityDetector.kt       # Anti-root, tampered build detection
  │    │    │    │    ├── SecurityRateLimiter.kt           # Rate limiting for auth & requests
- │    │    │    │    ├── SecurityInputValidator.kt        # Input sanitization
- │    │    │    │    ├── SecurityFileUploadValidator.kt   # File upload verification
- │    │    │    │    └── SecurityErrorFormatter.kt        # User-friendly error messages
+ │    │    │    │    └── SecurityInputValidator.kt        # Input sanitization
  │    │    │    ├── service/
  │    │    │    │    ├── LocationService.kt               # FusedLocationProvider real-time tracking
+ │    │    │    │    ├── RiderLocationForegroundService.kt # Foreground live navigation service
  │    │    │    │    └── ZyphuelFcmService.kt             # Firebase push notification service
- │    │    │    ├── worker/
- │    │    │    │    └── FuelPriceWorker.kt               # WorkManager periodic background broadcaster
  │    │    │    └── util/
- │    │    │         ├── UnifiedAssetManager.kt          # App icons, notification drawables, PWA metadata
- │    │    │         ├── GlobalErrorBoundary.kt          # Global exception handler
- │    │    │         └── DebugLogger.kt                  # Safe logging utility
+ │    │    │         ├── DeliveryOperatingHoursManager.kt # PKT Timezone Delivery Operating Hours & Status Evaluator
+ │    │    │         ├── FeeConstants.kt                  # Per-Liter Tiered Delivery Fee & Silent OGRA Pump Markup (+5.00)
+ │    │    │         ├── InvoiceGenerator.kt              # PDF Tax Invoice generator & Android PrintManager bridge
+ │    │    │         ├── RealtimeEmailEngine.kt           # Multi-channel transactional SMTP & Webhook email engine
+ │    │    │         └── DebugLogger.kt                   # Sanitized zero-leak debug logger
  │    │    └── res/
  │    │         ├── drawable/                            # App vector icons & logos
  │    │         ├── mipmap-*/                            # Adaptive launcher icons
- │    │         ├── values/                              # strings.xml, colors.xml, themes.xml
- │    │         └── xml/                                 # Backup & data extraction rules
- │    └── test/                                          # Local JVM & Roborazzi screenshot tests
- ├── build.gradle.kts                                    # App gradle build configuration
+ │    │         └── values/                              # strings.xml, colors.xml, themes.xml
+ │    └── test/                                          # Local JVM Unit Tests (FuelPumpPricingTest, ComprehensiveAppTest)
+ ├── build.gradle.kts                                    # App gradle build configuration (versionCode 52, versionName 2.6.4.0.0.24)
  └── AndroidManifest.xml                                 # Manifest permissions, services, metadata
 ```
+
+---
 
 ## 2. Core Modules & Component Hierarchy
 
 ### A. Data Layer (`com.example.data`)
-- **`Models.kt`**: Contains Room entities (`UserEntity`, `OrderEntity`, `AuditLogEntity`, `NotificationEntity`, `FuelStationEntity`) and UI data classes (`FuelPriceItem`, `RiderLocation`).
-- **`Repository.kt`**: Encapsulates Room DAOs (`UserDao`, `OrderDao`, `AuditLogDao`, `NotificationDao`), providing thread-safe Flow queries and suspend functions for database operations.
-- **`TrackmateFuelApiService.kt`**: Handles external network requests for real-time fuel market prices in Pakistan.
+- **`Models.kt`**: Contains core Room entities:
+  - `UserEntity`: `email` (PK), `name`, `passwordHash`, `role` (`customer`, `rider`, `admin`), `phoneNumber`, `residentialAddress`, `isVerified`.
+  - `OrderEntity`: `id` (PK), `customerEmail`, `customerName`, `serviceType`, `fuelVolumeLiters`, `totalAmountPkr`, `status` (`Pending`, `Assigned`, `Delivering`, `Completed`, `Cancelled`), `assignedRiderEmail`, `assignedRiderName`, `deliveryAddress`, `etaMinutes`, `rating`, `feedback`.
+  - `AuditLogEntity`: `id` (PK), `timestamp`, `action`, `performedBy`, `details`.
+  - `NotificationEntity`: `id` (PK), `timestamp`, `title`, `message`, `targetRole`, `isRead`.
+  - `VehicleEntity`: `id` (PK), `userId`, `make`, `model`, `plateNumber`, `fuelType`, `tankCapacityLiters`.
+- **`Repository.kt`**: Encapsulates DAOs (`UserDao`, `OrderDao`, `AuditLogDao`, `NotificationDao`, `VehicleDao`), providing thread-safe reactive Kotlin Flow queries and suspend functions.
 
 ### B. Business Logic & ViewModel (`com.example.ui.MainViewModel`)
-- Centralizes state streams (`StateFlow` / `SharedFlow`) for authenticated users, active orders, real-time map positions, rider dispatches, biometrics status, and notification logs.
-- Manages order placement logic: calculating distance charges per km from nearby petrol pumps, searching for nearby riders upon order confirmation, and dispatching orders to riders.
+- Centralizes state streams (`StateFlow` / `SharedFlow`) for authenticated users, active orders, real-time map positions, biometrics status, and notification logs.
+- Enforces the **Operating Hours Window Gate** (`isDeliveryOpen`) and blocks off-hour order placement attempts in `placeOrder()`.
+- Calculates retail pump rates silently via `FeeConstants.PUMP_RATE_MARKUP_FLOAT` (+Rs. 5.00/L).
 
-### C. UI Presentation Layer (`com.example.ui`)
-- **`MainActivity.kt`**: Configures edge-to-edge Compose layout, navigation drawers for Customer, Rider, and Admin roles, top action bars, bottom navigation rails, and modal dialogs.
-- **`Screens.kt`**: Houses all primary app composables:
-  - `CustomerHomeScreen`: Map preview, fuel ordering form, distance charge breakdown, and nearby pumps.
-  - `RiderHomeScreen`: Available order requests, discretionary order acceptance, active delivery navigation map.
-  - `AdminDashboardScreen`: Order oversight, user management, audit logs, and `AdminFuelPriceNotificationScheduleCard`.
-  - `UnifiedGoogleMapView` & `DriverRealTimeTrackingMap`: Interactive Leaflet/Google WebView map components displaying nearby petrol pumps, delivery route polyline, real-time vehicle movement, driver details, and ETA in minutes.
-- **`SecuritySettingsScreen.kt`**: Manages fingerprint biometrics enrollment, status indicators, and security settings.
+### C. Operating Hours & Delivery Fee Utilities (`com.example.util`)
+- **`DeliveryOperatingHoursManager.kt`**: Evaluates active delivery window in Pakistan Standard Time (`Asia/Karachi`):
+  - Mon–Thu: <font color="#10b981"><b>08:00 AM – 08:00 PM PKT</b></font>
+  - Fri: <font color="#10b981"><b>08:00 AM – 01:00 PM PKT</b></font>
+  - Sat–Sun: <font color="#10b981"><b>10:00 AM – 06:00 PM PKT</b></font>
+- **`FeeConstants.kt`**: Standardizes granular delivery fees:
+  - 1..10L: <font color="#10b981"><b>Rs. 300.00</b></font> | 11L: <font color="#10b981"><b>Rs. 320.00</b></font> | 12L: <font color="#10b981"><b>Rs. 340.00</b></font> | 13L: <font color="#10b981"><b>Rs. 360.00</b></font> | 14L: <font color="#10b981"><b>Rs. 380.00</b></font> | 15L (Strict Max Cap): <font color="#10b981"><b>Rs. 400.00</b></font>.
+  - Retail Pump Markup: `PUMP_RATE_MARKUP = 5.00` Rs./L.
 
-### D. Security & System Services (`com.example.security`, `com.example.service`, `com.example.worker`)
-- **`BiometricSecurityManager.kt`**: Provides Android `BiometricPrompt` authentication.
-- **`SecureStorageManager.kt`**: Stores sensitive user sessions in `EncryptedSharedPreferences`.
-- **`ZyphuelFcmService.kt`**: Listens for Firebase messaging push payloads and displays notification alerts using `@drawable/ic_notification`.
-- **`FuelPriceWorker.kt`**: Background WorkManager task for periodic fuel price updates based on admin broadcast schedule.
-- **`UnifiedAssetManager.kt`**: Centralizes asset integrity verification for launcher icons and notification drawables.
+### D. Trading-Style Codebase Movement Engine (`scripts/generate_github_graph.js`)
+- Tracks velocity across Daily (1D), Weekly (1W), and Monthly (1M) timeframes with exact push interval analysis.
+- Generates vector SVG chart at `.github/assets/repo-activity-chart.svg` and embeds live telemetry into `README.md`.
