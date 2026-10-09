@@ -53,3 +53,4 @@ desktop/.gradle/
 .DS_Store
 .externalNativeBuild
 .cxx
+.claude/

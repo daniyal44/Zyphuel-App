@@ -2,7 +2,7 @@
 
 **Effective Date:** October 2026  
 **Last Updated:** October 2026  
-**Application Version:** 2.6.4.0.0.23 (Build 51)  
+**Application Version:** 2.6.4.0.0.24 (Build 52)  
 **Package Name:** `com.aistudio.zyphuel.appv2`  
 **Official Website:** [https://www.zyphuel.com/](https://www.zyphuel.com/)  
 **Terms of Use URL:** [https://www.zyphuel.com/terms-of-use](https://www.zyphuel.com/terms-of-use)  
@@ -49,12 +49,20 @@ Petroleum products are hazardous and flammable materials regulated under Pakista
 
 ---
 
-## 5. Pricing, Tiered Delivery Fees & Payment Policies
-* **Fuel Pricing & Petrol Pump Retail Rates:** Petroleum product prices are based on official notified rates established by the **Oil & Gas Regulatory Authority (OGRA)** of Pakistan. In accordance with petroleum retail distribution in Lahore, retail rates for Super Petrol, High-Speed Diesel, and High-Octane include a fixed petrol pump retail margin of Rs. 5.00 per liter over official OGRA ex-depot base notifications, transparently calculated on checkout.
+## 5. Pricing, Tiered Delivery Fees, Operating Hours & Payment Policies
+* **Fuel Pricing & Petrol Pump Retail Rates:** Petroleum product prices are based on official notified rates established by the **Oil & Gas Regulatory Authority (OGRA)** of Pakistan. In accordance with petroleum retail distribution in Lahore, retail rates for Super Petrol, High-Speed Diesel, and High-Octane include a fixed petrol pump retail margin of Rs. 5.00 per liter (`PUMP_RATE_MARKUP = 5.00`) applied on top of official OGRA ex-depot base rates (`finalRate = ograBase + 5.00`), transparently calculated in the background with only final pump rates shown.
 * **Tiered Doorstep Delivery Rates:** Fuel doorstep mobile delivery follows official tiered delivery charges:
-  - **1 to 5 Liters**: Rs. 280.00
-  - **6 to 10 Liters**: Rs. 300.00
-  - **11 to 15 Liters (Maximum Cap)**: Rs. 350.00
+  - **1 to 10 Liters (including 5L, 7L, 10L)**: Rs. 300.00
+  - **11 Liters**: Rs. 320.00
+  - **12 Liters**: Rs. 340.00
+  - **13 Liters**: Rs. 360.00
+  - **14 Liters**: Rs. 380.00
+  - **15 Liters (Strict Maximum Cap)**: Rs. 400.00
+* **Official Delivery Operating Hours:** Doorstep deliveries operate strictly during the following operational windows (Pakistan Standard Time, UTC+5):
+  - **Monday – Thursday**: 08:00 AM – 08:00 PM
+  - **Friday**: 08:00 AM – 01:00 PM
+  - **Saturday – Sunday**: 10:00 AM – 06:00 PM
+  - Outside operating hours, order placement buttons are hidden and order requests cannot be submitted.
 * **Peak-Hour Surge:** During severe weather conditions or high-demand delivery windows, a dynamic surge fee may apply, clearly disclosed before confirmation.
 * **Payment Methods:** Customers may pay via Cash on Delivery (COD), JazzCash, EasyPaisa, or supported bank card transfers. Orders cannot exceed the 15-liter maximum cap.
 

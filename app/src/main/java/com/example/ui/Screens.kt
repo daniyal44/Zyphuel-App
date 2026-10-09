@@ -4117,6 +4117,9 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
 
     var selectedCategoryForModal by remember { mutableStateOf<com.example.data.category.Category?>(null) }
 
+    val isDeliveryOpen by viewModel.isDeliveryOpen.collectAsState()
+    val deliveryStatus by viewModel.deliveryStatus.collectAsState()
+
     var showOrderDialog by remember { mutableStateOf(false) }
     var selectedService by remember { mutableStateOf("") }
     var showPasswordDialog by remember { mutableStateOf(false) }
@@ -4412,17 +4415,19 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                 )
             },
             floatingActionButton = {
-                // Large action trigger floating button
-                ExtendedFloatingActionButton(
-                    text = { Text("Order Now", fontWeight = FontWeight.Bold, color = Color.White) },
-                    icon = { Icon(Icons.Filled.LocalGasStation, contentDescription = null, tint = Color.White) },
-                    onClick = {
-                        selectedService = ""
-                        showOrderDialog = true
-                    },
-                    containerColor = ZyphuelBluePrimary,
-                    modifier = Modifier.testTag("home_fab").spotlightAnchor(spotlight, "home_fab")
-                )
+                // Large action trigger floating button - ONLY displayed when deliveries are open
+                if (isDeliveryOpen) {
+                    ExtendedFloatingActionButton(
+                        text = { Text("Order Now", fontWeight = FontWeight.Bold, color = Color.White) },
+                        icon = { Icon(Icons.Filled.LocalGasStation, contentDescription = null, tint = Color.White) },
+                        onClick = {
+                            selectedService = ""
+                            showOrderDialog = true
+                        },
+                        containerColor = ZyphuelBluePrimary,
+                        modifier = Modifier.testTag("home_fab").spotlightAnchor(spotlight, "home_fab")
+                    )
+                }
             }
         ) { innerPadding ->
             LazyColumn(
@@ -4617,6 +4622,72 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                     }
                 }
 
+                // Doorstep Delivery Operating Hours & Live Status Banner
+                item {
+                    val status = deliveryStatus
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("delivery_operating_hours_banner"),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (status.isOpen) Color(0xFFF0FDF4) else Color(0xFFFEF2F2)
+                        ),
+                        border = BorderStroke(1.dp, if (status.isOpen) Color(0xFF86EFAC) else Color(0xFFFCA5A5)),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Surface(
+                                shape = CircleShape,
+                                color = if (status.isOpen) Color(0xFF22C55E) else Color(0xFFEF4444),
+                                modifier = Modifier.size(12.dp)
+                            ) {}
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = status.statusTitle,
+                                        style = MaterialTheme.typography.titleSmall.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (status.isOpen) Color(0xFF166534) else Color(0xFF991B1B)
+                                        )
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Surface(
+                                        shape = RoundedCornerShape(6.dp),
+                                        color = if (status.isOpen) Color(0xFFDCFCE7) else Color(0xFFFEE2E2)
+                                    ) {
+                                        Text(
+                                            text = if (status.isOpen) "COD Open" else "Closed",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 10.sp,
+                                            color = if (status.isOpen) Color(0xFF15803D) else Color(0xFFB91C1C),
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                }
+                                Text(
+                                    text = status.statusSubtitle,
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        color = if (status.isOpen) Color(0xFF166534) else Color(0xFF7F1D1D)
+                                    )
+                                )
+                                Text(
+                                    text = "Mon–Thu: 08:00 AM – 08:00 PM • Fri: 08:00 AM – 01:00 PM • Sat–Sun: 10:00 AM – 06:00 PM",
+                                    fontSize = 10.sp,
+                                    color = if (status.isOpen) Color(0xFF15803D) else Color(0xFF991B1B),
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
+                    }
+                }
+
                 // Authentic Lahore Startup Transparency Notice Card (One-Time / Dismissible)
                 if (showStartupNotice) {
                     item {
@@ -4717,8 +4788,12 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
-                                    selectedService = "Petrol"
-                                    showOrderDialog = true
+                                    if (isDeliveryOpen) {
+                                        selectedService = "Petrol"
+                                        showOrderDialog = true
+                                    } else {
+                                        Toast.makeText(context, "Deliveries are closed. Operating hours: Mon–Thu 8am–8pm, Fri 8am–1pm, Sat–Sun 10am–6pm.", Toast.LENGTH_LONG).show()
+                                    }
                                 }
                                 .testTag("service_petrol")
                                 .spotlightAnchor(spotlight, "service_petrol"),
@@ -4779,8 +4854,12 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
-                                    selectedService = "High-Octane"
-                                    showOrderDialog = true
+                                    if (isDeliveryOpen) {
+                                        selectedService = "High-Octane"
+                                        showOrderDialog = true
+                                    } else {
+                                        Toast.makeText(context, "Deliveries are closed. Operating hours: Mon–Thu 8am–8pm, Fri 8am–1pm, Sat–Sun 10am–6pm.", Toast.LENGTH_LONG).show()
+                                    }
                                 }
                                 .testTag("service_high_octane"),
                             shape = RoundedCornerShape(16.dp),
@@ -4841,8 +4920,12 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
-                                    selectedService = "Diesel"
-                                    showOrderDialog = true
+                                    if (isDeliveryOpen) {
+                                        selectedService = "Diesel"
+                                        showOrderDialog = true
+                                    } else {
+                                        Toast.makeText(context, "Deliveries are closed. Operating hours: Mon–Thu 8am–8pm, Fri 8am–1pm, Sat–Sun 10am–6pm.", Toast.LENGTH_LONG).show()
+                                    }
                                 }
                                 .testTag("service_diesel"),
                             shape = RoundedCornerShape(16.dp),
@@ -5826,28 +5909,31 @@ fun CustomerOrderHistoryCard(
                         )
                     }
 
-                    Button(
-                        onClick = {
-                            viewModel.placeOrder(
-                                serviceType = order.serviceType,
-                                quantity = order.quantity,
-                                totalPrice = order.totalPrice,
-                                deliveryAddress = order.deliveryAddress,
-                                onSuccess = {
-                                    Toast.makeText(context, "Reorder placed successfully!", Toast.LENGTH_SHORT).show()
-                                }
-                            )
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = ZyphuelBlueDark),
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(38.dp)
-                            .testTag("reorder_${order.id}_btn")
-                    ) {
-                        Icon(Icons.Filled.Refresh, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color.White)
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Reorder 🔁", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.White))
+                    val isDeliveryOpen by viewModel.isDeliveryOpen.collectAsState()
+                    if (isDeliveryOpen) {
+                        Button(
+                            onClick = {
+                                viewModel.placeOrder(
+                                    serviceType = order.serviceType,
+                                    quantity = order.quantity,
+                                    totalPrice = order.totalPrice,
+                                    deliveryAddress = order.deliveryAddress,
+                                    onSuccess = {
+                                        Toast.makeText(context, "Reorder placed successfully!", Toast.LENGTH_SHORT).show()
+                                    }
+                                )
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = ZyphuelBlueDark),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(38.dp)
+                                .testTag("reorder_${order.id}_btn")
+                        ) {
+                            Icon(Icons.Filled.Refresh, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color.White)
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Reorder 🔁", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.White))
+                        }
                     }
                 }
             }
@@ -8035,6 +8121,7 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
     val selectedCurrency by viewModel.selectedCurrency.collectAsState()
     val isPromoApplied by viewModel.isPromoApplied.collectAsState()
     val permanentMarkedLocations by viewModel.markedLocationsForCurrentUser.collectAsState()
+    val isDeliveryOpen by viewModel.isDeliveryOpen.collectAsState()
     // Loading state — prevents double-tap and shows spinner while order is being submitted
     val isPlacingOrder by viewModel.isPlacingOrder.collectAsState()
 
@@ -8158,11 +8245,41 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                                 style = MaterialTheme.typography.bodySmall
                             )
                             Text(
-                                "• 5L: Rs. 280  • 10L: Rs. 300  • 15L Max: Rs. 350",
+                                "• Up to 10L: Rs. 300  • 11L: Rs. 320  • 12L: Rs. 340  • 13L: Rs. 360  • 14L: Rs. 380  • 15L: Rs. 400",
                                 color = Color(0xFF15803D),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.SemiBold
                             )
+                        }
+                    }
+                }
+
+                if (!isDeliveryOpen) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF2F2)),
+                        border = BorderStroke(1.dp, Color(0xFFEF4444)),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Filled.AccessTime, contentDescription = null, tint = Color(0xFFDC2626), modifier = Modifier.size(20.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text(
+                                    "Deliveries Currently Closed",
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF991B1B),
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                                Text(
+                                    "Operating hours: Mon–Thu 08:00 AM – 08:00 PM | Fri 08:00 AM – 01:00 PM | Sat–Sun 10:00 AM – 06:00 PM. Orders cannot be submitted when closed.",
+                                    color = Color(0xFFB91C1C),
+                                    style = MaterialTheme.typography.labelSmall
+                                )
+                            }
                         }
                     }
                 }
@@ -8454,7 +8571,7 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                         Text(viewModel.formatPrice(deliveryCharge), style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark))
                     }
                     Text(
-                        text = "• Delivery Rates: 5L = Rs. 280 | 10L = Rs. 300 | 15L Max = Rs. 350",
+                        text = "• Delivery Rates: Up to 10L = Rs. 300 | 11L = Rs. 320 | 12L = Rs. 340 | 13L = Rs. 360 | 14L = Rs. 380 | 15L Max = Rs. 400",
                         fontSize = 10.sp,
                         color = Color(0xFF0369A1),
                         fontWeight = FontWeight.Medium
@@ -8482,66 +8599,67 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
         },
 
         confirmButton = {
-            Button(
-                onClick = {
-                    val finalAddr = deliveryAddress.trim().ifBlank { "Main Boulevard, Gulberg III, Lahore" }
-                    val finalServiceType = if (selectedSummaryParts.isNotEmpty()) {
-                        combinedServiceType
-                    } else if (serviceType.isNotBlank()) {
-                        serviceType
-                    } else {
-                        "Super Petrol (5L)"
-                    }
-                    val finalQuantity = totalQuantity.coerceAtLeast(1)
-                    val finalPrice = if (totalPrice > 0.0) totalPrice else 500.0
+            if (isDeliveryOpen) {
+                Button(
+                    onClick = {
+                        val finalAddr = deliveryAddress.trim().ifBlank { "Main Boulevard, Gulberg III, Lahore" }
+                        val finalServiceType = if (selectedSummaryParts.isNotEmpty()) {
+                            combinedServiceType
+                        } else if (serviceType.isNotBlank()) {
+                            serviceType
+                        } else {
+                            "Super Petrol (5L)"
+                        }
+                        val finalQuantity = totalQuantity.coerceAtLeast(1)
+                        val finalPrice = if (totalPrice > 0.0) totalPrice else 500.0
 
-                    viewModel.placeOrder(
-                        serviceType = finalServiceType,
-                        quantity = finalQuantity,
-                        totalPrice = finalPrice,
-                        deliveryAddress = finalAddr,
-                        paymentMethod = "Cash on Delivery"
-                    ) {
-                        onDismiss()
-                    }
-                },
-                enabled = !isPlacingOrder && !isFuelExceeded && totalFuelVolume > 0 && selectedSummaryParts.isNotEmpty(),
-                modifier = Modifier.testTag("dialog_confirm_btn"),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = ZyphuelBluePrimary,
-                    disabledContainerColor = ZyphuelBluePrimary.copy(alpha = 0.6f)
-                )
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        viewModel.placeOrder(
+                            serviceType = finalServiceType,
+                            quantity = finalQuantity,
+                            totalPrice = finalPrice,
+                            deliveryAddress = finalAddr,
+                            paymentMethod = "Cash on Delivery"
+                        ) {
+                            onDismiss()
+                        }
+                    },
+                    enabled = !isPlacingOrder && !isFuelExceeded && totalFuelVolume > 0 && selectedSummaryParts.isNotEmpty(),
+                    modifier = Modifier.testTag("dialog_confirm_btn"),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = ZyphuelBluePrimary,
+                        disabledContainerColor = ZyphuelBluePrimary.copy(alpha = 0.6f)
+                    )
                 ) {
-                    if (isPlacingOrder) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(16.dp),
-                            color = Color.White,
-                            strokeWidth = 2.dp
-                        )
-                        Text(
-                            tr("btn_placing_order", "Placing Order..."),
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Filled.CheckCircle,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp),
-                            tint = Color.White
-                        )
-                        Text(
-                            tr("btn_place_delivery_order", "Place Delivery Order 🚀"),
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold
-                        )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        if (isPlacingOrder) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
+                            )
+                            Text(
+                                tr("btn_placing_order", "Placing Order..."),
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Filled.CheckCircle,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                                tint = Color.White
+                            )
+                            Text(
+                                tr("btn_place_delivery_order", "Place Delivery Order 🚀"),
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
-
             }
         },
 
@@ -10383,10 +10501,10 @@ fun FAQDialog(onDismiss: () -> Unit) {
                         FAQItem("What is the maximum doorstep fuel order?", "Doorstep mobile delivery is capped at a maximum of 15 Liters per order (5L, 10L, or 15L) in compliance with OGRA petroleum safety standards. For commercial bulk orders, contact our WhatsApp hotline.")
                     }
                     item {
-                        FAQItem("What are the delivery charges?", "Delivery fees are tiered by volume: Rs. 280 for 5 Liters, Rs. 300 for 10 Liters, and Rs. 350 for 15 Liters.")
+                        FAQItem("What are the delivery charges?", "Delivery fees are tiered by volume: Rs. 300 for up to 10 Liters (5L, 7L, 10L), Rs. 320 for 11L, Rs. 340 for 12L, Rs. 360 for 13L, Rs. 380 for 14L, and Rs. 400 for 15 Liters (maximum order limit).")
                     }
                     item {
-                        FAQItem("Why is there a markup over station retail rates?", "As a premium mobile fuel delivery service, our rates include a Doorstep Bowser Delivery Surcharge (typically Rs. 20-25 per liter). This covers safe specialized transit, fleet logistics, and on-site dispensing, allowing you to bypass dry station lines entirely.")
+                        FAQItem("What are your doorstep delivery hours?", "Official doorstep delivery hours are: Mon–Thu 08:00 AM – 08:00 PM, Fri 08:00 AM – 01:00 PM, and Sat–Sun 10:00 AM – 06:00 PM (Pakistan Standard Time). Order actions and checkout are available exclusively during active operating hours.")
                     }
                     item {
                         FAQItem("How do 30L+ fuel deals work?", "For large orders exceeding 30 Liters, customers are guided to connect directly with WhatsApp for custom advance payment deals.")

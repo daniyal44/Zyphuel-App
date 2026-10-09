@@ -260,6 +260,37 @@
   - Incremented `versionCode = 51` and advanced `versionName = "2.6.4.0.0.23"` in `app/build.gradle.kts`.
   - Maintained zero leak guarantee, `.gitignore` secret isolation, and Room DB schema integrity.
 
+### Phase 28: Per-Liter Tiered Delivery Rates, Pump Rate Markup Constant & Operating Hours Window Gate (v2.6.4.0.0.24 Build 52)
+* **Tiered Doorstep Delivery Rates per Liter**:
+  - Configured in `FeeConstants.kt` and `calculateFuelDeliveryFee()`:
+    - 1 to 10 Liters (including 5L, 7L, 10L): Flat **Rs. 300.00**
+    - 11 Liters: **Rs. 320.00**
+    - 12 Liters: **Rs. 340.00**
+    - 13 Liters: **Rs. 360.00**
+    - 14 Liters: **Rs. 380.00**
+    - 15 Liters (Strict Max Cap): **Rs. 400.00**
+  - Linear formula: `300.00 + (liters - 10) * 20.00` for liters in 11..15.
+  - Enforced consistently in `FeeConstants`, `MainViewModel`, `Screens.kt` (`OrderDialog`), and `TermsAndPrivacyDialog.kt`.
+* **Standardized Pump Rate Markup Constant**:
+  - Defined `FeeConstants.PUMP_RATE_MARKUP = 5.00` (Double) and `FeeConstants.PUMP_RATE_MARKUP_FLOAT = 5.00f` (Float).
+  - Applied directly over official OGRA ex-depot base rates for Super Euro-V Petrol, Euro-V Diesel, and High-Octane 97 (`finalRate = ograBase + 5.00`).
+  - Zero debug text or markup surcharge labels rendered to customers; UI displays strictly the final pump rate.
+* **Delivery Operating Hours & Order Placement Gate**:
+  - Created `DeliveryOperatingHoursManager.kt` using Pakistan Standard Time (`Asia/Karachi`, UTC+5):
+    - **Monday – Thursday**: 08:00 AM – 08:00 PM
+    - **Friday**: 08:00 AM – 01:00 PM
+    - **Saturday – Sunday**: 10:00 AM – 06:00 PM
+  - UI Gate: Hides "Order Now" FloatingActionButton (`home_fab`) and modal confirmation buttons (`confirmButton`) when outside operating hours.
+  - Order History: Hides "Reorder 🔁" button on past orders when outside operating hours.
+  - Category Cards: Toast prompt informing customer of operational hours if attempting to click fuel products when closed.
+  - Hard Guard in ViewModel: `MainViewModel.placeOrder()` checks `isDeliveryOpen` and rejects submissions with user-facing message if outside hours.
+  - Live Status Banner: Renders open/closed status card with operational windows directly on `CustomerHomeScreen`.
+* **Testing & Verification**:
+  - Created unit tests in `FuelPumpPricingTest.kt` validating markup calculations, all per-liter tiered rates (5L, 7L, 10L, 11L, 12L, 13L, 14L, 15L), and all operating schedule boundaries across days of week and times of day.
+  - 100% test pass verified across full suite.
+* **Version Advancement & Release Sync**:
+  - Incremented `versionCode = 52` and advanced `versionName = "2.6.4.0.0.24"` in `app/build.gradle.kts`.
+
 ---
 
 

@@ -27,6 +27,8 @@ class FuelPumpPricingTest {
 
     @Test
     fun `test petrol pump rate constant is exactly Rs 5 point 00`() {
+        assertEquals(5.00, FeeConstants.PUMP_RATE_MARKUP, 0.001)
+        assertEquals(5.00f, FeeConstants.PUMP_RATE_MARKUP_FLOAT, 0.001f)
         assertEquals(5.00, FeeConstants.PETROL_PUMP_RATE_SURCHARGE, 0.001)
         assertEquals(5.00f, FeeConstants.PETROL_PUMP_RATE_SURCHARGE_FLOAT, 0.001f)
     }
@@ -136,13 +138,16 @@ class FuelPumpPricingTest {
 
     @Test
     fun `test tiered fuel delivery rates and service availability`() {
-        // Tiered delivery rates
-        assertEquals(280.0, FeeConstants.calculateFuelDeliveryFee(1), 0.001)
-        assertEquals(280.0, FeeConstants.calculateFuelDeliveryFee(5), 0.001)
-        assertEquals(300.0, FeeConstants.calculateFuelDeliveryFee(6), 0.001)
+        // Per-liter delivery rates
+        assertEquals(300.0, FeeConstants.calculateFuelDeliveryFee(1), 0.001)
+        assertEquals(300.0, FeeConstants.calculateFuelDeliveryFee(5), 0.001)
+        assertEquals(300.0, FeeConstants.calculateFuelDeliveryFee(7), 0.001)
         assertEquals(300.0, FeeConstants.calculateFuelDeliveryFee(10), 0.001)
-        assertEquals(350.0, FeeConstants.calculateFuelDeliveryFee(11), 0.001)
-        assertEquals(350.0, FeeConstants.calculateFuelDeliveryFee(15), 0.001)
+        assertEquals(320.0, FeeConstants.calculateFuelDeliveryFee(11), 0.001)
+        assertEquals(340.0, FeeConstants.calculateFuelDeliveryFee(12), 0.001)
+        assertEquals(360.0, FeeConstants.calculateFuelDeliveryFee(13), 0.001)
+        assertEquals(380.0, FeeConstants.calculateFuelDeliveryFee(14), 0.001)
+        assertEquals(400.0, FeeConstants.calculateFuelDeliveryFee(15), 0.001)
 
         // Max volume limit
         assertEquals(15, FeeConstants.FUEL_MAX_LITERS)
@@ -155,5 +160,90 @@ class FuelPumpPricingTest {
         assertFalse(FeeConstants.isServiceUnavailable("Petrol"))
         assertFalse(FeeConstants.isServiceUnavailable("Diesel"))
         assertFalse(FeeConstants.isServiceUnavailable("High-Octane"))
+    }
+
+    @Test
+    fun `test DeliveryOperatingHoursManager schedule windows`() {
+        val tz = com.example.util.DeliveryOperatingHoursManager.PAKISTAN_TIMEZONE
+
+        // 1. Monday to Thursday (08:00 AM to 08:00 PM)
+        val monMorningBefore = java.util.Calendar.getInstance(tz).apply {
+            set(java.util.Calendar.DAY_OF_WEEK, java.util.Calendar.MONDAY)
+            set(java.util.Calendar.HOUR_OF_DAY, 7)
+            set(java.util.Calendar.MINUTE, 59)
+        }
+        assertFalse(com.example.util.DeliveryOperatingHoursManager.isDeliveryOpen(monMorningBefore))
+
+        val monOpen = java.util.Calendar.getInstance(tz).apply {
+            set(java.util.Calendar.DAY_OF_WEEK, java.util.Calendar.MONDAY)
+            set(java.util.Calendar.HOUR_OF_DAY, 8)
+            set(java.util.Calendar.MINUTE, 0)
+        }
+        assertTrue(com.example.util.DeliveryOperatingHoursManager.isDeliveryOpen(monOpen))
+
+        val thuEveningJustBefore = java.util.Calendar.getInstance(tz).apply {
+            set(java.util.Calendar.DAY_OF_WEEK, java.util.Calendar.THURSDAY)
+            set(java.util.Calendar.HOUR_OF_DAY, 19)
+            set(java.util.Calendar.MINUTE, 59)
+        }
+        assertTrue(com.example.util.DeliveryOperatingHoursManager.isDeliveryOpen(thuEveningJustBefore))
+
+        val thuEveningClosed = java.util.Calendar.getInstance(tz).apply {
+            set(java.util.Calendar.DAY_OF_WEEK, java.util.Calendar.THURSDAY)
+            set(java.util.Calendar.HOUR_OF_DAY, 20)
+            set(java.util.Calendar.MINUTE, 0)
+        }
+        assertFalse(com.example.util.DeliveryOperatingHoursManager.isDeliveryOpen(thuEveningClosed))
+
+        // 2. Friday (08:00 AM to 01:00 PM)
+        val friMorningOpen = java.util.Calendar.getInstance(tz).apply {
+            set(java.util.Calendar.DAY_OF_WEEK, java.util.Calendar.FRIDAY)
+            set(java.util.Calendar.HOUR_OF_DAY, 8)
+            set(java.util.Calendar.MINUTE, 0)
+        }
+        assertTrue(com.example.util.DeliveryOperatingHoursManager.isDeliveryOpen(friMorningOpen))
+
+        val friJustBeforeClose = java.util.Calendar.getInstance(tz).apply {
+            set(java.util.Calendar.DAY_OF_WEEK, java.util.Calendar.FRIDAY)
+            set(java.util.Calendar.HOUR_OF_DAY, 12)
+            set(java.util.Calendar.MINUTE, 59)
+        }
+        assertTrue(com.example.util.DeliveryOperatingHoursManager.isDeliveryOpen(friJustBeforeClose))
+
+        val friClosedAt1Pm = java.util.Calendar.getInstance(tz).apply {
+            set(java.util.Calendar.DAY_OF_WEEK, java.util.Calendar.FRIDAY)
+            set(java.util.Calendar.HOUR_OF_DAY, 13)
+            set(java.util.Calendar.MINUTE, 0)
+        }
+        assertFalse(com.example.util.DeliveryOperatingHoursManager.isDeliveryOpen(friClosedAt1Pm))
+
+        // 3. Saturday and Sunday (10:00 AM to 06:00 PM)
+        val satBeforeOpen = java.util.Calendar.getInstance(tz).apply {
+            set(java.util.Calendar.DAY_OF_WEEK, java.util.Calendar.SATURDAY)
+            set(java.util.Calendar.HOUR_OF_DAY, 9)
+            set(java.util.Calendar.MINUTE, 59)
+        }
+        assertFalse(com.example.util.DeliveryOperatingHoursManager.isDeliveryOpen(satBeforeOpen))
+
+        val satOpen = java.util.Calendar.getInstance(tz).apply {
+            set(java.util.Calendar.DAY_OF_WEEK, java.util.Calendar.SATURDAY)
+            set(java.util.Calendar.HOUR_OF_DAY, 10)
+            set(java.util.Calendar.MINUTE, 0)
+        }
+        assertTrue(com.example.util.DeliveryOperatingHoursManager.isDeliveryOpen(satOpen))
+
+        val sunEveningOpen = java.util.Calendar.getInstance(tz).apply {
+            set(java.util.Calendar.DAY_OF_WEEK, java.util.Calendar.SUNDAY)
+            set(java.util.Calendar.HOUR_OF_DAY, 17)
+            set(java.util.Calendar.MINUTE, 59)
+        }
+        assertTrue(com.example.util.DeliveryOperatingHoursManager.isDeliveryOpen(sunEveningOpen))
+
+        val sunEveningClosed = java.util.Calendar.getInstance(tz).apply {
+            set(java.util.Calendar.DAY_OF_WEEK, java.util.Calendar.SUNDAY)
+            set(java.util.Calendar.HOUR_OF_DAY, 18)
+            set(java.util.Calendar.MINUTE, 0)
+        }
+        assertFalse(com.example.util.DeliveryOperatingHoursManager.isDeliveryOpen(sunEveningClosed))
     }
 }

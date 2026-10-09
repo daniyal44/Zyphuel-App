@@ -40,6 +40,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
@@ -781,18 +782,31 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _highOctanePrice = MutableStateFlow(sharedPrefs.getFloat("high_octane", 325.00f))
     val highOctanePrice = _highOctanePrice.asStateFlow()
 
-    // --- Retail Petrol Pump Rates (Base OGRA Rate + Rs. 5.00/L Petrol Pump Margin) ---
+    // --- Retail Petrol Pump Rates (Base OGRA Rate + Rs. 5.00/L Petrol Pump Margin/Markup) ---
     val petrolPumpPrice: StateFlow<Float> = _petrolPrice
-        .map { it + com.example.util.FeeConstants.PETROL_PUMP_RATE_SURCHARGE_FLOAT }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, _petrolPrice.value + com.example.util.FeeConstants.PETROL_PUMP_RATE_SURCHARGE_FLOAT)
+        .map { it + com.example.util.FeeConstants.PUMP_RATE_MARKUP_FLOAT }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, _petrolPrice.value + com.example.util.FeeConstants.PUMP_RATE_MARKUP_FLOAT)
 
     val dieselPumpPrice: StateFlow<Float> = _dieselPrice
-        .map { it + com.example.util.FeeConstants.PETROL_PUMP_RATE_SURCHARGE_FLOAT }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, _dieselPrice.value + com.example.util.FeeConstants.PETROL_PUMP_RATE_SURCHARGE_FLOAT)
+        .map { it + com.example.util.FeeConstants.PUMP_RATE_MARKUP_FLOAT }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, _dieselPrice.value + com.example.util.FeeConstants.PUMP_RATE_MARKUP_FLOAT)
 
     val highOctanePumpPrice: StateFlow<Float> = _highOctanePrice
-        .map { it + com.example.util.FeeConstants.PETROL_PUMP_RATE_SURCHARGE_FLOAT }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, _highOctanePrice.value + com.example.util.FeeConstants.PETROL_PUMP_RATE_SURCHARGE_FLOAT)
+        .map { it + com.example.util.FeeConstants.PUMP_RATE_MARKUP_FLOAT }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, _highOctanePrice.value + com.example.util.FeeConstants.PUMP_RATE_MARKUP_FLOAT)
+
+    // --- Doorstep Delivery Operating Hours State (Pakistan Standard Time, Asia/Karachi) ---
+    private val _isDeliveryOpen = MutableStateFlow(com.example.util.DeliveryOperatingHoursManager.isDeliveryOpen())
+    val isDeliveryOpen: StateFlow<Boolean> = _isDeliveryOpen.asStateFlow()
+
+    private val _deliveryStatus = MutableStateFlow(com.example.util.DeliveryOperatingHoursManager.getDeliveryStatus())
+    val deliveryStatus: StateFlow<com.example.util.DeliveryOperatingHoursManager.DeliveryStatus> = _deliveryStatus.asStateFlow()
+
+    fun refreshDeliveryOperatingStatus() {
+        val open = com.example.util.DeliveryOperatingHoursManager.isDeliveryOpen()
+        _isDeliveryOpen.value = open
+        _deliveryStatus.value = com.example.util.DeliveryOperatingHoursManager.getDeliveryStatus()
+    }
 
     fun getEffectiveFuelPumpPrice(serviceType: String): Float {
         return when {
@@ -949,6 +963,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _dieselPrice.value = 289.84f
         _highOctanePrice.value = 325.00f
         _lastPriceSyncTime.value = "Official OGRA Pakistan Feed"
+
+        viewModelScope.launch {
+            while (isActive) {
+                refreshDeliveryOperatingStatus()
+                delay(30_000L)
+            }
+        }
 
         viewModelScope.launch {
             // Seed DB with default admin and verified riders on start if needed
@@ -2247,6 +2268,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
         if (com.example.util.FeeConstants.isServiceUnavailable(serviceType)) {
             _uiMessage.value = "Selected service is permanently unavailable. Zyphuel exclusively delivers Super Euro-V Petrol, High-Speed Diesel, and High-Octane fuel."
+            return
+        }
+
+        if (!com.example.util.DeliveryOperatingHoursManager.isDeliveryOpen()) {
+            _uiMessage.value = "⚠️ Deliveries are currently closed. Operating hours: Mon–Thu 08:00 AM – 08:00 PM | Fri 08:00 AM – 01:00 PM | Sat–Sun 10:00 AM – 06:00 PM."
             return
         }
 

@@ -1514,3 +1514,45 @@ Zyphuel v2.4.0 introduces a comprehensive 10-category on-demand automotive and m
 * **Incremented `versionCode`**: `50` ➔ **`51`**.
 * **Advanced `versionName`**: `"2.6.4.0.0.22"` ➔ **`"2.6.4.0.0.23"`**.
 * **Green Verification**: Maintained 100% build health, Room DB entity integrity, and full documentation consistency across the entire codebase.
+
+
+---
+
+## 42. Per-Liter Tiered Delivery Pricing, PUMP_RATE_MARKUP Standardization & Operating Hours Window (v2.6.4.0.0.24 Build 52)
+
+### 42.1 Per-Liter Tiered Fuel Delivery Pricing Engine (`FeeConstants.kt`)
+* **Standardized Tiered Rates Across the Platform**:
+  - Implemented the official per-liter doorstep delivery rate schedule:
+    - **Up to 10 Liters (5L, 7L, 10L)**: Flat **Rs. 300.00** delivery fee.
+    - **11 Liters**: **Rs. 320.00**
+    - **12 Liters**: **Rs. 340.00**
+    - **13 Liters**: **Rs. 360.00**
+    - **14 Liters**: **Rs. 380.00**
+    - **15 Liters (Strict Max Limit)**: **Rs. 400.00**
+  - Updated `FeeConstants.calculateFuelDeliveryFee(liters: Int)` and `calculateDeliveryFee()` across `OrderDialog`, `TrackerScreen`, `CategoryDetailModal`, `InvoiceGenerator`, and receipts.
+  - Strict maximum order limit remains capped at 15 Liters (`FUEL_MAX_LITERS = 15`).
+
+### 42.2 Silent Retail Pump Rate Markup Engine (`PUMP_RATE_MARKUP = 5.00`)
+* **Official OGRA Ex-Depot Surcharge Constant**:
+  - Standardized `FeeConstants.PUMP_RATE_MARKUP = 5.00` and `PUMP_RATE_MARKUP_FLOAT = 5.00f` added to official OGRA base prices for Super Euro-V Petrol, Euro-V Diesel, and High-Octane 97.
+  - Formula: `finalRate = ograBase + 5.00`.
+  - Math executes silently in background; customer UI surfaces exclusively the final pump retail rates without any debug or surcharge labeling.
+
+### 42.3 Doorstep Delivery Operating Hours & Checkout Gate (`DeliveryOperatingHoursManager.kt`)
+* **Official Schedule (Pakistan Standard Time, `Asia/Karachi`)**:
+  - **Mon–Thu**: 08:00 AM – 08:00 PM PKT
+  - **Fri**: 08:00 AM – 01:00 PM PKT
+  - **Sat–Sun**: 10:00 AM – 06:00 PM PKT
+* **UI Action Hiding & Order Placement Gate**:
+  - When outside operating hours:
+    - "Order Now" Floating Action Button (`home_fab`) is completely hidden from `CustomerHomeScreen`.
+    - Tapping service cards (`service_petrol`, `service_high_octane`, `service_diesel`) displays an operating hours notification rather than opening the checkout dialog.
+    - `OrderDialog` confirm button (`dialog_confirm_btn`) is hidden and replaced with an hours closure warning.
+    - Order history "Reorder 🔁" button is hidden.
+    - Hard guards in `MainViewModel.placeOrder()` reject any submissions attempted when delivery services are closed.
+  - `CustomerHomeScreen` features a real-time Operating Hours & Status Banner informing users of current status (🟢 Open / 🔴 Closed) and schedule.
+
+### 42.4 App Versioning & Release Verification
+* **Incremented `versionCode`**: `51` ➔ **`52`**.
+* **Advanced `versionName`**: `"2.6.4.0.0.23"` ➔ **`"2.6.4.0.0.24"`**.
+* **Green Verification**: FuelPumpPricingTest, CategoryAndVehicleArchitectureTest, and ZyphuelComprehensiveAppTest verified 100% passing.

@@ -23,12 +23,26 @@ Whenever you create, modify, or update any feature, screen, ViewModel method, or
   - **Public Example Templates Only**: Public repositories must only include sanitized `.example` templates (`app/google-services.json.example`, `.env.example`) containing non-functional dummy placeholders.
 - **Data Protection in Logs & APIs**: Keep all sensitive credentials sanitized and redacted from log outputs (`DebugLogger`), crash reports, and diagnostic tools.
 
-## Doorstep Delivery Pricing & Volume Limits (CRITICAL MEMORY)
-- **Tiered Fuel Delivery Rates (Petrol, Diesel, High-Octane)**:
-  - **5 Liters**: Rs. 280 Delivery Fee
-  - **10 Liters**: Rs. 300 Delivery Fee
-  - **15 Liters (Max Limit)**: Rs. 350 Delivery Fee
+## Doorstep Delivery Pricing, Markup & Operating Hours (CRITICAL MEMORY)
+- **Per-Liter Tiered Fuel Delivery Rates (Petrol, Diesel, High-Octane)**:
+  - **5 Liters**: Rs. 300 Delivery Fee
+  - **7 Liters**: Rs. 300 Delivery Fee
+  - **10 Liters**: Rs. 300 Delivery Fee (Flat Rs. 300 for up to 10L)
+  - **11 Liters**: Rs. 320 Delivery Fee
+  - **12 Liters**: Rs. 340 Delivery Fee
+  - **13 Liters**: Rs. 360 Delivery Fee
+  - **14 Liters**: Rs. 380 Delivery Fee
+  - **15 Liters (Max Limit)**: Rs. 400 Delivery Fee
 - **Strict Maximum Volume Cap**: Fuel doorstep mobile delivery is capped at a maximum of **15 Liters** per order. Any order exceeding 15L must be prevented.
+- **Retail Pump Rate Markup**:
+  - `PUMP_RATE_MARKUP = 5.00` (Rs./Litre) applied on top of official OGRA ex-depot base rate for Super Euro-V Petrol, Euro-V Diesel, and High-Octane 97.
+  - Formula: `finalRate = ograBase + 5.00`.
+  - Math runs silently in background; only the final pump rate is displayed to the user (no debug/markup labels).
+- **Official Delivery Operating Hours & Order Gate**:
+  - **Mon–Thu**: 08:00 AM – 08:00 PM (PKT)
+  - **Fri**: 08:00 AM – 01:00 PM (PKT)
+  - **Sat–Sun**: 10:00 AM – 06:00 PM (PKT)
+  - Outside operating hours: "Order Now" action button is hidden from UI, and order submission is blocked at the ViewModel and database layers.
 - **Product Availability**:
   - **Pure Water Delivery**: Currently **UNAVAILABLE**.
   - **LPG Gas Cylinders**: Currently **UNAVAILABLE**.

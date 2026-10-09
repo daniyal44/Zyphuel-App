@@ -742,6 +742,7 @@ fun CategoryDetailModal(
     val livePetrol by viewModel.petrolPumpPrice.collectAsState()
     val liveDiesel by viewModel.dieselPumpPrice.collectAsState()
     val liveOctane by viewModel.highOctanePumpPrice.collectAsState()
+    val isDeliveryOpen by viewModel.isDeliveryOpen.collectAsState()
 
     val getEffectivePrice = remember(category.id, livePetrol, liveDiesel, liveOctane) {
         { sub: Subcategory ->
@@ -1245,34 +1246,36 @@ fun CategoryDetailModal(
             }
         },
         confirmButton = {
-            Button(
-                onClick = {
-                    val sub = selectedSubcategory ?: return@Button
-                    val unitPrice = getEffectivePrice(sub)
-                    viewModel.bookCategoryService(
-                        subcategory = sub,
-                        parentCategory = category,
-                        vehicle = selectedVehicle,
-                        notes = orderNotes,
-                        deliveryAddress = liveLocationAddr,
-                        quantity = orderQuantity,
-                        isEmergency = sub.isEmergency,
-                        unitPriceOverride = unitPrice,
-                        onSuccess = { onDismiss() }
+            if (category.id != "fuel_energy" || isDeliveryOpen) {
+                Button(
+                    onClick = {
+                        val sub = selectedSubcategory ?: return@Button
+                        val unitPrice = getEffectivePrice(sub)
+                        viewModel.bookCategoryService(
+                            subcategory = sub,
+                            parentCategory = category,
+                            vehicle = selectedVehicle,
+                            notes = orderNotes,
+                            deliveryAddress = liveLocationAddr,
+                            quantity = orderQuantity,
+                            isEmergency = sub.isEmergency,
+                            unitPriceOverride = unitPrice,
+                            onSuccess = { onDismiss() }
+                        )
+                    },
+                    enabled = selectedSubcategory != null,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (category.id == "roadside_assistance") Color(0xFFDC2626) else ZyphuelBluePrimary
+                    ),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.testTag("modal_book_service_btn")
+                ) {
+                    Text(
+                        text = if (category.id == "roadside_assistance") "Request Emergency SOS 🚨" else "Confirm & Book Now",
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
                     )
-                },
-                enabled = selectedSubcategory != null,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (category.id == "roadside_assistance") Color(0xFFDC2626) else ZyphuelBluePrimary
-                ),
-                shape = RoundedCornerShape(10.dp),
-                modifier = Modifier.testTag("modal_book_service_btn")
-            ) {
-                Text(
-                    text = if (category.id == "roadside_assistance") "Request Emergency SOS 🚨" else "Confirm & Book Now",
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
+                }
             }
         }
     )

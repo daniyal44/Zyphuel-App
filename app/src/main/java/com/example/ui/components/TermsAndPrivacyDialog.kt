@@ -318,7 +318,7 @@ private fun TermsContent() {
     LegalCard(
         icon = Icons.Filled.Payments,
         title = "4. Transparent Pricing & Cash on Delivery (COD)",
-        description = "All fuel rates strictly track notified retail pump prices. Fuel delivery follows official tiered delivery charges: Rs. 280 for up to 5 Liters, Rs. 300 for up to 10 Liters, and Rs. 350 for up to 15 Liters (maximum order limit). All transactions are settled via 100% Cash on Delivery (COD) upon direct doorstep verification. No hidden charges apply."
+        description = "All fuel rates strictly track notified retail pump prices. Fuel delivery follows official tiered delivery charges: Rs. 300 for up to 10 Liters (5L, 7L, 10L), Rs. 320 for 11L, Rs. 340 for 12L, Rs. 360 for 13L, Rs. 380 for 14L, and Rs. 400 for up to 15 Liters (maximum order limit). All transactions are settled via 100% Cash on Delivery (COD) upon direct doorstep verification. Operating delivery hours are Mon–Thu 08:00 AM – 08:00 PM, Fri 08:00 AM – 01:00 PM, and Sat–Sun 10:00 AM – 06:00 PM (PKT). No hidden charges apply."
     )
 
     LegalCard(

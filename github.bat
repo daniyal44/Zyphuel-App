@@ -1,12 +1,12 @@
 @echo off
 setlocal enabledelayedexpansion
-title Zyphuel - 1-Click GitHub Direct Push
+title Zyphuel - 1-Click GitHub Direct Push with Code Graph Auto-Sync
 color 0A
 
 cd /d "%~dp0"
 
 echo ============================================================
-echo   ZYPHUEL - 1-CLICK DIRECT GITHUB PUSH
+echo   ZYPHUEL - 1-CLICK DIRECT GITHUB PUSH ^& GRAPH SYNC
 echo ============================================================
 echo.
 echo Folder : %CD%
@@ -21,25 +21,34 @@ if errorlevel 1 (
     goto END
 )
 
+rem Ensure Git pre-commit hook is active
+if exist ".git" (
+    if not exist ".git\hooks\pre-commit" (
+        if exist "scripts\install_git_hooks.bat" (
+            call scripts\install_git_hooks.bat >nul 2>&1
+        )
+    )
+)
+
 rem Get active branch
 for /f "tokens=*" %%b in ('git rev-parse --abbrev-ref HEAD 2^>nul') do set "BRANCH=%%b"
 if "%BRANCH%"=="" set "BRANCH=main"
 echo Branch : %BRANCH%
 echo.
 
-rem Update engineering velocity graph if Node.js is present
+rem Update engineering velocity graph if Node.js is present (Pre-stage)
 where node >nul 2>&1
 if not errorlevel 1 (
     if exist "scripts\generate_github_graph.js" (
         echo [i] Engineering velocity graph update kar rahe hain...
-        node scripts\generate_github_graph.js >nul 2>&1
+        node scripts\generate_github_graph.js
     )
 )
 
 rem Set commit message
 set "COMMIT_MSG=%~1"
 if "%COMMIT_MSG%"=="" (
-    set "APP_VER=v2.6.4.0.0.23"
+    set "APP_VER=v2.6.4.0.0.24"
     if exist "app\build.gradle.kts" (
         for /f "tokens=2 delims==" %%i in ('findstr /i "versionName" app\build.gradle.kts 2^>nul') do (
             set "TEMP_VER=%%~i"
@@ -59,6 +68,19 @@ if errorlevel 1 (
     echo [2/3] Commit banaya ja raha hai:
     echo       "%COMMIT_MSG%"
     git commit -m "%COMMIT_MSG%"
+
+    rem Refresh graph with the newly created commit and amend seamlessly
+    where node >nul 2>&1
+    if not errorlevel 1 (
+        if exist "scripts\generate_github_graph.js" (
+            node scripts\generate_github_graph.js >nul 2>&1
+            git add README.md >nul 2>&1
+            git diff --cached --quiet >nul 2>&1
+            if errorlevel 1 (
+                git commit --amend --no-edit >nul 2>&1
+            )
+        )
+    )
 ) else (
     echo [2/3] Koi naye uncommitted changes nahi hain, existing commits push karenge...
 )
@@ -91,6 +113,9 @@ echo ============================================================
 
 :END
 echo.
+if "%~2"=="--no-pause" goto FINISH
+if "%NON_INTERACTIVE%"=="1" goto FINISH
 echo Window band karne ke liye koi bhi key dabayein...
 pause >nul
+:FINISH
 endlocal
