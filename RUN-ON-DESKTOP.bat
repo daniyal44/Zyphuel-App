@@ -73,7 +73,7 @@ if "%EMU_RUNNING%"=="1" (
 rem ---------- Step 2: Launch Emulator ----------
 echo  [2/4] Starting Android Emulator (%AVD_NAME%)...
 echo        (Desktop par phone window open ho rahi hai, intezaar karein...)
-start "" "%EMULATOR%" -avd %AVD_NAME% -gpu swiftshader
+start "" "%EMULATOR%" -avd %AVD_NAME% -gpu host
 
 rem ---------- Step 3: Wait for boot ----------
 echo  [3/4] Emulator ke boot hone ka intezaar ho raha hai...
