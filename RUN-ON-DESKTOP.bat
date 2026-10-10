@@ -73,14 +73,14 @@ if "%EMU_RUNNING%"=="1" (
 rem ---------- Step 2: Launch Emulator ----------
 echo  [2/4] Starting Android Emulator (%AVD_NAME%)...
 echo        (Desktop par phone window open ho rahi hai, intezaar karein...)
-start "" "%EMULATOR%" -avd %AVD_NAME% -gpu host
+start "" "%EMULATOR%" -avd %AVD_NAME% -gpu host -no-boot-anim -camera-back none -camera-front none
 
 rem ---------- Step 3: Wait for boot ----------
 echo  [3/4] Emulator ke boot hone ka intezaar ho raha hai...
 "%ADB%" wait-for-device
 
 :WAIT_BOOT
-timeout /t 3 >nul
+timeout /t 2 >nul
 for /f "tokens=*" %%A in ('"%ADB%" shell getprop sys.boot_completed 2^>nul') do set "BOOT_STATUS=%%A"
 set "BOOT_STATUS=!BOOT_STATUS:~0,1!"
 if not "!BOOT_STATUS!"=="1" (
@@ -89,6 +89,10 @@ if not "!BOOT_STATUS!"=="1" (
 )
 
 echo  [OK] Emulator mukammal boot ho chuka hai!
+echo  [OK] Applying High-Velocity UI Performance Tweaks (0.5x animation latency)...
+"%ADB%" shell settings put global window_animation_scale 0.5 >nul 2>&1
+"%ADB%" shell settings put global transition_animation_scale 0.5 >nul 2>&1
+"%ADB%" shell settings put global animator_duration_scale 0.5 >nul 2>&1
 
 :INSTALL_APP
 rem ---------- Step 4: Install and Launch APK ----------

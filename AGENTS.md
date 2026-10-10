@@ -1,13 +1,13 @@
 # Zyphuel Project Rules & Maintenance Guidelines
 
-**Last Updated:** <font color="#10b981"><b>2026-10-09</b></font> • **Application Version:** <font color="#10b981"><b>2.6.4.0.0.26 (Build 54)</b></font>
+**Last Updated:** <font color="#10b981"><b>2026-10-10</b></font> • **Application Version:** <font color="#10b981"><b>2.6.4.0.0.27 (Build 55)</b></font>
 
 ---
 
-## App Versioning & Release Rule (CRITICAL — Updated <font color="#10b981"><b>2026-10-09</b></font>)
+## App Versioning & Release Rule (CRITICAL — Updated <font color="#10b981"><b>2026-10-10</b></font>)
 Whenever you make ANY change, fix, feature, or modification to the app:
-- **MUST Increment `versionCode`**: Always increment `versionCode` in [`app/build.gradle.kts`](file:///d:/Games/New%20folder-web/Claude/app/build.gradle.kts) (currently at <font color="#10b981"><b>54</b></font>).
-- **MUST Advance `versionName` with Sub-Version Format**: Always format `versionName` as `2.6.4.0.0.XX` (starting at `2.6.4.0.0.01`), and increment the trailing segment by `+0.0.0.0.01` on every change/fix (`2.6.4.0.0.25` -> <font color="#10b981"><b>2.6.4.0.0.26</b></font>).
+- **MUST Increment `versionCode`**: Always increment `versionCode` in [`app/build.gradle.kts`](file:///d:/Games/New%20folder-web/Claude/app/build.gradle.kts) (currently at <font color="#10b981"><b>55</b></font>).
+- **MUST Advance `versionName` with Sub-Version Format**: Always format `versionName` as `2.6.4.0.0.XX` (starting at `2.6.4.0.0.01`), and increment the trailing segment by `+0.0.0.0.01` on every change/fix (`2.6.4.0.0.26` -> <font color="#10b981"><b>2.6.4.0.0.27</b></font>).
 - **Never publish with stale version codes**: Google Play Store rejects APK/AAB uploads if the `versionCode` is not strictly higher than the previous release.
 
 ---

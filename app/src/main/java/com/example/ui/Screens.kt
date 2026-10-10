@@ -851,7 +851,6 @@ fun SplashScreen(viewModel: MainViewModel) {
 
         // Wait for session to load — clean coroutine await, no busy polling
         viewModel.isSessionLoaded.filter { it }.first()
-        delay(300)
 
         val user = viewModel.currentUser.value
         if (user != null) {
@@ -2151,21 +2150,10 @@ fun AuthScreen(viewModel: MainViewModel, isRegister: Boolean, isRider: Boolean) 
     // (removed: showGoogleAccountPickerDialog state — device-account picker no longer exists; real Google flow only)
     var isGoogleSigningIn by remember { mutableStateOf(false) }
     var isAuthenticating by remember { mutableStateOf(false) }
-    var isInitialScreenLoading by remember { mutableStateOf(true) }
-
-    LaunchedEffect(Unit) {
-        kotlinx.coroutines.delay(450)
-        isInitialScreenLoading = false
-    }
 
     val scope = rememberCoroutineScope()
     val lifecycleOwner = LocalLifecycleOwner.current
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-
-    if (isInitialScreenLoading) {
-        TeslaAuthSkeleton()
-        return
-    }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
