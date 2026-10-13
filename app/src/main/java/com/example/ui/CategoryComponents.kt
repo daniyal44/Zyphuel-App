@@ -1147,7 +1147,7 @@ fun CategoryDetailModal(
 
                     // Quick Volume Preset Chips for Fuel
                     if (activeSub.unit == "L") {
-                        val presets = listOf(5 to "5 Litres", 10 to "10 Litres", 15 to "15 Litres (Max)")
+                        val presets = listOf(5 to "5 Litres", 10 to "10 Litres", 15 to "15 Litres")
 
                         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Text(
@@ -1298,12 +1298,31 @@ fun AdminCategoryManagementTab(
     modifier: Modifier = Modifier
 ) {
     val categories by viewModel.categories.collectAsState()
+    val allOrders by viewModel.allOrders.collectAsState()
+    val petrolBase by viewModel.petrolPrice.collectAsState()
+    val dieselBase by viewModel.dieselPrice.collectAsState()
+    val octaneBase by viewModel.highOctanePrice.collectAsState()
+
+    val petrolPumpRate = petrolBase.toDouble() + com.example.util.FeeConstants.PETROL_PUMP_RATE_SURCHARGE
+    val dieselPumpRate = dieselBase.toDouble() + com.example.util.FeeConstants.PETROL_PUMP_RATE_SURCHARGE
+    val octanePumpRate = octaneBase.toDouble() + com.example.util.FeeConstants.PETROL_PUMP_RATE_SURCHARGE
+
+    val petrolOrderCount = remember(allOrders) {
+        allOrders.count { it.serviceType.contains("Petrol", ignoreCase = true) }
+    }
+    val dieselOrderCount = remember(allOrders) {
+        allOrders.count { it.serviceType.contains("Diesel", ignoreCase = true) }
+    }
+    val octaneOrderCount = remember(allOrders) {
+        allOrders.count { it.serviceType.contains("Octane", ignoreCase = true) }
+    }
+
     var selectedCategoryId by remember(categories) {
-        mutableStateOf(categories.firstOrNull { it.isActive }?.id ?: categories.firstOrNull()?.id ?: "fuel_petrol")
+        mutableStateOf(categories.firstOrNull { it.isActive }?.id ?: categories.firstOrNull()?.id ?: "fuel_energy")
     }
     val currentCategory = categories.firstOrNull { it.id == selectedCategoryId } ?: categories.firstOrNull()
 
-    var expandedCatId by remember { mutableStateOf<String?>(null) }
+    var expandedCatId by remember { mutableStateOf<String?>("fuel_energy") }
     var editingFeeCatId by remember { mutableStateOf<String?>(null) }
     var feeInput by remember { mutableStateOf("") }
 
@@ -1321,8 +1340,159 @@ fun AdminCategoryManagementTab(
                     Icon(Icons.Filled.Tune, contentDescription = null, tint = ZyphuelBluePrimary, modifier = Modifier.size(24.dp))
                     Spacer(modifier = Modifier.width(10.dp))
                     Column {
-                        Text("Category & Service Operations Control", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall, color = ZyphuelBlueDark)
-                        Text("Manage availability, pricing, and service activation without republishing the app.", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                        Text("Category & Current Active Offerings Control", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall, color = ZyphuelBlueDark)
+                        Text("Live overview of all current Zyphuel services, active fuel items, tiered delivery fees, operating hours, and blocked categories.", style = MaterialTheme.typography.labelSmall, color = Color.DarkGray)
+                    }
+                }
+            }
+        }
+
+        // --- CURRENT ACTIVE ZYPHUEL OFFERINGS & LIVE OPERATIONS SUMMARY ---
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth().testTag("admin_current_offerings_summary_card"),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                border = BorderStroke(1.5.dp, Color(0xFF10B981)),
+                shape = RoundedCornerShape(16.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Filled.LocalGasStation, contentDescription = null, tint = Color(0xFF059669), modifier = Modifier.size(20.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Current Active Zyphuel Items & Live Rates",
+                                fontWeight = FontWeight.ExtraBold,
+                                style = MaterialTheme.typography.titleSmall,
+                                color = ZyphuelBlueDark
+                            )
+                        }
+                        Surface(
+                            color = Color(0xFFDCFCE7),
+                            shape = RoundedCornerShape(8.dp),
+                            border = BorderStroke(1.dp, Color(0xFF86EFAC))
+                        ) {
+                            Text(
+                                text = "LIVE CATALOG",
+                                color = Color(0xFF15803D),
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.ExtraBold, fontSize = 9.sp),
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                            )
+                        }
+                    }
+
+                    // Active Fuel Items Grid (Petrol, Diesel, High-Octane)
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        listOf(
+                            Triple("Super Euro-V Petrol", "Rs. ${String.format(java.util.Locale.US, "%.2f", petrolPumpRate)} / L", "$petrolOrderCount Orders • 5L–15L Max"),
+                            Triple("High-Speed Euro-V Diesel", "Rs. ${String.format(java.util.Locale.US, "%.2f", dieselPumpRate)} / L", "$dieselOrderCount Orders • 5L–15L Max"),
+                            Triple("High-Octane (RON 97)", "Rs. ${String.format(java.util.Locale.US, "%.2f", octanePumpRate)} / L", "$octaneOrderCount Orders • 5L–15L Max")
+                        ).forEach { (itemName, itemRate, itemMeta) ->
+                            Surface(
+                                color = Color(0xFFF0FDF4),
+                                shape = RoundedCornerShape(10.dp),
+                                border = BorderStroke(1.dp, Color(0xFFBBF7D0)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                            Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = Color(0xFF16A34A), modifier = Modifier.size(14.dp))
+                                            Text(itemName, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall, color = Color.Black)
+                                        }
+                                        Text(itemMeta, style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, color = Color(0xFF475569)))
+                                    }
+                                    Text(
+                                        text = itemRate,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = Color(0xFF15803D)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Current Tiered Delivery Fees & Operating Hours Box
+                    Surface(
+                        color = Color(0xFFF8FAFC),
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(10.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text(
+                                text = "Current Tiered Delivery Fee & Cap (15L Strict Max):",
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark)
+                            )
+                            Text(
+                                text = "• 1L–10L (5L, 7L, 10L): Rs. 300  |  11L: Rs. 320  |  12L: Rs. 340\n• 13L: Rs. 360  |  14L: Rs. 380  |  15L (Max Cap): Rs. 400",
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.5.sp, color = Color.Black, lineHeight = 15.sp)
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "Current Operating Hours (PKT):",
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark)
+                            )
+                            Text(
+                                text = "• Mon–Thu: 08:00 AM – 08:00 PM  |  Fri: 08:00 AM – 01:00 PM  |  Sat–Sun: 10:00 AM – 06:00 PM",
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.5.sp, color = Color.Black)
+                            )
+                        }
+                    }
+
+                    // Currently Unavailable / Blocked Products Banner
+                    Surface(
+                        color = Color(0xFFFEF2F2),
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, Color(0xFFFECACA)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                                Icon(Icons.Filled.Block, contentDescription = null, tint = Color(0xFFDC2626), modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Column {
+                                    Text(
+                                        text = "Currently Unavailable Items (Orders Blocked)",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFF991B1B))
+                                    )
+                                    Text(
+                                        text = "Pure Water Delivery • LPG Gas Cylinders",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.5.sp, color = Color(0xFF7F1D1D), fontWeight = FontWeight.SemiBold)
+                                    )
+                                }
+                            }
+                            Surface(
+                                color = Color(0xFFFEE2E2),
+                                shape = RoundedCornerShape(6.dp)
+                            ) {
+                                Text(
+                                    text = "UNAVAILABLE",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFFB91C1C)),
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -1410,8 +1580,8 @@ fun AdminCategoryManagementTab(
                                 Text("Rs. ${String.format(java.util.Locale.US, "%.0f", currentCategory.pricingConfig.deliveryFee)}", fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary, style = MaterialTheme.typography.bodyMedium)
                             }
                             Column {
-                                Text("Subcategories", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
-                                Text("${currentCategory.subcategories.size} (${currentCategory.subcategories.count { it.isActive }} Active)", fontWeight = FontWeight.Bold, color = Color.Black, style = MaterialTheme.typography.bodyMedium)
+                                Text("Current Items", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                                Text("${currentCategory.subcategories.count { it.isActive }} Active / ${currentCategory.subcategories.size} Total", fontWeight = FontWeight.Bold, color = Color.Black, style = MaterialTheme.typography.bodyMedium)
                             }
                             Column {
                                 Text("Status", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
@@ -1420,6 +1590,33 @@ fun AdminCategoryManagementTab(
                             Column {
                                 Text("Coverage", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                                 Text(currentCategory.locationCoverage.firstOrNull() ?: "Lahore", fontWeight = FontWeight.Bold, color = Color.Black, style = MaterialTheme.typography.bodyMedium)
+                            }
+                        }
+
+                        // Current Items in Selected Category
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(
+                                text = "Current Active Items in ${currentCategory.name}:",
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark)
+                            )
+                            LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                items(currentCategory.subcategories) { subItem ->
+                                    Surface(
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = if (subItem.isActive) Color(0xFFF0FDF4) else Color(0xFFFEF2F2),
+                                        border = BorderStroke(1.dp, if (subItem.isActive) Color(0xFF86EFAC) else Color(0xFFFECACA))
+                                    ) {
+                                        Text(
+                                            text = "${if (subItem.isActive) "✓" else "✕"} ${subItem.name} (Rs. ${String.format(java.util.Locale.US, "%.0f", subItem.basePrice)}/${subItem.unit})",
+                                            style = MaterialTheme.typography.labelSmall.copy(
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = if (subItem.isActive) Color(0xFF15803D) else Color(0xFFB91C1C)
+                                            ),
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                        )
+                                    }
+                                }
                             }
                         }
 
@@ -1506,7 +1703,12 @@ fun AdminCategoryManagementTab(
                                     color = ZyphuelBlueDark
                                 )
                                 Text(
-                                    "${cat.subcategories.size} Subcategories • ${cat.estimatedResponseTime}",
+                                    cat.shortDescription,
+                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.5.sp),
+                                    color = Color.DarkGray
+                                )
+                                Text(
+                                    "${cat.subcategories.count { it.isActive }} Active Items • ${cat.estimatedResponseTime}",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = Color.Gray
                                 )
@@ -1519,6 +1721,27 @@ fun AdminCategoryManagementTab(
                                 onCheckedChange = { viewModel.toggleCategoryActive(cat.id, it) },
                                 colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Color(0xFF10B981))
                             )
+                        }
+                    }
+
+                    // Visible Current Items Preview Row on Every Category Card
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        items(cat.subcategories.take(6)) { sub ->
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = if (sub.isActive) Color(0xFFF1F5F9) else Color(0xFFFEF2F2),
+                                border = BorderStroke(1.dp, if (sub.isActive) Color(0xFFCBD5E1) else Color(0xFFFECACA))
+                            ) {
+                                Text(
+                                    text = "${if (sub.isActive) "•" else "✕"} ${sub.name}",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontSize = 9.5.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = if (sub.isActive) Color(0xFF1E293B) else Color(0xFFB91C1C)
+                                    ),
+                                    modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
+                                )
+                            }
                         }
                     }
 
@@ -1570,7 +1793,7 @@ fun AdminCategoryManagementTab(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = if (isExpanded) "Hide Subcategories ▲" else "Configure Subcategories (${cat.subcategories.size}) ▼",
+                            text = if (isExpanded) "Hide Current Items ▲" else "View & Configure Current Items (${cat.subcategories.size}) ▼",
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = ZyphuelBluePrimary
@@ -1625,16 +1848,39 @@ fun AdminCategoryManagementTab(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            sub.name,
-                                            fontWeight = FontWeight.Bold,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = ZyphuelBlueDark
-                                        )
+                                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                            Text(
+                                                sub.name,
+                                                fontWeight = FontWeight.Bold,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = ZyphuelBlueDark
+                                            )
+                                            if (!sub.badgeText.isNullOrBlank()) {
+                                                Surface(
+                                                    color = if (sub.isActive) Color(0xFFDCFCE7) else Color(0xFFFEE2E2),
+                                                    shape = RoundedCornerShape(4.dp)
+                                                ) {
+                                                    Text(
+                                                        text = sub.badgeText,
+                                                        style = MaterialTheme.typography.labelSmall.copy(
+                                                            fontSize = 8.5.sp,
+                                                            fontWeight = FontWeight.Bold,
+                                                            color = if (sub.isActive) Color(0xFF15803D) else Color(0xFFB91C1C)
+                                                        ),
+                                                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp)
+                                                    )
+                                                }
+                                            }
+                                        }
                                         Text(
                                             "Rs. ${String.format(java.util.Locale.US, "%,.2f", sub.basePrice)} / ${sub.unit} • ${sub.estimatedDuration}",
                                             style = MaterialTheme.typography.labelSmall,
                                             color = Color.Gray
+                                        )
+                                        Text(
+                                            sub.description,
+                                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                            color = Color(0xFF475569)
                                         )
                                     }
                                     Switch(

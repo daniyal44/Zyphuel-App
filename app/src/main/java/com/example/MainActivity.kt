@@ -10,6 +10,7 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -18,6 +19,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelProvider
 import com.example.security.BiometricSecurityManager
 import com.example.ui.*
@@ -213,6 +215,18 @@ class MainActivity : FragmentActivity() {
                                     },
                                     onDecline = { viewModel.dismissBiometricEnrollPrompt(decline = true) }
                                 )
+                            }
+
+                            // Global Outdated App Version Message Bar (for Auth/Portal screens; Home screens render it inline)
+                            val isOutdatedGlobal by viewModel.isOutdatedAppVersion.collectAsState()
+                            if (isOutdatedGlobal && currentScreen !in listOf("customer_home", "rider_home", "splash")) {
+                                androidx.compose.foundation.layout.Box(
+                                    modifier = Modifier
+                                        .align(androidx.compose.ui.Alignment.TopCenter)
+                                        .padding(horizontal = 16.dp, vertical = 42.dp)
+                                ) {
+                                    OutdatedAppVersionMessageBar(viewModel = viewModel)
+                                }
                             }
 
                             // Global Browser Web-Push Notification UI Banner Overlay

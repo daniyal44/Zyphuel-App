@@ -113,11 +113,11 @@ object CategoryCatalogSeed {
 
     fun getDefaultCategories(): List<Category> {
         return listOf(
-            // 1. FUEL & ENERGY
+            // 1. FUEL & ENERGY (Current Active Core Products)
             Category(
                 id = "fuel_energy",
-                name = "Fuel & Energy",
-                shortDescription = "Doorstep petrol, diesel & emergency fuel",
+                name = "Fuel & Energy (Current Active)",
+                shortDescription = "Super Euro-V Petrol, High-Speed Diesel & High-Octane 97 (Max 15L • Rs. 300–400 Tiered Fee)",
                 iconName = "LocalGasStation",
                 isActive = true,
                 sortOrder = 1,
@@ -125,16 +125,18 @@ object CategoryCatalogSeed {
                 serviceType = CategoryServiceType.ON_DEMAND_DELIVERY,
                 supportedVehicleTypes = listOf(VehicleType.BIKE, VehicleType.CAR, VehicleType.SUV, VehicleType.VAN, VehicleType.COMMERCIAL),
                 locationCoverage = listOf("All Lahore Operational Zones", "Gulberg", "DHA", "Model Town", "Johar Town", "Bahria Town"),
-                estimatedResponseTime = "Direct Dispatch",
+                estimatedResponseTime = "Direct Dispatch (Mon-Thu 8AM-8PM, Fri 8AM-1PM, Sat-Sun 10AM-6PM)",
                 pricingConfig = PricingConfig(deliveryFee = 300.0, isDynamicFuelRate = true, unitLabel = "L"),
                 backendServiceMapping = "fuel_delivery_v1",
                 subcategories = listOf(
-                    // Petrol (2 subcategories)
-                    Subcategory("petrol_regular", "fuel_energy", "Regular Petrol", "Euro-V standard motor gasoline for daily commuting", "PETROL", true, 275.60, "L", "Direct Dispatch", badgeText = "OGRA Live"),
-                    Subcategory("petrol_octane", "fuel_energy", "High-Octane Petrol", "HOBC 97-Octane for luxury, turbo & performance vehicles", "PETROL", true, 325.00, "L", "Direct Dispatch", badgeText = "97 Octane"),
-                    // Diesel (2 subcategories)
-                    Subcategory("diesel_regular", "fuel_energy", "Regular Diesel", "High-Speed Diesel for commercial & heavy vehicles", "DIESEL", true, 284.20, "L", "Direct Dispatch", badgeText = "OGRA Live"),
-                    Subcategory("diesel_generator", "fuel_energy", "Generator Diesel", "Bulk & backup diesel delivery for home and commercial generators", "DIESEL", true, 284.20, "L", "Scheduled Dispatch", requiresVehicle = false)
+                    // Current Active Fuel Products
+                    Subcategory("petrol_regular", "fuel_energy", "Super Euro-V Petrol", "Certified Euro-V motor gasoline • 5L to 15L Max • Rs. 300–400 tiered delivery", "PETROL", true, 326.17, "L", "Direct Dispatch", badgeText = "CURRENT LIVE"),
+                    Subcategory("petrol_octane", "fuel_energy", "High-Octane (RON 97)", "HOBC 97-Octane for luxury, turbo & performance vehicles • 5L to 15L Max", "PETROL", true, 355.00, "L", "Direct Dispatch", badgeText = "CURRENT LIVE"),
+                    Subcategory("diesel_regular", "fuel_energy", "High-Speed Euro-V Diesel", "Euro-V High-Speed Diesel for SUVs, pickups & commercial vehicles • 5L to 15L Max", "DIESEL", true, 340.86, "L", "Direct Dispatch", badgeText = "CURRENT LIVE"),
+                    Subcategory("diesel_generator", "fuel_energy", "Generator Diesel", "Backup Euro-V diesel delivery for home and commercial generators • Max 15L", "DIESEL", true, 340.86, "L", "Scheduled Dispatch", requiresVehicle = false, badgeText = "CURRENT LIVE"),
+                    // Currently Unavailable Items (Explicitly listed as Inactive/Blocked for Admin Visibility)
+                    Subcategory("water_pure_blocked", "fuel_energy", "Pure Water Delivery (Unavailable)", "Currently unavailable across all customer order flows", "UNAVAILABLE", false, 0.0, "Can", "Unavailable", requiresVehicle = false, badgeText = "UNAVAILABLE"),
+                    Subcategory("lpg_cylinder_blocked", "fuel_energy", "LPG Gas Cylinders (Unavailable)", "Currently unavailable across all customer order flows", "UNAVAILABLE", false, 0.0, "Cylinder", "Unavailable", requiresVehicle = false, badgeText = "UNAVAILABLE")
                 )
             ),
 

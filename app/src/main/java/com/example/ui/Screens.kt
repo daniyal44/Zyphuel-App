@@ -4418,6 +4418,7 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                 }
             }
         ) { innerPadding ->
+            val isOutdatedAppVersion by viewModel.isOutdatedAppVersion.collectAsState()
             LazyColumn(
                 state = homeListState,
                 modifier = Modifier
@@ -4427,6 +4428,16 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                     .padding(horizontal = 20.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                // Outdated App Version Message Bar — ONLY displayed when the user has an OLD version of the app
+                if (isOutdatedAppVersion) {
+                    item {
+                        OutdatedAppVersionMessageBar(
+                            viewModel = viewModel,
+                            modifier = Modifier.padding(top = 12.dp)
+                        )
+                    }
+                }
+
                 // Delivery Address & Location Header (Careem / Indrive Style)
                 item {
                     Card(
@@ -5251,6 +5262,15 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
 
     if (showMyOrdersDialog) {
         MyOrdersDialog(viewModel = viewModel) { showMyOrdersDialog = false }
+    }
+
+    val postOrderFeedbackOrder by viewModel.postOrderFeedbackPromptOrder.collectAsState()
+    if (postOrderFeedbackOrder != null) {
+        PostOrderFeedbackReminderDialog(
+            order = postOrderFeedbackOrder!!,
+            viewModel = viewModel,
+            onDismiss = { viewModel.dismissPostOrderFeedbackPrompt() }
+        )
     }
 
     if (showEditLocationDialog) {
@@ -6600,7 +6620,7 @@ fun CustomerOrderCard(
                 }
             }
 
-            if (order.status == "Completed") {
+            if (order.status != "Cancelled" && order.status != "Canceled" && order.status != "Declined") {
                 HorizontalDivider(
                     modifier = Modifier.padding(horizontal = 16.dp),
                     color = Color.LightGray.copy(alpha = 0.5f)
@@ -6626,7 +6646,7 @@ fun CustomerOrderCard(
                                 }
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    text = "Your Rating",
+                                    text = "Your Feedback & Rating",
                                     style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontWeight = FontWeight.Bold)
                                 )
                             }
@@ -6639,10 +6659,16 @@ fun CustomerOrderCard(
                             }
                         }
                     } else {
-                        Text(
-                            text = "How was your delivery?",
-                            style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray)
-                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Share your order feedback ⭐",
+                                style = MaterialTheme.typography.bodySmall.copy(color = Color.Black, fontWeight = FontWeight.Bold)
+                            )
+                            Text(
+                                text = "Tell us how your order experience went",
+                                style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontSize = 10.sp)
+                            )
+                        }
                         Button(
                             onClick = { showRateDialog = true },
                             colors = ButtonDefaults.buttonColors(containerColor = ZyphuelBluePrimary),
@@ -6657,7 +6683,7 @@ fun CustomerOrderCard(
                                 tint = Color.White
                             )
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Rate Experience", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                            Text("Give Feedback", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
                         }
                     }
                 }
@@ -8207,41 +8233,6 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                 modifier = Modifier.verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                // Tiered Delivery Pricing Information Banner
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF0FDF4)),
-                    border = BorderStroke(1.dp, Color(0xFF86EFAC)),
-                    shape = RoundedCornerShape(10.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.LocalShipping,
-                            contentDescription = "Tiered Delivery Rates",
-                            tint = Color(0xFF16A34A),
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Column {
-                            Text(
-                                "Doorstep Fuel Delivery Rates (Max 15L)",
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF166534),
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                            Text(
-                                "• Up to 10L: Rs. 300  • 11L: Rs. 320  • 12L: Rs. 340  • 13L: Rs. 360  • 14L: Rs. 380  • 15L: Rs. 400",
-                                color = Color(0xFF15803D),
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
-                    }
-                }
-
                 if (!isDeliveryOpen) {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -8356,7 +8347,7 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                                             }
                                         ) {
                                             Text(
-                                                text = if (preset == 15) "15L Max" else "${preset}L",
+                                                text = "${preset}L",
                                                 color = if (petrolQty == preset) Color.White else ZyphuelBluePrimary,
                                                 fontSize = 9.sp,
                                                 fontWeight = FontWeight.Bold,
@@ -8426,7 +8417,7 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                                             }
                                         ) {
                                             Text(
-                                                text = if (preset == 15) "15L Max" else "${preset}L",
+                                                text = "${preset}L",
                                                 color = if (dieselQty == preset) Color.White else ZyphuelBluePrimary,
                                                 fontSize = 9.sp,
                                                 fontWeight = FontWeight.Bold,
@@ -8496,7 +8487,7 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                                             }
                                         ) {
                                             Text(
-                                                text = if (preset == 15) "15L Max" else "${preset}L",
+                                                text = "${preset}L",
                                                 color = if (octaneQty == preset) Color.White else ZyphuelBluePrimary,
                                                 fontSize = 9.sp,
                                                 fontWeight = FontWeight.Bold,
@@ -8555,15 +8546,9 @@ fun OrderDialog(viewModel: MainViewModel, serviceType: String, onDismiss: () -> 
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Delivery Charges (${totalFuelVolume}L Tier):", style = MaterialTheme.typography.bodyMedium.copy(color = Color.Gray))
+                        Text("Delivery Charges:", style = MaterialTheme.typography.bodyMedium.copy(color = Color.Gray))
                         Text(viewModel.formatPrice(deliveryCharge), style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, color = ZyphuelBlueDark))
                     }
-                    Text(
-                        text = "• Delivery Rates: Up to 10L = Rs. 300 | 11L = Rs. 320 | 12L = Rs. 340 | 13L = Rs. 360 | 14L = Rs. 380 | 15L Max = Rs. 400",
-                        fontSize = 10.sp,
-                        color = Color(0xFF0369A1),
-                        fontWeight = FontWeight.Medium
-                    )
                     if (isPromoApplied) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -9940,8 +9925,8 @@ fun TrackerScreen(viewModel: MainViewModel) {
                     }
                 }
 
-                // 4. Rating Card if Completed
-                if (trackingOrder!!.status == "Completed" || trackingOrder!!.status == "Delivered") {
+                // 4. Customer Feedback & Rating Card (Always available after placing an order)
+                if (trackingOrder!!.status != "Cancelled" && trackingOrder!!.status != "Canceled" && trackingOrder!!.status != "Declined") {
                     PostDeliveryRatingCard(
                         order = trackingOrder!!,
                         viewModel = viewModel
@@ -10196,6 +10181,189 @@ fun TrackerScreen(viewModel: MainViewModel) {
         )
     }
 
+    // 5. Post-Order Customer Feedback Reminder Modal (Automatically shown after order placement)
+    val postOrderFeedbackOrder by viewModel.postOrderFeedbackPromptOrder.collectAsState()
+    if (postOrderFeedbackOrder != null && !showDailyGpsSafetyDisclaimer) {
+        PostOrderFeedbackReminderDialog(
+            order = postOrderFeedbackOrder!!,
+            viewModel = viewModel,
+            onDismiss = { viewModel.dismissPostOrderFeedbackPrompt() }
+        )
+    }
+
+}
+
+@Composable
+fun PostOrderFeedbackReminderDialog(
+    order: OrderEntity,
+    viewModel: MainViewModel,
+    onDismiss: () -> Unit
+) {
+    var selectedStars by remember { mutableStateOf(5) }
+    var feedbackComment by remember { mutableStateOf("") }
+    val quickTags = remember {
+        listOf(
+            "Fast Order Booking ⚡",
+            "Smooth App Experience 👍",
+            "Fair OGRA Pricing ⛽",
+            "Easy Location Pinning 📍",
+            "Great Customer Support 💬"
+        )
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = Color.White,
+        shape = RoundedCornerShape(22.dp),
+        icon = {
+            Box(
+                modifier = Modifier
+                    .size(54.dp)
+                    .background(Color(0xFFFEF3C7), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Star,
+                    contentDescription = "Feedback Reminder",
+                    tint = Color(0xFFF59E0B),
+                    modifier = Modifier.size(30.dp)
+                )
+            }
+        },
+        title = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Order #${order.id} Confirmed! 🎉",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.ExtraBold,
+                        color = ZyphuelBlueDark
+                    ),
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Please share your feedback / اپنا فیڈ بیک ضرور دیں",
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = ZyphuelBluePrimary
+                    ),
+                    textAlign = TextAlign.Center
+                )
+            }
+        },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "How was your order experience for ${order.quantity}L ${order.serviceType}? Your feedback helps us improve doorstep fuel delivery in Lahore.",
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = Color(0xFF334155),
+                        lineHeight = 17.sp
+                    ),
+                    textAlign = TextAlign.Center
+                )
+
+                // 5-Star Interactive Selector
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    for (star in 1..5) {
+                        IconButton(
+                            onClick = { selectedStars = star },
+                            modifier = Modifier.size(40.dp).testTag("post_order_feedback_star_$star")
+                        ) {
+                            Icon(
+                                imageVector = if (star <= selectedStars) Icons.Filled.Star else Icons.Filled.StarBorder,
+                                contentDescription = "$star Stars",
+                                tint = if (star <= selectedStars) Color(0xFFFFB000) else Color(0xFFCBD5E1),
+                                modifier = Modifier.size(32.dp)
+                            )
+                        }
+                    }
+                }
+
+                // Quick Feedback Chips
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    quickTags.forEach { tag ->
+                        val isTagChosen = feedbackComment.contains(tag)
+                        Surface(
+                            modifier = Modifier.clickable {
+                                feedbackComment = if (feedbackComment.isBlank()) tag else "$feedbackComment, $tag"
+                            },
+                            shape = RoundedCornerShape(16.dp),
+                            color = if (isTagChosen) ZyphuelBluePrimary.copy(alpha = 0.12f) else Color(0xFFF8FAFC),
+                            border = BorderStroke(1.dp, if (isTagChosen) ZyphuelBluePrimary else Color(0xFFE2E8F0))
+                        ) {
+                            Text(
+                                text = tag,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = if (isTagChosen) ZyphuelBluePrimary else Color(0xFF334155),
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                            )
+                        }
+                    }
+                }
+
+                OutlinedTextField(
+                    value = feedbackComment,
+                    onValueChange = { feedbackComment = it },
+                    label = { Text("Your Feedback (Optional)") },
+                    placeholder = { Text("Tell us what you liked or how we can improve...", fontSize = 12.sp) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("post_order_feedback_input"),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black,
+                        focusedBorderColor = ZyphuelBluePrimary,
+                        unfocusedBorderColor = Color(0xFFCBD5E1),
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    maxLines = 3
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val finalComment = feedbackComment.trim().ifBlank { "Rated $selectedStars/5 stars right after placing order" }
+                    viewModel.submitOrderRating(order.id, selectedStars, finalComment)
+                    onDismiss()
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = ZyphuelBluePrimary),
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier.testTag("submit_post_order_feedback_btn")
+            ) {
+                Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text("Submit Feedback", fontWeight = FontWeight.Bold, color = Color.White)
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                modifier = Modifier.testTag("remind_later_feedback_btn")
+            ) {
+                Text("Rate Later on Tracker", color = Color(0xFF475569), fontWeight = FontWeight.Bold)
+            }
+        }
+    )
 }
 
 @Composable
@@ -10489,7 +10657,7 @@ fun FAQDialog(onDismiss: () -> Unit) {
                         FAQItem("What is the maximum doorstep fuel order?", "Doorstep mobile delivery is capped at a maximum of 15 Liters per order (5L, 10L, or 15L) in compliance with OGRA petroleum safety standards. For commercial bulk orders, contact our WhatsApp hotline.")
                     }
                     item {
-                        FAQItem("What are the delivery charges?", "Delivery fees are tiered by volume: Rs. 300 for up to 10 Liters (5L, 7L, 10L), Rs. 320 for 11L, Rs. 340 for 12L, Rs. 360 for 13L, Rs. 380 for 14L, and Rs. 400 for 15 Liters (maximum order limit).")
+                        FAQItem("What are the delivery charges?", "Delivery charges are calculated automatically in the background based on your selected fuel volume and shown in your order summary at checkout.")
                     }
                     item {
                         FAQItem("What are your doorstep delivery hours?", "Official doorstep delivery hours are: Mon–Thu 08:00 AM – 08:00 PM, Fri 08:00 AM – 01:00 PM, and Sat–Sun 10:00 AM – 06:00 PM (Pakistan Standard Time). Order actions and checkout are available exclusively during active operating hours.")
@@ -11178,14 +11346,56 @@ fun ProfileSettingsDialog(
     onDismiss: () -> Unit
 ) {
     val currentUser by viewModel.currentUser.collectAsState()
+    val syncedLoginPassword by viewModel.currentLoginPassword.collectAsState()
+    val currentAppLang by viewModel.currentLanguage.collectAsState()
     if (currentUser == null) return
 
     val context = LocalContext.current
-    var phoneNumber by remember(currentUser) { mutableStateOf(currentUser?.phoneNumber ?: "") }
-    var password by remember { mutableStateOf(currentUser!!.passwordHash) }
+    var phoneNumber by remember(currentUser?.email, currentUser?.phoneNumber) {
+        mutableStateOf(currentUser?.phoneNumber ?: "")
+    }
+    var password by remember(currentUser?.email, syncedLoginPassword) {
+        mutableStateOf(syncedLoginPassword)
+    }
     var passwordVisible by remember { mutableStateOf(false) }
+    var isRealtimeSyncingPassword by remember { mutableStateOf(false) }
+    var isRealtimeSyncingPhone by remember { mutableStateOf(false) }
+    var lastRealtimeSyncStamp by remember { mutableStateOf("Live Synced") }
+    var showLanguagePickerInProfile by remember { mutableStateOf(false) }
     var showDeleteConfirmInProfile by remember { mutableStateOf(false) }
     var pushNotificationsEnabled by remember { mutableStateOf(true) }
+
+    val matchesLoginPassword = remember(password, currentUser?.passwordHash, syncedLoginPassword) {
+        password.isNotBlank() && viewModel.verifyMatchesCurrentLoginPassword(password)
+    }
+
+    // Real-time automatic sync when user updates password in Profile Settings
+    LaunchedEffect(password) {
+        val trimmed = password.trim()
+        if (trimmed.length >= 4 && trimmed != syncedLoginPassword) {
+            isRealtimeSyncingPassword = true
+            kotlinx.coroutines.delay(600)
+            viewModel.updatePassword(trimmed, silent = true)
+            isRealtimeSyncingPassword = false
+            lastRealtimeSyncStamp = "Password synced just now"
+        } else {
+            isRealtimeSyncingPassword = false
+        }
+    }
+
+    // Real-time automatic sync when user updates phone number in Profile Settings
+    LaunchedEffect(phoneNumber) {
+        val trimmedPhone = phoneNumber.trim()
+        if (trimmedPhone.length >= 7 && trimmedPhone != (currentUser?.phoneNumber ?: "")) {
+            isRealtimeSyncingPhone = true
+            kotlinx.coroutines.delay(600)
+            viewModel.updatePhoneNumber(trimmedPhone, silent = true)
+            isRealtimeSyncingPhone = false
+            lastRealtimeSyncStamp = "Phone synced just now"
+        } else {
+            isRealtimeSyncingPhone = false
+        }
+    }
 
     val startupNoticePrefs = remember(context) {
         context.getSharedPreferences("zyphuel_ui_prefs", android.content.Context.MODE_PRIVATE)
@@ -11397,6 +11607,38 @@ fun ProfileSettingsDialog(
                     }
                 }
 
+                // World Language Selector Card inside Profile Settings
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { showLanguagePickerInProfile = true }
+                        .testTag("profile_language_selector_card"),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
+                    border = BorderStroke(1.dp, Color(0xFFCBD5E1))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp).fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                            Icon(Icons.Filled.Language, contentDescription = null, tint = ZyphuelBluePrimary, modifier = Modifier.size(22.dp))
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column {
+                                Text(tr("lbl_language", "App Language"), style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, color = Color.Black))
+                                Text(
+                                    "${currentAppLang.flag} ${currentAppLang.nameNative} (${currentAppLang.nameEn})",
+                                    style = MaterialTheme.typography.bodySmall.copy(color = ZyphuelBluePrimary, fontWeight = FontWeight.Bold)
+                                )
+                            }
+                        }
+                        TextButton(onClick = { showLanguagePickerInProfile = true }) {
+                            Text("Change", color = ZyphuelBluePrimary, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        }
+                    }
+                }
+
                 // Notification Preferences Toggle
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -11467,12 +11709,23 @@ fun ProfileSettingsDialog(
                     shape = RoundedCornerShape(12.dp)
                 )
 
-                // Phone Number (Editable to change)
+                // Phone Number (Editable with Real-Time Sync)
                 OutlinedTextField(
                     value = phoneNumber,
                     onValueChange = { phoneNumber = it },
-                    label = { Text("Phone Number") },
+                    label = { Text("Phone Number (Real-Time Sync)") },
                     leadingIcon = { Icon(Icons.Filled.Phone, contentDescription = null, tint = ZyphuelBluePrimary) },
+                    trailingIcon = {
+                        if (isRealtimeSyncingPhone) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                strokeWidth = 2.dp,
+                                color = ZyphuelBluePrimary
+                            )
+                        } else if (phoneNumber.isNotBlank() && phoneNumber == currentUser?.phoneNumber) {
+                            Icon(Icons.Filled.CheckCircle, contentDescription = "Synced", tint = Color(0xFF16A34A), modifier = Modifier.size(18.dp))
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth().testTag("profile_phone_input"),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Color.Black,
@@ -11488,17 +11741,36 @@ fun ProfileSettingsDialog(
                     singleLine = true
                 )
 
-                // Password (Editable to change)
+                // Password (Editable with Real-Time Login Password Sync & Match Verification)
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
-                    label = { Text("Password") },
+                    label = { Text("Login Password (Real-Time Sync)") },
+                    placeholder = { Text("Enter or update your login password", color = Color.Gray, fontSize = 12.sp) },
                     leadingIcon = { Icon(Icons.Filled.Lock, contentDescription = null, tint = ZyphuelBluePrimary) },
                     trailingIcon = {
-                        val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
-                        val description = if (passwordVisible) "Hide password" else "Show password"
-                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                            Icon(imageVector = image, contentDescription = description, tint = ZyphuelBluePrimary)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            if (isRealtimeSyncingPassword) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(16.dp),
+                                    strokeWidth = 2.dp,
+                                    color = ZyphuelBluePrimary
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                            } else if (matchesLoginPassword) {
+                                Icon(
+                                    Icons.Filled.Verified,
+                                    contentDescription = "Matches Login Password",
+                                    tint = Color(0xFF16A34A),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(2.dp))
+                            }
+                            val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+                            val description = if (passwordVisible) "Hide password" else "Show password"
+                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                Icon(imageVector = image, contentDescription = description, tint = ZyphuelBluePrimary)
+                            }
                         }
                     },
                     modifier = Modifier.fillMaxWidth().testTag("profile_password_input"),
@@ -11508,8 +11780,8 @@ fun ProfileSettingsDialog(
                         unfocusedTextColor = Color.Black,
                         focusedLabelColor = Color.Black,
                         unfocusedLabelColor = Color.Black,
-                        focusedBorderColor = ZyphuelBluePrimary,
-                        unfocusedBorderColor = Color.LightGray,
+                        focusedBorderColor = if (matchesLoginPassword) Color(0xFF16A34A) else ZyphuelBluePrimary,
+                        unfocusedBorderColor = if (matchesLoginPassword) Color(0xFF16A34A).copy(alpha = 0.6f) else Color.LightGray,
                         focusedContainerColor = Color.White,
                         unfocusedContainerColor = Color.White
                     ),
@@ -11517,13 +11789,83 @@ fun ProfileSettingsDialog(
                     singleLine = true
                 )
 
-                Text(
-                    text = "You can update your phone number and password directly. Changes apply immediately in real-time.",
-                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
-                    color = Color.Black,
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                // Live Password Sync & Login Match Status Pill
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = when {
+                        isRealtimeSyncingPassword || isRealtimeSyncingPhone -> Color(0xFFEFF6FF)
+                        matchesLoginPassword -> Color(0xFFF0FDF4)
+                        password.isBlank() -> Color(0xFFF8FAFC)
+                        else -> Color(0xFFFFFBEB)
+                    },
+                    border = BorderStroke(
+                        1.dp,
+                        when {
+                            isRealtimeSyncingPassword || isRealtimeSyncingPhone -> Color(0xFF93C5FD)
+                            matchesLoginPassword -> Color(0xFF86EFAC)
+                            password.isBlank() -> Color(0xFFE2E8F0)
+                            else -> Color(0xFFFDE68A)
+                        }
+                    ),
+                    modifier = Modifier.fillMaxWidth().testTag("profile_password_sync_status")
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                            Icon(
+                                imageVector = when {
+                                    isRealtimeSyncingPassword || isRealtimeSyncingPhone -> Icons.Filled.Sync
+                                    matchesLoginPassword -> Icons.Filled.CheckCircle
+                                    else -> Icons.Filled.LockReset
+                                },
+                                contentDescription = null,
+                                tint = when {
+                                    isRealtimeSyncingPassword || isRealtimeSyncingPhone -> ZyphuelBluePrimary
+                                    matchesLoginPassword -> Color(0xFF16A34A)
+                                    else -> Color(0xFFD97706)
+                                },
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text(
+                                    text = when {
+                                        isRealtimeSyncingPassword -> "Real-Time Syncing Login Password..."
+                                        isRealtimeSyncingPhone -> "Real-Time Syncing Phone Number..."
+                                        matchesLoginPassword -> "Login Password Matched & Real-Time Synced"
+                                        password.isBlank() -> "Type a new password to sync immediately"
+                                        password.length < 4 -> "Enter at least 4 characters to sync login password"
+                                        else -> "Ready to sync with login credentials"
+                                    },
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.Black
+                                    )
+                                )
+                                Text(
+                                    text = lastRealtimeSyncStamp,
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontSize = 10.sp,
+                                        color = Color(0xFF475569)
+                                    )
+                                )
+                            }
+                        }
+                        if (password.trim().length >= 4 && !matchesLoginPassword) {
+                            TextButton(
+                                onClick = {
+                                    viewModel.updatePassword(password.trim(), silent = false)
+                                    lastRealtimeSyncStamp = "Synced with Login Credentials"
+                                }
+                            ) {
+                                Text("Sync Now", fontWeight = FontWeight.Bold, fontSize = 11.sp, color = ZyphuelBluePrimary)
+                            }
+                        }
+                    }
+                }
 
                 // --- Danger Zone / Delete Account (For Standard Users) ---
                 if (currentUser!!.role != "admin" && !currentUser!!.email.equals("m.daniyalkhan490@gmail.com", ignoreCase = true)) {
@@ -11581,11 +11923,13 @@ fun ProfileSettingsDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    if (phoneNumber.isNotBlank() && phoneNumber != currentUser!!.phoneNumber) {
-                        viewModel.updatePhoneNumber(phoneNumber)
+                    val trimmedPhone = phoneNumber.trim()
+                    val trimmedPassword = password.trim()
+                    if (trimmedPhone.isNotBlank() && trimmedPhone != currentUser!!.phoneNumber) {
+                        viewModel.updatePhoneNumber(trimmedPhone, silent = false)
                     }
-                    if (password.isNotBlank() && password != currentUser!!.passwordHash) {
-                        viewModel.updatePassword(password)
+                    if (trimmedPassword.length >= 4 && (trimmedPassword != syncedLoginPassword || !viewModel.verifyMatchesCurrentLoginPassword(trimmedPassword))) {
+                        viewModel.updatePassword(trimmedPassword, silent = false)
                     }
                     onDismiss()
                 },
@@ -11593,15 +11937,22 @@ fun ProfileSettingsDialog(
                 shape = RoundedCornerShape(10.dp),
                 modifier = Modifier.testTag("profile_update_button")
             ) {
-                Text("Save Changes", fontWeight = FontWeight.Bold)
+                Text(tr("btn_save", "Save Changes"), fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Close", color = Color.Black, fontWeight = FontWeight.Bold)
+                Text(tr("btn_cancel", "Close"), color = Color.Black, fontWeight = FontWeight.Bold)
             }
         }
     )
+
+    if (showLanguagePickerInProfile) {
+        LanguagePickerDialog(
+            viewModel = viewModel,
+            onDismiss = { showLanguagePickerInProfile = false }
+        )
+    }
 
     if (showDeleteConfirmInProfile) {
         DeleteAccountConfirmationDialog(
@@ -11618,8 +11969,8 @@ fun ProfileSettingsDialog(
 
 
 /**
- * Standalone language selector. Opened directly from the navigation sidebar so that
- * tapping the language row changes the language in place instead of routing to Profile Settings.
+ * Standalone world language selector supporting 68+ global and regional languages with
+ * instant search, regional filters, native scripts, and real-time translation preview.
  */
 @Composable
 fun LanguagePickerDialog(
@@ -11628,63 +11979,215 @@ fun LanguagePickerDialog(
 ) {
     val context = LocalContext.current
     val currentAppLang by viewModel.currentLanguage.collectAsState()
+    var searchQuery by remember { mutableStateOf("") }
+    var selectedRegion by remember { mutableStateOf("All") }
+
+    val allLanguages = remember { AppLanguageManager.getSupportedLanguages() }
+    val regions = remember {
+        listOf("All", "Pakistan & South Asia", "Middle East & Central Asia", "East & Southeast Asia", "Europe & Americas", "Africa")
+    }
+
+    val filteredLanguages = remember(searchQuery, selectedRegion, allLanguages) {
+        allLanguages.filter { lang ->
+            val matchesRegion = selectedRegion == "All" ||
+                lang.region.equals(selectedRegion, ignoreCase = true) ||
+                (selectedRegion == "Pakistan & South Asia" && lang.code == "en")
+            val q = searchQuery.trim().lowercase()
+            val matchesQuery = q.isEmpty() ||
+                lang.nameEn.lowercase().contains(q) ||
+                lang.nameNative.lowercase().contains(q) ||
+                lang.code.lowercase().contains(q) ||
+                lang.region.lowercase().contains(q)
+            matchesRegion && matchesQuery
+        }
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = Color.White,
         shape = RoundedCornerShape(20.dp),
         title = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Filled.Language, contentDescription = null, tint = ZyphuelBluePrimary)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Select Language / زبان منتخب کریں",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 17.sp,
-                    color = Color.Black
-                )
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Filled.Public, contentDescription = null, tint = ZyphuelBluePrimary)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                text = "World Languages / زبان منتخب کریں",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp,
+                                color = Color.Black
+                            )
+                            Text(
+                                text = "${allLanguages.size} World Languages • Real-Time App Translation",
+                                fontSize = 11.sp,
+                                color = ZyphuelBluePrimary,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+                }
             }
         },
         text = {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(max = 400.dp)
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                    .heightIn(max = 460.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                AppLanguageManager.getSupportedLanguages().forEach { lang ->
-                    val isSelected = currentAppLang.code == lang.code
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                viewModel.setAppLanguage(lang)
-                                onDismiss()
-                                val toastMsg = "${AppLanguageManager.translate("msg_lang_changed", lang.code, "Language set to")} ${lang.nameNative} (${lang.nameEn})"
-                                Toast.makeText(context, toastMsg, Toast.LENGTH_SHORT).show()
-                            },
-                        shape = RoundedCornerShape(10.dp),
-                        color = if (isSelected) ZyphuelBluePrimary.copy(alpha = 0.12f) else Color(0xFFF8FAFC),
-                        border = BorderStroke(1.dp, if (isSelected) ZyphuelBluePrimary else Color(0xFFE2E8F0))
-                    ) {
-                        Row(
+                // Search Bar for 68+ World Languages
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    placeholder = {
+                        Text(
+                            "Search any world language (e.g. Urdu, Arabic, Español, 中文)...",
+                            fontSize = 12.sp,
+                            color = Color.Gray
+                        )
+                    },
+                    leadingIcon = {
+                        Icon(Icons.Filled.Search, contentDescription = "Search Language", tint = ZyphuelBluePrimary, modifier = Modifier.size(18.dp))
+                    },
+                    trailingIcon = {
+                        if (searchQuery.isNotEmpty()) {
+                            IconButton(onClick = { searchQuery = "" }) {
+                                Icon(Icons.Filled.Close, contentDescription = "Clear", tint = Color.Gray, modifier = Modifier.size(16.dp))
+                            }
+                        }
+                    },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black,
+                        focusedBorderColor = ZyphuelBluePrimary,
+                        unfocusedBorderColor = Color(0xFFCBD5E1),
+                        focusedContainerColor = Color(0xFFF8FAFC),
+                        unfocusedContainerColor = Color(0xFFF8FAFC)
+                    ),
+                    modifier = Modifier.fillMaxWidth().testTag("language_search_input")
+                )
+
+                // Region Filter Chips
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    regions.forEach { region ->
+                        val isRegionSelected = selectedRegion == region
+                        Surface(
+                            modifier = Modifier.clickable { selectedRegion = region },
+                            shape = RoundedCornerShape(20.dp),
+                            color = if (isRegionSelected) ZyphuelBluePrimary else Color(0xFFF1F5F9),
+                            border = BorderStroke(1.dp, if (isRegionSelected) ZyphuelBluePrimary else Color(0xFFE2E8F0))
+                        ) {
+                            Text(
+                                text = region,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isRegionSelected) Color.White else Color(0xFF334155),
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                            )
+                        }
+                    }
+                }
+
+                // Scrollable Language List
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f, fill = false)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    if (filteredLanguages.isEmpty()) {
+                        Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 12.dp, vertical = 10.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                                .padding(vertical = 24.dp),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(lang.flag, fontSize = 20.sp)
-                                Spacer(modifier = Modifier.width(10.dp))
-                                Column {
-                                    Text(lang.nameNative, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color.Black)
-                                    Text(lang.nameEn, fontSize = 11.sp, color = Color.DarkGray)
+                            Text(
+                                "No matching language found for \"$searchQuery\"",
+                                color = Color.Gray,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    } else {
+                        filteredLanguages.forEach { lang ->
+                            val isSelected = currentAppLang.code == lang.code
+                            val previewOrderText = AppLanguageManager.translate("lbl_order_fuel", lang.code, "Order Fuel")
+                            val previewHomeText = AppLanguageManager.translate("nav_home", lang.code, "Home")
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        viewModel.setAppLanguage(lang)
+                                        onDismiss()
+                                        val toastMsg = "${AppLanguageManager.translate("msg_lang_changed", lang.code, "Language updated to")} ${lang.nameNative} (${lang.nameEn})"
+                                        Toast.makeText(context, toastMsg, Toast.LENGTH_SHORT).show()
+                                    }
+                                    .testTag("lang_option_${lang.code}"),
+                                shape = RoundedCornerShape(10.dp),
+                                color = if (isSelected) ZyphuelBluePrimary.copy(alpha = 0.12f) else Color(0xFFF8FAFC),
+                                border = BorderStroke(1.dp, if (isSelected) ZyphuelBluePrimary else Color(0xFFE2E8F0))
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Text(lang.flag, fontSize = 22.sp)
+                                        Spacer(modifier = Modifier.width(10.dp))
+                                        Column {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Text(
+                                                    lang.nameNative,
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 14.sp,
+                                                    color = Color.Black
+                                                )
+                                                Spacer(modifier = Modifier.width(6.dp))
+                                                Text(
+                                                    "(${lang.nameEn})",
+                                                    fontSize = 11.5.sp,
+                                                    color = Color(0xFF475569),
+                                                    fontWeight = FontWeight.SemiBold
+                                                )
+                                            }
+                                            Text(
+                                                text = "$previewHomeText • $previewOrderText",
+                                                fontSize = 10.5.sp,
+                                                color = ZyphuelBluePrimary,
+                                                fontWeight = FontWeight.Medium
+                                            )
+                                        }
+                                    }
+                                    if (isSelected) {
+                                        Icon(
+                                            Icons.Filled.CheckCircle,
+                                            contentDescription = "Selected",
+                                            tint = ZyphuelBluePrimary,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
                                 }
-                            }
-                            if (isSelected) {
-                                Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = ZyphuelBluePrimary, modifier = Modifier.size(20.dp))
                             }
                         }
                     }
@@ -11693,7 +12196,7 @@ fun LanguagePickerDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("Close", fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary)
+                Text(tr("btn_cancel", "Close"), fontWeight = FontWeight.Bold, color = ZyphuelBluePrimary)
             }
         }
     )
@@ -11961,6 +12464,7 @@ fun RiderHomeScreen(viewModel: MainViewModel) {
                 )
             }
         ) { innerPadding ->
+        val isOutdatedRiderApp by viewModel.isOutdatedAppVersion.collectAsState()
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -11969,6 +12473,12 @@ fun RiderHomeScreen(viewModel: MainViewModel) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            if (isOutdatedRiderApp) {
+                item {
+                    OutdatedAppVersionMessageBar(viewModel = viewModel)
+                }
+            }
+
             if (viewModel.isRiderProfileIncomplete(currentUser!!)) {
                 item {
                     Card(
@@ -13424,6 +13934,100 @@ fun AdminAnalyticsDashboard(
                     Icon(Icons.Filled.Send, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.White)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Broadcast 4-Hour Rate Update Alert Now", fontWeight = FontWeight.Bold, color = Color.White)
+                }
+            }
+        }
+
+        // Real-Time App Version & Multi-Device Cloud Sync Control Card
+        if (viewModel != null) {
+            val versionConfig by viewModel.appVersionConfig.collectAsState()
+            val isOutdated by viewModel.isOutdatedAppVersion.collectAsState()
+            var downloadUrlInput by remember(versionConfig.downloadUrl) { mutableStateOf(versionConfig.downloadUrl) }
+            Card(
+                modifier = Modifier.fillMaxWidth().testTag("admin_app_version_sync_card"),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFF0FDF4)),
+                border = BorderStroke(1.dp, Color(0xFF10B981)),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.SystemUpdate,
+                                contentDescription = null,
+                                tint = Color(0xFF059669),
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Text(
+                                text = "Real-Time App Version & Cloud Sync",
+                                style = MaterialTheme.typography.titleSmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF065F46)
+                                )
+                            )
+                        }
+                        Surface(
+                            color = Color(0xFF10B981).copy(alpha = 0.2f),
+                            shape = RoundedCornerShape(6.dp)
+                        ) {
+                            Text(
+                                text = if (isOutdated) "UPDATE AVAILABLE" else "LATEST SYNCED",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    color = Color(0xFF047857),
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+
+                    Text(
+                        text = "Installed Build: v${viewModel.installedVersionName} (Build ${viewModel.installedVersionCode}) • Cloud Latest: v${versionConfig.latestVersionName} (Build ${versionConfig.latestVersionCode})",
+                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFF064E3B))
+                    )
+                    Text(
+                        text = "Users on any older version (< v${versionConfig.latestVersionName}) automatically see a 'Download New Version' message bar in real-time. Users on the latest version never see the update bar.",
+                        style = MaterialTheme.typography.bodySmall.copy(color = Color(0xFF1E293B), fontSize = 11.5.sp)
+                    )
+
+                    OutlinedTextField(
+                        value = downloadUrlInput,
+                        onValueChange = { downloadUrlInput = it },
+                        label = { Text("New Version Download Link (APK / Web)", fontSize = 11.sp) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth().testTag("admin_version_download_url_input"),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = Color.White,
+                            unfocusedContainerColor = Color.White,
+                            focusedTextColor = Color.Black,
+                            unfocusedTextColor = Color.Black
+                        )
+                    )
+
+                    Button(
+                        onClick = {
+                            viewModel.publishAppVersionUpdate(
+                                latestCode = viewModel.installedVersionCode,
+                                latestName = viewModel.installedVersionName,
+                                downloadUrl = downloadUrlInput
+                            )
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF059669)),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.fillMaxWidth().testTag("admin_broadcast_latest_version_btn")
+                    ) {
+                        Icon(Icons.Filled.CloudUpload, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.White)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Broadcast v${viewModel.installedVersionName} as Latest to All Devices", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 12.sp)
+                    }
                 }
             }
         }
@@ -18937,3 +19541,115 @@ private fun TechAndInternationalTab(context: android.content.Context) {
     }
 }
 
+/**
+ * Real-Time Outdated App Version Message Bar.
+ * STRICT RULE:
+ * - Displayed ONLY when the user has an OLD version of the app (BuildConfig.VERSION_CODE < latestVersionCode
+ *   or compareVersionNames(BuildConfig.VERSION_NAME, latestVersionName) < 0).
+ * - NEVER displayed when the user is on the latest version.
+ */
+@Composable
+fun OutdatedAppVersionMessageBar(
+    viewModel: MainViewModel,
+    modifier: Modifier = Modifier
+) {
+    val isOutdated by viewModel.isOutdatedAppVersion.collectAsState()
+    val versionConfig by viewModel.appVersionConfig.collectAsState()
+    val context = LocalContext.current
+
+    if (!isOutdated) return
+
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag("outdated_app_version_message_bar"),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF3C7)),
+        border = BorderStroke(1.5.dp, Color(0xFFF59E0B)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(34.dp)
+                            .background(Color(0xFFD97706), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.SystemUpdate,
+                            contentDescription = "New Version Available",
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    Column {
+                        Text(
+                            text = "🚀 New Version Available (v${versionConfig.latestVersionName})",
+                            style = MaterialTheme.typography.titleSmall.copy(
+                                fontWeight = FontWeight.ExtraBold,
+                                color = Color(0xFF92400E),
+                                fontSize = 13.5.sp
+                            )
+                        )
+                        Text(
+                            text = "Your version (v${viewModel.installedVersionName}) is outdated. Download the latest update for full real-time sync.",
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = Color(0xFF78350F),
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 11.5.sp
+                            )
+                        )
+                    }
+                }
+            }
+
+            Button(
+                onClick = {
+                    try {
+                        val url = versionConfig.downloadUrl.ifBlank { "https://zyphuel.netlify.app" }
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                        context.startActivity(intent)
+                    } catch (e: Exception) {
+                        Toast.makeText(context, "Download latest update at https://zyphuel.netlify.app", Toast.LENGTH_LONG).show()
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD97706)),
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(40.dp)
+                    .testTag("download_new_version_btn")
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.GetApp,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = "Download Latest Version (v${versionConfig.latestVersionName})",
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                )
+            }
+        }
+    }
+}

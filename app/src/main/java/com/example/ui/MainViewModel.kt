@@ -83,6 +83,22 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _currentUser = MutableStateFlow<UserEntity?>(null)
     val currentUser: StateFlow<UserEntity?> = _currentUser.asStateFlow()
 
+    // Real-time synced login password for the active user (backed by AES-256-GCM EncryptedSharedPreferences)
+    private val _currentLoginPassword = MutableStateFlow("")
+    val currentLoginPassword: StateFlow<String> = _currentLoginPassword.asStateFlow()
+
+    // Post-order feedback prompt state — triggered automatically after placing an order so user is reminded to rate/review
+    private val _postOrderFeedbackPromptOrder = MutableStateFlow<OrderEntity?>(null)
+    val postOrderFeedbackPromptOrder: StateFlow<OrderEntity?> = _postOrderFeedbackPromptOrder.asStateFlow()
+
+    fun dismissPostOrderFeedbackPrompt() {
+        _postOrderFeedbackPromptOrder.value = null
+    }
+
+    fun triggerPostOrderFeedbackPrompt(order: OrderEntity) {
+        _postOrderFeedbackPromptOrder.value = order
+    }
+
     // Screen Navigation State
     private val _currentScreen = MutableStateFlow("splash")
     val currentScreen: StateFlow<String> = _currentScreen.asStateFlow()
@@ -950,7 +966,80 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _smtpConfig = MutableStateFlow(SecureStorageManager.getSmtpConfig(application))
     val smtpConfig: StateFlow<com.example.security.SmtpConfig> = _smtpConfig.asStateFlow()
 
+    // --- Real-Time App Version Sync & Outdated Version Detection ---
+    val installedVersionCode: Int = BuildConfig.VERSION_CODE
+    val installedVersionName: String = BuildConfig.VERSION_NAME
+
+    private val _appVersionConfig = MutableStateFlow(
+        com.example.data.AppVersionConfig(
+            latestVersionCode = sharedPrefs.getInt("latest_version_code", BuildConfig.VERSION_CODE).coerceAtLeast(BuildConfig.VERSION_CODE),
+            latestVersionName = sharedPrefs.getString("latest_version_name", BuildConfig.VERSION_NAME) ?: BuildConfig.VERSION_NAME,
+            downloadUrl = sharedPrefs.getString("latest_download_url", "https://zyphuel.netlify.app") ?: "https://zyphuel.netlify.app",
+            releaseNotes = sharedPrefs.getString("latest_release_notes", "Zyphuel v${BuildConfig.VERSION_NAME} — Real-Time Sync, Live OGRA Rates & Security Upgrade") ?: ""
+        )
+    )
+    val appVersionConfig: StateFlow<com.example.data.AppVersionConfig> = _appVersionConfig.asStateFlow()
+
+    // Strictly TRUE only when the user's installed version is OLDER than the latest published version.
+    // Users on the latest version (>= latestVersionCode and >= latestVersionName) NEVER see the update bar.
+    private val _isOutdatedAppVersion = MutableStateFlow(false)
+    val isOutdatedAppVersion: StateFlow<Boolean> = _isOutdatedAppVersion.asStateFlow()
+
+    fun compareVersionNames(v1: String, v2: String): Int {
+        val parts1 = v1.trim().removePrefix("v").split(".").map { it.toIntOrNull() ?: 0 }
+        val parts2 = v2.trim().removePrefix("v").split(".").map { it.toIntOrNull() ?: 0 }
+        val maxLen = maxOf(parts1.size, parts2.size)
+        for (i in 0 until maxLen) {
+            val p1 = parts1.getOrElse(i) { 0 }
+            val p2 = parts2.getOrElse(i) { 0 }
+            if (p1 != p2) return p1.compareTo(p2)
+        }
+        return 0
+    }
+
+    private fun evaluateOutdatedAppVersion(config: com.example.data.AppVersionConfig) {
+        val isOldByCode = BuildConfig.VERSION_CODE < config.latestVersionCode
+        val isOldByName = compareVersionNames(BuildConfig.VERSION_NAME, config.latestVersionName) < 0
+        _isOutdatedAppVersion.value = isOldByCode || isOldByName
+    }
+
+    fun publishAppVersionUpdate(
+        latestCode: Int = BuildConfig.VERSION_CODE,
+        latestName: String = BuildConfig.VERSION_NAME,
+        downloadUrl: String = "https://zyphuel.netlify.app",
+        releaseNotes: String = "Zyphuel v$latestName (Build $latestCode) — Real-Time Sync, Multi-Language & Live Fuel Rates"
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val newConfig = com.example.data.AppVersionConfig(
+                latestVersionCode = latestCode,
+                latestVersionName = latestName.trim(),
+                downloadUrl = downloadUrl.trim().ifBlank { "https://zyphuel.netlify.app" },
+                releaseNotes = releaseNotes.trim(),
+                forceUpdate = false,
+                updatedAt = System.currentTimeMillis()
+            )
+            sharedPrefs.edit()
+                .putInt("latest_version_code", newConfig.latestVersionCode)
+                .putString("latest_version_name", newConfig.latestVersionName)
+                .putString("latest_download_url", newConfig.downloadUrl)
+                .putString("latest_release_notes", newConfig.releaseNotes)
+                .apply()
+            _appVersionConfig.value = newConfig
+            evaluateOutdatedAppVersion(newConfig)
+            val synced = repository.firestoreUserRepository.saveAppVersionConfig(newConfig)
+            withContext(Dispatchers.Main) {
+                if (synced) {
+                    _uiMessage.value = "✅ App Version v${newConfig.latestVersionName} (Build ${newConfig.latestVersionCode}) broadcasted to all devices in real-time!"
+                } else {
+                    _uiMessage.value = "✅ App Version v${newConfig.latestVersionName} saved locally."
+                }
+            }
+        }
+    }
+
     init {
+        evaluateOutdatedAppVersion(_appVersionConfig.value)
+
         // Enforce Official OGRA Pakistan Fuel Rates (e.g. Base Petrol Rs. 289.38 -> Petrol Pump Rate Rs. 294.38)
         sharedPrefs.edit()
             .putFloat("petrol", 289.38f)
@@ -971,6 +1060,69 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
 
+        // Real-Time App Version & Fuel Rates Cloud Sync across all devices
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val remoteVersion = repository.firestoreUserRepository.getAppVersionConfig()
+                if (remoteVersion == null ||
+                    BuildConfig.VERSION_CODE > remoteVersion.latestVersionCode ||
+                    compareVersionNames(BuildConfig.VERSION_NAME, remoteVersion.latestVersionName) > 0
+                ) {
+                    // This device is running the newest build -> automatically publish to Firestore
+                    // so all older app versions immediately receive the "Download New Version" message bar!
+                    val currentAsLatest = com.example.data.AppVersionConfig(
+                        latestVersionCode = BuildConfig.VERSION_CODE,
+                        latestVersionName = BuildConfig.VERSION_NAME,
+                        downloadUrl = remoteVersion?.downloadUrl?.ifBlank { "https://zyphuel.netlify.app" } ?: "https://zyphuel.netlify.app",
+                        releaseNotes = "Zyphuel v${BuildConfig.VERSION_NAME} (Build ${BuildConfig.VERSION_CODE}) — Real-Time Sync, Live OGRA Rates & Security Upgrade",
+                        forceUpdate = false,
+                        updatedAt = System.currentTimeMillis()
+                    )
+                    repository.firestoreUserRepository.saveAppVersionConfig(currentAsLatest)
+                    _appVersionConfig.value = currentAsLatest
+                    evaluateOutdatedAppVersion(currentAsLatest)
+                } else {
+                    sharedPrefs.edit()
+                        .putInt("latest_version_code", remoteVersion.latestVersionCode)
+                        .putString("latest_version_name", remoteVersion.latestVersionName)
+                        .putString("latest_download_url", remoteVersion.downloadUrl)
+                        .putString("latest_release_notes", remoteVersion.releaseNotes)
+                        .apply()
+                    _appVersionConfig.value = remoteVersion
+                    evaluateOutdatedAppVersion(remoteVersion)
+                }
+            } catch (e: Exception) {
+                DebugLogger.w("MainViewModel", "App version initial cloud sync warning: ${e.message}")
+            }
+
+            // Real-time snapshot listener for app version updates across all connected devices
+            repository.firestoreUserRepository.observeAppVersionConfig { updatedVersion ->
+                sharedPrefs.edit()
+                    .putInt("latest_version_code", updatedVersion.latestVersionCode)
+                    .putString("latest_version_name", updatedVersion.latestVersionName)
+                    .putString("latest_download_url", updatedVersion.downloadUrl)
+                    .putString("latest_release_notes", updatedVersion.releaseNotes)
+                    .apply()
+                _appVersionConfig.value = updatedVersion
+                evaluateOutdatedAppVersion(updatedVersion)
+            }
+
+            // Real-time snapshot listener for live fuel rates across all connected devices
+            repository.firestoreUserRepository.observeFuelRatesConfig { petrol, diesel, highOctane ->
+                if (petrol != _petrolPrice.value || diesel != _dieselPrice.value || highOctane != _highOctanePrice.value) {
+                    _petrolPrice.value = petrol
+                    _dieselPrice.value = diesel
+                    _highOctanePrice.value = highOctane
+                    repository.categoryRepository.syncLiveFuelPrices(petrol, diesel, highOctane)
+                    sharedPrefs.edit()
+                        .putFloat("petrol", petrol)
+                        .putFloat("diesel", diesel)
+                        .putFloat("high_octane", highOctane)
+                        .apply()
+                }
+            }
+        }
+
         viewModelScope.launch {
             // Seed DB with default admin and verified riders on start if needed
             repository.seedAdminIfNeeded()
@@ -981,14 +1133,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 val user = repository.userDao.getUserByEmail(loggedInEmail)
                 if (user != null) {
                     _currentUser.value = user
+                    _currentLoginPassword.value = SecureStorageManager.getUserLoginPassword(application, user.email) ?: ""
+                    attachRealtimeUserProfileObserver(user.email)
                 } else {
                     _currentUser.value = null
+                    _currentLoginPassword.value = ""
                 }
             } else {
                 if (loggedInEmail == "customer@zyphuel.com") {
                     sessionPrefs.edit().remove("logged_in_email").apply()
                 }
                 _currentUser.value = null
+                _currentLoginPassword.value = ""
             }
             _isSessionLoaded.value = true
         }
@@ -1359,6 +1515,37 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _uiMessage.value = null
     }
 
+    fun attachRealtimeUserProfileObserver(email: String) {
+        val cleanEmail = email.trim()
+        if (cleanEmail.isBlank()) return
+        repository.firestoreUserRepository.observeUserProfile(cleanEmail) { phone, pwdHash, photo ->
+            val current = _currentUser.value ?: return@observeUserProfile
+            if (!current.email.equals(cleanEmail, ignoreCase = true)) return@observeUserProfile
+            var updated = current
+            var changed = false
+            if (!phone.isNullOrBlank() && phone != current.phoneNumber) {
+                updated = updated.copy(phoneNumber = phone)
+                changed = true
+            }
+            if (!pwdHash.isNullOrBlank() && pwdHash != current.passwordHash) {
+                updated = updated.copy(passwordHash = pwdHash)
+                changed = true
+            }
+            if (!photo.isNullOrBlank() && photo != current.profilePictureUri) {
+                updated = updated.copy(profilePictureUri = photo)
+                changed = true
+            }
+            if (changed) {
+                _currentUser.value = updated
+                viewModelScope.launch(Dispatchers.IO) {
+                    try {
+                        repository.userDao.updateUser(updated)
+                    } catch (_: Exception) {}
+                }
+            }
+        }
+    }
+
     fun login(email: String, passwordHash: String, onSuccess: (UserEntity) -> Unit) {
         val trimmedEmail = email.trim()
         val emailValidation = SecurityInputValidator.validateEmail(trimmedEmail)
@@ -1378,6 +1565,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 val user = repository.loginUser(trimmedEmail, passwordHash)
                 if (user != null) {
                     SecurityRateLimiter.recordAuthSuccess("device_client", trimmedEmail)
+                    // Persist encrypted login password for real-time Profile Settings sync & matching
+                    SecureStorageManager.saveUserLoginPassword(getApplication(), user.email, passwordHash)
+                    _currentLoginPassword.value = passwordHash
                     if (user.role == "rider" && !user.isVerified) {
                         _uiMessage.value = "Your rider account is pending Admin approval. Please contact support."
                     } else {
@@ -1394,6 +1584,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun completeLogin(user: UserEntity) {
         _currentUser.value = user
+        val storedPwd = SecureStorageManager.getUserLoginPassword(getApplication(), user.email)
+        if (!storedPwd.isNullOrBlank()) {
+            _currentLoginPassword.value = storedPwd
+        }
+        attachRealtimeUserProfileObserver(user.email)
         sessionPrefs.edit()
             .putString("logged_in_email", user.email)
             .putString("last_remembered_email", user.email)
@@ -1764,8 +1959,31 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     _uiMessage.value = "Incorrect phone number for this account."
                     return@launch
                 }
-                val updatedUser = user.copy(passwordHash = com.example.security.SecurityCrypto.hashPassword(newPasswordHash))
+                val hashedPwd = com.example.security.SecurityCrypto.hashPassword(newPasswordHash)
+                val updatedUser = user.copy(
+                    passwordHash = hashedPwd,
+                    updatedAt = System.currentTimeMillis()
+                )
                 repository.userDao.updateUser(updatedUser)
+                SecureStorageManager.saveUserLoginPassword(getApplication(), trimmedEmail, newPasswordHash)
+                if (_currentUser.value?.email?.equals(trimmedEmail, ignoreCase = true) == true) {
+                    _currentUser.value = updatedUser
+                    _currentLoginPassword.value = newPasswordHash
+                }
+                val userUid = trimmedEmail.replace(".", "_")
+                viewModelScope.launch(Dispatchers.IO) {
+                    try {
+                        repository.firestoreUserRepository.saveOrUpdateUser(
+                            uid = userUid,
+                            email = updatedUser.email,
+                            displayName = updatedUser.name,
+                            photoUrl = updatedUser.profilePictureUri,
+                            role = updatedUser.role,
+                            phoneNumber = updatedUser.phoneNumber,
+                            passwordHash = hashedPwd
+                        )
+                    } catch (_: Exception) {}
+                }
                 repository.auditLogDao.insertLog(
                     AuditLogEntity(
                         action = "PASSWORD_RESET_SUCCESS",
@@ -1782,39 +2000,97 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun updatePassword(newPassword: String) {
+    /**
+     * Checks in real-time whether [candidatePassword] matches the logged-in user's active login password.
+     */
+    fun verifyMatchesCurrentLoginPassword(candidatePassword: String): Boolean {
+        val current = _currentUser.value ?: return false
+        val trimmed = candidatePassword.trim()
+        if (trimmed.isBlank()) return false
+        val syncedRaw = _currentLoginPassword.value
+        if (syncedRaw.isNotBlank() && trimmed == syncedRaw) return true
+        return com.example.security.SecurityCrypto.verifyPassword(trimmed, current.passwordHash)
+    }
+
+    /**
+     * Real-time password synchronization from Profile Settings.
+     * Updates Room DB (SHA-256 salted hash), AES-256-GCM EncryptedSharedPreferences,
+     * in-memory StateFlows (_currentUser & _currentLoginPassword), and Cloud Firestore.
+     */
+    fun updatePassword(newPassword: String, silent: Boolean = false) {
         val current = _currentUser.value ?: return
+        val trimmedPwd = newPassword.trim()
+        if (trimmedPwd.isBlank()) return
         if (current.role == "admin" || current.email.equals("m.daniyalkhan490@gmail.com", ignoreCase = true)) {
-            _uiMessage.value = "The admin's password is correct and can never be changed."
+            if (!silent) {
+                _uiMessage.value = "The admin's password is correct and can never be changed."
+            }
             return
         }
-        val pwdVal = SecurityInputValidator.validatePassword(newPassword)
+        // Ignore if accidental raw SHA-256 hex or OAuth placeholder is passed
+        val isRawSha256 = trimmedPwd.length == 64 && trimmedPwd.all { it in '0'..'9' || it in 'a'..'f' || it in 'A'..'F' }
+        if (isRawSha256 || trimmedPwd.startsWith("SOCIAL_OAUTH_")) return
+
+        val pwdVal = SecurityInputValidator.validatePassword(trimmedPwd)
         if (pwdVal is ValidationResult.Invalid) {
-            _uiMessage.value = pwdVal.reason
+            if (!silent) {
+                _uiMessage.value = pwdVal.reason
+            }
             return
         }
 
-        val actLimit = SecurityRateLimiter.checkAuthenticatedActionLimit(current.email, "update_password")
-        if (actLimit is RateLimitResult.Blocked) {
-            _uiMessage.value = actLimit.reason
-            return
+        if (!silent) {
+            val actLimit = SecurityRateLimiter.checkAuthenticatedActionLimit(current.email, "update_password")
+            if (actLimit is RateLimitResult.Blocked) {
+                _uiMessage.value = actLimit.reason
+                return
+            }
         }
 
         viewModelScope.launch {
             try {
-                val updated = current.copy(passwordHash = com.example.security.SecurityCrypto.hashPassword(newPassword))
+                val hashedPwd = com.example.security.SecurityCrypto.hashPassword(trimmedPwd)
+                val updated = current.copy(
+                    passwordHash = hashedPwd,
+                    updatedAt = System.currentTimeMillis()
+                )
                 repository.userDao.updateUser(updated)
+                SecureStorageManager.saveUserLoginPassword(getApplication(), current.email, trimmedPwd)
+                _currentLoginPassword.value = trimmedPwd
                 _currentUser.value = updated
+
+                // Real-time cloud sync to Firestore
+                val userUid = current.email.replace(".", "_")
+                viewModelScope.launch(Dispatchers.IO) {
+                    try {
+                        repository.firestoreUserRepository.saveOrUpdateUser(
+                            uid = userUid,
+                            email = current.email,
+                            displayName = current.name,
+                            photoUrl = current.profilePictureUri,
+                            role = current.role,
+                            phoneNumber = current.phoneNumber,
+                            passwordHash = hashedPwd
+                        )
+                    } catch (e: Exception) {
+                        DebugLogger.w("MainViewModel", "Firestore password sync: ${e.message}")
+                    }
+                }
+
                 repository.auditLogDao.insertLog(
                     AuditLogEntity(
                         action = "PROFILE_PASSWORD_UPDATE",
                         performedBy = current.email,
-                        details = "User updated their password from Profile Settings"
+                        details = "User updated their login password in real-time from Profile Settings"
                     )
                 )
-                _uiMessage.value = "Password updated successfully!"
+                if (!silent) {
+                    _uiMessage.value = "Login password synced and updated in real-time!"
+                }
             } catch (e: Exception) {
-                _uiMessage.value = SecurityErrorFormatter.formatUserError(e, "Failed to update password.")
+                if (!silent) {
+                    _uiMessage.value = SecurityErrorFormatter.formatUserError(e, "Failed to update password.")
+                }
             }
         }
     }
@@ -1840,12 +2116,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun updatePhoneNumber(newPhone: String, onSuccess: () -> Unit = {}) {
+    fun updatePhoneNumber(newPhone: String, silent: Boolean = false, onSuccess: () -> Unit = {}) {
         val current = _currentUser.value ?: return
         val trimmed = newPhone.trim()
         val phoneVal = SecurityInputValidator.validatePhone(trimmed)
         if (phoneVal is ValidationResult.Invalid) {
-            _uiMessage.value = phoneVal.reason
+            if (!silent) {
+                _uiMessage.value = phoneVal.reason
+            }
             return
         }
 
@@ -1864,7 +2142,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             email = current.email,
                             displayName = current.name,
                             photoUrl = current.profilePictureUri,
-                            role = current.role
+                            role = current.role,
+                            phoneNumber = trimmed,
+                            passwordHash = current.passwordHash
                         )
                     } catch (e: Exception) {
                         DebugLogger.w("MainViewModel", "Firestore phone sync: ${e.message}")
@@ -1878,10 +2158,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         details = "User updated phone number to $trimmed"
                     )
                 )
-                _uiMessage.value = "Phone number updated successfully!"
+                if (!silent) {
+                    _uiMessage.value = "Phone number updated successfully!"
+                }
                 onSuccess()
             } catch (e: Exception) {
-                _uiMessage.value = SecurityErrorFormatter.formatUserError(e, "Failed to update phone number.")
+                if (!silent) {
+                    _uiMessage.value = SecurityErrorFormatter.formatUserError(e, "Failed to update phone number.")
+                }
             }
         }
     }
@@ -1923,16 +2207,19 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
         viewModelScope.launch {
             try {
+                val hashedPwd = com.example.security.SecurityCrypto.hashPassword(passwordHash)
                 val newUser = UserEntity(
                     email = trimmedEmail,
                     name = trimmedName,
-                    passwordHash = com.example.security.SecurityCrypto.hashPassword(passwordHash),
+                    passwordHash = hashedPwd,
                     role = "customer",
                     phoneNumber = trimmedPhone,
                     isVerified = true
                 )
                 val success = repository.registerUser(newUser)
                 if (success) {
+                    SecureStorageManager.saveUserLoginPassword(getApplication(), trimmedEmail, passwordHash)
+                    _currentLoginPassword.value = passwordHash
                     SecurityRateLimiter.recordAuthSuccess("device_client", trimmedEmail)
                     _uiMessage.value = "Customer Registration Successful! Welcome email sent."
                     dispatchRealtimeEmail(
@@ -2137,6 +2424,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
             val success = repository.registerUser(newUser)
             if (success) {
+                SecureStorageManager.saveUserLoginPassword(getApplication(), finalEmail, passwordHash)
+                _currentLoginPassword.value = passwordHash
                 _uiMessage.value = "Rider Registration Successful! This is your assigned number: Rider #$assignedRiderNum (ID: $riderId). Pending Admin Approval."
                 dispatchRealtimeEmail(
                     recipientEmail = finalEmail,
@@ -2173,6 +2462,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             authRepository.signOut()
             com.example.auth.FirebaseAuthProvider.getInstance(getApplication()).signOut()
             _currentUser.value = null
+            _currentLoginPassword.value = ""
             _trackingOrder.value = null
             refreshSecurityAndBiometricStates(getApplication())
             _currentScreen.value = targetScreen
@@ -2212,6 +2502,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
                 withContext(Dispatchers.Main) {
                     _currentUser.value = null
+                    _currentLoginPassword.value = ""
                     _trackingOrder.value = null
                     _uiMessage.value = "Your account and all associated data have been permanently erased."
                     _currentScreen.value = "login_customer"
@@ -2339,7 +2630,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     _isPlacingOrder.value = false
                     navigateTo("tracker")
                     _isPromoApplied.value = false
-                    _uiMessage.value = "Order placed successfully! Order #${order.id} confirmed."
+                    // Prompt user for post-order feedback & rating right after placing order
+                    _postOrderFeedbackPromptOrder.value = finalTrackingOrder
+                    _uiMessage.value = "Order placed successfully! Order #${order.id} confirmed. Please share your feedback ⭐"
                     onSuccess()
                 }
 
@@ -3377,11 +3670,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
         viewModelScope.launch {
-            val updated = user.copy(passwordHash = newPassword)
-            repository.userDao.insertUser(updated)
+            val hashedPwd = com.example.security.SecurityCrypto.hashPassword(newPassword)
+            val updated = user.copy(
+                passwordHash = hashedPwd,
+                updatedAt = System.currentTimeMillis()
+            )
+            repository.userDao.updateUser(updated)
+            SecureStorageManager.saveUserLoginPassword(getApplication(), user.email, newPassword)
+            _currentLoginPassword.value = newPassword
             _currentUser.value = updated
             _passwordSuggestion.value = null
-            _uiMessage.value = "Password successfully strengthened!"
+            _uiMessage.value = "Password successfully strengthened and synced!"
         }
     }
 
@@ -3416,6 +3715,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
             // Sync live rates into the Category architecture
             repository.categoryRepository.syncLiveFuelPrices(petrol, diesel, octane)
+
+            // Sync fuel rates across all devices in real-time via Cloud Firestore
+            viewModelScope.launch(Dispatchers.IO) {
+                repository.firestoreUserRepository.saveFuelRatesConfig(petrol, diesel, octane)
+            }
 
             // Save to SharedPreferences
             sharedPrefs.edit()

@@ -1,7 +1,17 @@
 # 🚀 Zyphuel App Features & Technical Documentation
-**App Version:** `v2.6.4.0.0.27 (Build 55)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** <font color="#10b981"><b>2026-10-10</b></font>
+**App Version:** `v2.6.4.0.0.30 (Build 58)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** <font color="#10b981"><b>2026-10-13</b></font>
 
 Welcome to the complete architectural and functional guide for the **Zyphuel** Android application. This document outlines every single feature, function, database entity, and user flow from start to finish.
+
+> [!NOTE]
+> **Latest Updates (<font color="#10b981"><b>2026-10-13</b></font> — v2.6.4.0.0.30 / Build 58):**
+> 1. **Customer Order Dialog — Hidden Internal Tiered Delivery Fee Table (`OrderServiceDialog`, `Screens.kt`, `CategoryComponents.kt`)**: Removed the internal rate breakdown card (`Doorstep Fuel Delivery Rates (Max 15L)`) and rate schedule texts from the customer-facing order dialog and preset chips so that customers are not exposed to internal per-liter rate tables. Instead, customers cleanly see their calculated `Delivery Charges` in the checkout summary while the 15L cap and tiered fee engine (Rs. 300 up to 10L, Rs. 320 for 11L, Rs. 340 for 12L, Rs. 360 for 13L, Rs. 380 for 14L, Rs. 400 for 15L) run silently and securely in the background.
+> 2. **Outdated App Version Detection & "Download New Version" Message Bar (`OutdatedAppVersionMessageBar`, `MainViewModel`, `FirestoreUserRepository`)**: Real-time Cloud Firestore listener (`system_config/app_version`) compares the device's `BuildConfig.VERSION_CODE` and `BuildConfig.VERSION_NAME` against the latest published version. Users on an **older version** automatically see a prominent `"🚀 New Version Available — Download Latest Version"` message bar (`outdated_app_version_message_bar`) with a 1-tap download button, while users on the **latest version** (`>= latestVersionCode`) **never** see the update message bar.
+> 3. **Full Multi-Device Real-Time Sync (`system_config/app_version`, `system_config/fuel_rates`, `users/{uid}`)**: Automatically publishes newer app builds to Firestore on startup and syncs live OGRA fuel prices (`observeFuelRatesConfig` / `saveFuelRatesConfig`), user profiles, passwords, and orders in real-time across all devices. Includes an Admin Dashboard version broadcast card (`admin_app_version_sync_card`).
+> 3. **Real-Time Profile Password Sync & Login Password Match (`ProfileSettingsDialog`, `MainViewModel`, `SecureStorageManager`, `FirestoreUserRepository`)**: Displays and verifies the user's actual login password (via AES-256-GCM `SecureStorageManager.getUserLoginPassword` and `verifyMatchesCurrentLoginPassword`) with debounced real-time syncing to Room, `EncryptedSharedPreferences`, and Cloud Firestore (`observeUserProfile`).
+> 4. **68+ World Languages & Real-Time UI Translation (`AppLanguageManager`, `LanguagePickerDialog`)**: Expanded language support to 68 global and regional languages with search, region filters, and linguistic family fallback translation.
+> 5. **Web Version Privacy Portal Link (`TermsAndPrivacyDialog`, `PRIVACY_POLICY.md`, `TERMS_AND_CONDITIONS.md`)**: Updated the Web Version button and legal references to open `https://zyphuel.netlify.app/privacy`.
+> 6. **Post-Order Customer Feedback Reminder & Admin Categories Summary (`PostOrderFeedbackReminderDialog`, `AdminCategoryManagementTab`)**: Post-order feedback prompt and Admin Categories active offerings summary card (`admin_current_offerings_summary_card`).
 
 ---
 

@@ -281,6 +281,32 @@ object SecureStorageManager {
             .putBoolean("smtp_enabled", config.isEnabled)
             .apply()
     }
+
+    /**
+     * Stores the user's active login password inside AES-256-GCM hardware-backed EncryptedSharedPreferences
+     * so Profile Settings can display and verify the exact login password in real-time (never exposing raw SHA-256 hex).
+     */
+    fun saveUserLoginPassword(context: Context, email: String, rawPassword: String) {
+        val cleanEmail = email.trim().lowercase()
+        if (cleanEmail.isBlank() || rawPassword.isBlank()) return
+        // Do not store if rawPassword looks like a 64-char SHA-256 hex digest or OAuth token placeholder
+        val isSha256Hex = rawPassword.length == 64 && rawPassword.all { it in '0'..'9' || it in 'a'..'f' || it in 'A'..'F' }
+        if (isSha256Hex || rawPassword.startsWith("SOCIAL_OAUTH_")) return
+        val prefs = getEncryptedPreferences(context, AppModule.CUSTOMER)
+        prefs.edit()
+            .putString("enc_login_pwd_$cleanEmail", rawPassword)
+            .apply()
+    }
+
+    /**
+     * Retrieves the user's AES-256-GCM encrypted login password for real-time synchronization in Profile Settings.
+     */
+    fun getUserLoginPassword(context: Context, email: String): String? {
+        val cleanEmail = email.trim().lowercase()
+        if (cleanEmail.isBlank()) return null
+        val prefs = getEncryptedPreferences(context, AppModule.CUSTOMER)
+        return prefs.getString("enc_login_pwd_$cleanEmail", null)
+    }
 }
 
 /**

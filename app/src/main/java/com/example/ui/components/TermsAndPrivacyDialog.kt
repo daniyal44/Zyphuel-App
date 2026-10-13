@@ -208,7 +208,7 @@ fun TermsAndPrivacyDialog(
                 ) {
                     OutlinedButton(
                         onClick = {
-                            val url = if (selectedTab == 1) "https://www.zyphuel.com/privacy" else "https://www.zyphuel.com/terms-of-use"
+                            val url = "https://zyphuel.netlify.app/privacy"
                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
                             context.startActivity(intent)
                         },
@@ -370,7 +370,7 @@ private fun PrivacyContent() {
     LegalCard(
         icon = Icons.Filled.ContactSupport,
         title = "5. Privacy Officer & Legal Contact",
-        description = "For privacy inquiries or compliance notices:\n• Support: m.daniyalkhan490@gmail.com\n• Phone / WhatsApp: +92 323 0112464\n• Corporate Office: 75-Main Boulevard, Gulberg III, Lahore, Pakistan"
+        description = "For privacy inquiries or compliance notices:\n• Support: m.daniyalkhan490@gmail.com\n• Phone / WhatsApp: +92 323 0112464\n• Web Privacy Portal: https://zyphuel.netlify.app/privacy\n• Corporate Office: 75-Main Boulevard, Gulberg III, Lahore, Pakistan"
     )
 }
 

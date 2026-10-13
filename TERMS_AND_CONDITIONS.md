@@ -1,11 +1,11 @@
 # Terms and Conditions of Service (Zyphuel)
 
-**Effective Date:** <font color="#10b981"><b>2026-10-09</b></font> (October 2026)  
-**Last Updated:** <font color="#10b981"><b>2026-10-09</b></font>  
-**Application Version:** <font color="#10b981"><b>2.6.4.0.0.26 (Build 54)</b></font>  
+**Effective Date:** <font color="#10b981"><b>2026-10-13</b></font> (October 2026)  
+**Last Updated:** <font color="#10b981"><b>2026-10-13</b></font>  
+**Application Version:** <font color="#10b981"><b>2.6.4.0.0.30 (Build 58)</b></font>  
 **Package Name:** `com.aistudio.zyphuel.appv2`  
-**Official Website:** [https://www.zyphuel.com/](https://www.zyphuel.com/)  
-**Terms of Use URL:** [https://www.zyphuel.com/terms-of-use](https://www.zyphuel.com/terms-of-use)  
+**Official Website:** [https://zyphuel.netlify.app/privacy](https://zyphuel.netlify.app/privacy)  
+**Terms of Use & Privacy URL:** [https://zyphuel.netlify.app/privacy](https://zyphuel.netlify.app/privacy)  
 **Support Email:** m.daniyalkhan490@gmail.com  
 **WhatsApp Helpline:** +92 323 0112464
 
@@ -90,7 +90,7 @@ To the maximum extent permitted by applicable law in Pakistan:
 ---
 
 ## 9. Account Termination & Deletion
-Zyphuel respects your right to terminate your relationship with the platform. You may permanently delete your account directly inside the app under Profile Settings ("Delete Account / Erase Data") or online at [https://www.zyphuel.com/privacy](https://www.zyphuel.com/privacy).
+Zyphuel respects your right to terminate your relationship with the platform. You may permanently delete your account directly inside the app under Profile Settings ("Delete Account / Erase Data") or online at [https://zyphuel.netlify.app/privacy](https://zyphuel.netlify.app/privacy).
 
 ---
 
@@ -105,4 +105,4 @@ For any legal notices, queries, or assistance regarding these Terms:
 * **WhatsApp / Phone Helpline:** +92 323 0112464
 * **Company:** Zyphuel Pakistan
 * **Address:** 75-Main Boulevard, Gulberg III, Lahore, Punjab, Pakistan
-* **Website:** [https://www.zyphuel.com/](https://www.zyphuel.com/)
+* **Website:** [https://zyphuel.netlify.app/privacy](https://zyphuel.netlify.app/privacy)

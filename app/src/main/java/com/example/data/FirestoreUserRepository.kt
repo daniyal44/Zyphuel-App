@@ -32,7 +32,9 @@ class FirestoreUserRepository(private val context: Context) {
         email: String,
         displayName: String,
         photoUrl: String?,
-        role: String = "customer"
+        role: String = "customer",
+        phoneNumber: String? = null,
+        passwordHash: String? = null
     ): Boolean = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
         val firestore = db ?: return@withContext false
         try {
@@ -48,6 +50,12 @@ class FirestoreUserRepository(private val context: Context) {
                     "role" to role,
                     "lastLogin" to System.currentTimeMillis()
                 )
+                if (!phoneNumber.isNullOrBlank()) {
+                    userMap["phoneNumber"] = phoneNumber
+                }
+                if (!passwordHash.isNullOrBlank()) {
+                    userMap["passwordHash"] = passwordHash
+                }
 
                 docRef.set(
                     mapOf("createdAt" to System.currentTimeMillis()) + userMap,
@@ -60,6 +68,29 @@ class FirestoreUserRepository(private val context: Context) {
         } catch (e: Exception) {
             Log.w(TAG, "Error upserting user in Firestore: ${e.message}")
             false
+        }
+    }
+
+    /**
+     * Real-time listener for a user's profile document in Firestore (`users/{uid}`).
+     */
+    fun observeUserProfile(
+        email: String,
+        onUpdate: (phoneNumber: String?, passwordHash: String?, photoUrl: String?) -> Unit
+    ) {
+        val firestore = db ?: return
+        try {
+            val docId = email.trim().replace(".", "_")
+            firestore.collection("users").document(docId)
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null || snapshot == null || !snapshot.exists()) return@addSnapshotListener
+                    val phone = snapshot.getString("phoneNumber")
+                    val pwdHash = snapshot.getString("passwordHash")
+                    val photo = snapshot.getString("photoURL")
+                    onUpdate(phone, pwdHash, photo)
+                }
+        } catch (e: Exception) {
+            Log.w(TAG, "Error observing user profile in Firestore: ${e.message}")
         }
     }
 
@@ -210,4 +241,158 @@ class FirestoreUserRepository(private val context: Context) {
             null
         }
     }
+
+    /**
+     * Saves or updates the latest official application version metadata in Firestore at `system_config/app_version`.
+     * Devices running an older versionCode / versionName than this document automatically display the
+     * "New Version Available — Download Now" message bar, while devices on the latest version do not.
+     */
+    suspend fun saveAppVersionConfig(config: AppVersionConfig): Boolean = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        val firestore = db ?: return@withContext false
+        try {
+            kotlinx.coroutines.withTimeoutOrNull(2500L) {
+                val docRef = firestore.collection("system_config").document("app_version")
+                val data = mapOf(
+                    "latestVersionCode" to config.latestVersionCode,
+                    "latestVersionName" to config.latestVersionName,
+                    "downloadUrl" to config.downloadUrl,
+                    "releaseNotes" to config.releaseNotes,
+                    "forceUpdate" to config.forceUpdate,
+                    "updatedAt" to System.currentTimeMillis()
+                )
+                docRef.set(data, SetOptions.merge()).await()
+            }
+            Log.d(TAG, "App version config synced to Firestore: ${config.latestVersionName} (${config.latestVersionCode})")
+            true
+        } catch (e: Exception) {
+            Log.w(TAG, "Error saving app version config to Firestore: ${e.message}")
+            false
+        }
+    }
+
+    /**
+     * Fetches the current latest application version metadata from Firestore at `system_config/app_version`.
+     */
+    suspend fun getAppVersionConfig(): AppVersionConfig? = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        val firestore = db ?: return@withContext null
+        try {
+            val snapshot = kotlinx.coroutines.withTimeoutOrNull(2500L) {
+                firestore.collection("system_config").document("app_version").get().await()
+            }
+            if (snapshot != null && snapshot.exists()) {
+                val code = snapshot.getLong("latestVersionCode")?.toInt() ?: com.example.BuildConfig.VERSION_CODE
+                val name = snapshot.getString("latestVersionName")?.takeIf { it.isNotBlank() } ?: com.example.BuildConfig.VERSION_NAME
+                val url = snapshot.getString("downloadUrl")?.takeIf { it.isNotBlank() }
+                    ?: "https://play.google.com/store/apps/details?id=com.aistudio.zyphuel.appv2"
+                val notes = snapshot.getString("releaseNotes")?.takeIf { it.isNotBlank() }
+                    ?: "New version available with real-time profile sync, 68+ world languages, and faster live tracking!"
+                val force = snapshot.getBoolean("forceUpdate") ?: false
+                val updatedAt = snapshot.getLong("updatedAt") ?: System.currentTimeMillis()
+                AppVersionConfig(
+                    latestVersionCode = code,
+                    latestVersionName = name,
+                    downloadUrl = url,
+                    releaseNotes = notes,
+                    forceUpdate = force,
+                    updatedAt = updatedAt
+                )
+            } else null
+        } catch (e: Exception) {
+            Log.w(TAG, "Error fetching app version config from Firestore: ${e.message}")
+            null
+        }
+    }
+
+    /**
+     * Real-time listener for `system_config/app_version` so all connected devices immediately detect
+     * when a newer version is released and show/hide the update message bar accordingly.
+     */
+    fun observeAppVersionConfig(
+        onVersionChanged: (AppVersionConfig) -> Unit
+    ): com.google.firebase.firestore.ListenerRegistration? {
+        val firestore = db ?: return null
+        return try {
+            firestore.collection("system_config").document("app_version")
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null || snapshot == null || !snapshot.exists()) return@addSnapshotListener
+                    val code = snapshot.getLong("latestVersionCode")?.toInt() ?: return@addSnapshotListener
+                    val name = snapshot.getString("latestVersionName")?.takeIf { it.isNotBlank() } ?: com.example.BuildConfig.VERSION_NAME
+                    val url = snapshot.getString("downloadUrl")?.takeIf { it.isNotBlank() }
+                        ?: "https://play.google.com/store/apps/details?id=com.aistudio.zyphuel.appv2"
+                    val notes = snapshot.getString("releaseNotes")?.takeIf { it.isNotBlank() }
+                        ?: "New version available with real-time profile sync, 68+ world languages, and faster live tracking!"
+                    val force = snapshot.getBoolean("forceUpdate") ?: false
+                    val updatedAt = snapshot.getLong("updatedAt") ?: System.currentTimeMillis()
+                    onVersionChanged(
+                        AppVersionConfig(
+                            latestVersionCode = code,
+                            latestVersionName = name,
+                            downloadUrl = url,
+                            releaseNotes = notes,
+                            forceUpdate = force,
+                            updatedAt = updatedAt
+                        )
+                    )
+                }
+        } catch (e: Exception) {
+            Log.w(TAG, "Error observing app version config in Firestore: ${e.message}")
+            null
+        }
+    }
+
+    /**
+     * Saves live OGRA base fuel rates to Firestore at `system_config/fuel_rates` for real-time cross-device sync.
+     */
+    suspend fun saveFuelRatesConfig(petrol: Float, diesel: Float, highOctane: Float): Boolean = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        val firestore = db ?: return@withContext false
+        try {
+            kotlinx.coroutines.withTimeoutOrNull(2000L) {
+                firestore.collection("system_config").document("fuel_rates").set(
+                    mapOf(
+                        "petrol" to petrol.toDouble(),
+                        "diesel" to diesel.toDouble(),
+                        "highOctane" to highOctane.toDouble(),
+                        "updatedAt" to System.currentTimeMillis()
+                    ),
+                    SetOptions.merge()
+                ).await()
+            }
+            true
+        } catch (e: Exception) {
+            Log.w(TAG, "Error saving fuel rates to Firestore: ${e.message}")
+            false
+        }
+    }
+
+    /**
+     * Real-time listener for `system_config/fuel_rates` so fuel prices stay synced across all devices.
+     */
+    fun observeFuelRatesConfig(
+        onRatesChanged: (petrol: Float, diesel: Float, highOctane: Float) -> Unit
+    ): com.google.firebase.firestore.ListenerRegistration? {
+        val firestore = db ?: return null
+        return try {
+            firestore.collection("system_config").document("fuel_rates")
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null || snapshot == null || !snapshot.exists()) return@addSnapshotListener
+                    val petrol = snapshot.getDouble("petrol")?.toFloat() ?: return@addSnapshotListener
+                    val diesel = snapshot.getDouble("diesel")?.toFloat() ?: return@addSnapshotListener
+                    val highOctane = snapshot.getDouble("highOctane")?.toFloat() ?: 325.00f
+                    onRatesChanged(petrol, diesel, highOctane)
+                }
+        } catch (e: Exception) {
+            Log.w(TAG, "Error observing fuel rates in Firestore: ${e.message}")
+            null
+        }
+    }
 }
+
+data class AppVersionConfig(
+    val latestVersionCode: Int = com.example.BuildConfig.VERSION_CODE,
+    val latestVersionName: String = com.example.BuildConfig.VERSION_NAME,
+    val downloadUrl: String = "https://play.google.com/store/apps/details?id=com.aistudio.zyphuel.appv2",
+    val releaseNotes: String = "New version available with real-time profile sync, 68+ world languages & faster tracking!",
+    val forceUpdate: Boolean = false,
+    val updatedAt: Long = System.currentTimeMillis()
+)
+
