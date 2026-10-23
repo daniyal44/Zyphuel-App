@@ -514,18 +514,44 @@ class ZyphuelComprehensiveAppTest {
 
         com.example.security.SecurityRateLimiter.recordAuthSuccess(clientIp, testAccount)
 
-        // First 5 attempts allowed
-        for (i in 1..5) {
+        // First 4 attempts allowed (spec updated 2026-10-23: 4 attempts per 1-minute window)
+        for (i in 1..4) {
             val result = com.example.security.SecurityRateLimiter.checkAndRecordAuthAttempt(clientIp, testAccount)
             assertTrue("Attempt $i must be allowed", result is com.example.security.RateLimitResult.Allowed)
         }
 
-        // 6th attempt must be blocked
+        // 5th attempt must be blocked
         val blockedResult = com.example.security.SecurityRateLimiter.checkAndRecordAuthAttempt(clientIp, testAccount)
-        assertTrue("Attempt 6 must be blocked under rate limit", blockedResult is com.example.security.RateLimitResult.Blocked)
+        assertTrue("Attempt 5 must be blocked under rate limit", blockedResult is com.example.security.RateLimitResult.Blocked)
 
         // Clean up
         com.example.security.SecurityRateLimiter.recordAuthSuccess(clientIp, testAccount)
+
+        // --- Brute-force login lockout (added 2026-10-23): ---
+        // 4 wrong passwords inside 1 minute -> Error 422 + 5-minute cooldown.
+        val lockAccount = "lockout.test@zyphuel.com"
+        com.example.security.SecurityRateLimiter.recordAuthSuccess(clientIp, lockAccount)
+
+        // Wrong attempts 1..3 stay unlocked (null = still allowed)
+        repeat(3) { i ->
+            assertNull(
+                "Wrong password #${i + 1} must not lock the account yet",
+                com.example.security.SecurityRateLimiter.recordAuthFailure(clientIp, lockAccount)
+            )
+        }
+
+        // 4th wrong password inside the minute triggers the lockout
+        val lockMessage = com.example.security.SecurityRateLimiter.recordAuthFailure(clientIp, lockAccount)
+        assertNotNull("4th wrong password must trigger the lockout", lockMessage)
+        assertTrue("Lock message must carry Error 422", lockMessage!!.contains("Error 422"))
+        assertTrue("Lock message must announce the 5-minute cooldown", lockMessage.contains("5 minutes"))
+
+        // Further login attempts are rejected while the cooldown runs
+        val lockedCheck = com.example.security.SecurityRateLimiter.checkAuthLockout(clientIp, lockAccount)
+        assertTrue("Account must be locked during the cooldown", lockedCheck is com.example.security.RateLimitResult.Blocked)
+
+        // Clean up
+        com.example.security.SecurityRateLimiter.recordAuthSuccess(clientIp, lockAccount)
     }
 
     // =========================================================================

@@ -1,10 +1,18 @@
 # Zyphuel Database Schema (Room SQLite & Firestore)
 
-> **Current App Version:** `2.6.4.0.0.24 (Build 52)`  
-> **Last Synchronized:** <font color="#10b981"><b>2026-10-09</b></font>  
-> **Status:** <font color="#10b981"><b>Production Verified (100% Tests Passing)</b></font>
+> **Current App Version:** `2.6.4.0.0.33 (Build 61)`  
+> **Last Synchronized:** <font color="#10b981"><b>2026-10-23</b></font>  
+> **Status:** <font color="#10b981"><b>Build Verified (37/38 Tests Passing — 1 Pre-Existing Unrelated Failure)</b></font>
 
 The definitive single source of truth for Zyphuel's persistent data models.
+
+---
+
+## Room Database Version & Migration Policy (<font color="#10b981"><b>2026-10-23</b></font>)
+* **Current Room version: 13** (`@Database` annotation in `app/src/main/java/com/example/data/Models.kt`).
+* **Migration path shipped:** `MIGRATION_12_TO_13` — a schema-preserving no-op wired via `.addMigrations(...)` in both database builders (`Models.kt` `getDatabase()` and `Repository.kt` `AppRepository`). User data (users, orders, audit logs, notifications, marked locations, vehicles) survives every app update.
+* **`fallbackToDestructiveMigration()` is permanently removed.** Any future database version bump MUST ship a matching `Migration` object, otherwise Room throws instead of silently wiping user data.
+* Duplicate-email protection: `UserDao.getUserByEmail()` matches `LOWER(email) = LOWER(:email)` (case-insensitive).
 
 ---
 

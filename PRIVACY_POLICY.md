@@ -1,8 +1,8 @@
 # Privacy Policy for Zyphuel
 
 **Effective Date:** <font color="#10b981"><b>2026-10-13</b></font> (October 2026)  
-**Last Updated:** <font color="#10b981"><b>2026-10-13</b></font>  
-**Application Version:** <font color="#10b981"><b>2.6.4.0.0.30 (Build 58)</b></font>  
+**Last Updated:** <font color="#10b981"><b>2026-10-23</b></font>  
+**Application Version:** <font color="#10b981"><b>2.6.4.0.0.33 (Build 61)</b></font>  
 **Package Name:** `com.aistudio.zyphuel.appv2`  
 **Official Website:** [https://zyphuel.netlify.app/privacy](https://zyphuel.netlify.app/privacy)  
 **Privacy Policy URL:** [https://zyphuel.netlify.app/privacy](https://zyphuel.netlify.app/privacy)  
@@ -56,7 +56,7 @@ We process your personal information strictly for legitimate operational purpose
 2. **Real-Time Live Telematics**: Displaying real-time rider progression on live Google Maps to ensure route accuracy and prompt delivery.
 3. **Safety & Regulatory Compliance**: Adhering to Oil & Gas Regulatory Authority (OGRA) and civil safety guidelines concerning the secure transportation and handling of petroleum products (capped at a strict 15-liter maximum volume for mobile doorstep refueling).
 4. **Order Status Notifications**: Dispatching real-time status updates via push notifications, transactional emails, and SMS alerts.
-5. **Fraud Prevention & Account Security**: Enforcing rate limits, brute-force protection, biometric authentication, and audit logs.
+5. **Fraud Prevention & Account Security**: Enforcing rate limits and brute-force protection (4 failed password attempts within 1 minute lock login for a 5-minute cooldown with error code 422), single-use email codes for password recovery, biometric authentication that always re-verifies the stored password, and audit logs.
 
 ---
 
@@ -71,6 +71,7 @@ We do not sell, rent, or trade your personal data to advertisers or commercial t
 ## 5. Data Storage, Security & Retention
 * **Encrypted Local Storage**: Sensitive session tokens and security preferences are protected using Android Jetpack `EncryptedSharedPreferences` and SQLite Room database with AES-256 encryption.
 * **Data in Transit**: All communications between the mobile application and backend services are encrypted over TLS/SSL (HTTPS).
+* **Account Lockout & Recovery Codes (<font color="#10b981"><b>2026-10-23</b></font>)**: Repeated failed login attempts temporarily lock the account (error code 422) to stop password guessing. Password-reset codes are single-use 6-digit values emailed to your registered address and expire after 5 minutes.
 * **Retention Policy**: Transaction records and order invoices are retained for the statutory period required by taxation and trade laws. Non-essential telemetry is purged periodically.
 
 ---

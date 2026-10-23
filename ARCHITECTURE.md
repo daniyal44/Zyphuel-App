@@ -33,7 +33,7 @@ Zyphuel is engineered as a modern, high-performance, offline-first Android appli
                                      ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                     REPOSITORY & DATA PERSISTENCE                       │
-│  ZyphuelRepository.kt  ◄►  Room SQLite DB (AppDatabase.kt + DAOs)     │
+│  Repository.kt (AppRepository)  ◄►  Room SQLite DB (Models.kt + DAOs) │
 └────────────────────────────────────┬────────────────────────────────────┘
                                      │
                                      ▼
@@ -64,7 +64,7 @@ Zyphuel is engineered as a modern, high-performance, offline-first Android appli
 ```
 app/src/main/java/com/example/
 ├── data/
-│   ├── AppDatabase.kt                  # Room Database Instance & Version Migrations
+│   ├── Models.kt                       # Room Entities, DAOs, AppDatabase & Version Migrations (v13, MIGRATION_12_TO_13)
 │   ├── Models.kt                       # Room Data Entities & DAOs (UserDao, OrderDao, AuditLogDao, NotificationDao, MarkedLocationDao)
 │   ├── Repository.kt                   # Unified Data Repository Abstraction (with Admin Master Supervisory Authority)
 │   ├── FirestoreOrderRepository.kt     # Firestore Cloud Order Sync & Live Listeners

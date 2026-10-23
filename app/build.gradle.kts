@@ -19,8 +19,8 @@ android {
     applicationId = "com.aistudio.zyphuel.appv2"
     minSdk = 24
     targetSdk = 36
-    versionCode = 58
-    versionName = "2.6.4.0.0.30"
+    versionCode = 61
+    versionName = "2.6.4.0.0.33"
 
     manifestPlaceholders["MAPS_API_KEY"] = "AIzaZyphuelPlaceholderKey"
 
@@ -43,6 +43,15 @@ android {
       ?: "9c16c5decc45c872ee18e857d659bd6786c3f3e5de7220cb07935048a22b9e7f"
 
     buildConfigField("String", "MASTER_ADMIN_HASH", "\"$loadedAdminHash\"")
+
+    // Secure SMTP gateway password injection (2026-10-23). Never hardcode this in source:
+    // provide SMTP_APP_PASSWORD via environment or the git-ignored local.properties /
+    // app/admin-credentials.properties files. Empty by default; the admin-managed
+    // Firestore email gateway config is the primary source at runtime.
+    val loadedSmtpPassword = (System.getenv("SMTP_APP_PASSWORD")
+      ?: adminProps.getProperty("SMTP_APP_PASSWORD")
+      ?: "").replace("\\", "\\\\").replace("\"", "\\\"")
+    buildConfigField("String", "SMTP_APP_PASSWORD", "\"$loadedSmtpPassword\"")
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }

@@ -250,8 +250,10 @@ object SecureStorageManager {
         val host = prefs.getString("smtp_host", "smtp.gmail.com")?.ifBlank { "smtp.gmail.com" } ?: "smtp.gmail.com"
         val port = prefs.getInt("smtp_port", 465).let { if (it > 0) it else 465 }
         val senderEmail = prefs.getString("smtp_sender_email", "m.daniyalkhan490@gmail.com")?.ifBlank { "m.daniyalkhan490@gmail.com" } ?: "m.daniyalkhan490@gmail.com"
-        // Default to admin-provided official Google 16-letter App Password for real-time dispatch
-        val appPassword = prefs.getString("smtp_app_password", "nvyzrxsbhibncijb")?.ifBlank { "nvyzrxsbhibncijb" } ?: "nvyzrxsbhibncijb"
+        // SECURITY (2026-10-23): never ship a default credential in source. The gateway
+        // password is supplied at runtime by the admin-managed Firestore config, or for
+        // owner builds via the git-ignored SMTP_APP_PASSWORD secret (BuildConfig).
+        val appPassword = prefs.getString("smtp_app_password", "")?.trim() ?: ""
         val senderName = prefs.getString("smtp_sender_name", "Zyphuel Delivery Operations")?.ifBlank { "Zyphuel Delivery Operations" } ?: "Zyphuel Delivery Operations"
         val webhookUrl = prefs.getString("smtp_webhook_url", "") ?: ""
         val isEnabled = prefs.getBoolean("smtp_enabled", true)

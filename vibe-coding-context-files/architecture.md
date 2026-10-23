@@ -1,8 +1,8 @@
 # Zyphuel System Architecture
 
-> **Current App Version:** `2.6.4.0.0.24 (Build 52)`  
-> **Last Synchronized:** <font color="#10b981"><b>2026-10-09</b></font>  
-> **Status:** <font color="#10b981"><b>Production Verified (100% Tests Passing)</b></font>
+> **Current App Version:** `2.6.4.0.0.33 (Build 61)`  
+> **Last Synchronized:** <font color="#10b981"><b>2026-10-23</b></font>  
+> **Status:** <font color="#10b981"><b>Build Verified (37/38 Tests Passing — 1 Pre-Existing Unrelated Failure)</b></font>
 
 ---
 
@@ -22,7 +22,7 @@
 |---|---|---|
 | Front-end / UI | Kotlin + Jetpack Compose (Material 3) | Declarative UI, reactive state binding, responsive layout, smooth animations |
 | Architecture | Android MVVM with StateFlow & Coroutines | Clean separation of concerns, reactive unidirectional data flow |
-| Local Database | Android Room (SQLite) with KSP | Offline-first caching, ACID compliance, zero-boilerplate entity mappings |
+| Local Database | Android Room (SQLite) with KSP | Offline-first caching, ACID compliance, zero-boilerplate entity mappings. <font color="#10b981"><b>DB v13 with MIGRATION_12_TO_13 — user data preserved on every update (2026-10-23)</b></font> |
 | Cloud Database | Firebase Cloud Firestore | Multi-client live sync for orders, rider GPS telematics, and audit logs |
 | Telematics & Maps | Google Maps Android SDK + OpenStreetMap | Live driver bowser GPS tracking, route polylines, ETA updates |
 | Pricing Grounding | Google Gemini 2.0 Flash + Trackmate API | Real-time OGRA Pakistan official retail prices with fallback AI grounding |

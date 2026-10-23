@@ -10,6 +10,8 @@ import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.RoomDatabase
 import androidx.room.Update
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.flow.Flow
 
 // 1. User Entity representing Customers, Riders, and Admin accounts
@@ -134,7 +136,9 @@ data class NotificationEntity(
 
 @Dao
 interface UserDao {
-    @Query("SELECT * FROM users WHERE email = :email LIMIT 1")
+    // Case-insensitive lookup (2026-10-23): prevents duplicate signups such as
+    // "Ali@x.com" vs "ali@x.com", and lets users log in with any email casing.
+    @Query("SELECT * FROM users WHERE LOWER(email) = LOWER(:email) LIMIT 1")
     suspend fun getUserByEmail(email: String): UserEntity?
 
     @Query("SELECT * FROM users WHERE role = :role")
@@ -151,6 +155,11 @@ interface UserDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertUser(user: UserEntity)
+
+    // Registration-only insert (2026-10-23): ABORT instead of REPLACE, so a concurrent
+    // or case-variant duplicate signup can never overwrite an existing account record.
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertNewUser(user: UserEntity)
 
     @Update
     suspend fun updateUser(user: UserEntity)
@@ -250,7 +259,7 @@ interface MarkedLocationDao {
 
 // --- App Database definition ---
 
-@Database(entities = [UserEntity::class, OrderEntity::class, AuditLogEntity::class, NotificationEntity::class, MarkedLocationEntity::class, com.example.data.vehicle.VehicleEntity::class], version = 12, exportSchema = false)
+@Database(entities = [UserEntity::class, OrderEntity::class, AuditLogEntity::class, NotificationEntity::class, MarkedLocationEntity::class, com.example.data.vehicle.VehicleEntity::class], version = 13, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun orderDao(): OrderDao
@@ -269,10 +278,25 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "zyphuel_database"
-                ).fallbackToDestructiveMigration().build()
+                ).addMigrations(MIGRATION_12_TO_13).build()
                 INSTANCE = instance
                 instance
             }
         }
+    }
+}
+
+/**
+ * Migration 12 -> 13: no schema change, added purely so existing user data
+ * (users, orders, audit logs, notifications, marked locations, vehicles)
+ * is preserved on app update. NEVER use fallbackToDestructiveMigration():
+ * it deletes all user data whenever the database version changes.
+ * Any future version bump MUST add a matching Migration here.
+ * Added: 2026-10-23
+ */
+val MIGRATION_12_TO_13 = object : Migration(12, 13) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // Intentional no-op: schema identical, only the version counter changes.
+        // All existing rows stay untouched.
     }
 }

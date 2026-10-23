@@ -2,9 +2,9 @@
 
 **Application:** Zyphuel Doorstep Fuel & Energy Delivery  
 **Package Name:** `com.aistudio.zyphuel.appv2`  
-**Current Version:** <font color="#10b981"><b>2.6.4.0.0.26 (Build 54)</b></font>  
+**Current Version:** <font color="#10b981"><b>2.6.4.0.0.33 (Build 61)</b></font>  
 **Target SDK:** 36 (Android 16) | **Min SDK:** 24 (Android 7.0)  
-**Last Synchronized:** <font color="#10b981"><b>2026-10-09</b></font>
+**Last Synchronized:** <font color="#10b981"><b>2026-10-23</b></font>
 
 ---
 
@@ -81,6 +81,12 @@ Enter this URL in **Store presence > Store settings > Privacy Policy**:
 ---
 
 ## 4. App Version History Log
+
+* <font color="#10b981"><b>v2.6.4.0.0.33 (Build 61) — 2026-10-23</b></font>:
+  - **Zero data-loss on app update**: Room DB v13 with `MIGRATION_12_TO_13`; `fallbackToDestructiveMigration()` permanently removed so user accounts, orders, and logs survive every version bump.
+  - **Brute-force login lockout**: 4 wrong passwords within 1 minute lock login for a 5-minute cooldown (error code 422).
+  - **Password recovery hardening**: single-use 6-digit email OTP (5-min expiry) required before any password reset; duplicate (case-insensitive) email signups blocked.
+  - **Biometric login hardening**: fingerprint sign-in now re-verifies the stored password; no query-based account bypass.
 
 * <font color="#10b981"><b>v2.6.4.0.0.24 (Build 52) — 2026-10-09</b></font>:
   - Enforced official delivery operating hours window (Mon–Thu 08:00–20:00, Fri 08:00–13:00, Sat–Sun 10:00–18:00 PKT) with dynamic order action button hiding and database hard guards.

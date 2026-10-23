@@ -1,8 +1,12 @@
 # 10. Database Room Persistence & Data Models Documentation 🗄️
 
-> **Current App Version:** `2.6.4.0.0.26 (Build 54)`  
-> **Last Synchronized:** <font color="#10b981"><b>2026-10-09</b></font>  
-> **Status:** <font color="#10b981"><b>Production Verified (100% Tests Passing)</b></font>
+> **Current App Version:** `2.6.4.0.0.33 (Build 61)`  
+> **Last Synchronized:** <font color="#10b981"><b>2026-10-23</b></font>  
+> **Status:** <font color="#10b981"><b>Build Verified (37/38 Tests Passing — 1 Pre-Existing Unrelated Failure)</b></font>
+
+#### 🐛 **Data Loss Bug Fix (<font color="#10b981"><b>2026-10-23</b></font>)**: Database migration now preserves user data across app updates. Previously, `fallbackToDestructiveMigration()` caused all user data (accounts, orders, audit logs, notifications, marked locations, vehicles) to be deleted on every app update whenever the version changed. Fixed by adding Room migration `MIGRATION_12_TO_13` (a schema-preserving no-op) in `Models.kt` and wiring it with `.addMigrations(...)` in both `Models.getDatabase()` and `Repository.kt`.
+
+> ⚠️ **Release Rule (<font color="#10b981"><b>2026-10-23</b></font>)**: every future database version bump MUST ship a matching `Migration` object. `fallbackToDestructiveMigration()` is permanently removed from the codebase, so a missing migration surfaces as a build/runtime error instead of silently wiping user data.
 
 ## 📌 Category
 **Data Architecture & Persistence**
@@ -68,10 +72,9 @@ Zyphuel relies on Android Room database for reliable offline-first local data pe
 ---
 
 ## 📁 Source Locations
-* **Entities & Models**: `app/src/main/java/com/example/data/Models.kt`
-* **DAOs**: `app/src/main/java/com/example/data/Daos.kt` (`UserDao`, `OrderDao`, `AuditLogDao`, `NotificationDao`, `VehicleDao`)
-* **Database Class**: `app/src/main/java/com/example/data/AppDatabase.kt`
-* **Repository**: `app/src/main/java/com/example/data/ZyphuelRepository.kt`
+* **Entities, DAOs & Database Class**: `app/src/main/java/com/example/data/Models.kt` (`UserDao`, `OrderDao`, `AuditLogDao`, `NotificationDao`, `MarkedLocationDao`, `VehicleDao`, `AppDatabase`, `MIGRATION_12_TO_13`)
+* **Vehicle Models**: `app/src/main/java/com/example/data/vehicle/VehicleModels.kt`
+* **Repository**: `app/src/main/java/com/example/data/Repository.kt` (`AppRepository`)
 
 ---
 

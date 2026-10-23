@@ -21,6 +21,7 @@ The Security Engine provides end-to-end security, input sanitization, rate limit
    * Encrypts biometric session tokens and user preferences using AES-256 / SHA-256 digests.
 3. **Security Rate Limiter (`SecurityRateLimiter.kt`)**:
    * Limits login attempts, order placements, and rating submissions to prevent brute-force attacks.
+   * <font color="#10b981"><b>Login Lockout — Error 422 (2026-10-23)</b></font>: **4 wrong passwords inside 1 minute lock the account for a 5-minute cooldown**; the block message carries error code `422` with remaining seconds (`checkAuthLockout()` pre-check + `recordAuthFailure()` counting). Applies to password login, biometric login, and reset-code guesses; a successful login clears all counters (`recordAuthSuccess()`).
 4. **Security Input Validator (`SecurityInputValidator.kt`)**:
    * Enforces strict regex validation on emails, passwords, phone numbers, ratings (1-5 stars), and feedback notes.
 5. <font color="#10b981"><b>Order History Biometric Vault (`Screens.kt`)</b></font>:
@@ -33,7 +34,7 @@ The Security Engine provides end-to-end security, input sanitization, rate limit
 * **Default Disabled State**: Biometric authentication is disabled by default upon fresh app install and account registration.
 * **Enable Fingerprint Option**: Users see "Enable fingerprint" in Profile Settings and Security Settings once logged in. Tapping it scans fingerprint and enables biometric login.
 * **Post-Logout Quick Sign-In**: If biometrics are enabled, when a registered user logs out, the Fingerprint / Face ID login card appears on the login form for 1-tap quick sign-in using AndroidX `BiometricPrompt`.
-* **Instant Fallback Biometric Profile Lookup**: Integrated `loginWithBiometrics` in `MainViewModel` that verifies hardware fingerprint/face or uses email/role fallback credentials for 1-tap seamless login.
+* <font color="#10b981"><b>Password-Verified Biometric Sign-In (2026-10-23)</b></font>: `loginWithBiometrics` in `MainViewModel` resolves the account strictly by email and verifies the stored password via `repository.loginUser()` before completing login. The legacy email/role fallback ("first user of this role") that allowed a fingerprint to open any account without a password has been removed; missing stored passwords fall back to the email + password form, and the Error 422 lockout applies here too.
 * **Biometric Vault Badge**: Status badge on `CustomerOrderHistoryScreen`.
 * **Security Settings Panel (`SecuritySettingsScreen.kt`)**: User toggles for role-specific biometric enforcement ("Enable Fingerprint" / "Disable Fingerprint") and session timeout lock.
 

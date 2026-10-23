@@ -22,7 +22,7 @@ class AppRepository(context: Context) {
         context.applicationContext,
         AppDatabase::class.java,
         "zyphuel_database"
-    ).fallbackToDestructiveMigration().build()
+    ).addMigrations(com.example.data.MIGRATION_12_TO_13).build()
 
     val userDao = db.userDao()
     val orderDao = db.orderDao()
@@ -135,15 +135,39 @@ class AppRepository(context: Context) {
 
     // --- Authentication Operations ---
 
+    /**
+     * Email availability checker (2026-10-23): returns true when the address is
+     * already taken by ANY account (case-insensitive). Call this BEFORE signup so
+     * one person can never claim an email another user already registered.
+     */
+    suspend fun isEmailRegistered(email: String): Boolean {
+        val trimmed = email.trim()
+        if (trimmed.isBlank()) return false
+        return userDao.getUserByEmail(trimmed) != null
+    }
+
     suspend fun registerUser(user: UserEntity): Boolean {
-        val existing = userDao.getUserByEmail(user.email)
+        // Email normalization + duplicate guard (2026-10-23): emails are trimmed and
+        // lower-cased before insert so the PRIMARY KEY uniquely identifies an address
+        // regardless of letter-case, and the case-insensitive lookup catches existing
+        // accounts registered before normalization existed.
+        val normalizedEmail = user.email.trim().lowercase()
+        val normalizedUser = user.copy(email = normalizedEmail)
+        val existing = userDao.getUserByEmail(normalizedEmail)
         if (existing != null) return false // User already exists
 
-        userDao.insertUser(user)
+        // DB-level guard: insertNewUser uses ABORT, so two concurrent signups for the
+        // same address cannot overwrite each other (REPLACE would silently merge them).
+        try {
+            userDao.insertNewUser(normalizedUser)
+        } catch (e: Exception) {
+            com.example.util.DebugLogger.w("Repository", "Registration rejected for an existing email (duplicate guard)")
+            return false
+        }
         auditLogDao.insertLog(
             AuditLogEntity(
                 action = "USER_REGISTERED",
-                performedBy = user.email,
+                performedBy = normalizedEmail,
                 details = "Registered as ${user.role} (Verified: ${user.isVerified})"
             )
         )
@@ -156,6 +180,25 @@ class AppRepository(context: Context) {
 
         val user = userDao.getUserByEmail(email)
         if (user != null && com.example.security.SecurityCrypto.verifyPassword(password, user.passwordHash)) {
+            // Transparent hash upgrade (2026-10-23): legacy SHA-256/plaintext hashes are
+            // re-hashed with PBKDF2-HMAC-SHA256 on the first successful login. The master
+            // admin hash is intentionally left untouched (it is pinned via BuildConfig).
+            var authenticatedUser = user
+            if (user.role != "admin" && com.example.security.SecurityCrypto.needsRehash(user.passwordHash)) {
+                val upgraded = user.copy(
+                    passwordHash = com.example.security.SecurityCrypto.hashPassword(password),
+                    updatedAt = System.currentTimeMillis()
+                )
+                userDao.insertUser(upgraded)
+                authenticatedUser = upgraded
+                auditLogDao.insertLog(
+                    AuditLogEntity(
+                        action = "PASSWORD_HASH_UPGRADED",
+                        performedBy = user.email,
+                        details = "Password hash upgraded to PBKDF2-HMAC-SHA256 on login"
+                    )
+                )
+            }
             auditLogDao.insertLog(
                 AuditLogEntity(
                     action = "USER_LOGIN_SUCCESS",
@@ -163,7 +206,7 @@ class AppRepository(context: Context) {
                     details = "Login successful as ${user.role}"
                 )
             )
-            return user
+            return authenticatedUser
         }
         
         auditLogDao.insertLog(

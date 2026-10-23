@@ -94,7 +94,7 @@
 
 ### Phase 11: 10-Category Marketplace Architecture, Saved Vehicle Profiles & Typo-Tolerant Search (v2.4.1 Build 8)
 * **10 Top-Level Categories & 35+ Subcategories**: Launched comprehensive automotive and mobility marketplace (`CategoryCatalogSeed`, `CategoryModels.kt`) with live OGRA fuel pricing, emergency roadside SOS, auto repair, mobile detailing, tyre repair, battery jumpstart/installation, lubricants, EV services, water delivery, and fleet management.
-* **Customer Saved Vehicle Profiles ("My Vehicles")**: Added Room entity `VehicleEntity` and `VehicleDao` (Database version 12) with multi-vehicle registration, fuel types, and dynamic service compatibility filtering.
+* **Customer Saved Vehicle Profiles ("My Vehicles")**: Added Room entity `VehicleEntity` and `VehicleDao` (Database version 12 at the time of this entry; current database version is 13 with `MIGRATION_12_TO_13` as of <font color="#10b981"><b>2026-10-23</b></font>) with multi-vehicle registration, fuel types, and dynamic service compatibility filtering.
 * **Typo-Tolerant Global Search Engine**: Integrated Levenshtein edit-distance matching into `CategoryRepository.kt` with real-time `serviceSearchQuery` and `serviceSearchResults` StateFlows.
 * **Location Coverage & Dynamic ETA Engine**: Implemented `LocationCoverageManager.kt` using real Haversine distance and zone mapping across Greater Lahore without mock/fake values.
 * **Admin Category Control Tab**: Added Tab 8 in `AdminDashboardScreen` with instant live category availability toggles and pricing overrides.

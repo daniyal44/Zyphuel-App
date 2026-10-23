@@ -27,6 +27,7 @@ import com.example.security.ValidationResult
 import com.example.util.AppLanguage
 import com.example.util.AppLanguageManager
 import com.example.util.DebugLogger
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -630,21 +631,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 SecureStorageManager.getRegisteredEmail(context, module) ?: ""
             }
 
-            var user = if (emailToUse.isNotBlank()) repository.userDao.getUserByEmail(emailToUse) else null
+            // SECURITY (2026-10-23): login must ONLY happen with email + password.
+            // The old code fell back to "first user of this role", letting anyone with
+            // a fingerprint open a random account. That bypass is removed: the account
+            // must be found by email, and its stored password must verify successfully.
+            val user = if (emailToUse.isNotBlank()) repository.userDao.getUserByEmail(emailToUse) else null
 
             if (user == null) {
-                // Find registered account for this specific module role
-                val targetRole = when (module) {
-                    AppModule.RIDER -> "rider"
-                    AppModule.ADMIN -> "admin"
-                    else -> "customer"
-                }
-                val usersOfRole = repository.userDao.getUsersByRole(targetRole)
-                user = usersOfRole.firstOrNull()
-            }
-
-            if (user == null) {
-                onError("No account found to authenticate via biometrics. Please enter your email or register.")
+                onError("No account found for this email. Please sign in with your email & password.")
                 return@launch
             }
             if (user.role == "rider" && !user.isVerified) {
@@ -652,18 +646,40 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 return@launch
             }
 
+            // Lockout check (Error 422) applies to biometric login as well
+            val lockout = SecurityRateLimiter.checkAuthLockout("device_client", user.email)
+            if (lockout is RateLimitResult.Blocked) {
+                onError(lockout.reason)
+                return@launch
+            }
+
+            // Password verification: biometric only unlocks the STORED password;
+            // it never replaces the email + password check.
+            val storedPassword = SecureStorageManager.getUserLoginPassword(context, user.email)
+            if (storedPassword.isNullOrBlank()) {
+                onError("Fingerprint login is not set up for this account. Please sign in with your email & password first.")
+                return@launch
+            }
+            val verifiedUser = repository.loginUser(user.email, storedPassword)
+            if (verifiedUser == null) {
+                val lockMessage = SecurityRateLimiter.recordAuthFailure("device_client", user.email)
+                onError(lockMessage ?: "Password verification failed. Please sign in with your email & password.")
+                return@launch
+            }
+            SecurityRateLimiter.recordAuthSuccess("device_client", user.email)
+
             // Enable biometric lock on device for this account
             SecureStorageManager.setBiometricEnabled(context, module, true)
             SecureStorageManager.saveSecureCredentials(context, module, user.email, "BIO_TOKEN_${System.currentTimeMillis()}")
             SecureStorageManager.updateLastAuthTime(context, module)
 
             suppressBiometricOffer = true
-            completeLogin(user)
+            completeLogin(verifiedUser)
             repository.auditLogDao.insertLog(
                 AuditLogEntity(
                     action = "BIOMETRIC_LOGIN_SUCCESS",
-                    performedBy = user.email,
-                    details = "Biometric hardware authentication successful for ${user.role.uppercase()} (${user.email})"
+                    performedBy = verifiedUser.email,
+                    details = "Biometric hardware authentication successful for ${verifiedUser.role.uppercase()} (${verifiedUser.email})"
                 )
             )
             refreshSecurityAndBiometricStates(context)
@@ -975,7 +991,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             latestVersionCode = sharedPrefs.getInt("latest_version_code", BuildConfig.VERSION_CODE).coerceAtLeast(BuildConfig.VERSION_CODE),
             latestVersionName = sharedPrefs.getString("latest_version_name", BuildConfig.VERSION_NAME) ?: BuildConfig.VERSION_NAME,
             downloadUrl = sharedPrefs.getString("latest_download_url", "https://zyphuel.netlify.app") ?: "https://zyphuel.netlify.app",
-            releaseNotes = sharedPrefs.getString("latest_release_notes", "Zyphuel v${BuildConfig.VERSION_NAME} — Real-Time Sync, Live OGRA Rates & Security Upgrade") ?: ""
+            releaseNotes = sharedPrefs.getString("latest_release_notes", "Zyphuel v${BuildConfig.VERSION_NAME} — Real-Time Sync, Live OGRA Rates & Security Upgrade") ?: "",
+            forceUpdate = sharedPrefs.getBoolean("latest_force_update", false)
         )
     )
     val appVersionConfig: StateFlow<com.example.data.AppVersionConfig> = _appVersionConfig.asStateFlow()
@@ -1000,14 +1017,30 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private fun evaluateOutdatedAppVersion(config: com.example.data.AppVersionConfig) {
         val isOldByCode = BuildConfig.VERSION_CODE < config.latestVersionCode
         val isOldByName = compareVersionNames(BuildConfig.VERSION_NAME, config.latestVersionName) < 0
-        _isOutdatedAppVersion.value = isOldByCode || isOldByName
+        val outdated = isOldByCode || isOldByName
+        // Optional updates can be dismissed for the specific published build ("Later");
+        // mandatory/security updates (forceUpdate = true) can never be dismissed.
+        val dismissedCode = sharedPrefs.getInt("update_banner_dismissed_code", -1)
+        val dismissed = !config.forceUpdate && dismissedCode == config.latestVersionCode
+        _isOutdatedAppVersion.value = outdated && !dismissed
+    }
+
+    /** "Later" handler for OPTIONAL update banners (no-op for security/mandatory updates). 2026-10-23 */
+    fun dismissUpdateBanner() {
+        val config = _appVersionConfig.value
+        if (config.forceUpdate) return
+        sharedPrefs.edit()
+            .putInt("update_banner_dismissed_code", config.latestVersionCode)
+            .apply()
+        _isOutdatedAppVersion.value = false
     }
 
     fun publishAppVersionUpdate(
         latestCode: Int = BuildConfig.VERSION_CODE,
         latestName: String = BuildConfig.VERSION_NAME,
         downloadUrl: String = "https://zyphuel.netlify.app",
-        releaseNotes: String = "Zyphuel v$latestName (Build $latestCode) — Real-Time Sync, Multi-Language & Live Fuel Rates"
+        releaseNotes: String = "Zyphuel v$latestName (Build $latestCode) — Real-Time Sync, Multi-Language & Live Fuel Rates",
+        forceUpdate: Boolean = false
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             val newConfig = com.example.data.AppVersionConfig(
@@ -1015,7 +1048,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 latestVersionName = latestName.trim(),
                 downloadUrl = downloadUrl.trim().ifBlank { "https://zyphuel.netlify.app" },
                 releaseNotes = releaseNotes.trim(),
-                forceUpdate = false,
+                forceUpdate = forceUpdate,
                 updatedAt = System.currentTimeMillis()
             )
             sharedPrefs.edit()
@@ -1023,6 +1056,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 .putString("latest_version_name", newConfig.latestVersionName)
                 .putString("latest_download_url", newConfig.downloadUrl)
                 .putString("latest_release_notes", newConfig.releaseNotes)
+                .putBoolean("latest_force_update", newConfig.forceUpdate)
                 .apply()
             _appVersionConfig.value = newConfig
             evaluateOutdatedAppVersion(newConfig)
@@ -1038,6 +1072,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     init {
+        // Restore persisted failed-login lockouts so force-closing/restarting the app
+        // cannot bypass the 5-minute cooldown (added 2026-10-23).
+        SecurityRateLimiter.initialize(application)
         evaluateOutdatedAppVersion(_appVersionConfig.value)
 
         // Enforce Official OGRA Pakistan Fuel Rates (e.g. Base Petrol Rs. 289.38 -> Petrol Pump Rate Rs. 294.38)
@@ -1152,12 +1189,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         // Synchronize Real-Time Email Gateway configuration from Cloud Firestore across all devices
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                // Ensure valid default app password is saved into SecureStorageManager
+                // SECURITY (2026-10-23): no credentials are hardcoded in source. The gateway
+                // password comes from admin-managed Firestore config (below) or, for the
+                // developer/owner build only, the git-ignored SMTP_APP_PASSWORD secret
+                // (env / local.properties) injected as BuildConfig.SMTP_APP_PASSWORD.
                 val currentLocal = SecureStorageManager.getSmtpConfig(application)
                 if (currentLocal.appPassword.isBlank()) {
-                    val updated = currentLocal.copy(appPassword = "nvyzrxsbhibncijb")
-                    SecureStorageManager.saveSmtpConfig(application, updated)
-                    _smtpConfig.value = updated
+                    val seededPassword = com.example.BuildConfig.SMTP_APP_PASSWORD
+                    if (seededPassword.isNotBlank()) {
+                        val updated = currentLocal.copy(appPassword = seededPassword)
+                        SecureStorageManager.saveSmtpConfig(application, updated)
+                        _smtpConfig.value = updated
+                    }
                 }
 
                 val remoteConfig = repository.firestoreUserRepository.getEmailGatewayConfig()
@@ -1546,7 +1589,47 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    private val _loginCooldownSeconds = MutableStateFlow(0L)
+    /** Remaining seconds of the failed-login cooldown shown by the login form (0 = unlocked). */
+    val loginCooldownSeconds: StateFlow<Long> = _loginCooldownSeconds.asStateFlow()
+    private var loginCooldownJob: Job? = null
+
+    private fun lockedOutMessage(seconds: Long): String =
+        "Too many failed login attempts. Please try again in ${formatCooldown(seconds)}."
+
+    private fun formatCooldown(seconds: Long): String {
+        val safe = seconds.coerceAtLeast(0L)
+        return "%02d:%02d".format(safe / 60, safe % 60)
+    }
+
+    /**
+     * Starts (or refreshes) the on-screen cooldown countdown. The server-side/persisted
+     * lockout remains the single source of truth: this only mirrors its remaining time so
+     * the form re-enables by itself when the cooldown expires (added 2026-10-23).
+     */
+    private fun startLoginCooldown(seconds: Long) {
+        if (seconds <= 0L) {
+            _loginCooldownSeconds.value = 0L
+            return
+        }
+        loginCooldownJob?.cancel()
+        _loginCooldownSeconds.value = seconds
+        loginCooldownJob = viewModelScope.launch {
+            var remaining = seconds
+            while (remaining > 0L) {
+                delay(1000L)
+                remaining -= 1L
+                _loginCooldownSeconds.value = remaining
+            }
+        }
+    }
+
     fun login(email: String, passwordHash: String, onSuccess: (UserEntity) -> Unit) {
+        // A live cooldown disables the form until it reaches zero (added 2026-10-23).
+        if (_loginCooldownSeconds.value > 0L) {
+            _uiMessage.value = lockedOutMessage(_loginCooldownSeconds.value)
+            return
+        }
         val trimmedEmail = email.trim()
         val emailValidation = SecurityInputValidator.validateEmail(trimmedEmail)
         if (emailValidation is ValidationResult.Invalid) {
@@ -1554,9 +1637,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
 
-        val rateLimit = SecurityRateLimiter.checkAndRecordAuthAttempt("device_client", trimmedEmail)
-        if (rateLimit is RateLimitResult.Blocked) {
-            _uiMessage.value = rateLimit.reason
+        // Brute-force lockout (Error 422): 4 wrong passwords in 1 minute -> 5 min cooldown.
+        // Check-only here; failures are counted in recordAuthFailure below. Added: 2026-10-23
+        val lockout = SecurityRateLimiter.checkAuthLockout("device_client", trimmedEmail)
+        if (lockout is RateLimitResult.Blocked) {
+            startLoginCooldown(lockout.remainingCooldownSeconds)
+            _uiMessage.value = lockout.reason
             return
         }
 
@@ -1574,7 +1660,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         onSuccess(user)
                     }
                 } else {
-                    _uiMessage.value = "Invalid email or password."
+                    // Wrong password: count it; may trigger the Error 422 lockout. Added: 2026-10-23
+                    val lockMessage = SecurityRateLimiter.recordAuthFailure("device_client", trimmedEmail)
+                    val remaining = SecurityRateLimiter.checkAuthLockout("device_client", trimmedEmail)
+                    if (remaining is RateLimitResult.Blocked) {
+                        startLoginCooldown(remaining.remainingCooldownSeconds)
+                    }
+                    _uiMessage.value = lockMessage ?: "Invalid email or password."
                 }
             } catch (e: Exception) {
                 _uiMessage.value = SecurityErrorFormatter.formatUserError(e, "Login failed. Please verify credentials and try again.")
@@ -1911,9 +2003,59 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun resetPassword(email: String, phone: String, newPasswordHash: String, onSuccess: () -> Unit) {
+    // --- Password Reset OTP (added 2026-10-23) ---
+    // Previously a password could be reset with only email + phone (data an
+    // attacker may already know) - a silent account-takeover path. Now a one-time
+    // code is emailed to the registered address and must be entered before any
+    // reset can happen. Login itself remains email + password only.
+    private var pendingResetOtpEmail: String? = null
+    private var pendingResetOtpCode: String? = null
+    private var pendingResetOtpExpiryMs: Long = 0L
+
+    /** Sends a 6-digit one-time code to the account's registered email. Added: 2026-10-23 */
+    fun sendPasswordResetOtp(email: String) {
+        val trimmedEmail = email.trim()
+        val emailValidation = SecurityInputValidator.validateEmail(trimmedEmail)
+        if (emailValidation is ValidationResult.Invalid) {
+            _uiMessage.value = emailValidation.reason
+            return
+        }
+        val rateLimit = SecurityRateLimiter.checkAndRecordAuthAttempt("reset_otp", trimmedEmail)
+        if (rateLimit is RateLimitResult.Blocked) {
+            _uiMessage.value = rateLimit.reason
+            return
+        }
+        viewModelScope.launch {
+            try {
+                val user = repository.userDao.getUserByEmail(trimmedEmail)
+                if (user == null) {
+                    _uiMessage.value = "No account found with this email."
+                    return@launch
+                }
+                if (user.role == "admin" || user.email.equals("m.daniyalkhan490@gmail.com", ignoreCase = true)) {
+                    _uiMessage.value = "The admin's password is unforgotten and cannot be reset because the admin assigned it to the admin."
+                    return@launch
+                }
+                val code = String.format("%06d", kotlin.random.Random.nextInt(0, 1_000_000))
+                pendingResetOtpEmail = user.email.trim().lowercase()
+                pendingResetOtpCode = code
+                pendingResetOtpExpiryMs = System.currentTimeMillis() + (5 * 60 * 1000L) // 5 minutes
+                dispatchRealtimeEmail(
+                    recipientEmail = user.email,
+                    subject = "🔐 Zyphuel Password Reset Code",
+                    body = "Hello ${user.name},\n\nYour password reset code is: $code\n\nThis code expires in 5 minutes. If you did not request a password reset, ignore this email and keep your password unchanged.\n\n- Zyphuel Security"
+                )
+                _uiMessage.value = "Reset code sent to ${user.email}. Check your inbox (and spam folder)."
+            } catch (e: Exception) {
+                _uiMessage.value = "Could not send the reset code. Please try again."
+            }
+        }
+    }
+
+    fun resetPassword(email: String, phone: String, otp: String, newPasswordHash: String, onSuccess: () -> Unit) {
         val trimmedEmail = email.trim()
         val trimmedPhone = phone.trim()
+        val trimmedOtp = otp.trim()
 
         if (trimmedEmail.equals("m.daniyalkhan490@gmail.com", ignoreCase = true)) {
             _uiMessage.value = "The admin's password is unforgotten and cannot be reset because the admin assigned it to the admin."
@@ -1937,6 +2079,27 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             _uiMessage.value = pwdVal.reason
             return
         }
+
+        // OTP verification (2026-10-23): the reset code emailed to the registered
+        // address must match, belong to this email, and still be unexpired.
+        val expectedOtpEmail = pendingResetOtpEmail
+        val expectedOtpCode = pendingResetOtpCode
+        if (expectedOtpEmail == null || expectedOtpCode == null || System.currentTimeMillis() > pendingResetOtpExpiryMs) {
+            _uiMessage.value = "Reset code expired or not requested. Tap \"Send Code\" first."
+            return
+        }
+        if (!expectedOtpEmail.equals(trimmedEmail.lowercase(), ignoreCase = true)) {
+            _uiMessage.value = "This reset code was issued for a different email address."
+            return
+        }
+        if (trimmedOtp.length != 6 || trimmedOtp != expectedOtpCode) {
+            // Wrong codes count toward the same Error 422 brute-force lockout
+            val otpLock = SecurityRateLimiter.recordAuthFailure("device_client", trimmedEmail)
+            _uiMessage.value = otpLock ?: "Invalid reset code. Please check your email and try again."
+            return
+        }
+        // Code verified - consume it so it can never be reused (single-use)
+        pendingResetOtpCode = null
 
         val rateLimit = SecurityRateLimiter.checkAndRecordAuthAttempt("device_client", trimmedEmail)
         if (rateLimit is RateLimitResult.Blocked) {

@@ -171,22 +171,32 @@ class CategoryAndVehicleArchitectureTest {
         assertNotNull(fuelCat)
         assertTrue("Fuel category pricing must have isDynamicFuelRate flag true", fuelCat.pricingConfig.isDynamicFuelRate)
 
-        // Verify exactly 4 total subcategories in Fuel & Energy: 2 Petrol, 2 Diesel
-        assertEquals(4, fuelCat.subcategories.size)
+        // Verify exactly 4 orderable subcategories in Fuel & Energy: 2 Petrol, 2 Diesel.
+        // Water and LPG stay listed as explicitly disabled (isActive = false) so admin
+        // dashboards can surface them, but they are never orderable.
+        val orderable = fuelCat.subcategories.filter { it.isActive }
+        assertEquals("Exactly 4 orderable fuel subcategories", 4, orderable.size)
+        assertEquals(6, fuelCat.subcategories.size)
 
         // Verify Petrol (exactly 2)
-        val petrolSubs = fuelCat.subcategories.filter { it.serviceGroup == "PETROL" }
+        val petrolSubs = orderable.filter { it.serviceGroup == "PETROL" }
         assertEquals(2, petrolSubs.size)
         assertEquals(listOf("petrol_regular", "petrol_octane"), petrolSubs.map { it.id })
 
         // Verify Diesel (exactly 2)
-        val dieselSubs = fuelCat.subcategories.filter { it.serviceGroup == "DIESEL" }
+        val dieselSubs = orderable.filter { it.serviceGroup == "DIESEL" }
         assertEquals(2, dieselSubs.size)
         assertEquals(listOf("diesel_regular", "diesel_generator"), dieselSubs.map { it.id })
 
-        // Verify Gas is completely removed
-        val gasSubs = fuelCat.subcategories.filter { it.serviceGroup == "GAS" }
+        // Verify Gas is not orderable
+        val gasSubs = orderable.filter { it.serviceGroup == "GAS" }
         assertEquals(0, gasSubs.size)
+
+        // Verify Water and LPG are present but disabled (never orderable)
+        listOf("water_pure_blocked", "lpg_cylinder_blocked").forEach { blockedId ->
+            val blocked = fuelCat.subcategories.first { it.id == blockedId }
+            assertFalse("$blockedId must be disabled", blocked.isActive)
+        }
 
         // Verify FUEL ADD-ONS is completely removed
         val addOns = fuelCat.subcategories.filter { it.serviceGroup?.contains("ADD-ON", ignoreCase = true) == true }

@@ -1,8 +1,8 @@
 # Zyphuel Project Phases & Milestones
 
-> **Current App Version:** `2.6.4.0.0.24 (Build 52)`  
-> **Last Synchronized:** <font color="#10b981"><b>2026-10-09</b></font>  
-> **Status:** <font color="#10b981"><b>Production Verified (100% Tests Passing)</b></font>
+> **Current App Version:** `2.6.4.0.0.33 (Build 61)`  
+> **Last Synchronized:** <font color="#10b981"><b>2026-10-23</b></font>  
+> **Status:** <font color="#10b981"><b>Build Verified (37/38 Tests Passing — 1 Pre-Existing Unrelated Failure)</b></font>
 
 ---
 
@@ -39,3 +39,11 @@
 - [x] <font color="#10b981"><b>Silent Retail Markup</b>: `PUMP_RATE_MARKUP = 5.00` Rs./Litre applied over base OGRA rates silently in background.</font>
 - [x] <font color="#10b981"><b>Trading-Style GitHub Activity Graph</b>: High-frequency repository analyzer tracking 1D, 1W, and 1M velocity, commit intervals, and trendlines.</font>
 - [x] <font color="#10b981"><b>Product Availability Gate</b>: Water and LPG Gas permanently blocked.</font>
+
+## <font color="#10b981"><b>Phase 6 — Build 61 Data Preservation & Auth Hardening (2026-10-23)</b></font>
+**Goal:** Zero user-data loss across any app update; email + password as the only credential path.
+- [x] <font color="#10b981"><b>Room DB v13 Migration</b>: `MIGRATION_12_TO_13` (schema-preserving); `fallbackToDestructiveMigration()` permanently removed.</font>
+- [x] <font color="#10b981"><b>Error 422 Brute-Force Lockout</b>: 4 wrong passwords in 1 minute → 5-minute cooldown across all auth paths.</font>
+- [x] <font color="#10b981"><b>Email OTP Password Reset</b>: single-use 6-digit code, 5-minute expiry, closes email+phone-only takeover path.</font>
+- [x] <font color="#10b981"><b>Biometric Password Verification</b>: query-based account bypass removed; stored password re-verified on fingerprint sign-in.</font>
+- [x] <font color="#10b981"><b>Case-Insensitive Duplicate Email Guard</b>: `LOWER(email)` matching blocks duplicate signups in any letter-case.</font>

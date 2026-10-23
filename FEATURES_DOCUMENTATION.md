@@ -1,17 +1,26 @@
 # 🚀 Zyphuel App Features & Technical Documentation
-**App Version:** `v2.6.4.0.0.30 (Build 58)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** <font color="#10b981"><b>2026-10-13</b></font>
+**App Version:** `v2.6.4.0.0.33 (Build 61)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** <font color="#10b981"><b>2026-10-23</b></font>
 
 Welcome to the complete architectural and functional guide for the **Zyphuel** Android application. This document outlines every single feature, function, database entity, and user flow from start to finish.
 
 > [!NOTE]
-> **Latest Updates (<font color="#10b981"><b>2026-10-13</b></font> — v2.6.4.0.0.30 / Build 58):**
-> 1. **Customer Order Dialog — Hidden Internal Tiered Delivery Fee Table (`OrderServiceDialog`, `Screens.kt`, `CategoryComponents.kt`)**: Removed the internal rate breakdown card (`Doorstep Fuel Delivery Rates (Max 15L)`) and rate schedule texts from the customer-facing order dialog and preset chips so that customers are not exposed to internal per-liter rate tables. Instead, customers cleanly see their calculated `Delivery Charges` in the checkout summary while the 15L cap and tiered fee engine (Rs. 300 up to 10L, Rs. 320 for 11L, Rs. 340 for 12L, Rs. 360 for 13L, Rs. 380 for 14L, Rs. 400 for 15L) run silently and securely in the background.
-> 2. **Outdated App Version Detection & "Download New Version" Message Bar (`OutdatedAppVersionMessageBar`, `MainViewModel`, `FirestoreUserRepository`)**: Real-time Cloud Firestore listener (`system_config/app_version`) compares the device's `BuildConfig.VERSION_CODE` and `BuildConfig.VERSION_NAME` against the latest published version. Users on an **older version** automatically see a prominent `"🚀 New Version Available — Download Latest Version"` message bar (`outdated_app_version_message_bar`) with a 1-tap download button, while users on the **latest version** (`>= latestVersionCode`) **never** see the update message bar.
-> 3. **Full Multi-Device Real-Time Sync (`system_config/app_version`, `system_config/fuel_rates`, `users/{uid}`)**: Automatically publishes newer app builds to Firestore on startup and syncs live OGRA fuel prices (`observeFuelRatesConfig` / `saveFuelRatesConfig`), user profiles, passwords, and orders in real-time across all devices. Includes an Admin Dashboard version broadcast card (`admin_app_version_sync_card`).
-> 3. **Real-Time Profile Password Sync & Login Password Match (`ProfileSettingsDialog`, `MainViewModel`, `SecureStorageManager`, `FirestoreUserRepository`)**: Displays and verifies the user's actual login password (via AES-256-GCM `SecureStorageManager.getUserLoginPassword` and `verifyMatchesCurrentLoginPassword`) with debounced real-time syncing to Room, `EncryptedSharedPreferences`, and Cloud Firestore (`observeUserProfile`).
-> 4. **68+ World Languages & Real-Time UI Translation (`AppLanguageManager`, `LanguagePickerDialog`)**: Expanded language support to 68 global and regional languages with search, region filters, and linguistic family fallback translation.
-> 5. **Web Version Privacy Portal Link (`TermsAndPrivacyDialog`, `PRIVACY_POLICY.md`, `TERMS_AND_CONDITIONS.md`)**: Updated the Web Version button and legal references to open `https://zyphuel.netlify.app/privacy`.
-> 6. **Post-Order Customer Feedback Reminder & Admin Categories Summary (`PostOrderFeedbackReminderDialog`, `AdminCategoryManagementTab`)**: Post-order feedback prompt and Admin Categories active offerings summary card (`admin_current_offerings_summary_card`).
+> **Latest Updates (<font color="#10b981"><b>2026-10-23</b></font> — v2.6.4.0.0.33 / Build 61):**
+> 1. **Zero Data Loss on App Update (Room Migration, `Models.kt` + `Repository.kt`)**: `fallbackToDestructiveMigration()` permanently removed; database v13 ships `MIGRATION_12_TO_13` (schema-preserving no-op) via `.addMigrations(...)`, so accounts, orders, audit logs, notifications, marked locations and vehicles survive every version bump. Any future version bump MUST add a matching `Migration` (fails loudly instead of wiping data).
+> 2. **Brute-Force Login Lockout — Error 422 (`SecurityRateLimiter.kt`)**: 4 wrong passwords inside 1 minute lock login for a 5-minute cooldown; the block message carries error code `422` with remaining seconds. Enforced across password login, biometric login, and reset-code guessing; success clears counters.
+> 3. **Email-Only Password Recovery with One-Time Code (`sendPasswordResetOtp`, `ForgotPasswordDialog`)**: password reset now requires a 6-digit single-use code (5-min expiry) emailed to the registered address, closing the previous email+phone-only account-takeover path.
+> 4. **Password-Verified Biometric Login (`loginWithBiometrics`)**: removed the "first user of this role" query bypass — fingerprint login must resolve the account by email AND verify the stored password through `repository.loginUser()`.
+> 5. **Duplicate Email Checker (`UserDao.getUserByEmail`, `AppRepository.isEmailRegistered`)**: case-insensitive `LOWER(email)` matching blocks the same address being registered twice in any letter-case across all signup paths.
+
+> [!NOTE]
+> **Previous Updates (<font color="#10b981"><b>2026-10-13</b></font> — v2.6.4.0.0.31 / Build 59):**
+> 1. **One-Click Instant Desktop APK Downloader (`desktop_apk_download.bat`)**: Added a zero-friction, one-click Windows batch tool (`desktop_apk_download.bat`) in the project root. When double-clicked or executed, it dynamically resolves the user's active Windows Desktop path (handling both OneDrive Desktop and local Desktop via PowerShell `[Environment]::GetFolderPath('Desktop')`), compiles/assembles the latest debug APK via `gradlew.bat assembleDebug`, copies both version-tagged (`Zyphuel-v2.6.4.0.0.31-Build59.apk`) and shortcut-tagged (`Zyphuel-Latest.apk`) binaries directly to the Desktop, displays exact file size and verification info, and automatically opens Windows File Explorer highlighting the ready APK. Supports Quick Copy mode for sub-second export.
+> 2. **Customer Order Dialog — Hidden Internal Tiered Delivery Fee Table (`OrderServiceDialog`, `Screens.kt`, `CategoryComponents.kt`)**: Removed the internal rate breakdown card (`Doorstep Fuel Delivery Rates (Max 15L)`) and rate schedule texts from the customer-facing order dialog and preset chips so that customers are not exposed to internal per-liter rate tables. Instead, customers cleanly see their calculated `Delivery Charges` in the checkout summary while the 15L cap and tiered fee engine (Rs. 300 up to 10L, Rs. 320 for 11L, Rs. 340 for 12L, Rs. 360 for 13L, Rs. 380 for 14L, Rs. 400 for 15L) run silently and securely in the background.
+> 3. **Outdated App Version Detection & "Download New Version" Message Bar (`OutdatedAppVersionMessageBar`, `MainViewModel`, `FirestoreUserRepository`)**: Real-time Cloud Firestore listener (`system_config/app_version`) compares the device's `BuildConfig.VERSION_CODE` and `BuildConfig.VERSION_NAME` against the latest published version. Users on an **older version** automatically see a prominent `"🚀 New Version Available — Download Latest Version"` message bar (`outdated_app_version_message_bar`) with a 1-tap download button, while users on the **latest version** (`>= latestVersionCode`) **never** see the update message bar.
+> 4. **Full Multi-Device Real-Time Sync (`system_config/app_version`, `system_config/fuel_rates`, `users/{uid}`)**: Automatically publishes newer app builds to Firestore on startup and syncs live OGRA fuel prices (`observeFuelRatesConfig` / `saveFuelRatesConfig`), user profiles, passwords, and orders in real-time across all devices. Includes an Admin Dashboard version broadcast card (`admin_app_version_sync_card`).
+> 5. **Real-Time Profile Password Sync & Login Password Match (`ProfileSettingsDialog`, `MainViewModel`, `SecureStorageManager`, `FirestoreUserRepository`)**: Displays and verifies the user's actual login password (via AES-256-GCM `SecureStorageManager.getUserLoginPassword` and `verifyMatchesCurrentLoginPassword`) with debounced real-time syncing to Room, `EncryptedSharedPreferences`, and Cloud Firestore (`observeUserProfile`).
+> 6. **68+ World Languages & Real-Time UI Translation (`AppLanguageManager`, `LanguagePickerDialog`)**: Expanded language support to 68 global and regional languages with search, region filters, and linguistic family fallback translation.
+> 7. **Web Version Privacy Portal Link (`TermsAndPrivacyDialog`, `PRIVACY_POLICY.md`, `TERMS_AND_CONDITIONS.md`)**: Updated the Web Version button and legal references to open `https://zyphuel.netlify.app/privacy`.
+> 8. **Post-Order Customer Feedback Reminder & Admin Categories Summary (`PostOrderFeedbackReminderDialog`, `AdminCategoryManagementTab`)**: Post-order feedback prompt and Admin Categories active offerings summary card (`admin_current_offerings_summary_card`).
 
 ---
 
@@ -284,13 +293,23 @@ The app strictly segments access control across three user roles:
     * **Profile & Security Settings Toggle**: In `ProfileSettingsDialog` and `SecuritySettingsScreen`, users and riders can toggle Biometric Lock on/off with 1 tap.
     * **Prominent Login Prompt Card**: When enabled, the "Fingerprint / Face ID Login" card is displayed on the login screen for 1-tap fast entry without typing passwords.
     * **Post-Logout Quick Sign-In**: Biometric preferences persist securely across sessions in `SecureStorageManager` with AES-256 GCM encryption.
-    * Features instant email-based & role-based fallback lookup (`loginWithBiometrics` in `MainViewModel`) so users and drivers can sign in effortlessly even on emulators or un-enrolled hardware.
+    * **Password-Verified Biometric Login (<font color="#10b981"><b>2026-10-23</b></font>)**: `loginWithBiometrics` in `MainViewModel` now resolves the account strictly by email and verifies the stored password through `repository.loginUser()` before completing login. The legacy "first user of this role" query fallback (which let a fingerprint open a random account with no password) has been removed; a missing stored password falls back to the email + password form, and the Error 422 lockout also applies to biometric attempts.
   * **Order History Biometric Vault**:
     * Biometric protection badge and status vault on `CustomerOrderHistoryScreen` to protect sensitive delivery addresses and expenditure receipts.
   * **App Security Settings**:
     * Module-specific biometric toggles (Customer, Rider, Admin), custom security PINs, and session lock timeouts.
   * **Encrypted Storage & Passwords**:
     * Biometric tokens and user preferences secured via `SecureStorageManager` with AES-256 GCM encryption and SHA-256 hash digests.
+  * **Brute-Force Login Lockout — Error 422 (<font color="#10b981"><b>2026-10-23</b></font>)**:
+    * **Rule**: 4 wrong passwords inside a 1-minute sliding window lock the account for a 5-minute cooldown.
+    * **Signal**: the blocking message carries error code `422` with the remaining cooldown seconds (e.g. `Error 422: Too many failed login attempts...`).
+    * **Enforcement**: `SecurityRateLimiter.checkAuthLockout()` (pre-check) and `SecurityRateLimiter.recordAuthFailure()` (counts failures) in `SecurityRateLimiter.kt`; applies to password login, biometric login, and reset-code guessing. A successful login clears all counters via `recordAuthSuccess()`.
+  * **Email-Only Password Recovery with One-Time Code (<font color="#10b981"><b>2026-10-23</b></font>)**:
+    * `sendPasswordResetOtp()` emails a 6-digit single-use code (5-minute expiry) to the registered address through the real-time email engine; `ForgotPasswordDialog` gained an "Email Code" field plus a "Send Code" button.
+    * `resetPassword()` now requires `otp` and refuses to change any password without a matching, unexpired code issued for that exact email — closing the previous email+phone-only account-takeover path. Wrong codes count toward the same Error 422 lockout.
+  * **Duplicate Email Checker (<font color="#10b981"><b>2026-10-23</b></font>)**:
+    * `AppRepository.isEmailRegistered()` reports whether an address is already taken before signup.
+    * `UserDao.getUserByEmail()` now matches `LOWER(email) = LOWER(:email)`, so every signup path (customer, rider, admin, social) rejects duplicates in any letter-case (`Ali@x.com` vs `ali@x.com`) and login accepts any casing.
 
 ---
 
@@ -550,7 +569,7 @@ The app strictly segments access control across three user roles:
 ## 11.11 Real-Time Email Delivery Engine, Admin Profit Accounting, Profile Phone Updates & Domain Migration
 * **Robust Real-Time Google SMTP Email Delivery (`RealtimeEmailEngine.kt`, `SecureStorageManager.kt`)**:
   * **TLS SNI Support on Port 465**: Resolved mobile network handshake drops by creating explicit `SSLSocket` instances with Server Name Indication (`sslFactory.createSocket(plainSocket, host, port, true)`).
-  * **Fail-Safe Built-In Fallbacks**: `SecureStorageManager.getSmtpConfig` and `RealtimeEmailEngine` automatically fallback to verified credentials (`m.daniyalkhan490@gmail.com` with app password `pkymsolzualgbgzn`) whenever user preferences are uninitialized or blank, preventing silent email dispatch skips.
+  * **Fail-Safe Built-In Fallbacks**: `SecureStorageManager.getSmtpConfig` and `RealtimeEmailEngine` fall back to the admin-managed cloud gateway configuration when local preferences are uninitialized or blank, preventing silent email dispatch skips. No credentials are hardcoded in source (<font color="#10b981"><b>2026-10-23</b></font>).
   * **Google Sign-In Registration Welcome Email**: `handleSocialLoginSuccess` in `MainViewModel` now automatically fires a real-time welcome email upon social signup so every customer receives immediate confirmation in their registered inbox.
 * **Invoice Privacy & Admin Self-Fulfillment (`InvoiceGenerator.kt`)**:
   * **Intelligent Fulfillment Detection (`isAdminFulfillment`)**: Identifies orders fulfilled directly by administrators (`riderEmail.isNullOrBlank()`, `riderName` containing "Admin", or matching admin root address).
@@ -591,7 +610,9 @@ The app strictly segments access control across three user roles:
 ---
 
 ## 12. Database Architecture & Data Models
-Room Local Persistence layer (`AppDatabase.kt` v9):
+Room Local Persistence layer (`Models.kt` — `AppDatabase` class, <font color="#10b981"><b>DB v13</b></font>):
+
+**✅ Data Preservation Fix (<font color="#10b981"><b>2026-10-23</b></font>)**: Room database now uses proper migrations (`MIGRATION_12_TO_13`) instead of `fallbackToDestructiveMigration()`. This ensures user data (accounts, orders, audit logs, marked locations) is preserved across app updates rather than being deleted on every version change. **Rule for every future release**: bumping the database version REQUIRES adding a matching `Migration` object — `fallbackToDestructiveMigration()` is permanently removed from both `Models.kt` and `Repository.kt`, so a missing migration fails the build instead of wiping user data.
 * **`UserEntity`**: `email` (PK), `name`, `passwordHash`, `role`, `phoneNumber`, `residentialAddress`, `isVerified`.
 * **`OrderEntity`**: `id` (PK), `customerEmail`, `customerName`, `serviceType`, `fuelVolumeLiters`, `totalAmountPkr`, `status`, `assignedRiderEmail`, `assignedRiderName`, `deliveryAddress`, `etaMinutes`.
 * **`AuditLogEntity`**: `id` (PK), `timestamp`, `action`, `performedBy`, `details`.
@@ -714,7 +735,7 @@ Zyphuel v2.4.0 introduces a comprehensive 10-category on-demand automotive and m
 
 ### 16.2 Saved Vehicle Profiles ("My Vehicles")
 * **Persistence & Schema (`VehicleEntity` & `VehicleDao`)**:
-  - Saved vehicle profiles are stored locally in Room database version 12 (`vehicles` table) with fields `id`, `userId`, `make`, `model`, `year`, `licensePlate`, `fuelType`, `vehicleType`, `createdAt`, and `isDefault`.
+  - Saved vehicle profiles are stored locally in Room database version <font color="#10b981"><b>13</b></font> (`vehicles` table) — preserved on every update via `MIGRATION_12_TO_13` with fields `id`, `userId`, `make`, `model`, `year`, `licensePlate`, `fuelType`, `vehicleType`, `createdAt`, and `isDefault`.
   - The DAO supports reactive queries (`getVehiclesForUser(userId): Flow<List<VehicleEntity>>`), single active selection (`getDefaultVehicle`), upserts (`insertVehicle`), and secure profile deletion (`deleteVehicle`).
 * **UI Integration & Compatibility Matching (`MyVehiclesDialog` & `SavedVehiclesBar`)**:
   - Displayed on the Customer Home dashboard directly above the category grid as a horizontal scrollable vehicle chip selector with an `"Add Vehicle +"` button.
@@ -923,12 +944,12 @@ Zyphuel v2.4.0 introduces a comprehensive 10-category on-demand automotive and m
 ## 25. Authenticated Gmail App Password Integration & Active Cloud Synchronization
 ### 25.1 Google App Password Credential Provisioning
 * **Dedicated Authenticated SMTP Protocol**:
-  - Integrated the administrator's official 16-letter Google App Password (`nvyz rxsb hibn cijb` -> `nvyzrxsbhibncijb`) into `SecureStorageManager.kt` (`AppModule.ADMIN`).
+  - Integrated the administrator-managed Google App Password via encrypted `SecureStorageManager` (`AppModule.ADMIN`). <font color="#10b981"><b>2026-10-23</b></font>: the credential is no longer hardcoded in source or docs — it is supplied at runtime from admin-managed Firestore config or the git-ignored `SMTP_APP_PASSWORD` secret (env / `local.properties`).
   - Set default `SmtpConfig` parameters:
     - **Host**: `smtp.gmail.com`
     - **Port**: `465` (Direct SSL/TLS socket with explicit SNI)
     - **Sender Email**: `m.daniyalkhan490@gmail.com`
-    - **App Password**: `nvyzrxsbhibncijb`
+    - **App Password**: securely stored (encrypted at rest); never committed to source, docs, or logs.
     - **Sender Name**: `"Zyphuel Delivery Operations"`
     - **Enabled**: `true`
 

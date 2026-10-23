@@ -1759,10 +1759,12 @@ fun OnboardingScreen(viewModel: MainViewModel) {
 fun ForgotPasswordDialog(
     initialIsRider: Boolean,
     onDismiss: () -> Unit,
-    onSubmit: (String, String, String) -> Unit
+    onSendCode: (String) -> Unit,
+    onSubmit: (String, String, String, String) -> Unit // email, phone, otp, newPassword
 ) {
     var email by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
+    var otp by remember { mutableStateOf("") } // Email one-time code (added 2026-10-23)
     var newPassword by remember { mutableStateOf("") }
     var newPasswordVisible by remember { mutableStateOf(false) }
 
@@ -1850,6 +1852,44 @@ fun ForgotPasswordDialog(
                     singleLine = true
                 )
 
+                // Email One-Time Reset Code (2026-10-23) - proves inbox ownership
+                // before any password can be changed.
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = otp,
+                        onValueChange = { if (it.length <= 6) otp = it },
+                        label = { Text("Email Code") },
+                        leadingIcon = { Icon(Icons.Filled.Email, contentDescription = null, tint = ZyphuelBluePrimary) },
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("reset_otp_input"),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.Black,
+                            unfocusedTextColor = Color.Black,
+                            focusedLabelColor = ZyphuelBluePrimary,
+                            unfocusedLabelColor = Color.DarkGray,
+                            focusedBorderColor = ZyphuelBluePrimary,
+                            unfocusedBorderColor = Color.LightGray,
+                            focusedLeadingIconColor = ZyphuelBluePrimary,
+                            unfocusedLeadingIconColor = ZyphuelBluePrimary
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        singleLine = true
+                    )
+                    OutlinedButton(
+                        onClick = { onSendCode(email) },
+                        modifier = Modifier.testTag("send_reset_code_button"),
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(1.dp, ZyphuelBluePrimary)
+                    ) {
+                        Text("Send Code", color = ZyphuelBluePrimary, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    }
+                }
+
                 // New Password
                 OutlinedTextField(
                     value = newPassword,
@@ -1886,7 +1926,7 @@ fun ForgotPasswordDialog(
         },
         confirmButton = {
             Button(
-                onClick = { onSubmit(email, phone, newPassword) },
+                onClick = { onSubmit(email, phone, otp, newPassword) },
                 colors = ButtonDefaults.buttonColors(containerColor = ZyphuelBluePrimary),
                 shape = RoundedCornerShape(10.dp),
                 modifier = Modifier.testTag("reset_submit_button")
@@ -2986,6 +3026,21 @@ fun AuthScreen(viewModel: MainViewModel, isRegister: Boolean, isRider: Boolean) 
                     }
 
                     item {
+                        val loginCooldown by viewModel.loginCooldownSeconds.collectAsState()
+                        if (!isRegister && loginCooldown > 0L) {
+                            Text(
+                                text = "Too many failed login attempts. Please try again in " +
+                                    "%02d:%02d".format(loginCooldown / 60, loginCooldown % 60) + ".",
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    color = Color(0xFFB91C1C),
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 6.dp)
+                                    .testTag("login_cooldown_timer")
+                            )
+                        }
                         Button(
                             onClick = {
                                 if (isRegister) {
@@ -3044,6 +3099,15 @@ fun AuthScreen(viewModel: MainViewModel, isRegister: Boolean, isRider: Boolean) 
                                         }
                                     }
                                 } else {
+                                    if (loginCooldown > 0L) {
+                                        Toast.makeText(
+                                            context,
+                                            "Too many failed login attempts. Please try again in " +
+                                                "%02d:%02d".format(loginCooldown / 60, loginCooldown % 60) + ".",
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                        return@Button
+                                    }
                                     isAuthenticating = true
                                     viewModel.login(email, password) { user ->
                                         viewModel.completeLogin(user)
@@ -3060,6 +3124,7 @@ fun AuthScreen(viewModel: MainViewModel, isRegister: Boolean, isRider: Boolean) 
                                 .fillMaxWidth()
                                 .height(52.dp)
                                 .testTag("auth_submit_button"),
+                            enabled = isRegister || loginCooldown <= 0L,
                             colors = ButtonDefaults.buttonColors(containerColor = ZyphuelBluePrimary),
                             shape = RoundedCornerShape(12.dp)
                         ) {
@@ -3072,7 +3137,9 @@ fun AuthScreen(viewModel: MainViewModel, isRegister: Boolean, isRider: Boolean) 
                                 Spacer(modifier = Modifier.width(8.dp))
                             }
                             Text(
-                                text = if (isRegister) "Register Account" else "Log In",
+                                text = if (isRegister) "Register Account" else if (loginCooldown > 0L) {
+                                    "Locked (" + "%02d:%02d".format(loginCooldown / 60, loginCooldown % 60) + ")"
+                                } else "Log In",
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                             )
                         }
@@ -3436,8 +3503,11 @@ fun AuthScreen(viewModel: MainViewModel, isRegister: Boolean, isRider: Boolean) 
         ForgotPasswordDialog(
             initialIsRider = isRider,
             onDismiss = { showForgotPasswordDialog = false },
-            onSubmit = { emailVal, phoneVal, newPassVal ->
-                viewModel.resetPassword(emailVal, phoneVal, newPassVal) {
+            onSendCode = { emailVal ->
+                viewModel.sendPasswordResetOtp(emailVal)
+            },
+            onSubmit = { emailVal, phoneVal, otpVal, newPassVal ->
+                viewModel.resetPassword(emailVal, phoneVal, otpVal, newPassVal) {
                     showForgotPasswordDialog = false
                 }
             }
@@ -19599,7 +19669,7 @@ fun OutdatedAppVersionMessageBar(
                     }
                     Column {
                         Text(
-                            text = "🚀 New Version Available (v${versionConfig.latestVersionName})",
+                            text = if (versionConfig.forceUpdate) "🔒 Security Update Required (v${versionConfig.latestVersionName})" else "🚀 New Version Available (v${versionConfig.latestVersionName})",
                             style = MaterialTheme.typography.titleSmall.copy(
                                 fontWeight = FontWeight.ExtraBold,
                                 color = Color(0xFF92400E),
@@ -19607,13 +19677,26 @@ fun OutdatedAppVersionMessageBar(
                             )
                         )
                         Text(
-                            text = "Your version (v${viewModel.installedVersionName}) is outdated. Download the latest update for full real-time sync.",
+                            text = if (versionConfig.forceUpdate) {
+                                "A mandatory update is required to keep your account and data protected. Installed: v${viewModel.installedVersionName}."
+                            } else {
+                                "Your version (v${viewModel.installedVersionName}) is outdated. Download the latest update for full real-time sync."
+                            },
                             style = MaterialTheme.typography.bodySmall.copy(
                                 color = Color(0xFF78350F),
                                 fontWeight = FontWeight.Medium,
                                 fontSize = 11.5.sp
                             )
                         )
+                        if (versionConfig.releaseNotes.isNotBlank()) {
+                            Text(
+                                text = "📝 ${versionConfig.releaseNotes}",
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    color = Color(0xFF78350F),
+                                    fontSize = 10.5.sp
+                                )
+                            )
+                        }
                     }
                 }
             }
@@ -19649,6 +19732,24 @@ fun OutdatedAppVersionMessageBar(
                         color = Color.White
                     )
                 )
+            }
+
+            // Optional updates only: allow "Later" (persisted per published build).
+            // Mandatory security updates never show this action. Added 2026-10-23.
+            if (!versionConfig.forceUpdate) {
+                TextButton(
+                    onClick = { viewModel.dismissUpdateBanner() },
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .testTag("update_banner_later_btn")
+                ) {
+                    Text(
+                        text = "Later",
+                        color = Color(0xFF92400E),
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 12.sp
+                    )
+                }
             }
         }
     }

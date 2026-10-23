@@ -25,9 +25,10 @@ The User Roles & Authentication module manages account creation, authentication,
 * `FirebaseAuthProvider` (`app/src/main/java/com/example/auth/FirebaseAuthProvider.kt`): Manages Firebase authentication user sessions, state listeners (`StateFlow<FirebaseUser?>`), Google ID Token credential exchange (`signInWithGoogleIdToken`), generic OAuth credentials (`signInWithCredential`), and active session termination (`signOut`).
 * `loginUser(email, password)` (`MainViewModel.kt`): Validates user credentials against Room database (`UserEntity`), hashes password via SHA-256, and sets logged-in state `currentUser`.
 * `loginWithSocialAccount(provider, socialEmail, socialName, targetRole, onSuccess)` (`MainViewModel.kt`): Handles OAuth 2.0 single sign-on (SSO) exclusively for "Continue with Google" via `GoogleAuthManager`. Auto-provisions role-isolated accounts (`google.customer@zyphuel.com` or `google.rider@zyphuel.com`) or links existing email addresses with Google accounts, updates avatar URIs, and dispatches audit log entries.
-* `registerUser(name, email, phone, password, address)` (`MainViewModel.kt`): Validates inputs via `SecurityInputValidator`, checks for existing email, inserts new `UserEntity`, and triggers welcome notification/email.
+* `registerUser(name, email, phone, password, address)` (`MainViewModel.kt`): Validates inputs via `SecurityInputValidator`, checks for an existing email via `AppRepository.isEmailRegistered()` / case-insensitive `LOWER(email)` lookup (<font color="#10b981"><b>2026-10-23</b></font> — blocks duplicate signups such as `Ali@x.com` vs `ali@x.com`), inserts new `UserEntity`, and triggers welcome notification/email.
+* <font color="#10b981"><b>`sendPasswordResetOtp(email)` / `resetPassword(email, phone, otp, newPassword)` (2026-10-23)</b></font> (`MainViewModel.kt`): Password recovery emails a single-use 6-digit code (5-minute expiry) to the registered address; no password can be changed without the matching code for that exact email, closing the previous email+phone-only takeover path.
 * `logoutUser()` (`MainViewModel.kt`): Clears active user session state, terminates `FirebaseAuthProvider` session, clears biometric authentication state, and returns navigation to `LoginScreen`.
-* `loginWithBiometrics(context, module, userEmailInput)` (`MainViewModel.kt`): Biometric hardware authentication with instant profile lookup for fast 1-tap sign-in on both Customer and Rider login forms.
+* `loginWithBiometrics(context, module, userEmailInput)` (<font color="#10b981"><b>2026-10-23</b></font>): Biometric sign-in that resolves the account by email and re-verifies the stored password through `repository.loginUser()` — the old "first user of this role" query fallback was removed so no login path can bypass email + password.
 * `addRiderFromAdmin(...)` (`MainViewModel.kt`): Admin registration of new drivers storing personal, legal (CNIC/License), vehicle, and address credentials.
 * <font color="#10b981"><b>`deleteAccountPermanently(context)`</b> (`MainViewModel.kt`): Enforces Google Play User Data policy by deleting user account, profile records, and stored credentials upon confirmed user request.</font>
 
@@ -56,6 +57,7 @@ The User Roles & Authentication module manages account creation, authentication,
 ## 🛡️ Security & Social Features
 * SHA-256 secure password hashing.
 * Native Google OAuth 2.0 single sign-on (SSO) integration via `CredentialManager` and `GoogleAuthManager`.
-* Rate limiting on login attempts via `SecurityRateLimiter`.
+* Rate limiting on login attempts via `SecurityRateLimiter` (<font color="#10b981"><b>2026-10-23</b></font>): 4 wrong passwords in 1 minute → Error 422 lockout with 5-minute cooldown; wrong reset codes count toward the same lockout.
+* Email + password only for credential login; Google OAuth and fingerprint paths both end in server-verified or password-verified authentication.
 * Biometric hardware token verification via `BiometricPrompt` API.
 * Permanent account deletion compliance.
