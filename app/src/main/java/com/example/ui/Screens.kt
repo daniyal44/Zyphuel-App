@@ -14013,6 +14013,9 @@ fun AdminAnalyticsDashboard(
             val versionConfig by viewModel.appVersionConfig.collectAsState()
             val isOutdated by viewModel.isOutdatedAppVersion.collectAsState()
             var downloadUrlInput by remember(versionConfig.downloadUrl) { mutableStateOf(versionConfig.downloadUrl) }
+            // Mandatory (security) vs optional feature update (added 2026-10-23).
+            // A mandatory broadcast cannot be dismissed by the user.
+            var forceUpdateInput by remember(versionConfig.forceUpdate) { mutableStateOf(versionConfig.forceUpdate) }
             Card(
                 modifier = Modifier.fillMaxWidth().testTag("admin_app_version_sync_card"),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFFF0FDF4)),
@@ -14082,12 +14085,40 @@ fun AdminAnalyticsDashboard(
                         )
                     )
 
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Mandatory security update",
+                                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFF065F46))
+                            )
+                            Text(
+                                text = if (forceUpdateInput) {
+                                    "Users must update; the banner cannot be dismissed."
+                                } else {
+                                    "Optional update; users may choose \"Later\"."
+                                },
+                                style = MaterialTheme.typography.labelSmall.copy(color = Color(0xFF047857)),
+                                fontSize = 10.5.sp
+                            )
+                        }
+                        Switch(
+                            checked = forceUpdateInput,
+                            onCheckedChange = { forceUpdateInput = it },
+                            modifier = Modifier.testTag("admin_force_update_switch")
+                        )
+                    }
+
                     Button(
                         onClick = {
                             viewModel.publishAppVersionUpdate(
                                 latestCode = viewModel.installedVersionCode,
                                 latestName = viewModel.installedVersionName,
-                                downloadUrl = downloadUrlInput
+                                downloadUrl = downloadUrlInput,
+                                forceUpdate = forceUpdateInput
                             )
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF059669)),

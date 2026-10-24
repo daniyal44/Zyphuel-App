@@ -1,5 +1,48 @@
 # Zyphuel Changelog & Modifications (`changes.md`)
 
+> **This file is the project CHANGELOG.** Each entry lists version, release date (Asia/Karachi),
+> added/changed/fixed/security sections, database migration notes and known issues.
+
+## Version 2.6.4.0.0.33 (Release Build 61) — <font color="#10b981"><b>2026-10-23 22:48:18 PKT</b></font>
+
+**Scope:** security hardening, zero-data-loss update guarantees, email+password authentication, failure lockout and documentation. **No user data is migrated, rewritten or deleted by this release.**
+
+### Security
+- **Hardcoded SMTP credential removed** from `SecureStorageManager.getSmtpConfig()` (a live Gmail app password had been committed as the default) and from `FEATURES_DOCUMENTATION.md`. Credentials now come only from admin-managed Firestore config or the git-ignored `SMTP_APP_PASSWORD` secret. **Owner action: revoke and reissue that Google app password.**
+- **PBKDF2-HMAC-SHA256 password hashing** (120,000 iterations, 16-byte per-user salt, constant-time compare) replacing the fixed-pepper SHA-256 scheme. Legacy hashes are upgraded transparently on the next successful login.
+- **Password-verification bypasses closed:** raw plaintext equality no longer matches a stored hash, and `SOCIAL_OAUTH_*` placeholder accounts can never authenticate through the email/password form.
+- **Biometric sign-in can no longer select an account** by role fallback; it resolves the account by email and re-verifies the stored password through `loginUser()`.
+- **Failed-login lockout is restart-proof:** 4 wrong passwords inside a rolling 60-second window trigger a 5-minute cooldown, persisted with SHA-256-hashed keys plus monotonic (`elapsedRealtime`) tracking so a force-close or a device-clock change cannot bypass it.
+- **Lockout accounting is atomic:** a per-account mutex prevents parallel attempts from losing a failure count.
+- **Live cooldown UI:** the login card shows `Locked (MM:SS)` and re-enables itself at zero.
+- **Duplicate email guard:** case-insensitive `LOWER(email)` lookups, normalized (trim + lowercase) registration and an `ABORT`-mode insert so a duplicate can never overwrite an existing account.
+
+### Added
+- `SECURITY.md`, `DATABASE.md`, `MIGRATIONS.md`, `TESTING.md`.
+- `SecurityAndDataIntegrityTest` (16 tests): lockout policy, restart and parallel bypass, PBKDF2, injection payloads, OAuth placeholders, duplicate email, ownership scoping, migration and reopen-preserves-data.
+
+### Changed
+- **Admin update broadcast can mark a release as mandatory** (`admin_force_update_switch` in the App Version card): optional updates still show “Later”, mandatory security updates hide it and are never dismissible.
+- `README.md`: setup/environment section, real build+test commands, `PBKDF2` (was `SHA-256`) in the stack table, documentation map.
+- `AGENTS.md`, `FEATURES_DOCUMENTATION.md`, `PRIVACY_POLICY.md`, `TERMS_AND_CONDITIONS.md`, `PLAY_STORE_DATA_SAFETY_AND_COMPLIANCE.md` and the `docs/` & `vibe-coding-context-files/` sets synchronized to Build 61; stale dates corrected to the real Pakistan timestamp.
+
+### Fixed
+- **Data loss on app update:** `MIGRATION_12_TO_13` is registered in both Room builders, so updating the app no longer wipes the local database (`fallbackToDestructiveMigration` is not used anywhere).
+- **Stale category test:** the fuel catalog test now asserts the real seed (4 orderable SKUs + Water/LPG present but disabled) instead of a superseded count of 4.
+
+### Database migrations
+- Room **v13** via `MIGRATION_12_TO_13` — schema-identical no-op; **no backup required** for this release, but a Firestore export is still recommended before shipping.
+
+### Compatibility
+- `versionCode` <font color="#10b981"><b>61</b></font>, `versionName` <font color="#10b981"><b>2.6.4.0.0.33</b></font>. Existing accounts, orders, vehicles, marked locations and audit logs are preserved.
+
+### Known issues
+- Failed-login limits are enforced per device (no shared Redis counter); a second device is not covered.
+- `live_tracking` Firestore rule still permits any signed-in read/write until the staged rules patch in `SECURITY.md §5.2` is validated.
+- Signup-time email ownership verification is not implemented; ownership is proven through the recovery-code flow.
+
+---
+
 ## Version 2.6.4.0.0.26 (Release Build 54) — <font color="#10b981"><b>2026-10-09</b></font>
 
 ### 1. Strict Admin Password Git Exclusion & Zero-Leak Credential Isolation (<font color="#10b981"><b>2026-10-09</b></font>)
