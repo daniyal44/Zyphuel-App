@@ -7,6 +7,7 @@ import android.util.Base64
 import android.util.Log
 import com.example.security.SecureStorageManager
 import com.example.security.SmtpConfig
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -186,16 +187,20 @@ object RealtimeEmailEngine {
         // =========================================================================
         try {
             val firestore = FirebaseFirestore.getInstance()
+            // `uid` binds the queued email to the signed-in caller so Firestore rules can
+            // reject documents forged on someone else's behalf (hardened 2026-11-03).
+            val senderUid = FirebaseAuth.getInstance().currentUser?.uid.orEmpty()
             val mailDoc = hashMapOf(
                 "to" to listOf(trimmedRecipient),
                 "message" to hashMapOf(
                     "subject" to subject,
-                    "text" to bodyText,
+                    "text" to bodyText.chunked(90_000).firstOrNull().orEmpty(),
                     "html" to (htmlBody ?: generateHtmlEmail(subject, bodyText))
                 ),
                 "createdAt" to com.google.firebase.firestore.FieldValue.serverTimestamp(),
                 "deliveryStatus" to "PENDING",
-                "recipient" to trimmedRecipient
+                "recipient" to trimmedRecipient,
+                "uid" to senderUid
             )
             firestore.collection("mail").add(mailDoc)
             logI(TAG, "ℹ️ [Channel 3 - Firestore Mail] Queued in Firestore 'mail' collection for: $trimmedRecipient")

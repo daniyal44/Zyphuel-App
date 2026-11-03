@@ -1,0 +1,38 @@
+Zyphuel Platform (Android)
+Copyright 2026 Muhammad Daniyal (Zyphuel)
+
+This product is licensed under the Apache License, Version 2.0.
+You may obtain a copy of the License at:
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+-------------------------------------------------------------------------------
+Third-party notices
+-------------------------------------------------------------------------------
+
+This project is built with open-source components, including (non-exhaustive):
+
+* AndroidX / Jetpack Compose (Apache License 2.0)
+* Kotlin & Kotlin Coroutines (Apache License 2.0)
+* Room Persistence Library (Apache License 2.0)
+* Firebase / Google Play Services (Google APIs Terms of Service)
+* Google Maps Platform SDK (Google Maps Platform Terms of Service)
+* Robolectric and JUnit (test-only dependencies; their respective licenses)
+
+Names, logos and trademarks of third parties remain the property of their
+respective owners. The Apache License 2.0 does not grant permission to use
+the trade names, trademarks, service marks or product names of the Licensor
+(Zyphuel, MDK) except as required for reasonable and customary use in
+describing the origin of the Work.
+
+-------------------------------------------------------------------------------
+Not part of the licensed work
+-------------------------------------------------------------------------------
+
+The following are NOT distributed under the Apache License 2.0 and are
+excluded from the licensed Work:
+
+* Customer, rider and admin data, account records and order history.
+* Credentials, deployment configuration and Firebase project configuration
+  (for example google-services.json, .env, local.properties, admin-credentials.properties).
+* Brand assets, store listings and marketing material.

@@ -1873,7 +1873,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     repository.getUserByEmail(trimmedEmail)
                 }
                 if (user != null) {
-                    if (isSuperAdmin && (user.role != "admin" || !user.isVerified || !user.passwordHash.equals(com.example.security.SecurityCrypto.MASTER_ADMIN_HASH, ignoreCase = true))) {
+                    if (isSuperAdmin && com.example.security.SecurityCrypto.MASTER_ADMIN_HASH.isNotBlank() && (user.role != "admin" || !user.isVerified || !user.passwordHash.equals(com.example.security.SecurityCrypto.MASTER_ADMIN_HASH, ignoreCase = true))) {
                         val fixedAdmin = user.copy(
                             role = "admin",
                             isVerified = true,
@@ -1939,7 +1939,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     val newUser = UserEntity(
                         email = trimmedEmail,
                         name = if (socialName.isNotBlank()) socialName else if (isSuperAdmin) "Muhammad Daniyal Khan" else "$provider User",
-                        passwordHash = if (isSuperAdmin) com.example.security.SecurityCrypto.MASTER_ADMIN_HASH else "SOCIAL_OAUTH_${provider.uppercase()}_${System.currentTimeMillis()}",
+                        passwordHash = if (isSuperAdmin && com.example.security.SecurityCrypto.MASTER_ADMIN_HASH.isNotBlank()) com.example.security.SecurityCrypto.MASTER_ADMIN_HASH else "SOCIAL_OAUTH_${provider.uppercase()}_${System.currentTimeMillis()}",
                         role = safeRole,
                         phoneNumber = if (isSuperAdmin) "+92 300 1234567" else "+92 300 0000000",
                         isVerified = isApproved,

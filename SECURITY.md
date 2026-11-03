@@ -49,12 +49,12 @@ Security Rules are the authority for cloud data access.
 | Property | Value |
 | :--- | :--- |
 | Algorithm | PBKDF2-HMAC-SHA256 (platform-native; Argon2id needs a native dependency this project does not ship) |
-| Iterations | 120,000 |
+| Iterations | 600,000 (OWASP-aligned; hashes created with fewer iterations are re-hashed on the next successful login) |
 | Salt | 16 random bytes per user (`SecureRandom`) |
 | Pepper | Application-level constant in `SecurityCrypto.PEPPER` (defence in depth, not a substitute for the salt) |
 | Legacy compatibility | Old salted SHA-256 hashes are still accepted and are **transparently re-hashed to PBKDF2** on the next successful login (`PASSWORD_HASH_UPGRADED` audit entry) |
 | Plaintext fallback | Only for values that are clearly not a hash (not 64 hex chars). A stored hash can never be matched by submitting it. |
-| Master admin | `MASTER_ADMIN_HASH`, injected from `ADMIN_PASSWORD_HASH` (env / `admin-credentials.properties`), never in source |
+| Master admin | `MASTER_ADMIN_HASH`, injected from `ADMIN_PASSWORD_HASH` (env / `admin-credentials.properties`), **never in source and with no hardcoded fallback**. Missing value = master-admin path disabled (fail-closed); malformed value = build failure. |
 
 Passwords are never written to logs, audit entries, crash reports or documentation.
 
@@ -124,35 +124,29 @@ it requires an outbound mail provider that is configured at runtime and not guar
 
 | Collection | Rule |
 | :--- | :--- |
-| `users/{uid}` | read: owner or admin; create: role must be `customer`/`rider`; update: role immutable by owner |
+| `users/{uid}` | read: owner or admin; create/update: role must be `customer`/`rider` (admin for admins) **and** a strict field whitelist, so privilege fields cannot be injected; update: role immutable by owner |
 | `orders/{orderId}` | read/update: admin, owning customer or assigned rider; `totalPrice` and `customerEmail` immutable after creation; delete: admin only |
-| `audit_logs` | append-only; read admin-only; update/delete denied |
+| `live_tracking/{orderId}` | **admin only** (read and write) — hardened 2026-11-03 |
+| `audit_logs` | append-only; read and create admin-only; update/delete denied |
 | `system_config` (SMTP credentials) | admin only |
-| `feedback`, `mail` | create signed-in, read admin |
-| `app_stats` | public read, signed-in write |
+| `feedback` | create signed-in with a field whitelist; read/update/delete admin |
+| `mail` | create signed-in only when bound to the caller's own `auth.uid`, exactly one recipient, field whitelist and capped sizes; read/update/delete admin |
+| `app_stats` | public read; writes may only increment `count` by exactly 1 (or create at 1) |
 | default | deny everything not explicitly matched |
 
-**Known residual risk (documented, not silently changed):** `live_tracking/{orderId}` currently allows
-any signed-in user to read *and write*, because the tracking document does not carry an owner email and
-the app's session may be anonymously bridged. Tightening it requires a staging rules deploy and a
-two-device tracking test; shipping an untested rule could silently break live GPS. The reviewed patch
-is below and must be validated in staging before production deploy:
+**`live_tracking` decision (2026-11-03):** the previously documented residual risk is closed. Server-side
+GPS publishing is disabled in the client (`LiveTrackingRepository.publishLocation()` returns `false` and
+`observeLocation()` returns an empty flow), so no legitimate client flow reads or writes tracking
+documents. The collection is now admin-only for both read and write, which removes the ability for any
+signed-in (including anonymously bridged) user to read or spoof another customer's or rider's location.
+The only remaining client calls are administrative cleanup deletes (`clearLocation`,
+`purgeAllServerLiveTracking`), which fail closed for non-admin sessions by design.
 
-```javascript
-match /live_tracking/{orderId} {
-  function order() {
-    return get(/databases/$(database)/documents/orders/$(orderId)).data;
-  }
-  allow read: if isSignedIn() && (
-    isAdmin()
-    || order().customerEmail == request.auth.token.email
-    || order().riderEmail == request.auth.token.email
-  );
-  allow write: if isSignedIn() && (
-    isAdmin() || order().riderEmail == request.auth.token.email
-  );
-}
-```
+**`mail` residual risk (accepted, bounded):** Firestore rules cannot rate-limit, so a determined
+signed-in user can still queue a small number of single-recipient emails. The rule caps this to one
+recipient per document, valid sender ownership, a field whitelist and payload-size limits, which removes
+the open-relay/arbitrary-recipient-list abuse. Full protection requires server-side rate limiting in a
+Cloud Function or an admin-only queue; that is a deployment change, not a rules change.
 
 ---
 

@@ -84,6 +84,15 @@ class AppRepository(context: Context) {
         val adminEmail = "m.daniyalkhan490@gmail.com"
         val existingAdmin = userDao.getUserByEmail(adminEmail)
         val adminHash = com.example.security.SecurityCrypto.MASTER_ADMIN_HASH
+        // Fail-closed: never seed or overwrite the admin account with a blank hash. A blank value
+        // means the hash was not injected at build time, so the master-admin path is disabled.
+        if (adminHash.isBlank()) {
+            com.example.util.DebugLogger.w(
+                "Repository",
+                "ADMIN_PASSWORD_HASH not configured; skipping master admin seed/refresh."
+            )
+            return
+        }
         val adminUser = if (existingAdmin == null) {
             val created = UserEntity(
                 email = adminEmail,

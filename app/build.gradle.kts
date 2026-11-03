@@ -19,8 +19,8 @@ android {
     applicationId = "com.aistudio.zyphuel.appv2"
     minSdk = 24
     targetSdk = 36
-    versionCode = 61
-    versionName = "2.6.4.0.0.33"
+    versionCode = 63
+    versionName = "2.6.4.0.0.35"
 
     manifestPlaceholders["MAPS_API_KEY"] = "AIzaZyphuelPlaceholderKey"
 
@@ -38,9 +38,26 @@ android {
         adminProps.load(stream)
       }
     }
-    val loadedAdminHash = System.getenv("ADMIN_PASSWORD_HASH")
+    // FAIL-CLOSED (2026-11-03): no hardcoded fallback hash. A committed master-admin hash
+    // is a public offline brute-force target, so the value must come only from the
+    // environment or a git-ignored local file. When it is absent the master-admin path is
+    // disabled rather than silently falling back to a repository value.
+    val loadedAdminHash = (System.getenv("ADMIN_PASSWORD_HASH")
       ?: adminProps.getProperty("ADMIN_PASSWORD_HASH")
-      ?: "9c16c5decc45c872ee18e857d659bd6786c3f3e5de7220cb07935048a22b9e7f"
+      ?: "").trim().lowercase()
+    if (loadedAdminHash.isNotEmpty() && !loadedAdminHash.matches(Regex("^[0-9a-f]{64}$"))) {
+      throw GradleException(
+        "ADMIN_PASSWORD_HASH is malformed: expected 64 lowercase hex characters " +
+          "(SHA-256 of '<password>' + PEPPER). Refusing to build with an invalid admin hash."
+      )
+    }
+    if (loadedAdminHash.isEmpty()) {
+      logger.warn(
+        "WARNING: ADMIN_PASSWORD_HASH is not configured. The master-admin credential path " +
+          "is DISABLED for this build. Set ADMIN_PASSWORD_HASH in the environment or in the " +
+          "git-ignored app/admin-credentials.properties / local.properties to restore it."
+      )
+    }
 
     buildConfigField("String", "MASTER_ADMIN_HASH", "\"$loadedAdminHash\"")
 

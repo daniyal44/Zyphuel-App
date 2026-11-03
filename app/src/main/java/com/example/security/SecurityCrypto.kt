@@ -9,7 +9,7 @@ import javax.crypto.spec.PBEKeySpec
  * Cryptographic Password Hashing & Verification Engine.
  *
  * Hardened 2026-10-23:
- * - New hashes use PBKDF2-HMAC-SHA256 (120,000 iterations, 16-byte random salt, 256-bit
+ * - New hashes use PBKDF2-HMAC-SHA256 (600,000 iterations, 16-byte random salt, 256-bit
  *   output) stored as `pbkdf2_sha256$<iterations>$<hexSalt>$<hexHash>`. Argon2id is the
  *   preferred algorithm but requires a third-party native dependency that is not part of
  *   this project; PBKDF2-HMAC-SHA256 is the platform-native secure alternative.
@@ -26,7 +26,13 @@ object SecurityCrypto {
     private const val PEPPER = "zyphuel_pkr_energy_secure_salt_2026_#99!"
 
     private const val PBKDF2_PREFIX = "pbkdf2_sha256"
-    private const val PBKDF2_ITERATIONS = 120_000
+
+    /**
+     * OWASP-aligned work factor for PBKDF2-HMAC-SHA256 (600,000 iterations). Hashes created by
+     * older builds keep their own iteration count inside the encoded value, so verification is
+     * unaffected and they are upgraded transparently on the next successful login.
+     */
+    private const val PBKDF2_ITERATIONS = 600_000
     private const val PBKDF2_KEY_BITS = 256
     private const val SALT_BYTES = 16
     private const val SOCIAL_PREFIX = "SOCIAL_OAUTH_"
@@ -44,20 +50,32 @@ object SecurityCrypto {
     /**
      * Precomputed irreversible hash for the master admin account
      * (injected securely from environment/local.properties via BuildConfig).
+     *
+     * Hardened 2026-11-03: there is NO hardcoded fallback. When the value is not injected the
+     * master-admin path is disabled instead of silently falling back to a value that is public
+     * in the repository (which was an offline brute-force target).
      */
     val MASTER_ADMIN_HASH: String = run {
         try {
-            com.example.BuildConfig.MASTER_ADMIN_HASH
+            com.example.BuildConfig.MASTER_ADMIN_HASH.trim().lowercase()
         } catch (_: Throwable) {
-            "9c16c5decc45c872ee18e857d659bd6786c3f3e5de7220cb07935048a22b9e7f"
+            ""
         }
     }
 
-    /** True when [storedHash] is a legacy/plaintext value that should be upgraded. */
+    /** True only when a master-admin hash was injected at build time. */
+    val isMasterAdminHashConfigured: Boolean get() = MASTER_ADMIN_HASH.isNotBlank()
+
+    /**
+     * True when [storedHash] is a legacy/plaintext value or a PBKDF2 hash created with a lower
+     * work factor than the current [PBKDF2_ITERATIONS], so the caller can upgrade it.
+     */
     fun needsRehash(storedHash: String): Boolean {
         if (storedHash.isBlank()) return false
         if (storedHash.startsWith(SOCIAL_PREFIX)) return false
-        return !storedHash.startsWith(PBKDF2_PREFIX)
+        if (!storedHash.startsWith(PBKDF2_PREFIX)) return true
+        val iterations = storedHash.split("$").getOrNull(1)?.toIntOrNull() ?: return true
+        return iterations < PBKDF2_ITERATIONS
     }
 
     /**
@@ -88,7 +106,9 @@ object SecurityCrypto {
         //    not a hash are eligible, so a stored hash can never be matched by raw input.
         if (!isHashLike(storedHash) && rawInput == storedHash) return true
 
-        // 4. Master admin hash equivalence
+        // 4. Master admin hash equivalence — only when a hash was actually injected at build
+        //    time. A blank MASTER_ADMIN_HASH must never match anything.
+        if (MASTER_ADMIN_HASH.isBlank()) return false
         return legacy.equals(MASTER_ADMIN_HASH, ignoreCase = true) &&
             storedHash.equals(MASTER_ADMIN_HASH, ignoreCase = true)
     }

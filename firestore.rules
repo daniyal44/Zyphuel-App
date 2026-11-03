@@ -1,11 +1,23 @@
 rules_version = '2';
 
 // =============================================================================
-// Zyphuel — Cloud Firestore Production Security Rules (v2.6.4 Build 41)
+// Zyphuel — Cloud Firestore Production Security Rules
+// Version: 2.6.4.0.0.35 (Build 63) — hardened 2026-11-03
 // -----------------------------------------------------------------------------
 // STATUS: ACTIVE & ENFORCED
 // All clients are backed by authenticated Firebase Auth sessions (via Google OAuth
 // or cryptographic anonymous bridging in FirebaseAuthProvider.ensureAuthSession).
+//
+// Hardening applied 2026-11-03 (audit follow-up):
+//  - live_tracking: was read/write for ANY signed-in user (GPS privacy breach and
+//    location spoofing). Rider GPS publishing is disabled in the client, so this is
+//    now admin-only.
+//  - mail: was `to is list` for any signed-in user (open SMTP relay). Now bounded to
+//    the sender's own auth uid, a single recipient and a strict field whitelist.
+//  - users: create now whitelists fields so privilege fields (isAdmin, isVerified,
+//    wallet, limits, ...) can never be injected by a client.
+//  - audit_logs: create is admin-only (log tampering / fake entries).
+//  - app_stats: write may only increment `count` by exactly 1 (counter tampering).
 // =============================================================================
 
 service cloud.firestore {
@@ -34,17 +46,30 @@ service cloud.firestore {
       );
     }
 
+    // Only these fields may be written by a non-admin client to a user profile.
+    function userProfileFieldsAllowed() {
+      return request.resource.data.keys().hasOnly([
+        'uid', 'email', 'displayName', 'photoURL', 'role', 'lastLogin',
+        'createdAt', 'phoneNumber', 'passwordHash', 'authProvider'
+      ]);
+    }
+
     // ---- users/{uid} -------------------------------------------------------
     match /users/{uid} {
       allow read: if isOwnerUid(uid) || isAdmin();
 
-      // Normal users can only register as 'customer' or 'rider'; role elevation to 'admin' is blocked
-      allow create: if isSignedIn()
-                    && request.resource.data.role in ['customer', 'rider'];
+      // Normal users can only register as 'customer' or 'rider' with a whitelisted
+      // field set; role elevation to 'admin' is blocked and privilege fields cannot
+      // be injected.
+      allow create: if isAdmin()
+                    || ( isSignedIn()
+                         && request.resource.data.role in ['customer', 'rider']
+                         && userProfileFieldsAllowed() );
 
       allow update: if isAdmin()
                     || ( isOwnerUid(uid)
-                         && request.resource.data.role == resource.data.role ); // role immutable by owner
+                         && request.resource.data.role == resource.data.role
+                         && userProfileFieldsAllowed() ); // role immutable by owner
 
       allow delete: if isAdmin() || isOwnerUid(uid);
     }
@@ -57,10 +82,13 @@ service cloud.firestore {
         || isOwnerEmail(resource.data.riderEmail)
       );
 
+      // NOTE: email ownership is NOT enforced here on purpose — regular customers are signed
+      // in through anonymous bridging, so request.auth.token.email is null for them.
       allow create: if isSignedIn()
                     && request.resource.data.status == 'Pending'
                     && request.resource.data.totalPrice is number
-                    && request.resource.data.totalPrice >= 0;
+                    && request.resource.data.totalPrice >= 0
+                    && request.resource.data.customerEmail is string;
 
       // Price and customerEmail are strictly immutable after creation to prevent tampering
       allow update: if isSignedIn() && (
@@ -75,22 +103,27 @@ service cloud.firestore {
     }
 
     // ---- live_tracking/{orderId} (Rider GPS Telematics) ---------------------
+    // Server-side telematics publishing is disabled in the client (see
+    // LiveTrackingRepository.publishLocation/observeLocation). Restricting this to
+    // admin removes the ability for any signed-in user to read or spoof another
+    // customer's/rider's location. Added 2026-11-03.
     match /live_tracking/{orderId} {
-      allow read:  if isSignedIn();
-      allow write: if isSignedIn();
+      allow read:  if isAdmin();
+      allow write: if isAdmin();
     }
 
     // ---- feedback/{id} -----------------------------------------------------
     match /feedback/{id} {
       allow read: if isAdmin();
-      allow create: if isSignedIn();
+      allow create: if isSignedIn()
+                    && request.resource.data.keys().hasOnly(['email', 'message', 'subject', 'rating', 'createdAt', 'orderId', 'uid']);
       allow update, delete: if isAdmin();
     }
 
     // ---- audit_logs/{id} (Append-only security log) -------------------------
     match /audit_logs/{id} {
       allow read: if isAdmin();
-      allow create: if isSignedIn();
+      allow create: if isAdmin(); // clients do not write this collection
       allow update, delete: if false; // Audit logs are immutable
     }
 
@@ -101,16 +134,44 @@ service cloud.firestore {
     }
 
     // ---- mail/{id} (Transactional Invoicing Gateway) ------------------------
+    // The device queues a single transactional email per action. Rules bound the
+    // sender to their own auth uid, exactly one recipient, a strict field whitelist
+    // and capped payload sizes so the collection cannot be used as an open relay.
     match /mail/{id} {
       allow read: if isAdmin();
-      allow create: if isSignedIn() && request.resource.data.to is list;
+      allow create: if isSignedIn()
+                    && request.resource.data.keys().hasOnly([
+                         'to', 'message', 'createdAt', 'deliveryStatus', 'recipient', 'uid'
+                       ])
+                    && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.to is list
+                    && request.resource.data.to.size() == 1
+                    && request.resource.data.to[0] is string
+                    && request.resource.data.recipient is string
+                    && request.resource.data.recipient == request.resource.data.to[0]
+                    && request.resource.data.message is map
+                    && request.resource.data.message.keys().hasOnly(['subject', 'text', 'html'])
+                    && request.resource.data.message.subject is string
+                    && request.resource.data.message.subject.size() <= 200
+                    && request.resource.data.message.text is string
+                    && request.resource.data.message.text.size() <= 100000;
       allow update, delete: if isAdmin();
     }
 
     // ---- app_stats/{doc} (Public Install Counter) ---------------------------
     match /app_stats/{doc} {
-      allow read:  if true;
-      allow write: if isSignedIn();
+      allow read: if true;
+      // Clients may only bump the counter by exactly one, or create it at 1.
+      allow create: if isAdmin()
+                    || ( isSignedIn()
+                         && request.resource.data.count is number
+                         && request.resource.data.count == 1 );
+      allow update: if isAdmin()
+                    || ( isSignedIn()
+                         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['count', 'lastUpdated'])
+                         && request.resource.data.count is number
+                         && request.resource.data.count == resource.data.count + 1 );
+      allow delete: if isAdmin();
     }
 
     // ---- Default: Deny everything not explicitly matched --------------------

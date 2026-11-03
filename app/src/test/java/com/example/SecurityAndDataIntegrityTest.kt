@@ -230,7 +230,9 @@ class SecurityAndDataIntegrityTest {
 
     @Test
     fun `a stored hash can never be matched by raw input`() {
-        val storedHashLike = "9c16c5decc45c872ee18e857d659bd6786c3f3e5de7220cb07935048a22b9e7f"
+        // Synthetic 64-hex value: the test only needs a hash-shaped string, never a real
+        // credential hash (no credential value belongs in the repository).
+        val storedHashLike = "a".repeat(64)
         assertFalse(
             "Submitting the stored hash itself must not authenticate (no plaintext fallback for hash-like values)",
             SecurityCrypto.verifyPassword(storedHashLike, storedHashLike)

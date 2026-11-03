@@ -3,6 +3,42 @@
 > **This file is the project CHANGELOG.** Each entry lists version, release date (Asia/Karachi),
 > added/changed/fixed/security sections, database migration notes and known issues.
 
+## Version 2.6.4.0.0.35 (Release Build 63) — <font color="#10b981"><b>2026-11-03 19:15:00 PKT</b></font>
+
+**Scope:** security hardening from the repository audit. No database migration, no user data rewritten or deleted.
+
+### Security
+- **Master admin hash is now fail-closed.** The hardcoded 64-hex fallback was removed from `app/build.gradle.kts`, `SecurityCrypto.kt` and `app/admin-credentials.properties.example`. The value must come from `ADMIN_PASSWORD_HASH` (environment) or the git-ignored `app/admin-credentials.properties` / `local.properties`; a malformed value now fails the build and a missing value disables the master-admin path with a build warning instead of silently using a public hash.
+- **Guarded admin seeding and super-admin sync** (`Repository.seedAdminIfNeeded`, `MainViewModel.serverLoginWithSocial`) so a blank hash can never overwrite the admin account with an empty credential.
+- **PBKDF2 work factor raised to 600,000 iterations.** `needsRehash()` now also upgrades older lower-iteration PBKDF2 hashes, not just legacy SHA-256 ones.
+- **`firestore.rules` hardened:**
+  - `live_tracking` — admin only (was any signed-in user; rider GPS publishing is disabled in the client, so this closes a location read/spoof vector).
+  - `mail` — sender bound to its own `auth.uid`, exactly one recipient, strict field whitelist and capped payload sizes (was an arbitrary-recipient open relay).
+  - `users` create/update — field whitelist so privilege fields (`isAdmin`, `isVerified`, wallet/limit fields) cannot be injected.
+  - `feedback` create — field whitelist.
+  - `audit_logs` create — admin only (fake security-log entries blocked).
+  - `app_stats` — writes may only increment `count` by exactly one.
+- `RealtimeEmailEngine` now stamps `uid` on queued Firestore mail so the new rule can bind each email to its sender.
+
+### Owner actions required
+- Rotate the master admin password and generate a new `ADMIN_PASSWORD_HASH`, since the previous hash was public in the git history.
+
+---
+
+## Version 2.6.4.0.0.34 (Release Build 62) — <font color="#10b981"><b>2026-11-03 18:40:00 PKT</b></font>
+
+**Scope:** repository licensing and security audit follow-up. No app behaviour, database schema or user data changes.
+
+### Added
+- **`LICENSE`** (Apache License 2.0) and **`NOTICE`** — the repository was public with no license file, which meant "All Rights Reserved" by default. It is now genuinely open source with an express patent grant; trademarks (Zyphuel/MDK), user data, credentials and deployment config remain excluded (see `NOTICE`).
+- **README `⚖️ License` section** documenting usage rights and the exclusion list.
+
+### Security (audit findings — pending owner action)
+- Audit confirmed no API keys, keystores, `google-services.json`, `.env` or `local.properties` were ever tracked, and git history is clean.
+- Open items escalated to the owner: public `MASTER_ADMIN_HASH` fallback in `build.gradle.kts`/`SecurityCrypto.kt`, permissive `firestore.rules` for `live_tracking`, `mail`, `users` create, `audit_logs` and `app_stats`.
+
+---
+
 ## Version 2.6.4.0.0.33 (Release Build 61) — <font color="#10b981"><b>2026-10-23 22:48:18 PKT</b></font>
 
 **Scope:** security hardening, zero-data-loss update guarantees, email+password authentication, failure lockout and documentation. **No user data is migrated, rewritten or deleted by this release.**
