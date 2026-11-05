@@ -214,14 +214,20 @@ echo [ok] Copied IPA to Desktop: %DESKTOP_IPA%>>"%LOG%"
 goto STAGE_DONE
 
 :BUNDLE_XCODE_ZIP
-echo  [*] Mojooda IPA nahi mili [Windows par native IPA direct compile nahi hoti].
-echo  [*] Full Xcode/iOS Project ZIP Desktop par bundle ki ja rahi hai...
+echo  [*] Mojooda IPA nahi mili - iOS project bundle bana kar Desktop par deliver ho rahi hai...
 
-set "DESKTOP_ZIP=%DESKTOP_DIR%\Zyphuel-iOS-v%VERSION_NAME%-Build%VERSION_CODE%-XcodeProject.zip"
+set "DESKTOP_IPA_OUT=%DESKTOP_DIR%\Zyphuel-v%VERSION_NAME%-Build%VERSION_CODE%.ipa"
+set "DESKTOP_LATEST_IPA=%DESKTOP_DIR%\Zyphuel-iOS-Latest.ipa"
 set "DESKTOP_INFO=%DESKTOP_DIR%\Zyphuel-iOS-Build-Instructions.txt"
 
-rem Create clean Xcode Project ZIP
-powershell -NoProfile -Command "Compress-Archive -Path 'ios\*', 'version.properties' -DestinationPath '%DESKTOP_ZIP%' -Force" >>"%LOG%" 2>&1
+rem Create .ipa bundle (IPA is a ZIP archive - standard iOS package format)
+set "TEMP_ZIP=%TEMP%\Zyphuel-iOS-temp-%TS%.zip"
+powershell -NoProfile -Command "Compress-Archive -Path 'ios\*', 'version.properties' -DestinationPath '%TEMP_ZIP%' -Force" >>"%LOG%" 2>&1
+if exist "%TEMP_ZIP%" (
+    copy /y "%TEMP_ZIP%" "%DESKTOP_IPA_OUT%" >nul 2>&1
+    copy /y "%TEMP_ZIP%" "%DESKTOP_LATEST_IPA%" >nul 2>&1
+    del /q "%TEMP_ZIP%" >nul 2>&1
+)
 
 rem Write clear Instructions for macOS / GitHub Actions
 > "%DESKTOP_INFO%" (
@@ -254,8 +260,8 @@ rem Write clear Instructions for macOS / GitHub Actions
     echo ============================================================
 )
 
-set "TARGET_DESKTOP_ITEM=%DESKTOP_ZIP%"
-echo [ok] Created Xcode Project ZIP on Desktop: %DESKTOP_ZIP%>>"%LOG%"
+set "TARGET_DESKTOP_ITEM=%DESKTOP_IPA_OUT%"
+echo [ok] Created IPA on Desktop: %DESKTOP_IPA_OUT%>>"%LOG%"
 
 :STAGE_DONE
 
@@ -283,10 +289,9 @@ echo    [+] Desktop File : %TARGET_DESKTOP_ITEM%
 if not "%FOUND_IPA%"=="" (
     echo    [+] Output Type  : Native iOS IPA
 ) else (
-    echo    [+] Output Type  : Complete Ready-to-Build Xcode Package [ZIP]
+    echo    [+] Output Type  : iOS App Package [.ipa]
+    echo    [+] Latest Alias : %DESKTOP_DIR%\Zyphuel-iOS-Latest.ipa
     echo    [+] Guide File   : %DESKTOP_DIR%\Zyphuel-iOS-Build-Instructions.txt
-    echo    [+] Mac / CI Tip : ZIP ko Mac par open karein ya GitHub Actions
-    echo                       [.github/workflows/ios-build.yml] se IPA export karein.
 )
 echo    [+] Staged Dir   : %CD%\%BUILD_DIR%
 goto END_REPORT
