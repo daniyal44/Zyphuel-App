@@ -1,7 +1,7 @@
 # 🔐 Zyphuel — Security Architecture & Incident Response
 
 **Last Updated:** <font color="#10b981"><b>2026-10-23 22:48:18 PKT</b></font>
-**App Version:** <font color="#10b981"><b>v2.6.4.0.0.33 (Build 61)</b></font>
+**App Version:** <font color="#10b981"><b>v2.6.4.0.0.38 (Build 66)</b></font>
 **Document Status:** <font color="#10b981"><b>ACTIVE — verified against source at the timestamp above</b></font>
 
 ---
@@ -124,7 +124,7 @@ it requires an outbound mail provider that is configured at runtime and not guar
 
 | Collection | Rule |
 | :--- | :--- |
-| `users/{uid}` | read: owner or admin; create/update: role must be `customer`/`rider` (admin for admins) **and** a strict field whitelist, so privilege fields cannot be injected; update: role immutable by owner |
+| `users/{uid}` or `users/{email_with_underscores}` | read: owner (uid **or** matching authenticated email) or admin; create/update: role must be `customer`/`rider` (admin for admins) **and** a strict field whitelist (`updatedAt`, `profilePictureBase64` ≤400 KB, `vehicleType`, `vehicleNo` added for the iOS client; `isVerified`/`approvalStatus` stay admin-only); update: role immutable by owner |
 | `orders/{orderId}` | read/update: admin, owning customer or assigned rider; `totalPrice` and `customerEmail` immutable after creation; delete: admin only |
 | `live_tracking/{orderId}` | **admin only** (read and write) — hardened 2026-11-03 |
 | `audit_logs` | append-only; read and create admin-only; update/delete denied |

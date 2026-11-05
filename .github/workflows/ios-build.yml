@@ -1,0 +1,82 @@
+name: iOS Build
+
+on:
+  push:
+    paths:
+      - 'ios/**'
+      - '.github/workflows/ios-build.yml'
+  pull_request:
+    paths:
+      - 'ios/**'
+      - '.github/workflows/ios-build.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Build & test Zyphuel iOS
+    runs-on: macos-15
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        working-directory: ios
+        run: xcodegen generate
+
+      - name: Resolve packages
+        working-directory: ios
+        run: |
+          xcodebuild -project Zyphuel.xcodeproj -scheme Zyphuel \
+            -resolvePackageDependencies \
+            -clonedSourcePackagesDirPath .packages
+
+      - name: Pick an iPhone simulator
+        id: sim
+        run: |
+          DEVICE_ID="$(xcrun simctl list devices available | grep -m1 -E 'iPhone' | sed -E 's/.*\(([0-9A-F-]{36})\).*/\1/')"
+          if [ -z "$DEVICE_ID" ]; then
+            echo "No iPhone simulator found" >&2
+            xcrun simctl list devices available >&2
+            exit 1
+          fi
+          echo "destination=id=$DEVICE_ID" >> "$GITHUB_OUTPUT"
+          echo "Using simulator $DEVICE_ID"
+
+      - name: Build for simulator
+        working-directory: ios
+        run: |
+          xcodebuild build \
+            -project Zyphuel.xcodeproj \
+            -scheme Zyphuel \
+            -destination "${{ steps.sim.outputs.destination }}" \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Run unit tests
+        working-directory: ios
+        run: |
+          xcodebuild test \
+            -project Zyphuel.xcodeproj \
+            -scheme Zyphuel \
+            -destination "${{ steps.sim.outputs.destination }}" \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-test-results
+          path: ios/build/**/*.xcresult
+          if-no-files-found: ignore
+          retention-days: 7

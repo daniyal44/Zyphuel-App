@@ -1,10 +1,16 @@
 # 🚀 Zyphuel App Features & Technical Documentation
-**App Version:** `v2.6.4.0.0.33 (Build 61)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** <font color="#10b981"><b>2026-10-23</b></font>
+**App Version:** `v2.6.4.0.0.38 (Build 66)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** <font color="#10b981"><b>2026-11-05</b></font>
 
 Welcome to the complete architectural and functional guide for the **Zyphuel** Android application. This document outlines every single feature, function, database entity, and user flow from start to finish.
 
 > [!NOTE]
-> **Latest Updates (<font color="#10b981"><b>2026-10-23</b></font> — v2.6.4.0.0.33 / Build 61):**
+> **Latest Updates (<font color="#10b981"><b>2026-11-05</b></font> — v2.6.4.0.0.38 / Build 66):**
+> 1. **One shared version for Android + iOS (`version.properties`, `scripts/sync_versions.py`)**: Android Gradle reads `version.properties` directly; the iOS project, `ZyphuelConfig.swift`, `README.md` and this document are written by `sync_versions.py`. `sync_versions.bat --bump` raises both platforms together and `--check` (CI: `.github/workflows/version-sync.yml`, pre-commit hook) blocks any drift.
+> 2. **Mandatory change parity**: every feature, fix, Firestore rule and pricing constant must ship on Android **and** iOS in the same change set — see the parity table in section 0.
+> 3. **Cross-client contract fixes**: riders can now claim a `Pending` order (rules clause), iOS reuses the Android `users/{uid}` profile document instead of duplicating it, iOS writes `displayName` for Android, and order history matches both email casings.
+
+> [!NOTE]
+> **Previous Updates (<font color="#10b981"><b>2026-10-23</b></font> — v2.6.4.0.0.33 / Build 61):**
 > 1. **Zero Data Loss on App Update (Room Migration, `Models.kt` + `Repository.kt`)**: `fallbackToDestructiveMigration()` permanently removed; database v13 ships `MIGRATION_12_TO_13` (schema-preserving no-op) via `.addMigrations(...)`, so accounts, orders, audit logs, notifications, marked locations and vehicles survive every version bump. Any future version bump MUST add a matching `Migration` (fails loudly instead of wiping data).
 > 2. **Brute-Force Login Lockout — Error 422 (`SecurityRateLimiter.kt`)**: 4 wrong passwords inside 1 minute lock login for a 5-minute cooldown; the block message carries error code `422` with remaining seconds. Enforced across password login, biometric login, and reset-code guessing; success clears counters.
 > 3. **Email-Only Password Recovery with One-Time Code (`sendPasswordResetOtp`, `ForgotPasswordDialog`)**: password reset now requires a 6-digit single-use code (5-min expiry) emailed to the registered address, closing the previous email+phone-only account-takeover path.
@@ -12,7 +18,7 @@ Welcome to the complete architectural and functional guide for the **Zyphuel** A
 > 5. **Duplicate Email Checker (`UserDao.getUserByEmail`, `AppRepository.isEmailRegistered`)**: case-insensitive `LOWER(email)` matching blocks the same address being registered twice in any letter-case across all signup paths.
 
 > [!NOTE]
-> **Previous Updates (<font color="#10b981"><b>2026-10-13</b></font> — v2.6.4.0.0.31 / Build 59):**
+> **Earlier Updates (<font color="#10b981"><b>2026-10-13</b></font> — v2.6.4.0.0.31 / Build 59):**
 > 1. **One-Click Instant Desktop APK Downloader (`desktop_apk_download.bat`)**: Added a zero-friction, one-click Windows batch tool (`desktop_apk_download.bat`) in the project root. When double-clicked or executed, it dynamically resolves the user's active Windows Desktop path (handling both OneDrive Desktop and local Desktop via PowerShell `[Environment]::GetFolderPath('Desktop')`), compiles/assembles the latest debug APK via `gradlew.bat assembleDebug`, copies both version-tagged (`Zyphuel-v2.6.4.0.0.31-Build59.apk`) and shortcut-tagged (`Zyphuel-Latest.apk`) binaries directly to the Desktop, displays exact file size and verification info, and automatically opens Windows File Explorer highlighting the ready APK. Supports Quick Copy mode for sub-second export.
 > 2. **Customer Order Dialog — Hidden Internal Tiered Delivery Fee Table (`OrderServiceDialog`, `Screens.kt`, `CategoryComponents.kt`)**: Removed the internal rate breakdown card (`Doorstep Fuel Delivery Rates (Max 15L)`) and rate schedule texts from the customer-facing order dialog and preset chips so that customers are not exposed to internal per-liter rate tables. Instead, customers cleanly see their calculated `Delivery Charges` in the checkout summary while the 15L cap and tiered fee engine (Rs. 300 up to 10L, Rs. 320 for 11L, Rs. 340 for 12L, Rs. 360 for 13L, Rs. 380 for 14L, Rs. 400 for 15L) run silently and securely in the background.
 > 3. **Outdated App Version Detection & "Download New Version" Message Bar (`OutdatedAppVersionMessageBar`, `MainViewModel`, `FirestoreUserRepository`)**: Real-time Cloud Firestore listener (`system_config/app_version`) compares the device's `BuildConfig.VERSION_CODE` and `BuildConfig.VERSION_NAME` against the latest published version. Users on an **older version** automatically see a prominent `"🚀 New Version Available — Download Latest Version"` message bar (`outdated_app_version_message_bar`) with a 1-tap download button, while users on the **latest version** (`>= latestVersionCode`) **never** see the update message bar.
@@ -48,6 +54,52 @@ Below is the complete index of all **dedicated documentation files** (including 
 | **9** | [`docs/09_COMPOSE_ORDER_TRANSITION_ANIMATIONS.md`](/docs/09_COMPOSE_ORDER_TRANSITION_ANIMATIONS.md) | UI Motion & Animation | Status header transitions (`AnimatedContent`), pulsing halo, Canvas floating confetti celebration overlay. |
 | **10** | [`docs/10_DATABASE_ROOM_PERSISTENCE_AND_MODELS.md`](/docs/10_DATABASE_ROOM_PERSISTENCE_AND_MODELS.md) | Data Architecture | Room local SQLite persistence (`UserEntity`, `OrderEntity`, `AuditLogEntity`, `NotificationEntity`), DAOs. |
 | **11** | [`docs/11_REALTIME_ORDER_INVOICE_EMAIL.md`](/docs/11_REALTIME_ORDER_INVOICE_EMAIL.md) | Transactional Email | Auto order-confirmation + tax invoice to the **registered/Google email only**, webhook→SMTP→Firestore delivery, Admin Email Gateway setup & test. |
+
+---
+
+## 0. iOS Application — Native SwiftUI Port (v2.6.4.0.0.38)
+**Location:** [`ios/`](ios/README.md) • **Bundle ID:** `com.aistudio.zyphuel.appv2` • **Minimum iOS:** 17.0
+
+Zyphuel now ships as a native iOS app that shares the Android Firebase project, Firestore collections and business rules. It is a separate Swift codebase (not a web wrapper) under `ios/`.
+
+### Structure
+| Path | Responsibility |
+| :--- | :--- |
+| `ios/project.yml` | XcodeGen spec: app + test target, Swift Package Manager pins for Firebase and GoogleSignIn |
+| `ios/Config/` | `Info.plist` (permission strings mirroring the Android manifest), entitlements, sanitized `GoogleService-Info.example.plist` |
+| `Zyphuel/App/` | `ZyphuelApp` (Firebase/Google bootstrap, APNs delegate), `AppState` (session, role routing, order placement), `RootView` (launch → lock → auth → role shell) |
+| `Zyphuel/Core/Models/` | Codable mirrors of `UserEntity` / `OrderEntity` plus the 10-category service catalog |
+| `Zyphuel/Core/Pricing/` | `PricingEngine` and `OperatingHours` — 1:1 ports of `FeeConstants.kt` and `DeliveryOperatingHoursManager.kt` |
+| `Zyphuel/Core/Security/` | `PasswordHasher` (PBKDF2-HMAC-SHA256 600k), `SecurityRateLimiter` (4 attempts / 5 min, code 422), validators, Keychain store, Face ID lock |
+| `Zyphuel/Core/Services/` | Auth, users, orders, system config, transactional email gateway, CoreLocation, push notifications |
+| `Zyphuel/Features/` | Auth, Home, Order/Tracker/History, Rider portal, Admin console, Profile, Legal |
+| `ios/Tests/` | XCTest parity suite (pricing, hours, hashing, lockout, lifecycle, catalog) |
+
+### Feature parity
+- **Auth:** email + password, customer/rider registration, Google Sign-In, password reset link, blocked-account handling.
+- **Customer home:** Lahore delivery card (CoreLocation reverse geocode + share link), live OGRA rate card, typo-tolerant service search, 7 featured + 10 categories, operating-hours banner, current order card, notifications sheet, startup transparency note, outdated-version bar.
+- **Ordering:** COD-only sheet with 5–15L presets, tiered delivery fee, 2-decimal totals, address prefill, confirm hidden outside operating hours, water/LPG blocked.
+- **Tracking:** 4-step animated stepper, order summary, rider contact, post-delivery star rating written to `orders` and `feedback`.
+- **Rider portal:** duty toggle, verification gate, unassigned queue, accept → start route → complete & collect COD, COD totals.
+- **Admin console:** overview stats, order lifecycle (accept with auto-assign or self-delivery, start, delivered, decline with reason, delete cancelled), rider approval/revocation, customer search/deletion, live OGRA rate editor, email gateway + test dispatch, version sync card.
+- **Profile:** phone, order stats, English/اردو, Face ID lock, notification permission, WhatsApp/call support, legal, account deletion (root super admin protected).
+
+### Enforced parity constants
+- Delivery fee: Rs. 300 up to 10L, then 320 / 340 / 360 / 380 / 400 for 11–15L; 15L hard cap.
+- Pump markup: `+Rs. 5.00/L` applied silently to petrol, diesel and high-octane.
+- Operating hours (PKT): Mon–Thu 08:00–20:00, Fri 08:00–13:00, Sat–Sun 10:00–18:00.
+- Pure water and LPG ordering blocked in UI, pricing and order submission.
+
+### Unified versioning & change parity
+- `version.properties` (repo root) is the single version source. Android `app/build.gradle.kts` reads it, so `versionCode` / `versionName` cannot drift from iOS.
+- `scripts/sync_versions.py` (wrapped by `sync_versions.bat`) writes the iOS project, `ZyphuelConfig.swift`, `README.md` and this document. `--bump` increments both platforms together; `--check` fails CI on any mismatch (`.github/workflows/version-sync.yml`).
+- **Any change to one platform must be mirrored in the other in the same change set.** The parity table below is the checklist; shared rules (`firestore.rules`, pricing tiers, hours, 15 L cap, role gates, lockout policy) live in one place and are tested on both sides.
+
+### Build & verification
+- **Windows:** `desktop_ios.bat` — refreshes latest Firebase/GoogleSignIn pins, validates plists/Swift structure, writes `ios/build_report.txt`.
+- **macOS:** `bash ios/bootstrap.sh` (add `--test` for unit tests).
+- **CI:** `.github/workflows/ios-build.yml` builds and tests on a macOS runner for every change under `ios/`.
+- **Documented iOS limits:** no raw SMTP socket (uses the HTTPS relay + Firestore `mail` trigger), no recoverable password display, Firestore offline cache instead of Room, placeholder app icon until the 1024×1024 asset is supplied.
 
 ---
 
@@ -1607,7 +1659,7 @@ Zyphuel v2.4.0 introduces a comprehensive 10-category on-demand automotive and m
     3. **Automated Recovery & Conflict Auto-Resolver**: If a concurrent push ever occurs, `github.bat` executes an automatic rebase with `-X ours`, regenerates the dashboard from authoritative `git log`, stages `README.md`, and finishes rebase without stopping.
     4. **`[skip ci]` Loop Breaker**: Appended `[skip ci]` to routine automated commits created by `github.bat`, preventing GitHub Actions from spinning unnecessary trailing bot commits.
 * **Incremented `versionCode`**: `52` ➔ <font color="#10b981"><b>53</b></font>.
-* **Advanced `versionName`**: `"2.6.4.0.0.24"` ➔ <font color="#10b981"><b>"2.6.4.0.0.25"</b></font>.
+* **Advanced `versionName`**: `"2.6.4.0.0.24"` ➔ <font color="#10b981"><b>"2.6.4.0.0.38"</b></font>.
 
 ### 42.8 Desktop Emulator & App High-Velocity Performance Optimization — <font color="#10b981"><b>2026-10-10</b></font>
 * **Hardware & Emulator Display Layer Optimization**:
@@ -1620,7 +1672,7 @@ Zyphuel v2.4.0 introduces a comprehensive 10-category on-demand automotive and m
   - **Removed Artificial Auth Screen Delay**: Eliminated arbitrary `delay(450)` and non-essential skeleton loading state from `AuthScreen` in [`Screens.kt`](file:///d:/Games/New%20folder-web/Claude/app/src/main/java/com/example/ui/Screens.kt), enabling instantaneous display of the Customer Login Form upon navigation.
   - **Streamlined Splash Handover**: Eliminated artificial post-session delay (`delay(300)`) in `SplashScreen` in [`Screens.kt`](file:///d:/Games/New%20folder-web/Claude/app/src/main/java/com/example/ui/Screens.kt) for instant routing.
 * **Incremented `versionCode`**: `54` ➔ <font color="#10b981"><b>55</b></font>.
-* **Advanced `versionName`**: `"2.6.4.0.0.26"` ➔ <font color="#10b981"><b>"2.6.4.0.0.27"</b></font>.
+* **Advanced `versionName`**: `"2.6.4.0.0.38"` ➔ <font color="#10b981"><b>"2.6.4.0.0.38"</b></font>.
 
 
 

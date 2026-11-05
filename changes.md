@@ -3,6 +3,60 @@
 > **This file is the project CHANGELOG.** Each entry lists version, release date (Asia/Karachi),
 > added/changed/fixed/security sections, database migration notes and known issues.
 
+## Version 2.6.4.0.0.38 (Release Build 66) — <font color="#10b981"><b>2026-11-05 16:00:00 PKT</b></font>
+
+### Unified Android + iOS versioning and change parity
+- **One version source**: new `version.properties` holds `versionCode` / `versionName`. `app/build.gradle.kts` now loads it instead of hardcoding values, so an Android build can never disagree with iOS. Builds fail with a clear message if the file is missing or the format is wrong.
+- **`scripts/sync_versions.py`** (+ `sync_versions.bat` wrapper) applies the shared version to `ios/project.yml`, `ZyphuelConfig.swift`, `README.md` and `FEATURES_DOCUMENTATION.md`. `--bump` increments `versionCode` by 1 and the trailing `versionName` segment by `0.01` for both platforms at once; `--check` reports drift and exits non-zero.
+- **CI gate**: new `.github/workflows/version-sync.yml` runs `--check` on every push and pull request, and verifies Gradle still reads `version.properties`.
+- **Parity policy**: `AGENTS.md`, `TESTING.md`, `README.md` and `FEATURES_DOCUMENTATION.md` now require every feature, fix, Firestore rule and pricing constant to ship on Android **and** iOS in the same change set, with both test suites as the release gate.
+- Current version for both platforms: **2.6.4.0.0.38 (Build 66)**.
+
+---
+
+## Version 2.6.4.0.0.37 (Release Build 65) — <font color="#10b981"><b>2026-11-05 14:30:00 PKT</b></font>
+
+**Scope:** native iOS application added alongside Android. No Android behaviour, Room schema, Firestore rules or user data changed; the Android version pair is bumped only to keep the Play upload sequence monotonic.
+
+### Added
+- **`ios/` — complete SwiftUI port** of Zyphuel (iOS 17+, `com.aistudio.zyphuel.appv2`, same Firebase project):
+  - Auth: email/password, registration (customer or rider), Google Sign-In, password reset link.
+  - Customer: Lahore delivery card with CoreLocation + share link, live OGRA rate card, service search, 7 featured / 10 categories, operating-hours gate, active order card, notifications sheet.
+  - Ordering: COD sheet with 5–15L presets, tiered delivery fee, address prefill, confirm button hidden outside operating hours, availability block for water/LPG.
+  - Tracking: animated 4-step stepper, order summary, rider contact, star rating with Firestore `feedback` write.
+  - History: current + recent orders, search, Delivered/Cancelled filters.
+  - Rider portal: duty toggle, verification state, available queue, accept → start route → complete & collect COD, COD totals.
+  - Admin console: overview stats, order lifecycle actions (accept/auto-assign, start, mark delivered, decline with reason, delete cancelled), rider approval, customer search/deletion, live rate editor, email gateway with test dispatch.
+  - Profile: account, phone, order stats, English/اردو toggle, Face ID lock, notifications, WhatsApp/call support, legal, account deletion (root super admin protected).
+- **`desktop_ios.bat` + `scripts/update_ios_versions.ps1`** — Windows entry point that pins Firebase iOS SDK and GoogleSignIn-iOS to their latest releases, validates the project structure/plists/Swift brace balance and writes `ios/build_report.txt`.
+- **`ios/bootstrap.sh`** — macOS bootstrap (`xcodegen generate` + simulator build, `--test` runs the suite).
+- **`.github/workflows/ios-build.yml`** — macOS CI that generates the project, resolves Swift packages, builds and runs the iOS tests.
+- **`ios/Tests/ZyphuelLogicTests.swift`** — parity tests for pricing tiers, pump markup, operating hours, PBKDF2 format, 4/5-minute lockout, validators, order lifecycle, catalog and super-admin protection.
+
+### Parity guarantees (ported 1:1 from Kotlin)
+- `PricingEngine.swift` — Rs. 300/320/340/360/380/400 tiers, 15L cap, +Rs. 5.00/L pump markup, water/LPG blocked.
+- `OperatingHours.swift` — Asia/Karachi windows (Mon–Thu 08:00–20:00, Fri 08:00–13:00, Sat–Sun 10:00–18:00), identical status copy.
+- `Security.swift` — PBKDF2-HMAC-SHA256 at 600,000 iterations in the same `pbkdf2$sha256$…` format, iteration-aware rehash, 4 attempts / 5 minutes with error code 422.
+- Firestore document shapes (`users`, `orders`, `feedback`, `audit_logs`, `mail`, `app_stats`) and role guards match the Android repositories.
+- `firestore.rules`: the users match now accepts both document-id styles (`uid` and `email_with_underscores`) for the owning account, and the profile whitelist gained `updatedAt`, `profilePictureBase64` (≤400 KB), `vehicleType` and `vehicleNo` so the iOS client can sync without weakening privilege fields. iOS writes feedback with the existing `email`/`message` field names.
+
+### Platform differences (documented, intentional)
+- iOS cannot hold raw SMTP sockets in the background, so emails use the existing HTTPS webhook relay and the Firestore `mail` trigger.
+- The Android profile screen can reveal the stored login password; iOS does not store or display a recoverable password.
+- Room is replaced by Firestore's offline cache plus Keychain; live GPS upload remains disabled on both platforms.
+- `AppIcon.appiconset` ships as a placeholder until the 1024×1024 brand icon is supplied.
+
+### Fixed (cross-client contract audit)
+- **Riders could not claim a pending order.** The hardened `orders` update rule only allowed an update when the existing document already contained the rider's email, which is null for every unassigned order. Added an explicit claim clause (`Pending` → `Assigned`, `riderEmail` must equal the caller's auth email). Affects Android and iOS riders.
+- **Duplicate iOS profile documents.** iOS looked only at `users/{email_with_underscores}` while Android writes `users/{uid}`. iOS now resolves the existing document by email and reuses its id, and writes `displayName` alongside `name` so Android reads the same display name.
+- **Order visibility across casings.** iOS now queries `customerEmail` for both the authenticated casing and the lowercased form, so orders created on Android with a mixed-case email still appear in the iOS history.
+
+### Verification
+- iOS cannot be compiled on Windows: `desktop_ios.bat` validates structure, and `.github/workflows/ios-build.yml` is the compile/test gate on macOS.
+- Android checks re-run after the version bump (see `TESTING.md`): `:app:compileDebugKotlin` and `:app:testDebugUnitTest`.
+
+---
+
 ## Version 2.6.4.0.0.35 (Release Build 63) — <font color="#10b981"><b>2026-11-03 19:15:00 PKT</b></font>
 
 **Scope:** security hardening from the repository audit. No database migration, no user data rewritten or deleted.
@@ -144,6 +198,6 @@
 ### 5. Application Micro-Versioning & Compliance (<font color="#10b981"><b>2026-10-09</b></font>)
 - **`app/build.gradle.kts`**:
   - `versionCode`: incremented from 51 to <font color="#10b981"><b>52</b></font>.
-  - `versionName`: advanced from `2.6.4.0.0.23` to <font color="#10b981"><b>2.6.4.0.0.24</b></font>.
+  - `versionName`: advanced from `2.6.4.0.0.38` to <font color="#10b981"><b>2.6.4.0.0.24</b></font>.
 - **Legal Synchronization**: Updated [`TERMS_AND_CONDITIONS.md`](file:///d:/Games/New%20folder-web/Claude/TERMS_AND_CONDITIONS.md), [`PRIVACY_POLICY.md`](file:///d:/Games/New%20folder-web/Claude/PRIVACY_POLICY.md), and in-app legal viewer (`TermsAndPrivacyDialog.kt`) to reflect Build 52, tiered delivery pricing, and delivery operating hours.
 - **Test Suite**: Verified via `FuelPumpPricingTest.kt`, `ZyphuelComprehensiveAppTest`, and `CategoryAndVehicleArchitectureTest` with 100% test pass (0 failures).

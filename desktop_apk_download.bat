@@ -52,19 +52,14 @@ if "%DESKTOP_DIR%"=="" (
     )
 )
 
-rem ---------- Read Version from build.gradle.kts ----------
-set "VERSION_NAME=2.6.4.0.0.31"
-set "VERSION_CODE=59"
+rem ---------- Read Version from version.properties (shared with iOS) ----------
+set "VERSION_NAME=2.6.4.0.0.38"
+set "VERSION_CODE=66"
 
-if exist "app\build.gradle.kts" (
-    for /f "tokens=3 delims= " %%A in ('findstr /i "versionCode" app\build.gradle.kts') do (
-        set "VERSION_CODE=%%A"
-    )
-    for /f "tokens=2 delims==" %%A in ('findstr /i "versionName" app\build.gradle.kts') do (
-        set "TMP_VN=%%A"
-        set "TMP_VN=!TMP_VN: =!"
-        set "TMP_VN=!TMP_VN:"=!"
-        set "VERSION_NAME=!TMP_VN!"
+if exist "version.properties" (
+    for /f "tokens=1,2 delims==" %%A in ('findstr /i "versionCode versionName" version.properties') do (
+        if /i "%%A"=="versionCode" set "VERSION_CODE=%%B"
+        if /i "%%A"=="versionName" set "VERSION_NAME=%%B"
     )
 )
 

@@ -84,11 +84,10 @@ if not errorlevel 1 (
 rem Set commit message
 set "COMMIT_MSG=%~1"
 if "%COMMIT_MSG%"=="" (
-    set "APP_VER=v2.6.4.0.0.25"
-    if exist "app\build.gradle.kts" (
-        for /f "tokens=2 delims==" %%i in ('findstr /i "versionName" app\build.gradle.kts 2^>nul') do (
+    set "APP_VER=v2.6.4.0.0.38"
+    if exist "version.properties" (
+        for /f "tokens=2 delims==" %%i in ('findstr /i "versionName" version.properties 2^>nul') do (
             set "TEMP_VER=%%~i"
-            set "TEMP_VER=!TEMP_VER:"=!"
             set "TEMP_VER=!TEMP_VER: =!"
             if not "!TEMP_VER!"=="" set "APP_VER=v!TEMP_VER!"
         )

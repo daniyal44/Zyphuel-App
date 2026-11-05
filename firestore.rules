@@ -2,7 +2,7 @@ rules_version = '2';
 
 // =============================================================================
 // Zyphuel — Cloud Firestore Production Security Rules
-// Version: 2.6.4.0.0.35 (Build 63) — hardened 2026-11-03
+// Version: 2.6.4.0.0.36 (Build 64) — hardened 2026-11-05
 // -----------------------------------------------------------------------------
 // STATUS: ACTIVE & ENFORCED
 // All clients are backed by authenticated Firebase Auth sessions (via Google OAuth
@@ -46,17 +46,31 @@ service cloud.firestore {
       );
     }
 
+    // A profile may live at users/{uid} (Android writes uid when available) or at
+    // users/{email_with_underscores} (fallback + legacy admin sync). Ownership is
+    // decided by the authenticated email matching the document's own email field, so
+    // both document-id styles work without exposing other accounts.
+    function isOwnerDoc(docId, data) {
+      return isSignedIn() && (
+        request.auth.uid == docId ||
+        (request.auth.token.email != null && request.auth.token.email == data.email)
+      );
+    }
+
     // Only these fields may be written by a non-admin client to a user profile.
     function userProfileFieldsAllowed() {
       return request.resource.data.keys().hasOnly([
         'uid', 'email', 'displayName', 'photoURL', 'role', 'lastLogin',
-        'createdAt', 'phoneNumber', 'passwordHash', 'authProvider'
-      ]);
+        'createdAt', 'updatedAt', 'phoneNumber', 'passwordHash', 'authProvider',
+        'profilePictureBase64', 'vehicleType', 'vehicleNo'
+      ])
+      && (!request.resource.data.keys().hasAny(['profilePictureBase64'])
+          || request.resource.data.profilePictureBase64.size() <= 400000);
     }
 
     // ---- users/{uid} -------------------------------------------------------
     match /users/{uid} {
-      allow read: if isOwnerUid(uid) || isAdmin();
+      allow read: if isOwnerDoc(uid, resource.data) || isAdmin();
 
       // Normal users can only register as 'customer' or 'rider' with a whitelisted
       // field set; role elevation to 'admin' is blocked and privilege fields cannot
@@ -67,11 +81,11 @@ service cloud.firestore {
                          && userProfileFieldsAllowed() );
 
       allow update: if isAdmin()
-                    || ( isOwnerUid(uid)
+                    || ( isOwnerDoc(uid, resource.data)
                          && request.resource.data.role == resource.data.role
                          && userProfileFieldsAllowed() ); // role immutable by owner
 
-      allow delete: if isAdmin() || isOwnerUid(uid);
+      allow delete: if isAdmin() || isOwnerDoc(uid, resource.data);
     }
 
     // ---- orders/{orderId} --------------------------------------------------
@@ -95,6 +109,14 @@ service cloud.firestore {
         isAdmin()
         || isOwnerEmail(resource.data.riderEmail)
         || isOwnerEmail(resource.data.customerEmail)
+        // A rider may claim an unassigned pending order for themselves. Without this
+        // clause `resource.data.riderEmail` is null, so no rider could ever accept a
+        // new dispatch unless an admin assigned it first.
+        || ( resource.data.status == 'Pending'
+             && request.resource.data.status == 'Assigned'
+             && request.auth.token.email != null
+             && request.resource.data.riderEmail is string
+             && request.resource.data.riderEmail == request.auth.token.email )
       )
       && request.resource.data.totalPrice == resource.data.totalPrice
       && request.resource.data.customerEmail == resource.data.customerEmail;

@@ -11,6 +11,30 @@ plugins {
   alias(libs.plugins.google.services)
 }
 
+// Single source of truth shared with iOS: version.properties at the repository root.
+// Android reads it here; iOS (ios/project.yml, ZyphuelConfig.swift), README and the feature
+// docs are kept identical by scripts/sync_versions.py, so both apps always ship the same
+// versionCode / versionName. Never hardcode either value in this file.
+val versionFile = file("${rootDir}/version.properties")
+if (!versionFile.exists()) {
+  throw GradleException(
+    "version.properties is missing. It is the shared Android/iOS version source; " +
+      "restore it or run: python scripts/sync_versions.py --bump"
+  )
+}
+val sharedVersionProps = Properties()
+FileInputStream(versionFile).use { stream -> sharedVersionProps.load(stream) }
+val appVersionCode = sharedVersionProps.getProperty("versionCode")?.trim()?.toIntOrNull()
+  ?: throw GradleException("version.properties is missing a numeric versionCode")
+val appVersionName = sharedVersionProps.getProperty("versionName")?.trim()
+  ?.takeIf { it.isNotEmpty() }
+  ?: throw GradleException("version.properties is missing versionName")
+if (!appVersionName.matches(Regex("^\\d+\\.\\d+\\.\\d+\\.\\d+\\.\\d+\\.\\d+$"))) {
+  throw GradleException(
+    "versionName '$appVersionName' must use the 2.6.4.0.0.XX sub-version format."
+  )
+}
+
 android {
   namespace = "com.example"
   compileSdk { version = release(36) { minorApiLevel = 1 } }
@@ -19,8 +43,8 @@ android {
     applicationId = "com.aistudio.zyphuel.appv2"
     minSdk = 24
     targetSdk = 36
-    versionCode = 63
-    versionName = "2.6.4.0.0.35"
+    versionCode = appVersionCode
+    versionName = appVersionName
 
     manifestPlaceholders["MAPS_API_KEY"] = "AIzaZyphuelPlaceholderKey"
 

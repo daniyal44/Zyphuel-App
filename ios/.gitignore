@@ -1,0 +1,22 @@
+# Generated Xcode project (regenerate with `xcodegen generate`)
+*.xcodeproj
+*.xcworkspace
+!*.xcodeproj/project.xcworkspace
+
+# Firebase configuration — never commit the real file
+Config/GoogleService-Info.plist
+
+# Build output
+build/
+DerivedData/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Xcode user state
+xcuserdata/
+*.xcuserstate
+
+# Machine-local report written by desktop_ios.bat
+build_report.txt
+Versions.env

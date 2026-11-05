@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  TEMPLATE ONLY — never commit the real GoogleService-Info.plist.
+
+  The iOS app is the same Firebase project as the Android build
+  (project number 488422345846, package com.aistudio.zyphuel.appv2), so:
+
+  1. Firebase Console -> Project settings -> Your apps -> Add app -> iOS
+     Bundle ID: com.aistudio.zyphuel.appv2
+  2. Download GoogleService-Info.plist and place it at:
+        ios/Config/GoogleService-Info.plist
+     (git-ignored). ZyphuelApp only calls FirebaseApp.configure() when the
+     file exists, so the app still launches without it and shows a setup
+     banner instead of crashing.
+  3. In Info.plist replace REVERSED_CLIENT_ID with the REVERSED_CLIENT_ID
+     value from that file so Google Sign-In can complete its URL callback.
+  4. Enable the iOS OAuth client in Google Cloud Console and add the
+     reversed client ID URL scheme to the iOS app entry in Firebase.
+
+  All values below are placeholders and are not functional.
+-->
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+	<string>REPLACE_WITH_FIREBASE_IOS_API_KEY</string>
+	<key>GCM_SENDER_ID</key>
+	<string>000000000000</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.aistudio.zyphuel.appv2</string>
+	<key>PROJECT_ID</key>
+	<string>REPLACE_WITH_FIREBASE_PROJECT_ID</string>
+	<key>STORAGE_BUCKET</key>
+	<string>REPLACE_WITH_FIREBASE_STORAGE_BUCKET</string>
+	<key>IS_ADS_ENABLED</key>
+	<false/>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false/>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true/>
+	<key>IS_GCM_ENABLED</key>
+	<true/>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true/>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:000000000000:ios:0000000000000000000000</string>
+	<key>CLIENT_ID</key>
+	<string>REPLACE_WITH_IOS_CLIENT_ID.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.REPLACE_WITH_IOS_CLIENT_ID</string>
+</dict>
+</plist>

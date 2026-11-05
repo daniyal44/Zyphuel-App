@@ -1,14 +1,17 @@
 # Zyphuel Project Rules & Maintenance Guidelines
 
-**Last Updated:** <font color="#10b981"><b>2026-10-23</b></font> • **Application Version:** <font color="#10b981"><b>2.6.4.0.0.33 (Build 61)</b></font>
+**Last Updated:** <font color="#10b981"><b>2026-11-05</b></font> • **Application Version:** <font color="#10b981"><b>2.6.4.0.0.38 (Build 66)</b></font>
 
 ---
 
-## App Versioning & Release Rule (CRITICAL — Updated <font color="#10b981"><b>2026-10-13</b></font>)
-Whenever you make ANY change, fix, feature, or modification to the app:
-- **MUST Increment `versionCode`**: Always increment `versionCode` in [`app/build.gradle.kts`](file:///d:/Games/New%20folder-web/Claude/app/build.gradle.kts) (currently at <font color="#10b981"><b>61</b></font>).
-- **MUST Advance `versionName` with Sub-Version Format**: Always format `versionName` as `2.6.4.0.0.XX` (starting at `2.6.4.0.0.01`), and increment the trailing segment by `+0.0.0.0.01` on every change/fix (`2.6.4.0.0.32` -> <font color="#10b981"><b>2.6.4.0.0.33</b></font>).
-- **Never publish with stale version codes**: Google Play Store rejects APK/AAB uploads if the `versionCode` is not strictly higher than the previous release.
+## Unified Versioning & Cross-Platform Parity Rule (CRITICAL — Updated <font color="#10b981"><b>2026-11-05</b></font>)
+**Every functional change MUST land on BOTH platforms in the same change set** — Android (Kotlin/Compose, `app/`) and iOS (SwiftUI, `ios/`). A feature, fix, Firestore rule, pricing constant, permission, copy change or bug fix that exists on only one platform is an **incomplete** change. When you touch one app, immediately mirror the change in the other and in the shared layers (`firestore.rules`, docs).
+- **Single version source**: [`version.properties`](version.properties) holds `versionCode` / `versionName`. Android Gradle reads it directly; iOS ([`ios/project.yml`](ios/project.yml), [`ZyphuelConfig.swift`](ios/Zyphuel/Core/Config/ZyphuelConfig.swift)) and the docs are written by [`scripts/sync_versions.py`](scripts/sync_versions.py).
+- **MUST bump Android and iOS together**: run `sync_versions.bat --bump` (or `python scripts/sync_versions.py --bump`). It increments `versionCode` by `1` and the trailing `versionName` segment by `+0.01` (e.g. `…0.37` → `…0.38`), then rewrites Android, iOS, `README.md` and `FEATURES_DOCUMENTATION.md`. Never edit a version by hand and never bump only one platform.
+- **Drift gate**: `python scripts/sync_versions.py --check` (run in CI by [`.github/workflows/version-sync.yml`](.github/workflows/version-sync.yml)) fails the build when any platform or doc disagrees.
+- **Docs per change**: update [`README.md`](README.md), [`FEATURES_DOCUMENTATION.md`](FEATURES_DOCUMENTATION.md), [`changes.md`](changes.md) and [`TESTING.md`](TESTING.md) for **both** platforms.
+- **Both test suites are required**: Android `./gradlew :app:compileDebugKotlin` + `:app:testDebugUnitTest`; iOS `ios/bootstrap.sh test` on macOS or the `iOS Build` workflow.
+- **Never publish with stale version codes**: Google Play, TestFlight and the App Store all reject a build whose build number is not strictly higher than the last upload.
 
 ---
 
@@ -82,7 +85,8 @@ Whenever you create, modify, or update any feature, screen, ViewModel method, or
 ---
 
 ## UI & Architecture Rules
-- Language: Kotlin with Jetpack Compose (Material 3).
+- Language: Kotlin with Jetpack Compose (Material 3) for Android; SwiftUI for `ios/`.
+- **Screen parity**: every Android screen, dialog and state has an equivalent SwiftUI view in `ios/Zyphuel/Features/`, and every iOS screen has an Android counterpart. Shared business rules (pricing tiers, operating hours, 15 L cap, roles, security limits) must come from the same constants on both sides.
 - State Management: `MainViewModel` with `StateFlow`.
 - Test Tags: Always include `testTag` for key interactive UI elements.
 - Room DB: Retain `UserEntity`, `OrderEntity`, `AuditLogEntity`, and `NotificationEntity` definitions.

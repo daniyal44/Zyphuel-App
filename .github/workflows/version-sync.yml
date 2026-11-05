@@ -1,0 +1,33 @@
+name: Version Sync
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: version-sync-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Android and iOS versions must match
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Check shared version
+        run: python scripts/sync_versions.py --check
+
+      - name: Ensure the version file is the only source
+        run: |
+          test -f version.properties || { echo "version.properties missing"; exit 1; }
+          grep -q "version.properties" app/build.gradle.kts || { echo "Gradle does not read version.properties"; exit 1; }

@@ -62,23 +62,47 @@ const SPRINT_MILESTONES = {
 }
 
 function getAppVersionInfo() {
+  // version.properties is the single source shared with iOS. build.gradle.kts only
+  // references it, so parsing Gradle directly would always fall back to defaults.
+  let versionCode = null
+  let versionName = null
+  let targetSdk = '36'
+
   try {
+    const propsPath = path.resolve(__dirname, '../version.properties')
+    if (fs.existsSync(propsPath)) {
+      const props = fs.readFileSync(propsPath, 'utf8')
+      const vcMatch = props.match(/^\s*versionCode\s*=\s*(\d+)/m)
+      const vnMatch = props.match(/^\s*versionName\s*=\s*([^\s#]+)/m)
+      if (vcMatch) versionCode = vcMatch[1]
+      if (vnMatch) versionName = vnMatch[1]
+    }
+
     const gradlePath = path.resolve(__dirname, '../app/build.gradle.kts')
     if (fs.existsSync(gradlePath)) {
       const content = fs.readFileSync(gradlePath, 'utf8')
-      const vcMatch = content.match(/versionCode\s*=\s*(\d+)/)
-      const vnMatch = content.match(/versionName\s*=\s*"([^"]+)"/)
       const sdkMatch = content.match(/targetSdk\s*=\s*(\d+)/)
-      return {
-        versionCode: vcMatch ? vcMatch[1] : '52',
-        versionName: vnMatch ? vnMatch[1] : '2.6.4.0.0.24',
-        targetSdk: sdkMatch ? sdkMatch[1] : '36'
+      if (sdkMatch) targetSdk = sdkMatch[1]
+
+      // Legacy fallback for checkouts created before version.properties existed.
+      if (!versionCode) {
+        const vcFallback = content.match(/versionCode\s*=\s*(\d+)/)
+        if (vcFallback) versionCode = vcFallback[1]
+      }
+      if (!versionName) {
+        const vnFallback = content.match(/versionName\s*=\s*"([^"]+)"/)
+        if (vnFallback) versionName = vnFallback[1]
       }
     }
   } catch (err) {
-    console.warn('[CodeGraphEngine] Could not read build.gradle.kts:', err.message)
+    console.warn('[CodeGraphEngine] Could not read version.properties:', err.message)
   }
-  return { versionCode: '52', versionName: '2.6.4.0.0.24', targetSdk: '36' }
+
+  return {
+    versionCode: versionCode || '52',
+    versionName: versionName || '2.6.4.0.0.24',
+    targetSdk
+  }
 }
 
 function getGitCommitHistoryWithChurn() {
