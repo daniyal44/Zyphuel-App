@@ -55,6 +55,8 @@ debug.keystore
 /captures
 *.apk
 *.aab
+*.ipa
+ios-builds/
 *.log
 build-log.txt
 desktop-build-log.txt
