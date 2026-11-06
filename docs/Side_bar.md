@@ -1,6 +1,6 @@
 # Zyphuel Application - Sidebar & Navigation Architecture (`docs/Side_bar.md`)
 
-> **Current App Version:** `2.6.4.0.0.38 (Build 66)`  
+> **Current App Version:** `2.6.4.0.0.39 (Build 67)`  
 > **Last Synchronized:** <font color="#10b981"><b>2026-10-09</b></font>  
 > **Status:** <font color="#10b981"><b>Production Verified (100% Tests Passing)</b></font>
 
@@ -25,7 +25,7 @@ Zyphuel App Sidebar Drawer
  │    ├── Terms of Service & Privacy Policy (Play Store Compliance)
  │    ├── Permanent Account Deletion (Google Play User Data Policy)
  │    └── Support Hotline (WhatsApp Direct)
- └── Footer Section (App Version v2.6.4.0.0.38 Build 66, Logout Action)
+ └── Footer Section (App Version v2.6.4.0.0.39 Build 67, Logout Action)
 ```
 
 ---
@@ -51,7 +51,7 @@ Zyphuel App Sidebar Drawer
 4. **Security & Biometrics (`ROUTE_SECURITY_SETTINGS`)**: Admin fingerprint security configuration.
 
 ### D. Legal, Privacy & Compliance Items
-<font color="#10b981"><b>Updated in Build 66 (2026-10-09)</b></font>
+<font color="#10b981"><b>Updated in Build 67 (2026-10-09)</b></font>
 1. **Terms & Privacy Policy**: Launches in-app legal dialog (`TermsAndPrivacyDialog.kt`) reflecting official delivery hours and tiered delivery fees.
 2. **Permanent Account Deletion**: Provides direct 2-click account and data erasure in compliance with Google Play Developer Policies.
 
@@ -63,4 +63,4 @@ Zyphuel App Sidebar Drawer
   - <font color="#10b981"><b>Mon–Thu:</b> 08:00 AM – 08:00 PM PKT</font>
   - <font color="#10b981"><b>Fri:</b> 08:00 AM – 01:00 PM PKT</font>
   - <font color="#10b981"><b>Sat–Sun:</b> 10:00 AM – 06:00 PM PKT</font>
-- **Version Footer**: Displays current release version <font color="#10b981"><b>`v2.6.4.0.0.38 (Build 66)`</b></font>.
+- **Version Footer**: Displays current release version <font color="#10b981"><b>`v2.6.4.0.0.39 (Build 67)`</b></font>.
