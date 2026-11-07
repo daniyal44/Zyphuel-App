@@ -9,6 +9,9 @@ Config/GoogleService-Info.plist
 # Build output
 build/
 DerivedData/
+.packages/
+resolve.log
+build.log
 *.ipa
 *.dSYM.zip
 *.dSYM

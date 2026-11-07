@@ -132,7 +132,7 @@ Android and iOS ship the same version from the same file, so an iOS-only or Andr
 | iOS CI gate | `.github/workflows/ios-build.yml` on a macOS runner |
 | iOS app icon | `ios/Zyphuel/Resources/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png` exists and is opaque 1024×1024 (`Click`-checked via `System.Drawing`); CI asserts `AppIcon60x60@2x.png` inside `Zyphuel.app` |
 | iOS privacy manifest | `ios/Config/PrivacyInfo.xcprivacy` present, listed as `Copy Bundle Resources` in `ios/project.yml`, and found at `Zyphuel.app/PrivacyInfo.xcprivacy` by CI |
-| iOS Firebase config bundling | `Config/GoogleService-Info.plist` must appear in `Zyphuel.app` when provided (`project.yml` optional resource) |
+| iOS Firebase config bundling | `Config/GoogleService-Info.plist` must appear in `Zyphuel.app` when provided (the `preBuildScripts` copy phase); the build must still succeed when it is absent |
 | iOS download artifacts | `desktop_ios_download.bat` → only a validated IPA, a `-Simulator.app.zip`, or a clearly named `-iOS-Source.zip`; never an undersized `.ipa` |
 | Shared business rules | Pricing tiers 300/320/340/360/380/400, 15 L cap, +5 markup, PKT operating hours, 4-attempt lockout — verified by `ZyphuelLogicTests` on iOS and `FuelPumpPricingTest` / `SecurityAndDataIntegrityTest` on Android |
 | Firestore contract | One rules file for both clients: `users` accepts `uid` and email-derived doc ids, `orders` rider claim, `feedback` iOS fields |

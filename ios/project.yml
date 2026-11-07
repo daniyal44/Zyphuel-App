@@ -39,14 +39,27 @@ targets:
       # Apple privacy manifest: must be copied into the app bundle (App Store requirement).
       - path: Config/PrivacyInfo.xcprivacy
         buildPhase: resources
-      # Firebase configuration. Optional so a fresh clone without the git-ignored
-      # GoogleService-Info.plist still generates and builds (setup mode).
-      - path: Config/GoogleService-Info.plist
-        buildPhase: resources
-        optional: true
+    # The git-ignored Firebase plist cannot be a project resource: a missing resource
+    # reference fails the build ("Build input file cannot be found"). This copy phase
+    # bundles it when it exists and leaves the app in setup mode when it does not.
+    preBuildScripts:
+      - name: Copy Firebase configuration (optional)
+        basedOnDependencyAnalysis: false
+        script: |
+          SRC="${SRCROOT}/Config/GoogleService-Info.plist"
+          DEST_DIR="${BUILT_PRODUCTS_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}"
+          if [ -f "${SRC}" ]; then
+            mkdir -p "${DEST_DIR}"
+            cp "${SRC}" "${DEST_DIR}/GoogleService-Info.plist"
+            echo "Bundled GoogleService-Info.plist"
+          else
+            echo "warning: GoogleService-Info.plist missing - app starts in setup mode"
+          fi
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.aistudio.zyphuel.appv2
+        # Only this target's single copy phase needs filesystem access.
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
         PRODUCT_NAME: Zyphuel
         INFOPLIST_FILE: Config/Info.plist
         CODE_SIGN_ENTITLEMENTS: Config/Zyphuel.entitlements
