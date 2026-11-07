@@ -1,7 +1,9 @@
+import Combine
 import FirebaseAuth
 import FirebaseCore
 import Foundation
 import GoogleSignIn
+import UIKit
 
 enum AuthError: LocalizedError {
     case missingPresenter

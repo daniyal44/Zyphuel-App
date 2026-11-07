@@ -2,6 +2,7 @@ import FirebaseCore
 import FirebaseMessaging
 import GoogleSignIn
 import SwiftUI
+import UIKit
 import UserNotifications
 
 /// App delegate owns the pieces SwiftUI cannot express: APNs registration, the FCM

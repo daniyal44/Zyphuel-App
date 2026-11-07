@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// Rider portal. Same lifecycle as the Android `RiderHomeScreen`: pending orders can be
 /// accepted, then the rider must pick up fuel, start the route and finally collect COD.

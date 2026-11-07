@@ -1,6 +1,8 @@
+import Combine
 import FirebaseAuth
 import FirebaseFirestore
 import Foundation
+import UIKit
 
 /// Central session + routing state. Equivalent to `MainViewModel`'s auth/session slice
 /// plus `MainActivity`'s role-based start destination.

@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 /// In-app localization matching the Android English/Urdu toggle
 /// (`AppLanguageManager`). Copy is kept in one table so a missing key falls back to the
