@@ -28,6 +28,20 @@ jobs:
       - name: Show Xcode version
         run: xcodebuild -version
 
+      # Firebase iOS SDK 13.x declares `swift-tools-version:6.2`, which the macos-15
+      # default Xcode 16.4 toolchain (Swift 6.1) cannot read. The image also ships
+      # Xcode 26.x, so select the newest installed Xcode instead of the default.
+      - name: Select newest Xcode
+        run: |
+          set -euo pipefail
+          LATEST="$(python3 -c "import glob,re;c=[(tuple(int(n) for n in re.findall(r'\d+',p)),p) for p in glob.glob('/Applications/Xcode_*.app')];print(max(c)[1] if c else '')")"
+          if [ -n "${LATEST}" ]; then
+            echo "Selecting ${LATEST}"
+            sudo xcode-select -s "${LATEST}"
+          fi
+          xcodebuild -version
+          swift --version
+
       - name: Install XcodeGen
         run: brew install xcodegen
 

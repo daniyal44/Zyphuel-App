@@ -13,7 +13,8 @@ RUN_TESTS=0
 
 echo "==> Checking toolchain"
 if ! command -v xcodebuild >/dev/null 2>&1; then
-  echo "ERROR: xcodebuild not found. Install Xcode 16+ from the App Store."
+  echo "ERROR: xcodebuild not found. Install Xcode 26+ from the App Store"
+  echo "       (Firebase iOS SDK 13.x requires swift-tools-version 6.2)."
   exit 1
 fi
 xcodebuild -version

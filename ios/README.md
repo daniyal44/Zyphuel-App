@@ -3,7 +3,8 @@
 Native SwiftUI port of the Zyphuel Android app (`com.aistudio.zyphuel.appv2`).
 Same Firebase project, same Firestore collections, same pricing rules, same roles.
 
-> **Build environment:** iOS builds require macOS with Xcode 16+ and XcodeGen.
+> **Build environment:** iOS builds require macOS with Xcode 26+ (Firebase iOS SDK 13.x
+> declares `swift-tools-version:6.2`, which Xcode 16.x cannot read) and XcodeGen.
 > This repository is developed on Windows, so the Swift code here has **not been
 > compiled locally**. The `iOS Build` GitHub Actions workflow
 > (`.github/workflows/ios-build.yml`) is the compile/test gate; `desktop_ios.bat`
@@ -181,7 +182,7 @@ against production. Until then, live writes still use the previous ruleset.
 | "Firebase is not configured" banner | missing plist | add `ios/Config/GoogleService-Info.plist` |
 | Google sign-in returns to app but not signed in | URL scheme missing | set `REVERSED_CLIENT_ID` in `Info.plist` |
 | `Missing package product 'FirebaseAuth'` | packages not resolved | `xcodebuild -resolvePackageDependencies` |
-| Build fails on Xcode 15 | iOS 17 APIs | use Xcode 16+ |
+| `Could not resolve package dependencies … incompatible tools version (6.2.0)` | Firebase 13.x needs Swift 6.2 | use Xcode 26+ (CI selects the newest installed Xcode) |
 | Sign-in works but orders denied | rules not deployed | deploy `firestore.rules` |
 | Download gives an ~84 KB ".ipa" | old builds renamed the source zip to `.ipa` | re-run `desktop_ios_download.bat`; source packages now end in `-iOS-Source.zip` |
 | `NSPrivacyAccessedAPITypes` upload error | privacy manifest missing from the bundle | keep `Config/PrivacyInfo.xcprivacy` in `project.yml` resources |
