@@ -166,13 +166,13 @@ struct SecurityRateLimiter {
         if lockedUntil != nil, isLocked(now: now) {
             throw LockoutError(remainingSeconds: remainingLockSeconds(now: now))
         }
-        failedAttempts = failedAttempts.filter { now.timeIntervalSince($0) < attemptWindow }
+        failedAttempts = failedAttempts.filter { now.timeIntervalSince($0) < Self.attemptWindow }
         failedAttempts.append(now)
 
         if failedAttempts.count >= Self.maxAttempts {
-            lockedUntil = now.addingTimeInterval(cooldown)
+            lockedUntil = now.addingTimeInterval(Self.cooldown)
             failedAttempts.removeAll()
-            throw LockoutError(remainingSeconds: Int(cooldown))
+            throw LockoutError(remainingSeconds: Int(Self.cooldown))
         }
     }
 
