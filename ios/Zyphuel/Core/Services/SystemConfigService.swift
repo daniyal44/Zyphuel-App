@@ -11,7 +11,8 @@ final class SystemConfigService: ObservableObject {
     @Published private(set) var emailGateway: EmailGatewayConfig = EmailGatewayConfig(webhookURL: nil, senderEmail: nil)
     @Published var errorMessage: String?
 
-    private let db = Firestore.firestore()
+    // Lazy so a Firebase-less setup mode (and the unit-test host) can launch.
+    private lazy var db = Firestore.firestore()
     private var listeners: [ListenerRegistration] = []
 
     var isDeliveriesOpen: Bool { OperatingHours.isDeliveryOpen() }
@@ -124,7 +125,8 @@ final class EmailGateway {
         var detail: String
     }
 
-    private let db = Firestore.firestore()
+    // Lazy: mail is only queued when a signed-in session exists.
+    private lazy var db = Firestore.firestore()
 
     /// Queues one email. The `uid` field satisfies the hardened `mail` rule that binds a
     /// sender to their own auth uid and allows exactly one recipient per document.

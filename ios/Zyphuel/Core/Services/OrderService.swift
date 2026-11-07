@@ -12,7 +12,8 @@ final class OrderService: ObservableObject {
     @Published private(set) var isSubmitting = false
     @Published var errorMessage: String?
 
-    private let db = Firestore.firestore()
+    // Lazy so a Firebase-less setup mode (and the unit-test host) can launch.
+    private lazy var db = Firestore.firestore()
     private var ordersListener: ListenerRegistration?
     private var riderListener: ListenerRegistration?
 

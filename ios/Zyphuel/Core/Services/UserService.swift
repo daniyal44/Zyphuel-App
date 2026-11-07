@@ -14,7 +14,8 @@ final class UserService: ObservableObject {
     @Published private(set) var customers: [AppUser] = []
     @Published var errorMessage: String?
 
-    private let db = Firestore.firestore()
+    // Lazy so a Firebase-less setup mode (and the unit-test host) can launch.
+    private lazy var db = Firestore.firestore()
     private var profileListener: ListenerRegistration?
     private var ridersListener: ListenerRegistration?
     private var customersListener: ListenerRegistration?

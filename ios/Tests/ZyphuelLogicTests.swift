@@ -161,7 +161,9 @@ final class SecurityTests: XCTestCase {
             XCTAssertEqual(lockout?.remainingSeconds, 300)
         }
         XCTAssertTrue(limiter.isLocked(now: now.addingTimeInterval(4)))
-        XCTAssertEqual(limiter.remainingLockSeconds(now: now.addingTimeInterval(4)), 296)
+        // The cooldown starts when the fourth attempt trips the lock (at +3s), so 4s
+        // after the first attempt leaves 299 of the 300 seconds.
+        XCTAssertEqual(limiter.remainingLockSeconds(now: now.addingTimeInterval(4)), 299)
 
         limiter.registerSuccess()
         XCTAssertFalse(limiter.isLocked(now: now.addingTimeInterval(5)))

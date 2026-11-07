@@ -111,7 +111,9 @@ enum PasswordHasher {
 
     /// Older Android builds used 120k iterations; those hashes are upgraded on next login.
     static func needsRehash(_ encoded: String) -> Bool {
-        guard let stored = StoredHash(encoded: encoded) else { return true }
+        // Only a parseable hash can be compared: an unknown value never verifies, so it
+        // is not a "legacy hash that must be upgraded".
+        guard let stored = StoredHash(encoded: encoded) else { return false }
         return stored.iterations < iterations
     }
 

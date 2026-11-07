@@ -29,7 +29,9 @@ final class AppState: ObservableObject {
     let language = LanguageManager()
     let notifications = NotificationService()
 
-    private let db = Firestore.firestore()
+    // Lazy: without GoogleService-Info.plist the app runs in setup mode and must not
+    // touch Firestore, which raises when FirebaseApp is not configured.
+    private lazy var db = Firestore.firestore()
     private var pendingRole: UserRole = .customer
 
     var isFirebaseConfigured: Bool { auth.isConfigured }
