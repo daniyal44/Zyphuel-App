@@ -38,9 +38,18 @@ jobs:
       - name: Resolve packages
         working-directory: ios
         run: |
-          xcodebuild -project Zyphuel.xcodeproj -scheme Zyphuel \
-            -resolvePackageDependencies \
-            -clonedSourcePackagesDirPath .packages
+          set -o pipefail
+          xcodebuild -version
+          swift --version || true
+          if ! xcodebuild -project Zyphuel.xcodeproj -scheme Zyphuel \
+                -resolvePackageDependencies \
+                -clonedSourcePackagesDirPath .packages 2>&1 | tee resolve.log; then
+            # Public logs need auth, so surface the real reason as a check annotation.
+            MSG="$(grep -iE 'error|fail|could not|unable|requirement|toolchain|tools version' resolve.log \
+              | head -8 | tr '\n' ' ' | tr -d '\r' | cut -c1-900)"
+            echo "::error title=Resolve packages failed::${MSG}"
+            exit 1
+          fi
 
       - name: Pick an iPhone simulator
         id: sim
