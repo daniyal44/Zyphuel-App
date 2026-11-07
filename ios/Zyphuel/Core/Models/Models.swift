@@ -361,7 +361,8 @@ enum ServiceCatalog {
         all.first { $0.id == id }
     }
 
-    private static let fuel = ServiceCategory(
+    /// Referenced from the home screen's primary "Order Now" action.
+    static let fuel = ServiceCategory(
         id: "fuel_energy",
         name: "Fuel & Energy",
         summary: "Super Euro-V Petrol, High-Speed Diesel & High-Octane 97 (Max 15L • Rs. 300–400 tiered fee)",
