@@ -80,12 +80,18 @@ jobs:
       - name: Build for simulator
         working-directory: ios
         run: |
-          xcodebuild build \
-            -project Zyphuel.xcodeproj \
-            -scheme Zyphuel \
-            -destination "${{ steps.sim.outputs.destination }}" \
-            -derivedDataPath build \
-            CODE_SIGNING_ALLOWED=NO
+          set -o pipefail
+          if ! xcodebuild build \
+                -project Zyphuel.xcodeproj \
+                -scheme Zyphuel \
+                -destination "${{ steps.sim.outputs.destination }}" \
+                -derivedDataPath build \
+                CODE_SIGNING_ALLOWED=NO 2>&1 | tee build.log; then
+            # Compiler errors stay readable without authenticated job logs.
+            MSG="$(grep -E 'error:' build.log | head -12 | tr '\n' ' ' | tr -d '\r' | cut -c1-900)"
+            echo "::error title=Build failed::${MSG}"
+            exit 1
+          fi
 
       - name: Verify App Store readiness
         working-directory: ios
