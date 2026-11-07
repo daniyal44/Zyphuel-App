@@ -1,10 +1,17 @@
 # 🚀 Zyphuel App Features & Technical Documentation
-**App Version:** `v2.6.4.0.0.39 (Build 67)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** <font color="#10b981"><b>2026-11-05</b></font>
+**App Version:** `v2.6.4.0.0.40 (Build 68)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** <font color="#10b981"><b>2026-11-05</b></font>
 
 Welcome to the complete architectural and functional guide for the **Zyphuel** Android application. This document outlines every single feature, function, database entity, and user flow from start to finish.
 
 > [!NOTE]
-> **Latest Updates (<font color="#10b981"><b>2026-11-05</b></font> — v2.6.4.0.0.38 / Build 66):**
+> **Latest Updates (<font color="#10b981"><b>2026-11-07</b></font> — v2.6.4.0.0.40 / Build 68):**
+> 1. **iOS App Store readiness — real icon + privacy manifest**: `ios/Zyphuel/Resources/Assets.xcassets/AppIcon.appiconset` now ships an opaque 1024×1024 brand icon (`AppIcon-1024.png`, regenerate with `scripts/generate_ios_app_icon.ps1`), and `ios/Config/PrivacyInfo.xcprivacy` declares no tracking, the collected data types and the required-reason APIs; both are `Copy Bundle Resources` members so they land in `Zyphuel.app`.
+> 2. **iOS Firebase configuration is bundled again (`project.yml`)**: the target previously globbed only `Zyphuel/`, so the git-ignored `Config/GoogleService-Info.plist` never reached the app bundle and `FirebaseApp.configure()` silently ran the app in setup mode. The plist is now an optional resource entry (`optional: true`), keeping fresh clones buildable.
+> 3. **Honest iOS download (`desktop_ios_download.bat`)**: the script no longer renames the ~84 KB source zip to `.ipa`. It validates a real IPA (`Payload/*.app/Info.plist`, ≥ 1 MB) before copying, can fetch the CI Simulator build (`Zyphuel-ios-simulator-app`) through the GitHub CLI, and otherwise delivers `Zyphuel-v<ver>-Build<n>-iOS-Source.zip` with explicit "not an app" instructions.
+> 4. **CI bundle assertions (`.github/workflows/ios-build.yml`)**: the macOS job fails if the icon or privacy manifest is missing from the built `Zyphuel.app`, then publishes `Zyphuel-iOS-Simulator.app.zip` as a downloadable artifact.
+>
+> [!NOTE]
+> **Previous Updates (<font color="#10b981"><b>2026-11-05</b></font> — v2.6.4.0.0.38 / Build 66):**
 > 1. **One shared version for Android + iOS (`version.properties`, `scripts/sync_versions.py`)**: Android Gradle reads `version.properties` directly; the iOS project, `ZyphuelConfig.swift`, `README.md` and this document are written by `sync_versions.py`. `sync_versions.bat --bump` raises both platforms together and `--check` (CI: `.github/workflows/version-sync.yml`, pre-commit hook) blocks any drift.
 > 2. **Mandatory change parity**: every feature, fix, Firestore rule and pricing constant must ship on Android **and** iOS in the same change set — see the parity table in section 0.
 > 3. **Cross-client contract fixes**: riders can now claim a `Pending` order (rules clause), iOS reuses the Android `users/{uid}` profile document instead of duplicating it, iOS writes `displayName` for Android, and order history matches both email casings.
@@ -57,7 +64,7 @@ Below is the complete index of all **dedicated documentation files** (including 
 
 ---
 
-## 0. iOS Application — Native SwiftUI Port (v2.6.4.0.0.39)
+## 0. iOS Application — Native SwiftUI Port (v2.6.4.0.0.40)
 **Location:** [`ios/`](ios/README.md) • **Bundle ID:** `com.aistudio.zyphuel.appv2` • **Minimum iOS:** 17.0
 
 Zyphuel now ships as a native iOS app that shares the Android Firebase project, Firestore collections and business rules. It is a separate Swift codebase (not a web wrapper) under `ios/`.

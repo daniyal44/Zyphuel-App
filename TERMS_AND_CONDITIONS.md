@@ -2,7 +2,7 @@
 
 **Effective Date:** <font color="#10b981"><b>2026-10-13</b></font> (October 2026)  
 **Last Updated:** <font color="#10b981"><b>2026-10-23</b></font>  
-**Application Version:** <font color="#10b981"><b>2.6.4.0.0.39 (Build 67)</b></font>  
+**Application Version:** <font color="#10b981"><b>2.6.4.0.0.40 (Build 68)</b></font>  
 **Package Name:** `com.aistudio.zyphuel.appv2`  
 **Official Website:** [https://zyphuel.netlify.app/privacy](https://zyphuel.netlify.app/privacy)  
 **Terms of Use & Privacy URL:** [https://zyphuel.netlify.app/privacy](https://zyphuel.netlify.app/privacy)  

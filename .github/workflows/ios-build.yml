@@ -61,7 +61,35 @@ jobs:
             -project Zyphuel.xcodeproj \
             -scheme Zyphuel \
             -destination "${{ steps.sim.outputs.destination }}" \
+            -derivedDataPath build \
             CODE_SIGNING_ALLOWED=NO
+
+      - name: Verify App Store readiness
+        working-directory: ios
+        run: |
+          set -euo pipefail
+          APP="build/Build/Products/Debug-iphonesimulator/Zyphuel.app"
+          test -d "$APP"
+          test -f "$APP/PrivacyInfo.xcprivacy"
+          test -f "$APP/AppIcon60x60@2x.png"
+          echo "Icon and privacy manifest are inside the app bundle."
+
+      - name: Package simulator build
+        working-directory: ios
+        run: |
+          set -euo pipefail
+          APP="build/Build/Products/Debug-iphonesimulator/Zyphuel.app"
+          test -d "$APP"
+          ditto -c -k --sequesterRsrc --keepParent "$APP" Zyphuel-iOS-Simulator.app.zip
+          ls -lh Zyphuel-iOS-Simulator.app.zip
+
+      - name: Upload simulator build
+        uses: actions/upload-artifact@v4
+        with:
+          name: Zyphuel-ios-simulator-app
+          path: ios/Zyphuel-iOS-Simulator.app.zip
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Run unit tests
         working-directory: ios
@@ -70,6 +98,7 @@ jobs:
             -project Zyphuel.xcodeproj \
             -scheme Zyphuel \
             -destination "${{ steps.sim.outputs.destination }}" \
+            -derivedDataPath build \
             CODE_SIGNING_ALLOWED=NO
 
       - name: Upload test results

@@ -1,6 +1,6 @@
 # 02. Customer Order Placing & Operating Hours Gate Documentation ⛽
 
-**Last Updated:** <font color="#10b981"><b>2026-10-09</b></font> • **Application Version:** <font color="#10b981"><b>2.6.4.0.0.39 (Build 67)</b></font>
+**Last Updated:** <font color="#10b981"><b>2026-10-09</b></font> • **Application Version:** <font color="#10b981"><b>2.6.4.0.0.40 (Build 68)</b></font>
 
 ## 📌 Category
 **Customer Commerce & Order Management Engine**

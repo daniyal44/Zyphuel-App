@@ -1,7 +1,7 @@
 # 🧪 Zyphuel — Testing & Release Verification
 
 **Last Updated:** <font color="#10b981"><b>2026-10-23 22:48:18 PKT</b></font>
-**App Version:** <font color="#10b981"><b>v2.6.4.0.0.39 (Build 67)</b></font>
+**App Version:** <font color="#10b981"><b>v2.6.4.0.0.40 (Build 68)</b></font>
 **Last Full Run:** <font color="#10b981"><b>2026-10-23 22:44 PKT — 54 tests, 0 failed, 0 skipped</b></font>
 **Document Status:** <font color="#10b981"><b>ACTIVE</b></font>
 
@@ -110,7 +110,7 @@ runs no migration and produces no duplicate rows.
 3. `./gradlew :app:bundleRelease` → `app/build/outputs/bundle/release/app-release.aab`.
 4. Signing: `KEYSTORE_PATH`, `STORE_PASSWORD`, `KEY_PASSWORD` set; **never** publish a bundle signed with
    the debug keystore fallback.
-5. `versionCode` strictly greater than the previous Play upload (currently **66**, from `version.properties`).
+5. `versionCode` strictly greater than the previous Play upload (currently **68**, from `version.properties`).
    Confirm Android and iOS agree: `python scripts/sync_versions.py --check` must print `Version sync check OK`.
 6. No secrets in the tree: `git grep -i "app_password\|MASTER_ADMIN\|keystore"` should return only
    template/`.example` references.
@@ -125,11 +125,15 @@ Android and iOS ship the same version from the same file, so an iOS-only or Andr
 
 | Check | Command / action |
 | :--- | :--- |
-| Version parity | `python scripts/sync_versions.py --check` → `Version sync check OK: v2.6.4.0.0.38 (Build 66) everywhere.` |
+| Version parity | `python scripts/sync_versions.py --check` → `Version sync check OK: v2.6.4.0.0.40 (Build 68) everywhere.` |
 | Version bump | `sync_versions.bat --bump` → bumps `versionCode` +1 and the trailing segment +0.01 for **both** apps and the docs |
 | iOS structure/pins/plists | `scripts/update_ios_versions.ps1` → `RESULT: PASS` (Windows-safe, no Xcode required) |
 | iOS build + unit tests (macOS) | `ios/bootstrap.sh test` → XcodeGen project, archive, `ZyphuelLogicTests` green |
 | iOS CI gate | `.github/workflows/ios-build.yml` on a macOS runner |
+| iOS app icon | `ios/Zyphuel/Resources/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png` exists and is opaque 1024×1024 (`Click`-checked via `System.Drawing`); CI asserts `AppIcon60x60@2x.png` inside `Zyphuel.app` |
+| iOS privacy manifest | `ios/Config/PrivacyInfo.xcprivacy` present, listed as `Copy Bundle Resources` in `ios/project.yml`, and found at `Zyphuel.app/PrivacyInfo.xcprivacy` by CI |
+| iOS Firebase config bundling | `Config/GoogleService-Info.plist` must appear in `Zyphuel.app` when provided (`project.yml` optional resource) |
+| iOS download artifacts | `desktop_ios_download.bat` → only a validated IPA, a `-Simulator.app.zip`, or a clearly named `-iOS-Source.zip`; never an undersized `.ipa` |
 | Shared business rules | Pricing tiers 300/320/340/360/380/400, 15 L cap, +5 markup, PKT operating hours, 4-attempt lockout — verified by `ZyphuelLogicTests` on iOS and `FuelPumpPricingTest` / `SecurityAndDataIntegrityTest` on Android |
 | Firestore contract | One rules file for both clients: `users` accepts `uid` and email-derived doc ids, `orders` rider claim, `feedback` iOS fields |
 

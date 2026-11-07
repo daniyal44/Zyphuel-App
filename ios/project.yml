@@ -21,8 +21,8 @@ settings:
   base:
     SWIFT_VERSION: "5.0"
     SWIFT_STRICT_CONCURRENCY: minimal
-    MARKETING_VERSION: "2.6.4.0.0.39"
-    CURRENT_PROJECT_VERSION: "67"
+    MARKETING_VERSION: "2.6.4.0.0.40"
+    CURRENT_PROJECT_VERSION: "68"
     IPHONEOS_DEPLOYMENT_TARGET: "17.0"
     CODE_SIGN_STYLE: Automatic
     ENABLE_USER_SCRIPT_SANDBOXING: YES
@@ -36,6 +36,14 @@ targets:
       - path: Zyphuel
         excludes:
           - "**/*.md"
+      # Apple privacy manifest: must be copied into the app bundle (App Store requirement).
+      - path: Config/PrivacyInfo.xcprivacy
+        buildPhase: resources
+      # Firebase configuration. Optional so a fresh clone without the git-ignored
+      # GoogleService-Info.plist still generates and builds (setup mode).
+      - path: Config/GoogleService-Info.plist
+        buildPhase: resources
+        optional: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.aistudio.zyphuel.appv2

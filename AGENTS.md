@@ -1,6 +1,6 @@
 # Zyphuel Project Rules & Maintenance Guidelines
 
-**Last Updated:** <font color="#10b981"><b>2026-11-05</b></font> • **Application Version:** <font color="#10b981"><b>2.6.4.0.0.38 (Build 66)</b></font>
+**Last Updated:** <font color="#10b981"><b>2026-11-07</b></font> • **Application Version:** <font color="#10b981"><b>2.6.4.0.0.40 (Build 68)</b></font>
 
 ---
 

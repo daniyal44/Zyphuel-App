@@ -1,6 +1,6 @@
 # Task Plan: Delivery Pricing Update, Pump Rate Markup, Operating Hours Gate & Trading Activity Graph
 
-> **Current App Version:** `2.6.4.0.0.39 (Build 67)`  
+> **Current App Version:** `2.6.4.0.0.40 (Build 68)`  
 > **Last Synchronized:** <font color="#10b981"><b>2026-10-23</b></font>  
 > **Status:** <font color="#10b981"><b>Build Verified (37/38 Tests Passing — 1 Pre-Existing Unrelated Failure)</b></font>
 
@@ -9,7 +9,7 @@
 2. Standardize `PUMP_RATE_MARKUP = 5.00` (Rs./L) over official OGRA ex-depot base rates for Super Euro-V Petrol, Euro-V Diesel, and High-Octane 97, running silently in the background with zero debug/markup text shown to users.
 3. Enforce strict operating delivery hours (Mon–Thu 08:00 AM – 08:00 PM, Fri 08:00 AM – 01:00 PM, Sat–Sun 10:00 AM – 06:00 PM PKT). Outside these hours: hide order placement buttons and reject any order placement attempts.
 4. Implement a high-frequency trading-style GitHub activity graph engine tracking 1D, 1W, and 1M velocity, commit cadence, and incline/decline trends with auto-update hooks.
-5. Synchronize all tests, documentation, and app versioning (versionCode 52, versionName 2.6.4.0.0.39).
+5. Synchronize all tests, documentation, and app versioning (versionCode 52, versionName 2.6.4.0.0.40).
 
 ## Phases
 - [x] Phase 1: Research & Codebase Analysis (<font color="#10b981"><b>2026-10-09</b></font>)

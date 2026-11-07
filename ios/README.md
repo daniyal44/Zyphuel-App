@@ -86,11 +86,21 @@ state rather than crashing.
 ### Windows
 
 ```bat
-desktop_ios.bat
+desktop_ios_download.bat
 ```
 
 This refreshes Firebase / GoogleSignIn pins to the latest releases, validates the
-project, writes `ios/build_report.txt` and prints the macOS commands.
+project, writes `ios/build_report.txt` and stages the best installable artifact it can
+actually find on the Desktop:
+
+| Situation | Delivered file |
+| --- | --- |
+| A signed/real `.ipa` exists in the workspace | `Zyphuel-v<ver>-Build<n>.ipa` (validated: `Payload/*.app/Info.plist`, ≥ 1 MB) |
+| GitHub CLI is authenticated and a CI run exists | `Zyphuel-v<ver>-Build<n>-Simulator.app.zip` from the `Zyphuel-ios-simulator-app` artifact |
+| No build available (Windows has no Xcode) | `Zyphuel-v<ver>-Build<n>-iOS-Source.zip` — **source only, never renamed to `.ipa`** |
+
+Windows cannot compile iOS code, so a real device `.ipa` always comes from macOS or
+GitHub Actions; the script no longer produces a tiny fake `.ipa` out of the source tree.
 
 ### macOS
 
@@ -142,8 +152,9 @@ These are security or platform constraints, not missing features:
    `live_tracking` and does not request background location for customers.
 4. **Local storage.** Room is replaced by Firestore's offline cache plus Keychain for
    secrets; there is no SQLite schema to migrate on iOS.
-5. **App icon.** `AppIcon.appiconset` is a placeholder; add the 1024×1024 brand icon
-   before submitting to App Store Connect.
+5. **App icon.** `AppIcon.appiconset` ships the generated 1024×1024 brand mark
+   (`AppIcon-1024.png`, opaque RGB, no alpha channel). Regenerate it with
+   `scripts/generate_ios_app_icon.ps1` if the brand mark changes.
 
 ---
 
@@ -172,3 +183,5 @@ against production. Until then, live writes still use the previous ruleset.
 | `Missing package product 'FirebaseAuth'` | packages not resolved | `xcodebuild -resolvePackageDependencies` |
 | Build fails on Xcode 15 | iOS 17 APIs | use Xcode 16+ |
 | Sign-in works but orders denied | rules not deployed | deploy `firestore.rules` |
+| Download gives an ~84 KB ".ipa" | old builds renamed the source zip to `.ipa` | re-run `desktop_ios_download.bat`; source packages now end in `-iOS-Source.zip` |
+| `NSPrivacyAccessedAPITypes` upload error | privacy manifest missing from the bundle | keep `Config/PrivacyInfo.xcprivacy` in `project.yml` resources |

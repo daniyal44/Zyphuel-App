@@ -272,7 +272,24 @@ struct AppVersionInfo: Codable, Equatable {
         mandatory: false
     )
 
-    var isOutdated: Bool { latestVersionCode > ZyphuelConfig.buildNumber }
+    /// True when the published build (code or name) is ahead of the running app.
+    var isOutdated: Bool {
+        if latestVersionCode > ZyphuelConfig.buildNumber { return true }
+        return Self.isVersion(latestVersionName, newerThan: ZyphuelConfig.marketingVersion)
+    }
+
+    /// Compares dotted numeric version strings such as "2.6.4.0.0.40" vs "2.6.4.0.0.39".
+    /// Missing trailing segments count as zero, so a blank published name is never "newer".
+    static func isVersion(_ candidate: String, newerThan reference: String) -> Bool {
+        let candidateParts = candidate.split(separator: ".").map { Int($0) ?? 0 }
+        let referenceParts = reference.split(separator: ".").map { Int($0) ?? 0 }
+        for index in 0..<max(candidateParts.count, referenceParts.count) {
+            let lhs = index < candidateParts.count ? candidateParts[index] : 0
+            let rhs = index < referenceParts.count ? referenceParts[index] : 0
+            if lhs != rhs { return lhs > rhs }
+        }
+        return false
+    }
 }
 
 struct EmailGatewayConfig: Codable, Equatable {

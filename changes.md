@@ -3,6 +3,18 @@
 > **This file is the project CHANGELOG.** Each entry lists version, release date (Asia/Karachi),
 > added/changed/fixed/security sections, database migration notes and known issues.
 
+## Version 2.6.4.0.0.40 (Release Build 68) — <font color="#10b981"><b>2026-11-07 12:00:00 PKT</b></font>
+
+### iOS polish: honest downloads, App Store icon, privacy manifest, Firebase bundling
+- **The 84 KB "download" is gone.** `desktop_ios_download.bat` used to zip `ios/` (about 84 KB of Swift source) and rename it to `Zyphuel-iOS-Latest.ipa`. Windows cannot compile iOS code, so that file could never be an app. The script now validates every candidate (≥ 1 MB **and** a real `Payload/*.app/Info.plist` entry), only copies a genuine IPA, otherwise pulls the real Simulator build from the `Zyphuel-ios-simulator-app` Actions artifact (when `gh` is authenticated), and only as a last resort delivers `Zyphuel-v<ver>-Build<n>-iOS-Source.zip` — explicitly named as source. Rejected archives are reported in the log and summary instead of being handed over as an "app".
+- **App Store icon shipped.** `Assets.xcassets/AppIcon.appiconset` held an empty placeholder, so the bundle had no icon at all. Added an opaque 1024×1024 brand icon (`AppIcon-1024.png`, renderer at `scripts/generate_ios_app_icon.ps1`) and flipped `ZyphuelConfig.hasAppIcon` to `true`.
+- **Privacy manifest added.** New `ios/Config/PrivacyInfo.xcprivacy` declares no tracking, the collected data types (name, email, phone, precise location, user ID, user content) and the required-reason APIs (UserDefaults `CA92.1`, file timestamp `C617.1`, boot time `35F9.1`, disk space `E174.1`). It is a `Copy Bundle Resources` member, which App Store Connect requires for upload.
+- **`GoogleService-Info.plist` is finally bundled.** The target only globbed `Zyphuel/`, so `Config/GoogleService-Info.plist` never reached the app bundle and `FirebaseApp.configure()` silently skipped real Firebase even when the file existed. `project.yml` now copies it as an optional resource, alongside the privacy manifest.
+- **CI proves the bundle.** `.github/workflows/ios-build.yml` builds with a fixed derived-data path, asserts `PrivacyInfo.xcprivacy` and the compiled `AppIcon60x60@2x.png` exist inside `Zyphuel.app`, then uploads `Zyphuel-ios-simulator-app` (`Zyphuel-iOS-Simulator.app.zip`) as a real, installable Simulator artifact.
+- **Docs:** `ios/README.md` documents the three download outcomes and the icon/privacy requirements, and `TESTING.md` gained the iOS App Store-readiness checks.
+
+---
+
 ## Version 2.6.4.0.0.38 (Release Build 66) — <font color="#10b981"><b>2026-11-05 16:00:00 PKT</b></font>
 
 ### Unified Android + iOS versioning and change parity

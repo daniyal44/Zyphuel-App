@@ -8,8 +8,8 @@ enum ZyphuelConfig {
 
     // MARK: Build identity (mirrors build.gradle.kts)
     static let bundleIdentifier = "com.aistudio.zyphuel.appv2"
-    static let marketingVersion = "2.6.4.0.0.39"
-    static let buildNumber = 67
+    static let marketingVersion = "2.6.4.0.0.40"
+    static let buildNumber = 68
 
     // MARK: Business identity
     static let brandName = "Zyphuel"
@@ -61,6 +61,7 @@ enum ZyphuelConfig {
     static let websiteURL = URL(string: "https://zyphuel.netlify.app")!
 
     // MARK: Assets
-    /// Flip to false if the generated app icon is not yet in Assets.xcassets.
-    static let hasAppIcon = false
+    /// The 1024x1024 brand icon ships in `Assets.xcassets/AppIcon.appiconset`.
+    /// Regenerate it with `scripts/generate_ios_app_icon.ps1`.
+    static let hasAppIcon = true
 }
