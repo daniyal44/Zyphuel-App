@@ -26,13 +26,15 @@
 ```text
 =================================================================================================================ZYPHUEL REAL-TIME TRADING-STYLE CODEBASE VELOCITY & MOVEMENT TERMINAL
 Engine: Dynamic Code Churn • Push Cadence Intervals • Scale of Change Classification (Major vs. Minor Shifts)
-=================================================================================================================APP VERSION: v2.6.4.0.0.40 (Build 68)   | TOTAL COMMITS: 118   | ACTIVE CODING DAYS: 31
-CODE CHURN : +88,251 / -18,213 lines  | GROSS IMPACT : 106,464 lines | MAJOR SHIFTS: 52 (44%)
-PUSH CADENCE: Avg ~22.0h per push     | FASTEST INTERVAL: 0m      | MAX COOLDOWN: 10.6d
+=================================================================================================================APP VERSION: v2.6.4.0.0.40 (Build 68)   | TOTAL COMMITS: 120   | ACTIVE CODING DAYS: 31
+CODE CHURN : +88,274 / -18,236 lines  | GROSS IMPACT : 106,510 lines | MAJOR SHIFTS: 52 (43%)
+PUSH CADENCE: Avg ~21.8h per push     | FASTEST INTERVAL: 0m      | MAX COOLDOWN: 10.6d
 MOMENTUM   : ▲ BULLISH ACCELERATION     | OPERATING GATE: Mon-Thu 8am-8pm, Fri 8am-1pm, Sat-Sun 10am-6pm PKT
 ------------------------------------------------------------------------------------------------------------------------
 SHA      DATE & TIME       INTERVAL  CHURN METER  SCALE OF CHANGE CHURN (+/-)    MOMENTUM TREND    COMMIT SUMMARY
 ------------------------------------------------------------------------------------------------------------------------
+1b9e5b0  2026-11-08 00:29  +10m      ███░░░░░░░   MINOR SHIFT     +3/-3          ◄ CONSOLIDATION   fix(ios): qualify static rate-limiter co
+ae84c93  2026-11-07 19:19  Immediate ███░░░░░░░   MINOR SHIFT     +20/-20        ◄ CONSOLIDATION   chore(dashboard): auto-update code-based
 23bcb9e  2026-11-08 00:20  +10m      ███░░░░░░░   MINOR SHIFT     +2/-1          ◄ CONSOLIDATION   fix(ios): expose the fuel category for t
 c0c6fa6  2026-11-07 19:10  Immediate ███░░░░░░░   MINOR SHIFT     +19/-19        ◄ CONSOLIDATION   chore(dashboard): auto-update code-based
 7123a49  2026-11-08 00:12  +11m      ██████████   MAJOR SHIFT     +14/-0         ◄ CONSOLIDATION   fix(ios): add the framework imports the 
@@ -41,8 +43,6 @@ e682001  2026-11-08 00:02  +10m      ██████░░░░   MODERATE S
 ee89586  2026-11-07 18:52  Immediate ███░░░░░░░   MINOR SHIFT     +18/-18        ◄ CONSOLIDATION   chore(dashboard): auto-update code-based
 9dcb0f5  2026-11-07 23:53  +9m       ███░░░░░░░   MINOR SHIFT     +12/-6         ◄ CONSOLIDATION   ci(ios): surface compiler errors as anno
 12d79fa  2026-11-07 18:44  +6m       ███░░░░░░░   MINOR SHIFT     +19/-19        ◄ CONSOLIDATION   chore(dashboard): auto-update code-based
-6815d84  2026-11-07 23:38  +5m       ██████░░░░   MODERATE SHIFT  +20/-3         ◄ CONSOLIDATION   ci(ios): select the newest Xcode so Fire
-e00b87f  2026-11-07 18:33  Immediate ███░░░░░░░   MINOR SHIFT     +21/-21        ◄ CONSOLIDATION   chore(dashboard): auto-update code-based
 =================================================================================================================```
 
 #### 📊 Dynamic Codebase Churn & Velocity Chart (Mermaid Vector Rendering)
@@ -51,8 +51,8 @@ xychart-beta
     title "Zyphuel Codebase Velocity & Change Magnitude (Daily Movement & Churn Trend)"
     x-axis ["08-11", "08-21", "09-02", "09-07", "09-10", "09-17", "09-22", "10-04", "10-13", "11-05", "11-08"]
     y-axis "Lines Changed (Gross Churn)" 0 --> 5000
-    bar [11, 617, 3175, 3147, 80, 523, 560, 718, 3203, 5000, 47]
-    line [11, 5000, 3653, 3160, 2820, 1800, 2407, 1325, 2508, 4689, 1317]
+    bar [11, 617, 3175, 3147, 80, 523, 560, 718, 3203, 5000, 53]
+    line [11, 5000, 3653, 3160, 2820, 1800, 2407, 1325, 2508, 4689, 1329]
 ```
 
 #### 🌿 Architectural Milestone Progression
@@ -85,13 +85,13 @@ gitGraph
 | :--- | :--- | :--- |
 | 🚀 **App Version** | **v2.6.4.0.0.40** | Production Build `68` |
 | 🛡️ **Target Android SDK** | **Android 15/16 Ready** | API Level `36` |
-| 📦 **Total Lifetime Commits** | **118 Commits** | Inception (<font color="#10b981"><b>2026-08-11</b></font>) to Present (<font color="#10b981"><b>2026-11-08</b></font>) |
-| 🔄 **Total Codebase Churn** | **+88,251 / -18,213** | Net Delta: `+70,038` lines across codebase |
-| ⚖️ **Shift Magnitude Ratio** | **52 Major • 22 Moderate • 44 Minor** | `44%` Major Architectural Shifts |
-| ⏱️ **Push Cadence & Intervals** | **~22.0h Active Cadence** | Min: `0m` • Max Cooldown: `10.6d` |
+| 📦 **Total Lifetime Commits** | **120 Commits** | Inception (<font color="#10b981"><b>2026-08-11</b></font>) to Present (<font color="#10b981"><b>2026-11-08</b></font>) |
+| 🔄 **Total Codebase Churn** | **+88,274 / -18,236** | Net Delta: `+70,038` lines across codebase |
+| ⚖️ **Shift Magnitude Ratio** | **52 Major • 22 Moderate • 46 Minor** | `43%` Major Architectural Shifts |
+| ⏱️ **Push Cadence & Intervals** | **~21.8h Active Cadence** | Min: `0m` • Max Cooldown: `10.6d` |
 | 📈 **Movement Momentum** | **▲ BULLISH EXPANSION** | High-velocity momentum across sprints |
-| 📅 **Total Active Coding Days** | **31 Days** | `3.8` Avg Commits / Active Day |
-| ⚡ **Latest Verified Push** | `23bcb9e` (<font color="#10b981"><b>2026-11-08</b></font> `00:20`) | `fix(ios): expose the fuel category for the Order` |
+| 📅 **Total Active Coding Days** | **31 Days** | `3.9` Avg Commits / Active Day |
+| ⚡ **Latest Verified Push** | `1b9e5b0` (<font color="#10b981"><b>2026-11-08</b></font> `00:29`) | `fix(ios): qualify static rate-limiter constants` |
 | 🟢 **Operational Delivery Gate** | **Mon–Thu 8am–8pm, Fri 8am–1pm, Sat–Sun 10am–6pm PKT** | Tiered Rates (Rs. 300–400), 15L Cap, Silent +Rs. 5/L Markup |
 
 <details>
@@ -100,15 +100,15 @@ gitGraph
 ##### 🗓️ 1M Monthly Macro Volume & Sprint Milestones (Project Start to Present)
 | Month | Commits | % Share | Churn (+/-) | Velocity Meter | Shift Classification | Sprint Focus & Core Milestones |
 | :--- | :---: | :---: | :---: | :--- | :--- | :--- |
-| <font color="#10b981"><b>August 2026</b></font> | `8` | **6.8%** | `+37,630 / -1,506` | `███████████░` | 4 Major / 1 Minor | 🚀 **Genesis & Architecture**: Core Android MVP, Multi-Role Auth (Customer/Rider/Admin), Room DB v11 & Initial Fuel Dispatch |
-| <font color="#10b981"><b>September 2026</b></font> | `50` | **42.4%** | `+30,575 / -11,572` | `████████████` | 28 Major / 9 Minor | 🔥 **Marketplace & Telematics**: 10-Category Catalog, Live Rider GPS Telematics, Dual SMTP Email Gateway, PDF Invoices & Interactive Tour |
-| <font color="#10b981"><b>October 2026</b></font> | `34` | **28.8%** | `+9,912 / -4,281` | `████░░░░░░░░` | 14 Major / 16 Minor | ⚡ **Security & Operating Gate**: Secret Hardening, Tiered Delivery Fees (300-400 PKR), Silent OGRA Markup, Operating Hours Gate & Code-Based Graph |
-| <font color="#10b981"><b>November 2026</b></font> | `26` | **22.0%** | `+10,134 / -854` | `███░░░░░░░░░` | 6 Major / 18 Minor | Sprint evolution & features |
+| <font color="#10b981"><b>August 2026</b></font> | `8` | **6.7%** | `+37,630 / -1,506` | `███████████░` | 4 Major / 1 Minor | 🚀 **Genesis & Architecture**: Core Android MVP, Multi-Role Auth (Customer/Rider/Admin), Room DB v11 & Initial Fuel Dispatch |
+| <font color="#10b981"><b>September 2026</b></font> | `50` | **41.7%** | `+30,575 / -11,572` | `████████████` | 28 Major / 9 Minor | 🔥 **Marketplace & Telematics**: 10-Category Catalog, Live Rider GPS Telematics, Dual SMTP Email Gateway, PDF Invoices & Interactive Tour |
+| <font color="#10b981"><b>October 2026</b></font> | `34` | **28.3%** | `+9,912 / -4,281` | `████░░░░░░░░` | 14 Major / 16 Minor | ⚡ **Security & Operating Gate**: Secret Hardening, Tiered Delivery Fees (300-400 PKR), Silent OGRA Markup, Operating Hours Gate & Code-Based Graph |
+| <font color="#10b981"><b>November 2026</b></font> | `28` | **23.3%** | `+10,157 / -877` | `███░░░░░░░░░` | 6 Major / 20 Minor | Sprint evolution & features |
 
 ##### 📅 1W Weekly Velocity & Momentum Breakdown
 | Week | Commits | Active Days | Churn (+/-) | Velocity Meter | Shift Breakdown | Momentum Trend |
 | :--- | :---: | :---: | :---: | :--- | :--- | :--- |
-| <font color="#10b981"><b>2026-W46</b></font> | `14` | `2 days` | `+804/-371` | `█░░░░░░░░░` | 2 Major, 10 Minor | **▲ ACTIVE EXPANSION** |
+| <font color="#10b981"><b>2026-W46</b></font> | `16` | `2 days` | `+827/-394` | `█░░░░░░░░░` | 2 Major, 12 Minor | **▲ ACTIVE EXPANSION** |
 | <font color="#10b981"><b>2026-W45</b></font> | `12` | `3 days` | `+9330/-483` | `███░░░░░░░` | 4 Major, 8 Minor | **▲ ACTIVE EXPANSION** |
 | <font color="#10b981"><b>2026-W44</b></font> | `1` | `1 days` | `+798/-20` | `█░░░░░░░░░` | 1 Major, 0 Minor | **▲ ACTIVE EXPANSION** |
 | <font color="#10b981"><b>2026-W43</b></font> | `1` | `1 days` | `+1494/-190` | `█░░░░░░░░░` | 1 Major, 0 Minor | **▲ ACTIVE EXPANSION** |
@@ -118,8 +118,8 @@ gitGraph
 ##### 📅 1D Daily Push Cadence & Incline/Decline Trends (Recent 12 Active Days)
 | Date | Commits | Churn (+/-) | Velocity Meter | Shift Scale Breakdown | Timing of Pushes | Movement Trend |
 | :--- | :---: | :---: | :--- | :--- | :--- | :--- |
-| <font color="#10b981"><b>2026-11-08</b></font> | `3` | `+39/-8` | `█░░░░░░░░░` | 1 Major, 1 Mod, 1 Min | From `00:02` to `00:20` | **▼ CONSOLIDATION** |
-| <font color="#10b981"><b>2026-11-07</b></font> | `11` | `+765/-363` | `█░░░░░░░░░` | 1 Major, 1 Mod, 9 Min | From `23:32` to `19:10` | **▼ CONSOLIDATION** |
+| <font color="#10b981"><b>2026-11-08</b></font> | `4` | `+42/-11` | `█░░░░░░░░░` | 1 Major, 1 Mod, 2 Min | From `00:02` to `00:29` | **▼ CONSOLIDATION** |
+| <font color="#10b981"><b>2026-11-07</b></font> | `12` | `+785/-383` | `█░░░░░░░░░` | 1 Major, 1 Mod, 10 Min | From `23:32` to `19:19` | **▼ CONSOLIDATION** |
 | <font color="#10b981"><b>2026-11-06</b></font> | `1` | `+52/-52` | `█░░░░░░░░░` | 1 Major, 0 Mod, 0 Min | At `20:16` | **▼ CONSOLIDATION** |
 | <font color="#10b981"><b>2026-11-05</b></font> | `7` | `+8780/-321` | `███░░░░░░░` | 2 Major, 0 Mod, 5 Min | From `15:44` to `18:26` | **▲ BULLISH SURGE** |
 | <font color="#10b981"><b>2026-11-03</b></font> | `4` | `+498/-110` | `█░░░░░░░░░` | 1 Major, 0 Mod, 3 Min | From `17:57` to `17:37` | **▼ CONSOLIDATION** |
