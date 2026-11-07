@@ -124,12 +124,19 @@ jobs:
       - name: Run unit tests
         working-directory: ios
         run: |
-          xcodebuild test \
-            -project Zyphuel.xcodeproj \
-            -scheme Zyphuel \
-            -destination "${{ steps.sim.outputs.destination }}" \
-            -derivedDataPath build \
-            CODE_SIGNING_ALLOWED=NO
+          set -o pipefail
+          if ! xcodebuild test \
+                -project Zyphuel.xcodeproj \
+                -scheme Zyphuel \
+                -destination "${{ steps.sim.outputs.destination }}" \
+                -derivedDataPath build \
+                CODE_SIGNING_ALLOWED=NO 2>&1 | tee test.log; then
+            MSG="$(grep -E '(error:|XCTAssert.*failed|: error: -\[)' test.log \
+              | sed -E 's#^/Users/runner/work/Zyphuel-App/Zyphuel-App/ios/##' \
+              | awk '!seen[$0]++' | head -40 | tr '\n' '|' | tr -d '\r' | cut -c1-4000)"
+            echo "::error title=Tests failed::${MSG}"
+            exit 1
+          fi
 
       - name: Upload test results
         if: always()
