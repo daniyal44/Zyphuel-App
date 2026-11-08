@@ -13,6 +13,9 @@ DerivedData/
 resolve.log
 build.log
 *.ipa
+*.xcarchive/
+ipa-staging/
+*.app.zip
 *.dSYM.zip
 *.dSYM
 

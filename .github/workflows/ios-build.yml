@@ -113,28 +113,84 @@ jobs:
           ditto -c -k --sequesterRsrc --keepParent "$APP" Zyphuel-iOS-Simulator.app.zip
           ls -lh Zyphuel-iOS-Simulator.app.zip
 
-      - name: Report download size
-        working-directory: ios
-        run: |
-          set -euo pipefail
-          APP="build/Build/Products/Debug-iphonesimulator/Zyphuel.app"
-          ZIP="Zyphuel-iOS-Simulator.app.zip"
-          APP_BYTES="$(du -sk "$APP" | cut -f1)"
-          ZIP_BYTES="$(stat -f%z "$ZIP")"
-          {
-            echo "### iOS download"
-            echo ""
-            echo "| artifact | size |"
-            echo "| --- | --- |"
-            echo "| ${ZIP} | $(awk "BEGIN{printf \"%.2f MiB\", ${ZIP_BYTES}/1048576}") |"
-            echo "| Zyphuel.app (unzipped, simulator) | $(awk "BEGIN{printf \"%.2f MiB\", ${APP_BYTES}/1024}") |"
-          } >> "$GITHUB_STEP_SUMMARY"
-
       - name: Upload simulator build
         uses: actions/upload-artifact@v4
         with:
           name: Zyphuel-ios-simulator-app
           path: ios/Zyphuel-iOS-Simulator.app.zip
+          if-no-files-found: error
+          retention-days: 14
+
+      # The App Store build is a signed Release device archive. This repository holds no
+      # Apple certificate, so the archive is unsigned: it still proves the Release
+      # configuration compiles and gives the true device-IPA size. It cannot be installed.
+      - name: Archive device build (unsigned)
+        working-directory: ios
+        run: |
+          set -o pipefail
+          if ! xcodebuild archive \
+                -project Zyphuel.xcodeproj \
+                -scheme Zyphuel \
+                -configuration Release \
+                -destination 'generic/platform=iOS' \
+                -archivePath Zyphuel.xcarchive \
+                -derivedDataPath build-device \
+                CODE_SIGNING_ALLOWED=NO \
+                CODE_SIGNING_REQUIRED=NO \
+                CODE_SIGN_IDENTITY="" \
+                OTHER_SWIFT_FLAGS='$(inherited) -continue-building-after-errors' 2>&1 | tee archive.log; then
+            MSG="$(grep -E 'error:' archive.log | sed -E 's#^/Users/runner/work/Zyphuel-App/Zyphuel-App/ios/##' | awk '!seen[$0]++' | head -40 | tr '\n' '|' | tr -d '\r' | cut -c1-4000)"
+            if [ -z "$MSG" ]; then
+              MSG="$(tail -30 archive.log | tr '\n' '|' | tr -d '\r' | cut -c1-4000)"
+            fi
+            echo "::error title=Device archive failed::${MSG}"
+            exit 1
+          fi
+
+      - name: Package unsigned device IPA
+        working-directory: ios
+        run: |
+          set -euo pipefail
+          APP="Zyphuel.xcarchive/Products/Applications/Zyphuel.app"
+          test -d "$APP"
+          test -f "$APP/PrivacyInfo.xcprivacy"
+          test -f "$APP/AppIcon60x60@2x.png"
+          rm -rf ipa-staging
+          mkdir -p ipa-staging/Payload
+          ditto "$APP" ipa-staging/Payload/Zyphuel.app
+          (cd ipa-staging && zip -qry ../Zyphuel-iOS-Device-unsigned.ipa Payload)
+          ls -lh Zyphuel-iOS-Device-unsigned.ipa
+
+      - name: Report download size
+        working-directory: ios
+        run: |
+          set -euo pipefail
+          SIM_APP="build/Build/Products/Debug-iphonesimulator/Zyphuel.app"
+          ZIP="Zyphuel-iOS-Simulator.app.zip"
+          IPA="Zyphuel-iOS-Device-unsigned.ipa"
+          DEVICE_APP="Zyphuel.xcarchive/Products/Applications/Zyphuel.app"
+          ZIP_BYTES="$(stat -f%z "$ZIP")"
+          IPA_BYTES="$(stat -f%z "$IPA")"
+          SIM_APP_KIB="$(du -sk "$SIM_APP" | cut -f1)"
+          DEVICE_APP_KIB="$(du -sk "$DEVICE_APP" | cut -f1)"
+          # The job summary is not readable from the public API, so also annotate.
+          echo "::notice title=iOS download size::simulator zip ${ZIP_BYTES} bytes ($(awk "BEGIN{printf \"%.2f MiB\", ${ZIP_BYTES}/1048576}") MiB) | unsigned device IPA ${IPA_BYTES} bytes ($(awk "BEGIN{printf \"%.2f MiB\", ${IPA_BYTES}/1048576}") MiB)"
+          {
+            echo "### iOS download"
+            echo ""
+            echo "| artifact | bytes | size |"
+            echo "| --- | --- | --- |"
+            echo "| ${ZIP} (simulator, installable on a Mac) | ${ZIP_BYTES} | $(awk "BEGIN{printf \"%.2f MiB\", ${ZIP_BYTES}/1048576}") |"
+            echo "| ${IPA} (device, unsigned — size reference only) | ${IPA_BYTES} | $(awk "BEGIN{printf \"%.2f MiB\", ${IPA_BYTES}/1048576}") |"
+            echo "| Zyphuel.app (unzipped, simulator) | — | $(awk "BEGIN{printf \"%.2f MiB\", ${SIM_APP_KIB}/1024}") |"
+            echo "| Zyphuel.app (unzipped, Release device) | — | $(awk "BEGIN{printf \"%.2f MiB\", ${DEVICE_APP_KIB}/1024}") |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload unsigned device IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: Zyphuel-ios-device-ipa-unsigned
+          path: ios/Zyphuel-iOS-Device-unsigned.ipa
           if-no-files-found: error
           retention-days: 14
 
