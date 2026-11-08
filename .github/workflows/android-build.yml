@@ -41,14 +41,21 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      # The wrapper is committed from Windows, where git records no exec bit.
+      - name: Make the Gradle wrapper executable
+        run: chmod +x gradlew
+
       - name: Compile and run unit tests
         run: |
           set -o pipefail
           if ! ./gradlew --no-daemon --console=plain \
                 :app:compileDebugKotlin :app:testDebugUnitTest 2>&1 | tee gradle.log; then
             # Public logs need auth, so publish the real diagnostics as annotations.
-            MSG="$(grep -E '^e: file|error:|FAILED|Execution failed for task|Caused by:' gradle.log \
+            MSG="$(grep -E '^e: file|error:|FAILED|Execution failed for task|Caused by:|^\* What went wrong' gradle.log \
               | awk '!seen[$0]++' | head -40 | tr '\n' '|' | tr -d '\r' | cut -c1-4000)"
+            if [ -z "$MSG" ]; then
+              MSG="$(tail -30 gradle.log | tr '\n' '|' | tr -d '\r' | cut -c1-4000)"
+            fi
             echo "::error title=Android compile or tests failed::${MSG}"
             exit 1
           fi
@@ -57,8 +64,11 @@ jobs:
         run: |
           set -o pipefail
           if ! ./gradlew --no-daemon --console=plain :app:assembleDebug 2>&1 | tee assemble.log; then
-            MSG="$(grep -E '^e: file|error:|FAILED|Execution failed for task' assemble.log \
+            MSG="$(grep -E '^e: file|error:|FAILED|Execution failed for task|^\* What went wrong' assemble.log \
               | awk '!seen[$0]++' | head -40 | tr '\n' '|' | tr -d '\r' | cut -c1-4000)"
+            if [ -z "$MSG" ]; then
+              MSG="$(tail -30 assemble.log | tr '\n' '|' | tr -d '\r' | cut -c1-4000)"
+            fi
             echo "::error title=APK packaging failed::${MSG}"
             exit 1
           fi
