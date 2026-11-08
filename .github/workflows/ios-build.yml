@@ -173,17 +173,21 @@ jobs:
           IPA_BYTES="$(stat -f%z "$IPA")"
           SIM_APP_KIB="$(du -sk "$SIM_APP" | cut -f1)"
           DEVICE_APP_KIB="$(du -sk "$DEVICE_APP" | cut -f1)"
+          MIB="$(awk -v bytes="${ZIP_BYTES}" 'BEGIN { printf "%.2f", bytes / 1048576 }')"
+          IPA_MIB="$(awk -v bytes="${IPA_BYTES}" 'BEGIN { printf "%.2f", bytes / 1048576 }')"
+          SIM_APP_MIB="$(awk -v kib="${SIM_APP_KIB}" 'BEGIN { printf "%.2f", kib / 1024 }')"
+          DEVICE_APP_MIB="$(awk -v kib="${DEVICE_APP_KIB}" 'BEGIN { printf "%.2f", kib / 1024 }')"
           # The job summary is not readable from the public API, so also annotate.
-          echo "::notice title=iOS download size::simulator zip ${ZIP_BYTES} bytes ($(awk "BEGIN{printf \"%.2f MiB\", ${ZIP_BYTES}/1048576}") MiB) | unsigned device IPA ${IPA_BYTES} bytes ($(awk "BEGIN{printf \"%.2f MiB\", ${IPA_BYTES}/1048576}") MiB)"
+          echo "::notice title=iOS download size::simulator zip ${ZIP_BYTES} bytes (${MIB} MiB) | unsigned device IPA ${IPA_BYTES} bytes (${IPA_MIB} MiB)"
           {
             echo "### iOS download"
             echo ""
             echo "| artifact | bytes | size |"
             echo "| --- | --- | --- |"
-            echo "| ${ZIP} (simulator, installable on a Mac) | ${ZIP_BYTES} | $(awk "BEGIN{printf \"%.2f MiB\", ${ZIP_BYTES}/1048576}") |"
-            echo "| ${IPA} (device, unsigned — size reference only) | ${IPA_BYTES} | $(awk "BEGIN{printf \"%.2f MiB\", ${IPA_BYTES}/1048576}") |"
-            echo "| Zyphuel.app (unzipped, simulator) | — | $(awk "BEGIN{printf \"%.2f MiB\", ${SIM_APP_KIB}/1024}") |"
-            echo "| Zyphuel.app (unzipped, Release device) | — | $(awk "BEGIN{printf \"%.2f MiB\", ${DEVICE_APP_KIB}/1024}") |"
+            echo "| ${ZIP} (simulator, installable on a Mac) | ${ZIP_BYTES} | ${MIB} MiB |"
+            echo "| ${IPA} (device, unsigned — size reference only) | ${IPA_BYTES} | ${IPA_MIB} MiB |"
+            echo "| Zyphuel.app (unzipped, simulator) | — | ${SIM_APP_MIB} MiB |"
+            echo "| Zyphuel.app (unzipped, Release device) | — | ${DEVICE_APP_MIB} MiB |"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload unsigned device IPA
