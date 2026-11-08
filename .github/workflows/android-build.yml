@@ -97,6 +97,8 @@ jobs:
           APK_BYTES="$(stat -c %s "$APK")"
           AAB_BYTES="$(stat -c %s "$AAB")"
           ls -lh "$APK" "$AAB"
+          # Also exposed as an annotation: the job summary is not readable from the public API.
+          echo "::notice title=Android download size::debug APK ${APK_BYTES} bytes ($(awk "BEGIN{printf \"%.2f\", ${APK_BYTES}/1048576}") MiB) | release AAB ${AAB_BYTES} bytes ($(awk "BEGIN{printf \"%.2f\", ${AAB_BYTES}/1048576}") MiB)"
           {
             echo "### Android download"
             echo ""
