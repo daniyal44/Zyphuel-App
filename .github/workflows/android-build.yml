@@ -1,0 +1,95 @@
+name: Android Build
+
+on:
+  push:
+    paths:
+      - 'app/**'
+      - 'gradle/**'
+      - '*.gradle.kts'
+      - 'version.properties'
+      - '.github/workflows/android-build.yml'
+  pull_request:
+    paths:
+      - 'app/**'
+      - 'gradle/**'
+      - '*.gradle.kts'
+      - 'version.properties'
+      - '.github/workflows/android-build.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Build & test Zyphuel Android
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # AGP 9.x requires a JDK 17+ toolchain; Gradle 9.5 also runs on 21.
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Compile and run unit tests
+        run: |
+          set -o pipefail
+          if ! ./gradlew --no-daemon --console=plain \
+                :app:compileDebugKotlin :app:testDebugUnitTest 2>&1 | tee gradle.log; then
+            # Public logs need auth, so publish the real diagnostics as annotations.
+            MSG="$(grep -E '^e: file|error:|FAILED|Execution failed for task|Caused by:' gradle.log \
+              | awk '!seen[$0]++' | head -40 | tr '\n' '|' | tr -d '\r' | cut -c1-4000)"
+            echo "::error title=Android compile or tests failed::${MSG}"
+            exit 1
+          fi
+
+      - name: Build debug APK
+        run: |
+          set -o pipefail
+          if ! ./gradlew --no-daemon --console=plain :app:assembleDebug 2>&1 | tee assemble.log; then
+            MSG="$(grep -E '^e: file|error:|FAILED|Execution failed for task' assemble.log \
+              | awk '!seen[$0]++' | head -40 | tr '\n' '|' | tr -d '\r' | cut -c1-4000)"
+            echo "::error title=APK packaging failed::${MSG}"
+            exit 1
+          fi
+
+      - name: Report download size
+        run: |
+          set -euo pipefail
+          APK="$(ls app/build/outputs/apk/debug/*.apk | head -1)"
+          BYTES="$(stat -c %s "$APK")"
+          ls -lh "$APK"
+          {
+            echo "### Android download"
+            echo ""
+            echo "| artifact | bytes | MiB |"
+            echo "| --- | --- | --- |"
+            echo "| $(basename "$APK") | ${BYTES} | $(awk "BEGIN{printf \"%.2f\", ${BYTES}/1048576}") |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Zyphuel-android-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-test-results
+          path: app/build/reports/tests/testDebugUnitTest/**
+          if-no-files-found: ignore
+          retention-days: 7

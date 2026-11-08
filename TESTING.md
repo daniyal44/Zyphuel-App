@@ -129,7 +129,9 @@ Android and iOS ship the same version from the same file, so an iOS-only or Andr
 | Version bump | `sync_versions.bat --bump` → bumps `versionCode` +1 and the trailing segment +0.01 for **both** apps and the docs |
 | iOS structure/pins/plists | `scripts/update_ios_versions.ps1` → `RESULT: PASS` (Windows-safe, no Xcode required) |
 | iOS build + unit tests (macOS) | `ios/bootstrap.sh test` → XcodeGen project, archive, `ZyphuelLogicTests` green |
-| iOS CI gate | `.github/workflows/ios-build.yml` on a macOS runner |
+| iOS CI gate | `.github/workflows/ios-build.yml` on a macOS runner: resolve, build, bundle assertions, unit tests, artifact upload |
+| Android CI gate | `.github/workflows/android-build.yml` on an Ubuntu runner: `./gradlew :app:compileDebugKotlin :app:testDebugUnitTest`, then `:app:assembleDebug` |
+| Download sizes | Every workflow writes the real artifact size to its job summary — iOS `Zyphuel-iOS-Simulator.app.zip` ≈ 12.4 MiB; Android APK from `Zyphuel-android-debug-apk` |
 | iOS app icon | `ios/Zyphuel/Resources/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png` exists and is opaque 1024×1024 (`Click`-checked via `System.Drawing`); CI asserts `AppIcon60x60@2x.png` inside `Zyphuel.app` |
 | iOS privacy manifest | `ios/Config/PrivacyInfo.xcprivacy` present, listed as `Copy Bundle Resources` in `ios/project.yml`, and found at `Zyphuel.app/PrivacyInfo.xcprivacy` by CI |
 | iOS Firebase config bundling | `Config/GoogleService-Info.plist` must appear in `Zyphuel.app` when provided (the `preBuildScripts` copy phase); the build must still succeed when it is absent |
@@ -137,7 +139,7 @@ Android and iOS ship the same version from the same file, so an iOS-only or Andr
 | Shared business rules | Pricing tiers 300/320/340/360/380/400, 15 L cap, +5 markup, PKT operating hours, 4-attempt lockout — verified by `ZyphuelLogicTests` on iOS and `FuelPumpPricingTest` / `SecurityAndDataIntegrityTest` on Android |
 | Firestore contract | One rules file for both clients: `users` accepts `uid` and email-derived doc ids, `orders` rider claim, `feedback` iOS fields |
 
-Static checks on Windows never replace a real Xcode build: report the iOS suite as **unverified** until the macOS workflow or a Mac has run it.
+The desktop never builds either app: Android and iOS compile, test and package **only on GitHub Actions** (`iOS Build`, `Android Build`, `Version Sync`). Report a platform as **unverified** until its workflow run is green on the pushed commit.
 
 ---
 
