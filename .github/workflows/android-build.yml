@@ -73,18 +73,37 @@ jobs:
             exit 1
           fi
 
+      # Play ships the minified release bundle, so measure that too: it is the size a user
+      # actually downloads. It is signed with the fallback debug key, so it is only measured,
+      # never uploaded or published.
+      - name: Build release bundle for size
+        run: |
+          set -o pipefail
+          if ! ./gradlew --no-daemon --console=plain :app:bundleRelease 2>&1 | tee release.log; then
+            MSG="$(grep -E '^e: file|error:|FAILED|Execution failed for task|^\* What went wrong' release.log \
+              | awk '!seen[$0]++' | head -40 | tr '\n' '|' | tr -d '\r' | cut -c1-4000)"
+            if [ -z "$MSG" ]; then
+              MSG="$(tail -30 release.log | tr '\n' '|' | tr -d '\r' | cut -c1-4000)"
+            fi
+            echo "::error title=Release bundle failed::${MSG}"
+            exit 1
+          fi
+
       - name: Report download size
         run: |
           set -euo pipefail
           APK="$(ls app/build/outputs/apk/debug/*.apk | head -1)"
-          BYTES="$(stat -c %s "$APK")"
-          ls -lh "$APK"
+          AAB="$(ls app/build/outputs/bundle/release/*.aab | head -1)"
+          APK_BYTES="$(stat -c %s "$APK")"
+          AAB_BYTES="$(stat -c %s "$AAB")"
+          ls -lh "$APK" "$AAB"
           {
             echo "### Android download"
             echo ""
             echo "| artifact | bytes | MiB |"
             echo "| --- | --- | --- |"
-            echo "| $(basename "$APK") | ${BYTES} | $(awk "BEGIN{printf \"%.2f\", ${BYTES}/1048576}") |"
+            echo "| $(basename "$APK") (debug, installable) | ${APK_BYTES} | $(awk "BEGIN{printf \"%.2f\", ${APK_BYTES}/1048576}") |"
+            echo "| $(basename "$AAB") (release, minified) | ${AAB_BYTES} | $(awk "BEGIN{printf \"%.2f\", ${AAB_BYTES}/1048576}") |"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload debug APK
