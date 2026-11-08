@@ -106,19 +106,11 @@ android {
         storePassword = System.getenv("STORE_PASSWORD")
         keyAlias = "upload"
         keyPassword = System.getenv("KEY_PASSWORD")
-      } else {
-        storeFile = file("${rootDir}/debug.keystore")
-        storePassword = "android"
-        keyAlias = "androiddebugkey"
-        keyPassword = "android"
       }
-    }
-
-    create("debugConfig") {
-      storeFile = file("${rootDir}/debug.keystore")
-      storePassword = "android"
-      keyAlias = "androiddebugkey"
-      keyPassword = "android"
+      // Without an upload key nothing is set here on purpose: `release` and `debug` fall back
+      // to AGP's built-in `debug` signing config, which uses (and generates) the SDK debug
+      // keystore in ~/.android. A committed or git-ignored keystore at the repo root is not
+      // present on a CI runner, and pointing at a missing file fails `validateSigning`.
     }
   }
 
@@ -128,9 +120,13 @@ android {
       isMinifyEnabled = true
       isShrinkResources = true
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-      signingConfig = signingConfigs.getByName("release")
+      signingConfig = if (signingConfigs.getByName("release").storeFile != null) {
+        signingConfigs.getByName("release")
+      } else {
+        signingConfigs.getByName("debug")
+      }
     }
-    debug { signingConfig = signingConfigs.getByName("debugConfig") }
+    debug { signingConfig = signingConfigs.getByName("debug") }
   }
   compileOptions {
     sourceCompatibility = JavaVersion.VERSION_11

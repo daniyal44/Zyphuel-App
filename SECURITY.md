@@ -183,8 +183,10 @@ credential that may already be in git history or on a shared device.
 - `targetSdk`/`compileSdk` 36, `minSdk` 24; AGP 9.1.1, Kotlin 2.2.10, Gradle 9.5.0, Room 2.7.0,
   Firebase BOM 34.15.0.
 - Versions are pinned in `gradle/libs.versions.toml`; upgrades are deliberate and build-verified.
-- Release signing reads `KEYSTORE_PATH`, `STORE_PASSWORD`, `KEY_PASSWORD` from the environment; a
-  missing keystore falls back to the debug keystore so local builds still work (never publish such a build).
+- Release signing reads `KEYSTORE_PATH`, `STORE_PASSWORD`, `KEY_PASSWORD` from the environment; when no
+  upload key is present, `release` and `debug` fall back to AGP's built-in `debug` signing config, which
+  uses the SDK keystore in `~/.android` (generated on demand). No keystore is committed or required, so a
+  CI runner can package a build; such a build is never publishable.
 
 ---
 
