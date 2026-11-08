@@ -131,7 +131,7 @@ Android and iOS ship the same version from the same file, so an iOS-only or Andr
 | iOS build + unit tests (macOS) | `ios/bootstrap.sh test` → XcodeGen project, archive, `ZyphuelLogicTests` green |
 | iOS CI gate | `.github/workflows/ios-build.yml` on a macOS runner: resolve, build, bundle assertions, unit tests, artifact upload |
 | Android CI gate | `.github/workflows/android-build.yml` on an Ubuntu runner: `./gradlew :app:compileDebugKotlin :app:testDebugUnitTest`, then `:app:assembleDebug` |
-| Download sizes | Every workflow writes the real artifact size to its job summary — iOS `Zyphuel-iOS-Simulator.app.zip` ≈ 12.4 MiB; Android APK from `Zyphuel-android-debug-apk` |
+| Download sizes | Every workflow writes the real artifact size to its job summary — measured on Build 68: iOS `Zyphuel-iOS-Simulator.app.zip` 12.41 MiB; Android debug APK 31.72 MiB (`Zyphuel-android-debug-apk`); Android release AAB 30.16 MiB (minified, measured only, Play splits it per ABI/device) |
 | iOS app icon | `ios/Zyphuel/Resources/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png` exists and is opaque 1024×1024 (`Click`-checked via `System.Drawing`); CI asserts `AppIcon60x60@2x.png` inside `Zyphuel.app` |
 | iOS privacy manifest | `ios/Config/PrivacyInfo.xcprivacy` present, listed as `Copy Bundle Resources` in `ios/project.yml`, and found at `Zyphuel.app/PrivacyInfo.xcprivacy` by CI |
 | iOS Firebase config bundling | `Config/GoogleService-Info.plist` must appear in `Zyphuel.app` when provided (the `preBuildScripts` copy phase); the build must still succeed when it is absent |
