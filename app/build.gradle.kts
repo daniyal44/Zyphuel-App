@@ -89,9 +89,12 @@ android {
     // provide SMTP_APP_PASSWORD via environment or the git-ignored local.properties /
     // app/admin-credentials.properties files. Empty by default; the admin-managed
     // Firestore email gateway config is the primary source at runtime.
+    // Gmail app passwords are 16 letters/digits. Strip every other character so a value
+    // pasted with spaces, quotes or line breaks can never produce an invalid Java literal
+    // in the generated BuildConfig (which fails `compileDebugJavaWithJavac`).
     val loadedSmtpPassword = (System.getenv("SMTP_APP_PASSWORD")
       ?: adminProps.getProperty("SMTP_APP_PASSWORD")
-      ?: "").replace("\\", "\\\\").replace("\"", "\\\"")
+      ?: "").filter { it.isLetterOrDigit() }
     buildConfigField("String", "SMTP_APP_PASSWORD", "\"$loadedSmtpPassword\"")
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
