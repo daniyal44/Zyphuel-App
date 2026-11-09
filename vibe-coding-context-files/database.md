@@ -1,6 +1,6 @@
 # Zyphuel Database Schema (Room SQLite & Firestore)
 
-> **Current App Version:** `2.6.4.0.0.40 (Build 68)`  
+> **Current App Version:** `2.6.4.0.0.41 (Build 69)`  
 > **Last Synchronized:** <font color="#10b981"><b>2026-10-23</b></font>  
 > **Status:** <font color="#10b981"><b>Build Verified (37/38 Tests Passing — 1 Pre-Existing Unrelated Failure)</b></font>
 

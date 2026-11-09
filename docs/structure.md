@@ -1,6 +1,6 @@
 # Zyphuel Application - Codebase & Architecture Structure (`docs/structure.md`)
 
-**Last Updated:** <font color="#10b981"><b>2026-10-09</b></font> • **Application Version:** <font color="#10b981"><b>2.6.4.0.0.40 (Build 68)</b></font>
+**Last Updated:** <font color="#10b981"><b>2026-10-09</b></font> • **Application Version:** <font color="#10b981"><b>2.6.4.0.0.41 (Build 69)</b></font>
 
 ---
 
@@ -49,7 +49,7 @@ app/
  │    │         ├── mipmap-*/                            # Adaptive launcher icons
  │    │         └── values/                              # strings.xml, colors.xml, themes.xml
  │    └── test/                                          # Local JVM Unit Tests (FuelPumpPricingTest, ComprehensiveAppTest)
- ├── build.gradle.kts                                    # App gradle build configuration (shared version.properties: versionCode 68, versionName 2.6.4.0.0.40)
+ ├── build.gradle.kts                                    # App gradle build configuration (shared version.properties: versionCode 69, versionName 2.6.4.0.0.41)
  └── AndroidManifest.xml                                 # Manifest permissions, services, metadata
 ```
 

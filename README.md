@@ -3,10 +3,10 @@
 <div align="center">
   <img src="company .png" width="140" height="140" alt="Zyphuel MDK Logo" />
   <h3>Pakistan's Premier On-Demand Fuel & Clean Energy Ecosystem</h3>
-  <p><b>Version 2.6.4.0.0.40 (Build 68) • Target SDK 36 • Android 15/16 Ready • Jetpack Compose Material 3 • Room DB v13 • Real-Time Dual Notifications</b></p>
+  <p><b>Version 2.6.4.0.0.41 (Build 69) • Target SDK 36 • Android 15/16 Ready • Jetpack Compose Material 3 • Room DB v13 • Real-Time Dual Notifications</b></p>
 
   <p>
-    <a href="https://github.com/daniyal44/Zyphuel-App"><img src="https://img.shields.io/badge/App%20Version-v2.6.4.0.0.40%20(Build%2068)-0284c7?style=for-the-badge&logo=android" alt="App Version v2.6.4.0.0.40" /></a>
+    <a href="https://github.com/daniyal44/Zyphuel-App"><img src="https://img.shields.io/badge/App%20Version-v2.6.4.0.0.41%20(Build%2069)-0284c7?style=for-the-badge&logo=android" alt="App Version v2.6.4.0.0.41" /></a>
     <a href="https://github.com/daniyal44/Zyphuel-App/commits/main"><img src="https://img.shields.io/github/commit-activity/m/daniyal44/Zyphuel-App?style=for-the-badge&color=0284c7&label=Monthly%20Changes" alt="Monthly Commits" /></a>
     <a href="https://github.com/daniyal44/Zyphuel-App/commits/main"><img src="https://img.shields.io/github/last-commit/daniyal44/Zyphuel-App?style=for-the-badge&color=10b981" alt="Last Commit" /></a>
     <a href="https://developer.android.com"><img src="https://img.shields.io/badge/Target%20SDK-36-emerald?style=for-the-badge" alt="Target SDK 36" /></a>
@@ -142,7 +142,7 @@ Zyphuel is Pakistan's premier on-demand doorstep delivery platform for **Super E
 
 ---
 
-## 🚀 Key Features (v2.6.4.0.0.40 Latest)
+## 🚀 Key Features (v2.6.4.0.0.41 Latest)
 
 * **Real-Time Automated Order Invoice Email Gateway (`RealtimeEmailEngine.kt`)**: Instant HTML invoice email dispatch to customer inbox upon order placement with order details, volumetric items, unit prices, delivery fee, and total payable amount.
 * **High-Contrast Pure Black Typography**: WCAG AAA compliant text styling across Profile Settings, Drawer navigation, category cards, and modal dialogs ensuring effortless readability in all lighting conditions.
@@ -222,7 +222,7 @@ $env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-25.0.4.7-hotspot"; & "C:
 * [`MIGRATIONS.md`](MIGRATIONS.md): Migration policy, registry, execution, failure recovery and rollback limits.
 * [`TESTING.md`](TESTING.md): Test commands and the security, rate-limit, isolation and data-preservation matrix.
 * [`changes.md`](changes.md): Release changelog with version numbers, dates and migration notes.
-* [`FEATURES_DOCUMENTATION.md`](file:///d:/Games/New%20folder-web/Claude/FEATURES_DOCUMENTATION.md): Comprehensive feature inventory & component specifications (v2.6.4.0.0.40).
+* [`FEATURES_DOCUMENTATION.md`](file:///d:/Games/New%20folder-web/Claude/FEATURES_DOCUMENTATION.md): Comprehensive feature inventory & component specifications (v2.6.4.0.0.41).
 * [`ARCHITECTURE.md`](file:///d:/Games/New%20folder-web/Claude/ARCHITECTURE.md): System architecture, layered diagram, and data flow constraints.
 * [`PLAY_STORE_ASO_BLUEPRINT.md`](file:///d:/Games/New%20folder-web/Claude/PLAY_STORE_ASO_BLUEPRINT.md): App Store Optimization, keywords, and release assets guide.
 * [`bugs.md`](file:///d:/Games/New%20folder-web/Claude/bugs.md): Master bug resolution and verification ledger.
