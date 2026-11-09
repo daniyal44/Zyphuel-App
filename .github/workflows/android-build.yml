@@ -86,10 +86,12 @@ jobs:
             exit 0
           fi
           echo "--- ${FILE} ---"
-          REDACTED="$(sed -E 's/(SMTP_APP_PASSWORD_HEX = ")[^"]*/\1<redacted>/' "$FILE" | nl -ba)"
+          REDACTED="$(sed -E 's/((SMTP_APP_PASSWORD_HEX|MASTER_ADMIN_HASH) = ")[^"]*/\1<redacted>/g' "$FILE" | nl -ba)"
           printf '%s\n' "$REDACTED" | cat -A | sed -n '1,40p'
           # Annotations are the only diagnostics readable without authenticated logs.
           echo "::warning title=BuildConfig with line numbers::$(printf '%s' "$REDACTED" | tr '\n' '|' | tr -d '\r' | cut -c1-3800)"
+          # Belt and braces: never leave the unredacted file behind in the workspace.
+          rm -f "$FILE"
 
       - name: Build debug APK
         run: |
