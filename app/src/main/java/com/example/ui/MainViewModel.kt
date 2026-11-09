@@ -1190,23 +1190,25 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 // SECURITY (2026-10-23): no credentials are hardcoded in source. The gateway
-                // password comes from admin-managed Firestore config (below) or, for the
-                // developer/owner build only, the git-ignored SMTP_APP_PASSWORD secret
-                // (env / local.properties) injected as BuildConfig.SMTP_APP_PASSWORD.
-                val currentLocal = SecureStorageManager.getSmtpConfig(application)
-                if (currentLocal.appPassword.isBlank()) {
-                    val seededPassword = com.example.BuildConfig.SMTP_APP_PASSWORD
-                    if (seededPassword.isNotBlank()) {
-                        val updated = currentLocal.copy(appPassword = seededPassword)
-                        SecureStorageManager.saveSmtpConfig(application, updated)
-                        _smtpConfig.value = updated
-                    }
-                }
+                // password arrives as the git-ignored SMTP_APP_PASSWORD build secret
+                // (environment / local.properties) compiled into BuildConfig, plus the
+                // admin-managed Firestore config below. It is applied on every launch, so an
+                // app update that rotates it never needs the admin to retype anything.
+                val packagedPassword = com.example.BuildConfig.SMTP_APP_PASSWORD
+                val currentLocal = SecureStorageManager.applyPackagedSmtpPassword(application, packagedPassword)
+                _smtpConfig.value = currentLocal
+                val packagedClean = packagedPassword.replace(" ", "").trim()
 
                 val remoteConfig = repository.firestoreUserRepository.getEmailGatewayConfig()
                 if (remoteConfig != null && (remoteConfig.appPassword.isNotBlank() || remoteConfig.webhookUrl.isNotBlank())) {
-                    SecureStorageManager.saveSmtpConfig(application, remoteConfig)
-                    _smtpConfig.value = remoteConfig
+                    // This build's packaged password wins, so a rotation reaches every device.
+                    val merged = if (packagedClean.isNotBlank()) remoteConfig.copy(appPassword = packagedClean) else remoteConfig
+                    SecureStorageManager.saveSmtpConfig(application, merged)
+                    _smtpConfig.value = merged
+                    if (merged != remoteConfig) {
+                        repository.firestoreUserRepository.saveEmailGatewayConfig(merged)
+                        DebugLogger.i("MainViewModel", "Rotated packaged Email Gateway password synced to Cloud Firestore.")
+                    }
                     DebugLogger.i("MainViewModel", "Remote Email Gateway config loaded from Cloud Firestore.")
                 } else {
                     // Seed Cloud Firestore with local active configuration so all devices stay in sync

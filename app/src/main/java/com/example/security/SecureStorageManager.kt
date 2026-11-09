@@ -23,6 +23,7 @@ object SecureStorageManager {
     private const val KEY_ALIAS = "zyphuel_master_enclave_key"
     private const val ANDROID_KEYSTORE = "AndroidKeyStore"
     private const val BIO_DEVICE_PREFS = "zyphuel_biometric_device_prefs"
+    private const val KEY_SMTP_PASSWORD_BUILD = "smtp_password_build"
 
     private val encryptedPrefsCache = java.util.concurrent.ConcurrentHashMap<AppModule, SharedPreferences>()
 
@@ -283,6 +284,34 @@ object SecureStorageManager {
             .putBoolean("smtp_enabled", config.isEnabled)
             .apply()
     }
+
+    /**
+     * Re-applies the app password packaged into this build on every launch.
+     *
+     * The credential itself is never in source: it arrives as `SMTP_APP_PASSWORD` from the
+     * environment or the git-ignored `local.properties` / `app/admin-credentials.properties`
+     * and is compiled into `BuildConfig.SMTP_APP_PASSWORD`. Applying it on each start means
+     * an app update that ships a rotated password repairs the enclave by itself, with no
+     * manual re-entry; only the build code that last applied it is recorded.
+     */
+    fun applyPackagedSmtpPassword(context: Context, packagedPassword: String): SmtpConfig {
+        val cleaned = packagedPassword.replace(" ", "").trim()
+        val current = getSmtpConfig(context)
+        if (cleaned.isBlank()) return current
+
+        val updated = if (current.appPassword == cleaned) current else current.copy(appPassword = cleaned)
+        if (updated !== current) saveSmtpConfig(context, updated)
+        getEncryptedPreferences(context, AppModule.ADMIN).edit()
+            .putInt(KEY_SMTP_PASSWORD_BUILD, com.example.BuildConfig.VERSION_CODE)
+            .apply()
+        return updated
+    }
+
+    /**
+     * Build code whose packaged SMTP password was last applied (diagnostics only).
+     */
+    fun packagedSmtpPasswordBuild(context: Context): Int =
+        getEncryptedPreferences(context, AppModule.ADMIN).getInt(KEY_SMTP_PASSWORD_BUILD, 0)
 
     /**
      * Stores the user's active login password inside AES-256-GCM hardware-backed EncryptedSharedPreferences

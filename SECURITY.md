@@ -155,7 +155,7 @@ Cloud Function or an admin-only queue; that is a deployment change, not a rules 
 | Secret | Storage | Never in |
 | :--- | :--- | :--- |
 | `ADMIN_PASSWORD_HASH` | `ADMIN_PASSWORD_HASH` env var or `app/admin-credentials.properties` (git-ignored) → `BuildConfig` | source, docs, commits |
-| `SMTP_APP_PASSWORD` | admin-managed Firestore `system_config` → `EncryptedSharedPreferences`; owner builds may inject via env/`local.properties` (`BuildConfig.SMTP_APP_PASSWORD`) | source, docs, logs |
+| `SMTP_APP_PASSWORD` | admin-managed Firestore `system_config` → `EncryptedSharedPreferences` (Android) / Keychain (iOS); builds inject it from the environment, `app/admin-credentials.properties` or the `SMTP_APP_PASSWORD` Actions secret (`BuildConfig.SMTP_APP_PASSWORD` / bundled `Secrets.plist`) | source, docs, logs, git |
 | `google-services.json`, `local.properties`, `*.jks`, `.env` | git-ignored; only `.example` templates are committed | git history |
 | Session tokens | AES-256-GCM via Android Keystore (`EncryptedSharedPreferences`) | logs, backups |
 
@@ -165,6 +165,28 @@ were removed; the default is now an empty string, and credentials come only from
 Firestore config or the git-ignored `SMTP_APP_PASSWORD` secret. **The leaked app password must still be
 revoked and reissued in the Google Account settings** — removing it from source does not invalidate a
 credential that may already be in git history or on a shared device.
+
+### 6.1 Email Gateway credential lifecycle (both platforms)
+
+- **Single sealed source.** The value is never written to a tracked file. `.gitignore` excludes
+  `*app_password*`, `*app-password*`, `*appPassword*`, `*.secrets.*`, `secrets.properties` and
+  `ios/Config/Secrets.plist`; only the empty placeholders in `.env.example` and
+  `app/admin-credentials.properties.example` are committed.
+- **Build-time injection.** Android reads `SMTP_APP_PASSWORD` from the environment or the git-ignored
+  `local.properties` / `app/admin-credentials.properties` into `BuildConfig.SMTP_APP_PASSWORD`. iOS reads
+  the git-ignored `ios/Config/Secrets.plist`, which CI writes from the repository secret before building.
+  CI never echoes it; a missing secret is reported with a notice, not a failure.
+- **Re-applied on every launch, so every update refreshes it.**
+  `SecureStorageManager.applyPackagedSmtpPassword` (Android) and `EmailGatewayCredentialStore`
+  (iOS Keychain) write the packaged value into the encrypted enclave on start. An update that ships a
+  rotated password therefore repairs the device by itself; only the build code that applied it is stored.
+- **Shared with the other platform.** The packaged password becomes authoritative for
+  `system_config/email_gateway`, so a rotation reaches Android and iOS clients through the existing
+  authenticated listener. iOS delivers through the HTTPS relay / Firestore mail trigger, so the record
+  is credentials-parity, not a second SMTP client.
+- **Rotation is expected after exposure.** A credential pasted into a chat, an issue or a log is
+  considered compromised: revoke it in the Google Account, issue a new app password, update the
+  Actions secret and the local ignored file, then let the next build distribute it.
 
 ---
 

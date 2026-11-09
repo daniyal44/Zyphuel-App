@@ -1017,7 +1017,17 @@ Zyphuel v2.4.0 introduces a comprehensive 10-category on-demand automotive and m
   - On application startup, `MainViewModel` checks local `SecureStorageManager` and Cloud Firestore. If credentials are blank or unconfigured, it automatically writes and syncs the validated App Password.
   - Ensures all devices (customers, riders, and admins) immediately possess operational email delivery capability without manual setup intervention.
 
-### 25.3 Cross-Environment Engine Resilience (`RealtimeEmailEngine.kt`)
+### 25.3 Password Is Re-Applied On Every Launch and Every Update <font color="#10b981"><b>2026-11-09</b></font>
+* **Android (`SecureStorageManager.applyPackagedSmtpPassword`)**:
+  - `SMTP_APP_PASSWORD` is injected at build time (environment, `app/admin-credentials.properties`, or the GitHub Actions secret) as `BuildConfig.SMTP_APP_PASSWORD` — never committed, never in docs or logs.
+  - Every launch applies that value to the AES-256-GCM admin enclave, so an app **update that ships a rotated password repairs itself**; only the build code that applied it (`smtp_password_build`) is recorded, never a copy of the secret elsewhere.
+  - When the packaged value differs from `system_config/email_gateway`, the merged config is pushed back to Firestore so every device picks up the rotation through the existing real-time listener.
+* **iOS (`EmailGatewayCredentialStore`)**:
+  - CI writes the git-ignored `ios/Config/Secrets.plist` from the `SMTP_APP_PASSWORD` secret; `project.yml` copies it into `Zyphuel.app` and `ZyphuelConfig.bundledEmailAppPassword` reads it.
+  - On every launch the value is re-applied to the Keychain (`gateway.app_password`) and the packaged value stays authoritative over a remote rotation, mirroring Android.
+  - iOS still delivers through the HTTPS relay / Firestore `mail` trigger, so the shared `appPassword` field is credential parity with Android rather than a second SMTP client. Admin → Email gateway shows the Keychain state and writes the value with **Save & Sync**.
+
+### 25.4 Cross-Environment Engine Resilience (`RealtimeEmailEngine.kt`)
 * **Safe Base64 & Multiplatform Logging**:
   - Added `safeBase64Encode` supporting both `android.util.Base64` and standard `java.util.Base64`.
   - Added safe logging methods (`logD`, `logI`, `logW`, `logE`) to prevent `RuntimeException` during unit testing or non-Android execution.

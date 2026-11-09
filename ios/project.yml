@@ -55,6 +55,19 @@ targets:
           else
             echo "warning: GoogleService-Info.plist missing - app starts in setup mode"
           fi
+
+          # Email Gateway app password: the git-ignored file is written by CI from the
+          # SMTP_APP_PASSWORD repository secret (or locally by the owner). It is a copy
+          # phase for the same reason as the Firebase plist: a missing resource reference
+          # would fail the build.
+          SECRETS_SRC="${SRCROOT}/Config/Secrets.plist"
+          if [ -f "${SECRETS_SRC}" ]; then
+            mkdir -p "${DEST_DIR}"
+            cp "${SECRETS_SRC}" "${DEST_DIR}/Secrets.plist"
+            echo "Bundled Secrets.plist (Email Gateway credential)"
+          else
+            echo "warning: Secrets.plist missing - Email Gateway builds without a packaged password"
+          fi
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.aistudio.zyphuel.appv2

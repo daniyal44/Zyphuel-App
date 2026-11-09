@@ -669,7 +669,8 @@ private struct AdminEmailTab: View {
                 Button {
                     Task {
                         await config.saveGateway(webhookURL: webhook.trimmingCharacters(in: .whitespaces),
-                                                 senderEmail: sender.trimmingCharacters(in: .whitespaces))
+                                                 senderEmail: sender.trimmingCharacters(in: .whitespaces),
+                                                 appPassword: EmailGatewayCredentialStore.syncPackagedPassword())
                         statusMessage = config.errorMessage ?? "Gateway saved and synced."
                     }
                 } label: {
@@ -705,6 +706,8 @@ private struct AdminEmailTab: View {
                 channelRow("HTTPS Webhook Relay (port 443)", configured: !(config.emailGateway.webhookURL ?? "").isEmpty)
                 channelRow("Firestore mail trigger", configured: true)
                 channelRow("Direct SMTP (Android devices only)", configured: false)
+                channelRow("Gateway app password (Keychain, re-applied on every launch)",
+                           configured: !EmailGatewayCredentialStore.storedPassword.isEmpty)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .zyphuelCard()

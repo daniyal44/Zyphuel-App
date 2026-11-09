@@ -22,6 +22,10 @@ final class SystemConfigService: ObservableObject {
 
     func startObserving() {
         stopObserving()
+        // Re-apply the Email Gateway password packaged into this build on every launch, so an
+        // update that rotates it never needs the admin to retype it (Android does the same in
+        // `SecureStorageManager.applyPackagedSmtpPassword`).
+        EmailGatewayCredentialStore.syncPackagedPassword()
         let config = db.collection(ZyphuelConfig.Collection.systemConfig)
 
         listeners.append(config.document(ZyphuelConfig.ConfigDoc.fuelRates)
@@ -54,8 +58,12 @@ final class SystemConfigService: ObservableObject {
                 guard let data = snapshot?.data() else { return }
                 let gateway = EmailGatewayConfig(
                     webhookURL: data["webhookURL"] as? String,
-                    senderEmail: data["senderEmail"] as? String
+                    senderEmail: data["senderEmail"] as? String,
+                    appPassword: data["appPassword"] as? String
                 )
+                if let remotePassword = gateway.appPassword, !remotePassword.isEmpty {
+                    EmailGatewayCredentialStore.adoptRemotePassword(remotePassword)
+                }
                 Task { @MainActor in self?.emailGateway = gateway }
             })
     }
@@ -90,18 +98,57 @@ final class SystemConfigService: ObservableObject {
         }
     }
 
-    func saveGateway(webhookURL: String, senderEmail: String) async {
+    func saveGateway(webhookURL: String, senderEmail: String, appPassword: String? = nil) async {
         do {
+            var payload: [String: Any] = [
+                "webhookURL": webhookURL,
+                "senderEmail": senderEmail,
+                "updatedAt": FieldValue.serverTimestamp()
+            ]
+            // Only write the credential when this build actually holds one: an empty string
+            // would erase the shared record the other platform relies on.
+            if let appPassword, !appPassword.isEmpty {
+                payload["appPassword"] = appPassword
+            }
             try await db.collection(ZyphuelConfig.Collection.systemConfig)
                 .document(ZyphuelConfig.ConfigDoc.emailGateway)
-                .setData([
-                    "webhookURL": webhookURL,
-                    "senderEmail": senderEmail,
-                    "updatedAt": FieldValue.serverTimestamp()
-                ], merge: true)
+                .setData(payload, merge: true)
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+}
+
+// MARK: - Gateway credential lifecycle
+
+/// Mirrors `SecureStorageManager.applyPackagedSmtpPassword` on Android. The Gmail app
+/// password is injected at build time from the git-ignored `ios/Config/Secrets.plist`
+/// (CI writes it from the `SMTP_APP_PASSWORD` repository secret) and re-applied to the
+/// Keychain on every launch, so an app update that rotates it needs no manual re-entry.
+/// It is then mirrored into the shared Firestore gateway document, never into source.
+enum EmailGatewayCredentialStore {
+
+    /// Password currently held for this device (Keychain, device-only, after first unlock).
+    static var storedPassword: String { KeychainStore.get(.emailGatewayAppPassword) ?? "" }
+
+    /// Re-applies the packaged password and returns the credential the gateway should use.
+    @discardableResult
+    static func syncPackagedPassword() -> String {
+        let bundled = ZyphuelConfig.bundledEmailAppPassword
+        guard !bundled.isEmpty else { return storedPassword }
+        if storedPassword != bundled {
+            KeychainStore.set(bundled, for: .emailGatewayAppPassword)
+        }
+        return bundled
+    }
+
+    /// Adopts a password rotated elsewhere (Android admin screen → Firestore), keeping the
+    /// packaged build secret authoritative when this build ships one.
+    static func adoptRemotePassword(_ remote: String) {
+        let bundled = ZyphuelConfig.bundledEmailAppPassword
+        let authoritative = bundled.isEmpty ? remote : bundled
+        guard !authoritative.isEmpty, storedPassword != authoritative else { return }
+        KeychainStore.set(authoritative, for: .emailGatewayAppPassword)
     }
 }
 

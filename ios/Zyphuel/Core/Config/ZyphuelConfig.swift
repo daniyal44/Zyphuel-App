@@ -60,6 +60,20 @@ enum ZyphuelConfig {
     static let termsURL = URL(string: "https://zyphuel.netlify.app/terms")!
     static let websiteURL = URL(string: "https://zyphuel.netlify.app")!
 
+    // MARK: Packaged secrets (never in the repository)
+    /// Gmail app password for the transactional Email Gateway, injected at build time from the
+    /// git-ignored `ios/Config/Secrets.plist` (key `SMTPAppPassword`). CI writes that file from
+    /// the `SMTP_APP_PASSWORD` repository secret. The app re-applies it to the Keychain on every
+    /// launch, so a rotation shipped with an update needs no manual re-entry.
+    static var bundledEmailAppPassword: String {
+        guard let path = Bundle.main.path(forResource: "Secrets", ofType: "plist"),
+              let dict = NSDictionary(contentsOfFile: path),
+              let value = dict["SMTPAppPassword"] as? String
+        else { return "" }
+        return value.replacingOccurrences(of: " ", with: "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
     // MARK: Assets
     /// The 1024x1024 brand icon ships in `Assets.xcassets/AppIcon.appiconset`.
     /// Regenerate it with `scripts/generate_ios_app_icon.ps1`.

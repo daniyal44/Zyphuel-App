@@ -295,6 +295,10 @@ struct AppVersionInfo: Codable, Equatable {
 struct EmailGatewayConfig: Codable, Equatable {
     var webhookURL: String?
     var senderEmail: String?
+    /// Shared with Android in `system_config/email_gateway`. iOS itself delivers through the
+    /// HTTPS relay and the Firestore mail trigger, but it keeps the same credential record so
+    /// an owner rotation made on Android reaches every client.
+    var appPassword: String? = nil
     var isConfigured: Bool { (webhookURL?.isEmpty == false) }
 }
 

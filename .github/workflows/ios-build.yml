@@ -49,6 +49,32 @@ jobs:
         working-directory: ios
         run: xcodegen generate
 
+      # The app password has to be inside the bundle so the app can re-apply it to the
+      # Keychain on every launch. The file is git-ignored and produced here from the
+      # repository secret, so the value never lands in the tree, a commit or a log line.
+      - name: Write packaged Email Gateway secret
+        working-directory: ios
+        env:
+          SMTP_APP_PASSWORD: ${{ secrets.SMTP_APP_PASSWORD }}
+        run: |
+          if [ -z "${SMTP_APP_PASSWORD:-}" ]; then
+            echo "::notice title=Email Gateway::SMTP_APP_PASSWORD secret is not set, so this build ships no packaged password and relies on the admin-managed Firestore config."
+            exit 0
+          fi
+          mkdir -p Config
+          cat > Config/Secrets.plist <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>SMTPAppPassword</key>
+            <string>${SMTP_APP_PASSWORD}</string>
+          </dict>
+          </plist>
+          PLIST
+          plutil -lint Config/Secrets.plist > /dev/null
+          echo "Wrote ios/Config/Secrets.plist for this build."
+
       - name: Resolve packages
         working-directory: ios
         run: |

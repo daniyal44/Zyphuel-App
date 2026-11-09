@@ -26,6 +26,11 @@ jobs:
     name: Build & test Zyphuel Android
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    # Email Gateway app password: injected into BuildConfig.SMTP_APP_PASSWORD only, never
+    # written to a file. Absent secret = build without a packaged credential (the app then
+    # relies on the admin-managed Firestore config), which is a valid state.
+    env:
+      SMTP_APP_PASSWORD: ${{ secrets.SMTP_APP_PASSWORD }}
 
     steps:
       - name: Checkout

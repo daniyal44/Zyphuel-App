@@ -280,6 +280,7 @@ enum KeychainStore {
         case sessionRole = "session.role"
         case rateLimiterState = "security.rate_limiter"
         case biometricLockEnabled = "security.biometric_lock"
+        case emailGatewayAppPassword = "gateway.app_password"
     }
 
     @discardableResult
@@ -322,7 +323,8 @@ enum KeychainStore {
     }
 
     static func reset() {
-        [Key.sessionEmail, .sessionRole, .rateLimiterState, .biometricLockEnabled]
+        [Key.sessionEmail, .sessionRole, .rateLimiterState, .biometricLockEnabled,
+         .emailGatewayAppPassword]
             .forEach(remove)
     }
 }

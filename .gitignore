@@ -72,3 +72,14 @@ desktop/.gradle/
 .externalNativeBuild
 .cxx
 .claude/
+
+# Email Gateway app password (Gmail App Password) — must never be public
+# Injected only at build time from the environment / local.properties (Android) and
+# ios/Config/Secrets.plist (iOS). Keep every real value out of the tree.
+*app_password*
+*app-password*
+*appPassword*
+*.secrets.*
+secrets.properties
+ios/Config/Secrets.plist
+ios/Config/EmailGateway.secrets.plist

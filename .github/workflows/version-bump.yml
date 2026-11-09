@@ -1,0 +1,69 @@
+name: Version Bump
+
+# The single version source is version.properties; scripts/sync_versions.py --bump rewrites
+# Android, iOS, README and FEATURES_DOCUMENTATION together. This project never runs project
+# scripts on a developer desktop, so the bump happens here, on the runner.
+on:
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: Why this bump is needed (echoed into the commit message)
+        required: false
+        default: Release bump
+
+concurrency:
+  group: version-bump
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  bump:
+    name: Bump both platforms
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Show current version
+        run: cat version.properties
+
+      - name: Bump versionCode + versionName on both platforms
+        run: python scripts/sync_versions.py --bump
+
+      - name: Verify the version gate still passes
+        run: python scripts/sync_versions.py --check
+
+      - name: Commit and push
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No version change was produced."
+            exit 0
+          fi
+          NAME="$(grep -E '^versionName=' version.properties | cut -d= -f2 | tr -d '[:space:]')"
+          CODE="$(grep -E '^versionCode=' version.properties | cut -d= -f2 | tr -d '[:space:]')"
+          git commit -m "chore(version): bump to v${NAME} (Build ${CODE}) [skip ci]"
+          git push origin HEAD:main
+          {
+            echo "### Version bumped"
+            echo ""
+            echo "| field | value |"
+            echo "| --- | --- |"
+            echo "| versionName | ${NAME} |"
+            echo "| versionCode | ${CODE} |"
+            echo "| reason | ${{ inputs.reason }} |"
+          } >> "$GITHUB_STEP_SUMMARY"
