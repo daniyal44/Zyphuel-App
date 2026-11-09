@@ -65,6 +65,20 @@ jobs:
             exit 1
           fi
 
+      # Diagnostics: the generated constant is the only place a build secret is interpolated,
+      # so on failure show its shape with the value redacted (cat -A exposes stray bytes).
+      - name: Show generated BuildConfig (redacted)
+        if: failure()
+        run: |
+          set -euo pipefail
+          FILE="$(find app/build/generated/source/buildConfig -name BuildConfig.java 2>/dev/null | head -1)"
+          if [ -z "$FILE" ]; then
+            echo "BuildConfig.java was not generated"
+            exit 0
+          fi
+          echo "--- ${FILE} ---"
+          sed -E 's/(SMTP_APP_PASSWORD = ")[^"]*/\1<redacted>/' "$FILE" | cat -A | sed -n '1,40p'
+
       - name: Build debug APK
         run: |
           set -o pipefail
