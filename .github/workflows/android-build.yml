@@ -157,3 +157,54 @@ jobs:
           path: app/build/reports/tests/testDebugUnitTest/**
           if-no-files-found: ignore
           retention-days: 7
+
+      # Email Gateway build-status notification: fires on every completed run so the
+      # admin inbox has a continuous audit trail of every CI build (pass or fail).
+      - name: Notify Email Gateway (build status)
+        if: always()
+        env:
+          SMTP_APP_PASSWORD: ${{ secrets.SMTP_APP_PASSWORD }}
+          SMTP_SENDER: ${{ secrets.SMTP_SENDER || 'noreply@zyphuel.com' }}
+          SMTP_RECIPIENT: ${{ secrets.SMTP_RECIPIENT }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SMTP_RECIPIENT:-}" ] || [ -z "${SMTP_APP_PASSWORD:-}" ]; then
+            echo "::notice title=Email Gateway::SMTP_RECIPIENT or SMTP_APP_PASSWORD secret is not set — skipping build notification email."
+            exit 0
+          fi
+          STATUS="${{ job.status }}"
+          SUBJECT="[Zyphuel Android] Build ${STATUS} — ${GITHUB_SHA::7} ($(date -u +%Y-%m-%d))"
+          BODY="Repository: ${GITHUB_REPOSITORY}
+          Branch: ${GITHUB_REF_NAME}
+          Commit: ${GITHUB_SHA::7}
+          Status: ${STATUS}
+          Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
+          Triggered by: ${GITHUB_ACTOR}
+          Date: $(date -u '+%Y-%m-%d %H:%M UTC')"
+          # Send via curl to Gmail SMTP relay (base64 AUTH LOGIN)
+          {
+            echo "EHLO github-actions"
+            sleep 1
+            echo "AUTH LOGIN"
+            sleep 1
+            echo "$(echo -n "${SMTP_SENDER}" | base64)"
+            sleep 1
+            echo "$(echo -n "${SMTP_APP_PASSWORD}" | base64)"
+            sleep 1
+            echo "MAIL FROM:<${SMTP_SENDER}>"
+            sleep 1
+            echo "RCPT TO:<${SMTP_RECIPIENT}>"
+            sleep 1
+            echo "DATA"
+            sleep 1
+            echo "Subject: ${SUBJECT}"
+            echo "From: Zyphuel CI <${SMTP_SENDER}>"
+            echo "To: ${SMTP_RECIPIENT}"
+            echo "Content-Type: text/plain; charset=UTF-8"
+            echo ""
+            echo "${BODY}"
+            echo "."
+            sleep 1
+            echo "QUIT"
+          } | openssl s_client -connect smtp.gmail.com:465 -quiet 2>/dev/null || \
+            echo "::warning title=Email Gateway::SMTP relay delivery failed (non-blocking)."

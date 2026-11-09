@@ -82,6 +82,8 @@ if not errorlevel 1 (
 )
 
 rem Set commit message
+rem NOTE: [skip ci] is ONLY added to auto-generated (no argument) pushes.
+rem User-provided commit messages trigger CI so android-build and ios-build run.
 set "COMMIT_MSG=%~1"
 if "%COMMIT_MSG%"=="" (
     set "APP_VER=v2.6.4.0.0.38"
@@ -92,10 +94,7 @@ if "%COMMIT_MSG%"=="" (
             if not "!TEMP_VER!"=="" set "APP_VER=v!TEMP_VER!"
         )
     )
-    set "COMMIT_MSG=chore: direct push update - %date% %time% (!APP_VER!) [skip ci]"
-) else (
-    echo "!COMMIT_MSG!" | findstr /i "skip ci" >nul 2>&1
-    if errorlevel 1 set "COMMIT_MSG=!COMMIT_MSG! [skip ci]"
+    set "COMMIT_MSG=chore: direct push update - %date% %time% (!APP_VER!)"
 )
 
 echo [1/3] Files stage kar rahe hain (git add -A)...

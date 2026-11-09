@@ -6,6 +6,10 @@ on:
       - main
     paths-ignore:
       - 'README.md'
+  # Run daily at midnight UTC so the dashboard always reflects the latest 24h of activity,
+  # even on days with no push. This also keeps the GitHub contribution graph populated.
+  schedule:
+    - cron: '0 0 * * *'
   workflow_dispatch:
 
 permissions:

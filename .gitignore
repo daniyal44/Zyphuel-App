@@ -73,13 +73,30 @@ desktop/.gradle/
 .cxx
 .claude/
 
-# Email Gateway app password (Gmail App Password) — must never be public
-# Injected only at build time from the environment / local.properties (Android) and
-# ios/Config/Secrets.plist (iOS). Keep every real value out of the tree.
+# Email Gateway app password (Gmail App Password) — must NEVER be public.
+# The real password is injected only at build time from:
+#   Android: SMTP_APP_PASSWORD env var / local.properties / admin-credentials.properties
+#   iOS:     ${{ secrets.SMTP_APP_PASSWORD }} → ios/Config/Secrets.plist (CI-generated)
+# ZERO tolerance: every pattern that could hold the raw password is blocked here.
 *app_password*
 *app-password*
 *appPassword*
+*smtp_password*
+*smtp-password*
+*smtpPassword*
+*smtp_pass*
+*smtp-pass*
+*SmtpAppPassword*
+*gmail_password*
+*gmail-password*
+*email_password*
+*email-password*
 *.secrets.*
 secrets.properties
+secrets.plist
 ios/Config/Secrets.plist
 ios/Config/EmailGateway.secrets.plist
+ios/Config/*.secrets.*
+*gateway_password*
+*gateway-password*
+*gateway_cred*
