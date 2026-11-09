@@ -78,9 +78,10 @@ jobs:
             exit 0
           fi
           echo "--- ${FILE} ---"
-          sed -E 's/(SMTP_APP_PASSWORD_HEX = ")[^"]*/\1<redacted>/' "$FILE" | cat -A | sed -n '1,40p'
+          REDACTED="$(sed -E 's/(SMTP_APP_PASSWORD_HEX = ")[^"]*/\1<redacted>/' "$FILE" | nl -ba)"
+          printf '%s\n' "$REDACTED" | cat -A | sed -n '1,40p'
           # Annotations are the only diagnostics readable without authenticated logs.
-          echo "::warning title=BuildConfig dump::$(sed -E 's/(SMTP_APP_PASSWORD_HEX = ")[^"]*/\1<redacted>/' "$FILE" | tr '\n' '|' | tr -d '\r' | cut -c1-1500)"
+          echo "::warning title=BuildConfig with line numbers::$(printf '%s' "$REDACTED" | tr '\n' '|' | tr -d '\r' | cut -c1-3800)"
 
       - name: Build debug APK
         run: |
