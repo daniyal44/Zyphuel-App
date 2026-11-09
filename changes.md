@@ -3,6 +3,13 @@
 > **This file is the project CHANGELOG.** Each entry lists version, release date (Asia/Karachi),
 > added/changed/fixed/security sections, database migration notes and known issues.
 
+## Version 2.6.4.0.0.41 (Release Build 69) — <font color="#10b981"><b>2026-11-09 PKT</b></font>
+
+### Version bump on the runner, Email Gateway credential lifecycle, secret-template build gate
+- **Bumped by GitHub, never on a desktop.** `Version Bump` (`.github/workflows/version-bump.yml`) runs `scripts/sync_versions.py --bump` followed by `--check` on the runner and commits both platforms plus the docs: `versionCode` **68 → 69**, `versionName` **2.6.4.0.0.40 → 2.6.4.0.0.41** in `version.properties`, `ios/project.yml`, `ZyphuelConfig.swift`, `README.md`, `FEATURES_DOCUMENTATION.md` and `TESTING.md`.
+- **Build 69 ships the Email Gateway credential lifecycle** described under 2.6.4.0.0.40: the app password is hex-encoded into `BuildConfig` (Android) or bundled as `Secrets.plist` from the Actions secret (iOS) and re-applied to the encrypted enclave / Keychain on every launch, so an update that rotates it needs no manual re-entry.
+- **Secret-template pitfall closed.** An empty `SMTP_APP_PASSWORD=` in `.env.example` was mirrored by the secrets plugin into `String SMTP_APP_PASSWORD = ;`, failing `compileDebugJavaWithJavac` with "illegal start of expression". The template omits the key, and `android-build.yml` now rebuilds whenever either secret template changes.
+
 ## Version 2.6.4.0.0.40 (Release Build 68) — <font color="#10b981"><b>2026-11-07 12:00:00 PKT</b></font>
 
 ### CI-only builds, Android pipeline, launch fix, real download sizes
