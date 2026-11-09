@@ -65,8 +65,8 @@ if "%DESKTOP_DIR%"=="" (
 )
 
 rem ---------- Version ----------
-set "VERSION_NAME=2.6.4.0.0.40"
-set "VERSION_CODE=68"
+set "VERSION_NAME=unknown"
+set "VERSION_CODE=0"
 
 if exist "version.properties" (
     for /f "tokens=1,2 delims==" %%A in ('findstr /i "versionCode versionName" version.properties 2^>nul') do (
@@ -208,13 +208,28 @@ if exist "ios\project.yml" copy /y "ios\project.yml" "%BUILD_DIR%\project.yml" >
 if exist "version.properties" copy /y "version.properties" "%BUILD_DIR%\version.properties" >nul 2>&1
 if exist "ios\build_report.txt" copy /y "ios\build_report.txt" "%BUILD_DIR%\ios_build_report.txt" >nul 2>&1
 
-rem ---- 3a. Pull the Simulator app artifact from GitHub Actions when possible
+rem ---- 3a. Pull device IPA and Simulator app artifacts from GitHub Actions
 set "SIM_APP_ZIP="
+set "DEVICE_IPA="
 if "%FAIL%"=="0" if "%HAS_GH%"=="1" (
-    echo  [*] GitHub Actions se latest Simulator build download...
+    echo  [*] GitHub Actions se latest builds download kar rahe hain...
+
+    rem Try device IPA first (preferred - installable on real devices)
+    gh run download --repo "%REPO%" --name Zyphuel-ios-device-ipa-unsigned --dir "%BUILD_DIR%\actions-device" >>"%LOG%" 2>&1
+    if exist "%BUILD_DIR%\actions-device" (
+        for /r "%BUILD_DIR%\actions-device" %%F in (*.ipa) do (
+            if exist "%%F" set "DEVICE_IPA=%%F"
+        )
+    )
+    if not "!DEVICE_IPA!"=="" (
+        echo  [+] Device IPA mil gayi: !DEVICE_IPA!
+    ) else (
+        echo  [i] Device IPA artifact nahi mila.
+    )
+
+    rem Also try Simulator build
     gh run download --repo "%REPO%" --name Zyphuel-ios-simulator-app --dir "%BUILD_DIR%\actions" >>"%LOG%" 2>&1
     if exist "%BUILD_DIR%\actions" (
-        rem The artifact download contains only our simulator zip; take the first one.
         for /r "%BUILD_DIR%\actions" %%F in (*.zip) do (
             if exist "%%F" set "SIM_APP_ZIP=%%F"
         )
@@ -222,7 +237,7 @@ if "%FAIL%"=="0" if "%HAS_GH%"=="1" (
     if not "!SIM_APP_ZIP!"=="" (
         echo  [+] Simulator build mil gaya: !SIM_APP_ZIP!
     ) else (
-        echo  [i] Koi fresh Simulator artifact nahi mila (workflow abhi chala ho tab available hota hai).
+        echo  [i] Koi fresh Simulator artifact nahi mila.
     )
 )
 
@@ -237,6 +252,9 @@ if exist "%OUT_ROOT%" (
 echo  [*] IPA search complete.
 if not "%FOUND_IPA%"=="" echo  [+] Valid IPA: %FOUND_IPA%
 if not "%FOUND_IPA%"=="" goto COPY_FOUND_IPA
+
+rem Prefer device IPA from Actions over simulator build
+if not "%DEVICE_IPA%"=="" goto COPY_DEVICE_IPA
 
 if not "%SIM_APP_ZIP%"=="" goto COPY_SIM_APP
 goto STAGE_SOURCE_ZIP
@@ -263,6 +281,16 @@ if /i not "%VERDICT%"=="YES" (
 )
 set "FOUND_IPA=%CAND%"
 goto :eof
+
+rem ------------------------------------------------------------------
+:COPY_DEVICE_IPA
+set "DESKTOP_DIPA=%DESKTOP_DIR%\Zyphuel-v%VERSION_NAME%-Build%VERSION_CODE%-Device-unsigned.ipa"
+copy /y "%DEVICE_IPA%" "%DESKTOP_DIPA%" >nul
+set "TARGET_DESKTOP_ITEM=%DESKTOP_DIPA%"
+set "OUTPUT_KIND=Device IPA (unsigned) from GitHub Actions - sign with Xcode/AltStore"
+set "EXTRA_INFO=Sign karne ke liye: Xcode re-sign ya AltStore use karein."
+echo [ok] Copied device IPA to Desktop: %DESKTOP_DIPA%>>"%LOG%"
+goto STAGE_DONE
 
 rem ------------------------------------------------------------------
 :COPY_FOUND_IPA

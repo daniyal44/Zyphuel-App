@@ -19,22 +19,48 @@ echo    ZYPHUEL - ONE-CLICK INSTANT DESKTOP APK DOWNLOADER
 echo  ============================================================
 echo.
 
-rem ---------- Java & Environment Setup ----------
+rem ---------- Java & Environment Setup (auto-detect any installed JDK) ----------
 if not defined JAVA_HOME (
-    if exist "C:\Program Files\Eclipse Adoptium\jdk-25.0.4.7-hotspot" (
-        set "JAVA_HOME=C:\Program Files\Eclipse Adoptium\jdk-25.0.4.7-hotspot"
+    for /d %%J in ("C:\Program Files\Eclipse Adoptium\jdk-*-hotspot") do (
+        if exist "%%J\bin\java.exe" set "JAVA_HOME=%%J"
     )
 )
-if exist "%JAVA_HOME%\bin" (
-    set "PATH=%JAVA_HOME%\bin;%PATH%"
+if not defined JAVA_HOME (
+    for /d %%J in ("C:\Program Files\Java\jdk-*") do (
+        if exist "%%J\bin\java.exe" set "JAVA_HOME=%%J"
+    )
+)
+if not defined JAVA_HOME (
+    for /d %%J in ("C:\Program Files\Microsoft\jdk-*") do (
+        if exist "%%J\bin\java.exe" set "JAVA_HOME=%%J"
+    )
+)
+if defined JAVA_HOME (
+    if exist "%JAVA_HOME%\bin" (
+        set "PATH=%JAVA_HOME%\bin;%PATH%"
+        echo  [+] JDK: %JAVA_HOME%
+    )
+) else (
+    echo  [i] JAVA_HOME set nahi hai - Gradle wrapper apna JDK dhundh lega.
 )
 
-rem ---------- Gradle Setup ----------
+rem ---------- Gradle Setup (always prefer the project wrapper) ----------
 set "GRADLE_CMD="
 if exist "%~dp0gradlew.bat" (
     set "GRADLE_CMD=%~dp0gradlew.bat"
-) else if exist "C:\Users\mdani\.gradle\wrapper\dists\gradle-9.5.0-bin\bvnork1r7n8i6kp5cnkibsc9q\gradle-9.5.0\bin\gradle.bat" (
-    set "GRADLE_CMD=C:\Users\mdani\.gradle\wrapper\dists\gradle-9.5.0-bin\bvnork1r7n8i6kp5cnkibsc9q\gradle-9.5.0\bin\gradle.bat"
+    echo  [+] Gradle: project wrapper (gradlew.bat)
+) else (
+    rem Search for any installed Gradle version dynamically
+    for /d %%G in ("%USERPROFILE%\.gradle\wrapper\dists\gradle-*-bin\*\gradle-*") do (
+        if exist "%%G\bin\gradle.bat" (
+            set "GRADLE_CMD=%%G\bin\gradle.bat"
+        )
+    )
+    if defined GRADLE_CMD (
+        echo  [+] Gradle: system install (!GRADLE_CMD!)
+    ) else (
+        echo  [!] Gradle nahi mili - build skip hoga, existing APK use karega.
+    )
 )
 
 rem ---------- Resolve Desktop Path Dynamically ----------
@@ -53,8 +79,9 @@ if "%DESKTOP_DIR%"=="" (
 )
 
 rem ---------- Read Version from version.properties (shared with iOS) ----------
-set "VERSION_NAME=2.6.4.0.0.38"
-set "VERSION_CODE=66"
+rem Fallback values are only used if version.properties is missing.
+set "VERSION_NAME=unknown"
+set "VERSION_CODE=0"
 
 if exist "version.properties" (
     for /f "tokens=1,2 delims==" %%A in ('findstr /i "versionCode versionName" version.properties') do (
@@ -80,20 +107,45 @@ echo        Intezaar karein (Daemon cached build ~3-10 seconds)...
 echo.
 
 if not "%GRADLE_CMD%"=="" (
-    call "%GRADLE_CMD%" assembleDebug --daemon
+    call "%GRADLE_CMD%" assembleDebug --daemon --console=plain
     if errorlevel 1 (
         echo.
         echo  [!] Gradle build me masla aya, mojooda APK check kar rahe hain...
         if not exist "%SRC_APK%" (
-            echo  [X] Koi pehle se built APK nahi mili: %SRC_APK%
-            pause
-            exit /b 1
+            echo  [!] Local APK nahi mili, GitHub Actions se download try...
+            goto GH_FALLBACK
         )
         echo  [*] Mojooda APK mil gayi hai, isko Desktop par copy kiya ja raha hai.
     )
 ) else (
-    echo  [!] Gradle command nahi mili, existing APK use kar rahe hain...
+    echo  [!] Gradle command nahi mili, existing APK ya GitHub Actions try...
+    if not exist "%SRC_APK%" goto GH_FALLBACK
 )
+goto COPY_ONLY
+
+:GH_FALLBACK
+rem Try downloading latest APK from GitHub Actions
+where gh >nul 2>nul
+if errorlevel 1 goto NO_APK
+gh auth status >nul 2>nul
+if errorlevel 1 goto NO_APK
+echo  [*] GitHub Actions se latest APK download kar rahe hain...
+set "GH_DL_DIR=%TEMP%\zyphuel-apk-dl"
+if exist "%GH_DL_DIR%" rd /s /q "%GH_DL_DIR%"
+gh run download --repo daniyal44/Zyphuel-App --name Zyphuel-android-debug-apk --dir "%GH_DL_DIR%" >nul 2>&1
+if exist "%GH_DL_DIR%" (
+    for /r "%GH_DL_DIR%" %%F in (*.apk) do (
+        if exist "%%F" (
+            set "SRC_APK=%%F"
+            echo  [+] GitHub Actions APK mil gayi: %%F
+            goto COPY_ONLY
+        )
+    )
+)
+:NO_APK
+echo  [X] Koi APK nahi mili - pehle build karein ya GitHub Actions run karein.
+pause
+exit /b 1
 
 :COPY_ONLY
 echo.

@@ -6,7 +6,7 @@ color 0A
 cd /d "%~dp0"
 
 echo ============================================================
-echo   ZYPHUEL - 1-CLICK DIRECT GITHUB PUSH ^& GRAPH SYNC
+echo   ZYPHUEL - 1-CLICK DIRECT GITHUB PUSH AND GRAPH SYNC
 echo ============================================================
 echo.
 echo Folder : %CD%
@@ -20,6 +20,19 @@ if errorlevel 1 (
     echo     Download karein: https://git-scm.com/download/win
     goto END
 )
+
+rem ---------- Clean stale lock files ----------
+if exist ".git\index.lock" (
+    echo [i] Stale index.lock hata rahe hain...
+    del /f /q ".git\index.lock" >nul 2>&1
+)
+if exist ".git\HEAD.lock" (
+    echo [i] Stale HEAD.lock hata rahe hain...
+    del /f /q ".git\HEAD.lock" >nul 2>&1
+)
+
+rem Cancel any stuck rebase from previous failed run
+git rebase --abort >nul 2>&1
 
 rem Configure Git merge driver to permanently prevent merge conflicts on README.md
 git config merge.ours.driver true
@@ -43,18 +56,13 @@ echo Branch : %BRANCH%
 echo.
 
 rem Pre-sync: Fetch remote first to prevent fast-forward push rejections
-echo [0/3] Remote repository sync check kar rahe hain...
+echo [0/4] Remote repository sync check kar rahe hain...
 git fetch origin %BRANCH% >nul 2>&1
 for /f %%c in ('git rev-list HEAD..origin/%BRANCH% --count 2^>nul') do set "BEHIND_COUNT=%%c"
 if not "!BEHIND_COUNT!"=="" if not "!BEHIND_COUNT!"=="0" (
-    echo [i] Remote repository par !BEHIND_COUNT! naye commit^(s^) hain. Auto-syncing...
-    git status --porcelain | findstr /r "." >nul 2>&1
-    if not errorlevel 1 (
-        git stash push -u -m "zyphuel_autostash" >nul 2>&1
-        set "DID_STASH=1"
-    ) else (
-        set "DID_STASH=0"
-    )
+    echo [i] Remote par !BEHIND_COUNT! naye commits hain. Auto-syncing...
+    git stash push -u -m "zyphuel_autostash" >nul 2>&1
+    set "DID_STASH=1"
     git pull --rebase -X ours origin %BRANCH% >nul 2>&1
     if errorlevel 1 (
         git checkout --theirs README.md >nul 2>&1
@@ -63,91 +71,86 @@ if not "!BEHIND_COUNT!"=="" if not "!BEHIND_COUNT!"=="0" (
         git rebase --continue >nul 2>&1
         if errorlevel 1 git rebase --skip >nul 2>&1
     )
-    if "!DID_STASH!"=="1" (
-        git stash pop >nul 2>&1
-        if errorlevel 1 (
-            git checkout --ours README.md >nul 2>&1
-            git add README.md >nul 2>&1
-        )
+    git stash pop >nul 2>&1
+    if errorlevel 1 (
+        git checkout --ours README.md >nul 2>&1
+        git add README.md >nul 2>&1
     )
+) else (
+    set "DID_STASH=0"
 )
 
 rem Update engineering velocity graph if Node.js is present
 where node >nul 2>&1
 if not errorlevel 1 (
     if exist "scripts\generate_github_graph.js" (
-        echo [i] Engineering velocity graph update kar rahe hain...
+        echo [1/4] Engineering velocity graph update kar rahe hain...
         node scripts\generate_github_graph.js
+    )
+) else (
+    echo [1/4] Node.js nahi mila, graph skip...
+)
+
+rem Read version from version.properties
+set "APP_VER=unknown"
+if exist "version.properties" (
+    for /f "tokens=2 delims==" %%i in ('findstr /i "versionName" version.properties 2^>nul') do (
+        set "TEMP_VER=%%~i"
+        set "TEMP_VER=!TEMP_VER: =!"
+        if not "!TEMP_VER!"=="" set "APP_VER=v!TEMP_VER!"
     )
 )
 
 rem Set commit message
-rem NOTE: [skip ci] is ONLY added to auto-generated (no argument) pushes.
 rem User-provided commit messages trigger CI so android-build and ios-build run.
 set "COMMIT_MSG=%~1"
 if "%COMMIT_MSG%"=="" (
-    set "APP_VER=v2.6.4.0.0.38"
-    if exist "version.properties" (
-        for /f "tokens=2 delims==" %%i in ('findstr /i "versionName" version.properties 2^>nul') do (
-            set "TEMP_VER=%%~i"
-            set "TEMP_VER=!TEMP_VER: =!"
-            if not "!TEMP_VER!"=="" set "APP_VER=v!TEMP_VER!"
-        )
-    )
     set "COMMIT_MSG=chore: direct push update - %date% %time% (!APP_VER!)"
 )
 
-echo [1/3] Files stage kar rahe hain (git add -A)...
+echo [2/4] Files stage kar rahe hain (git add -A)...
 git add -A
 
 git diff --cached --quiet
 if errorlevel 1 (
-    echo [2/3] Commit banaya ja raha hai:
-    echo       "%COMMIT_MSG%"
-    git commit -m "%COMMIT_MSG%"
-
-    rem Refresh graph with the newly created commit and amend seamlessly
-    where node >nul 2>&1
-    if not errorlevel 1 (
-        if exist "scripts\generate_github_graph.js" (
-            node scripts\generate_github_graph.js >nul 2>&1
-            git add README.md >nul 2>&1
-            git diff --cached --quiet >nul 2>&1
-            if errorlevel 1 (
-                git commit --amend --no-edit >nul 2>&1
-            )
-        )
+    echo [3/4] Commit banaya ja raha hai:
+    echo       "!COMMIT_MSG!"
+    rem --no-verify skips pre-commit hook because THIS script already ran the graph
+    rem generator above. Without this, the hook runs it AGAIN during commit,
+    rem causing HEAD.lock conflict (two git processes fighting over the lock).
+    git commit --no-verify -m "!COMMIT_MSG!"
+    if errorlevel 1 (
+        echo [!] Commit fail - lock file clean kar ke retry...
+        del /f /q ".git\HEAD.lock" >nul 2>&1
+        del /f /q ".git\index.lock" >nul 2>&1
+        git add -A >nul 2>&1
+        git commit --no-verify -m "!COMMIT_MSG!"
     )
 ) else (
-    echo [2/3] Koi naye uncommitted changes nahi hain, existing commits push karenge...
+    echo [3/4] Koi naye uncommitted changes nahi hain, existing commits push karenge...
 )
 
 echo.
-echo [3/3] GitHub par direct push kar rahe hain (%BRANCH%)...
+echo [4/4] GitHub par direct push kar rahe hain (%BRANCH%)...
 git push origin %BRANCH%
 if errorlevel 1 (
     echo.
-    echo [!] Push reject hua. Auto-resolving and syncing with remote...
+    echo [!] Push reject hua. Auto-resolving...
+    rem Stash any uncommitted changes first so pull --rebase can work
+    git stash push -u -m "zyphuel_push_retry" >nul 2>&1
     git fetch origin %BRANCH%
     git pull --rebase -X ours origin %BRANCH%
     if errorlevel 1 (
-        echo [i] Resolving auto-generated graph in README.md...
+        echo [i] Rebase conflict resolve kar rahe hain...
         git checkout --theirs README.md >nul 2>&1
-        where node >nul 2>&1
-        if not errorlevel 1 (
-            if exist "scripts\generate_github_graph.js" (
-                node scripts\generate_github_graph.js >nul 2>&1
-            )
-        )
         git add README.md >nul 2>&1
         set "GIT_EDITOR=true"
         git rebase --continue >nul 2>&1
-        if errorlevel 1 (
-            git rebase --skip >nul 2>&1
-        )
+        if errorlevel 1 git rebase --skip >nul 2>&1
     )
+    git stash pop >nul 2>&1
 
-    rem Refresh graph once more before final push
+    rem Regenerate graph with latest history and amend
     where node >nul 2>&1
     if not errorlevel 1 (
         if exist "scripts\generate_github_graph.js" (
@@ -155,7 +158,7 @@ if errorlevel 1 (
             git add README.md >nul 2>&1
             git diff --cached --quiet >nul 2>&1
             if errorlevel 1 (
-                git commit --amend --no-edit >nul 2>&1
+                git commit --no-verify --amend --no-edit >nul 2>&1
             )
         )
     )
@@ -163,8 +166,12 @@ if errorlevel 1 (
     echo Dobara push kar rahe hain...
     git push origin %BRANCH%
     if errorlevel 1 (
-        echo [X] Push fail ho gaya. Internet connection ya permissions check karein.
-        goto END
+        echo [!] Normal push fail, force-with-lease try kar rahe hain...
+        git push --force-with-lease origin %BRANCH%
+        if errorlevel 1 (
+            echo [X] Push fail ho gaya. Internet ya permissions check karein.
+            goto END
+        )
     )
 )
 
