@@ -127,7 +127,7 @@ Android and iOS ship the same version from the same file, so an iOS-only or Andr
 | :--- | :--- |
 | Version parity | `python scripts/sync_versions.py --check` → `Version sync check OK: v2.6.4.0.0.40 (Build 68) everywhere.` |
 | Version bump | GitHub → Actions → **Version Bump** → *Run workflow* (`scripts/sync_versions.py --bump` on the runner) → bumps `versionCode` +1 and the trailing segment +0.01 for **both** apps and the docs; project scripts are never run on a developer desktop |
-| Email Gateway credential | Never in the tree: `git grep -n "SMTP_APP_PASSWORD"` must only match placeholders/templates. The value arrives from the `SMTP_APP_PASSWORD` Actions secret (Android `BuildConfig`, iOS `ios/Config/Secrets.plist`) and is re-applied to the encrypted enclave/Keychain on every launch, so an update picks up a rotation automatically |
+| Email Gateway credential | Never in the tree: `git grep -n "SMTP_APP_PASSWORD"` must only match placeholders/templates. The value arrives from the `SMTP_APP_PASSWORD` Actions secret (Android hex-encoded `BuildConfig` → `BuildSecrets`, iOS `ios/Config/Secrets.plist`) and is re-applied to the encrypted enclave/Keychain on every launch, so an update picks up a rotation automatically |
 | iOS structure/pins/plists | `scripts/update_ios_versions.ps1` → `RESULT: PASS` (Windows-safe, no Xcode required) |
 | iOS build + unit tests (macOS) | `ios/bootstrap.sh test` → XcodeGen project, archive, `ZyphuelLogicTests` green |
 | iOS CI gate | `.github/workflows/ios-build.yml` on a macOS runner: resolve, build, bundle assertions, unit tests, artifact upload |

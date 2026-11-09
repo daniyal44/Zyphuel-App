@@ -290,7 +290,8 @@ object SecureStorageManager {
      *
      * The credential itself is never in source: it arrives as `SMTP_APP_PASSWORD` from the
      * environment or the git-ignored `local.properties` / `app/admin-credentials.properties`
-     * and is compiled into `BuildConfig.SMTP_APP_PASSWORD`. Applying it on each start means
+     * and is compiled into this build, hex-encoded in `BuildConfig` and decoded by
+     * [BuildSecrets.smtpAppPassword]. Applying it on each start means
      * an app update that ships a rotated password repairs the enclave by itself, with no
      * manual re-entry; only the build code that last applied it is recorded.
      */

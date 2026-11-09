@@ -1019,7 +1019,7 @@ Zyphuel v2.4.0 introduces a comprehensive 10-category on-demand automotive and m
 
 ### 25.3 Password Is Re-Applied On Every Launch and Every Update <font color="#10b981"><b>2026-11-09</b></font>
 * **Android (`SecureStorageManager.applyPackagedSmtpPassword`)**:
-  - `SMTP_APP_PASSWORD` is injected at build time (environment, `app/admin-credentials.properties`, or the GitHub Actions secret) as `BuildConfig.SMTP_APP_PASSWORD` — never committed, never in docs or logs.
+  - `SMTP_APP_PASSWORD` is injected at build time (environment, `app/admin-credentials.properties`, or the GitHub Actions secret) as `BuildConfig.SMTP_APP_PASSWORD_HEX`, decoded by `BuildSecrets.smtpAppPassword` — never committed, never in docs or logs, and hex encoding keeps a pasted value's spaces/line breaks from breaking the generated Java literal.
   - Every launch applies that value to the AES-256-GCM admin enclave, so an app **update that ships a rotated password repairs itself**; only the build code that applied it (`smtp_password_build`) is recorded, never a copy of the secret elsewhere.
   - When the packaged value differs from `system_config/email_gateway`, the merged config is pushed back to Firestore so every device picks up the rotation through the existing real-time listener.
 * **iOS (`EmailGatewayCredentialStore`)**:

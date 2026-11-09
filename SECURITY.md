@@ -155,7 +155,7 @@ Cloud Function or an admin-only queue; that is a deployment change, not a rules 
 | Secret | Storage | Never in |
 | :--- | :--- | :--- |
 | `ADMIN_PASSWORD_HASH` | `ADMIN_PASSWORD_HASH` env var or `app/admin-credentials.properties` (git-ignored) → `BuildConfig` | source, docs, commits |
-| `SMTP_APP_PASSWORD` | admin-managed Firestore `system_config` → `EncryptedSharedPreferences` (Android) / Keychain (iOS); builds inject it from the environment, `app/admin-credentials.properties` or the `SMTP_APP_PASSWORD` Actions secret (`BuildConfig.SMTP_APP_PASSWORD` / bundled `Secrets.plist`) | source, docs, logs, git |
+| `SMTP_APP_PASSWORD` | admin-managed Firestore `system_config` → `EncryptedSharedPreferences` (Android) / Keychain (iOS); builds inject it from the environment, `app/admin-credentials.properties` or the `SMTP_APP_PASSWORD` Actions secret (`BuildConfig.SMTP_APP_PASSWORD_HEX` → `BuildSecrets` / bundled `Secrets.plist`) | source, docs, logs, git |
 | `google-services.json`, `local.properties`, `*.jks`, `.env` | git-ignored; only `.example` templates are committed | git history |
 | Session tokens | AES-256-GCM via Android Keystore (`EncryptedSharedPreferences`) | logs, backups |
 
@@ -173,7 +173,9 @@ credential that may already be in git history or on a shared device.
   `ios/Config/Secrets.plist`; only the empty placeholders in `.env.example` and
   `app/admin-credentials.properties.example` are committed.
 - **Build-time injection.** Android reads `SMTP_APP_PASSWORD` from the environment or the git-ignored
-  `local.properties` / `app/admin-credentials.properties` into `BuildConfig.SMTP_APP_PASSWORD`. iOS reads
+  `local.properties` / `app/admin-credentials.properties`, hex-encodes it into
+  `BuildConfig.SMTP_APP_PASSWORD_HEX` and decodes it with `BuildSecrets` (raw interpolation would let a
+  pasted line break break the generated Java literal). iOS reads
   the git-ignored `ios/Config/Secrets.plist`, which CI writes from the repository secret before building.
   CI never echoes it; a missing secret is reported with a notice, not a failure.
 - **Re-applied on every launch, so every update refreshes it.**

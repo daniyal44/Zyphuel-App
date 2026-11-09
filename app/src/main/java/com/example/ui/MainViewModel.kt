@@ -1194,7 +1194,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 // (environment / local.properties) compiled into BuildConfig, plus the
                 // admin-managed Firestore config below. It is applied on every launch, so an
                 // app update that rotates it never needs the admin to retype anything.
-                val packagedPassword = com.example.BuildConfig.SMTP_APP_PASSWORD
+                val packagedPassword = com.example.security.BuildSecrets.smtpAppPassword
                 val currentLocal = SecureStorageManager.applyPackagedSmtpPassword(application, packagedPassword)
                 _smtpConfig.value = currentLocal
                 val packagedClean = packagedPassword.replace(" ", "").trim()
