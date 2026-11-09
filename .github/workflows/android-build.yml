@@ -7,6 +7,10 @@ on:
       - 'gradle/**'
       - '*.gradle.kts'
       - 'version.properties'
+      # These templates are compiled into BuildConfig by the secrets plugin: an empty key
+      # in them has already broken compileDebugJavaWithJavac, so a change must be built.
+      - '.env.example'
+      - 'app/admin-credentials.properties.example'
       - '.github/workflows/android-build.yml'
   pull_request:
     paths:
@@ -14,6 +18,10 @@ on:
       - 'gradle/**'
       - '*.gradle.kts'
       - 'version.properties'
+      # These templates are compiled into BuildConfig by the secrets plugin: an empty key
+      # in them has already broken compileDebugJavaWithJavac, so a change must be built.
+      - '.env.example'
+      - 'app/admin-credentials.properties.example'
       - '.github/workflows/android-build.yml'
   workflow_dispatch:
 

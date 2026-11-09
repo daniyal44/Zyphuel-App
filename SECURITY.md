@@ -177,6 +177,12 @@ credential that may already be in git history or on a shared device.
   `BuildConfig.SMTP_APP_PASSWORD_HEX` and decodes it with `BuildSecrets` (raw interpolation would let a
   pasted line break break the generated Java literal). iOS reads
   the git-ignored `ios/Config/Secrets.plist`, which CI writes from the repository secret before building.
+- **No empty secret keys in the templates.** The secrets Gradle plugin mirrors every key of
+  `.env` / `.env.example` into `BuildConfig`, and an empty `SMTP_APP_PASSWORD=` produces the invalid
+  literal `String SMTP_APP_PASSWORD = ;`, which fails `compileDebugJavaWithJavac` ("illegal start of
+  expression"). The template therefore omits the key entirely; the value comes from the git-ignored
+  admin-credentials file or the Actions secret, and `android-build.yml` rebuilds whenever either
+  template changes.
   CI never echoes it; a missing secret is reported with a notice, not a failure.
 - **Re-applied on every launch, so every update refreshes it.**
   `SecureStorageManager.applyPackagedSmtpPassword` (Android) and `EmailGatewayCredentialStore`
