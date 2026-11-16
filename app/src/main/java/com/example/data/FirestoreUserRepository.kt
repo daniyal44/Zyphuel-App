@@ -377,7 +377,7 @@ class FirestoreUserRepository(private val context: Context) {
                     if (error != null || snapshot == null || !snapshot.exists()) return@addSnapshotListener
                     val petrol = snapshot.getDouble("petrol")?.toFloat() ?: return@addSnapshotListener
                     val diesel = snapshot.getDouble("diesel")?.toFloat() ?: return@addSnapshotListener
-                    val highOctane = snapshot.getDouble("highOctane")?.toFloat() ?: 325.00f
+                    val highOctane = snapshot.getDouble("highOctane")?.toFloat() ?: 370.00f
                     onRatesChanged(petrol, diesel, highOctane)
                 }
         } catch (e: Exception) {

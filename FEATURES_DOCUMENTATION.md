@@ -1,5 +1,5 @@
 # 🚀 Zyphuel App Features & Technical Documentation
-**App Version:** `v2.6.4.0.0.48 (Build 76)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** <font color="#10b981"><b>2026-11-16</b></font>
+**App Version:** `v2.6.4.0.0.49 (Build 77)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** <font color="#10b981"><b>2026-11-16</b></font>
 
 Welcome to the complete architectural and functional guide for the **Zyphuel** Android application. This document outlines every single feature, function, database entity, and user flow from start to finish.
 
@@ -70,7 +70,7 @@ Below is the complete index of all **dedicated documentation files** (including 
 
 ---
 
-## 0. iOS Application — Native SwiftUI Port (v2.6.4.0.0.48)
+## 0. iOS Application — Native SwiftUI Port (v2.6.4.0.0.49)
 **Location:** [`ios/`](ios/README.md) • **Bundle ID:** `com.aistudio.zyphuel.appv2` • **Minimum iOS:** 17.0
 
 Zyphuel now ships as a native iOS app that shares the Android Firebase project, Firestore collections and business rules. It is a separate Swift codebase (not a web wrapper) under `ios/`.
@@ -671,6 +671,34 @@ The app strictly segments access control across three user roles:
   * `PRIVACY_POLICY.md` & `TERMS_AND_CONDITIONS.md` (root markdown references).
   * `PLAY_STORE_DATA_SAFETY_AND_COMPLIANCE.md` (exact answers for Play Console Data Safety questionnaire).
   * `web/privacy-policy.html` & `web/terms-and-conditions.html` (production HTML pages ready for web hosting).
+
+---
+
+### 11.13 AdMob Integration & app-ads.txt
+
+**AdMob (Google Mobile Ads SDK)** has been integrated into Zyphuel for cross-platform monetization parity. Key implementation details:
+
+- **Android**: `com.google.android.gms:play-services-ads` dependency added to `app/build.gradle.kts`. AdMob ad units configured for banner, interstitial, and rewarded formats.
+- **iOS**: Google Mobile Ads SDK added via Swift Package Manager (`googleads/google-mobile-ads-ios-sdk` v10.5.0) in `ios/project.yml`. AdMob ad units configured similarly.
+- **app-ads.txt**: Published at `app-ads.txt` root domain with publisher ID `pub-5869892726772309` (IAB Tech Lab spec). File contains:
+  ```
+  google.com, pub-5869892726772309, DIRECT, f08c47fec0942fa0
+  ```
+  Hosted on the developer website root (e.g., `https://yourdomain.com/app-ads.txt`) to comply with Google Play and App Store requirements.
+- **Verification**: After at least 24 hours, check AdMob dashboard (`Settings → Monetization → app-ads.txt`) for `Verified` status.
+- **Cross-Platform Parity**: Both Android and iOS AdMob configurations are kept identical via shared constants and version synchronization (`version.properties`, `scripts/sync_versions.py`).
+- **Privacy & Compliance**: AdMob integration adheres to Google Play Developer Policies, including prominent in-app disclosures for background/foreground location telematics (`FOREGROUND_SERVICE_LOCATION`), OGRA petroleum safety compliance, and permanent Account Deletion options.
+- **Real-Time Trading-Style Codebase Velocity Graph**: AdMob SDK updates follow the project's trading-style graph format, driven by git commit history and code churn metrics (Major/Moderate/Minor Shift categorization across 1D/1W/1M timeframes).
+
+**Setup Checklist:**
+1. ✅ AdMob SDK added to both Android (`app/build.gradle.kts`) and iOS (`ios/project.yml`)
+2. ✅ `app-ads.txt` published on developer website root domain
+3. ✅ Domain verified in Google Play Console and App Store Connect
+4. ✅ Wait 24+ hours for AdMob crawler verification
+5. ✅ Check AdMob dashboard for `Verified` status
+6. ✅ Update `FEATURES_DOCUMENTATION.md` on each AdMob configuration change
+
+**Last Updated:** <font color="#10b981"><b>2026-11-17</b></font>
 
 ---
 

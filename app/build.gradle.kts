@@ -170,6 +170,7 @@ dependencies {
   implementation(libs.play.services.location)
   implementation(libs.play.services.maps)
   implementation(libs.maps.compose)
+  implementation(libs.play.services.ads)
   implementation(libs.androidx.activity.compose)
   // implementation(libs.androidx.camera.camera2)
   // implementation(libs.androidx.camera.core)

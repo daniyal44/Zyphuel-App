@@ -574,11 +574,11 @@ private struct AdminRatesTab: View {
             VStack(alignment: .leading, spacing: 9) {
                 SectionHeader(title: "Live OGRA base rates",
                               subtitle: "Pump price adds Rs. 5.00/L automatically")
-                LabeledField(label: "Super Euro-V Petrol", placeholder: "289.38", text: $petrol,
+                LabeledField(label: "Super Euro-V Petrol", placeholder: "328.00", text: $petrol,
                              keyboard: .decimalPad)
-                LabeledField(label: "High-Speed Diesel", placeholder: "289.84", text: $diesel,
+                LabeledField(label: "High-Speed Diesel", placeholder: "358.00", text: $diesel,
                              keyboard: .decimalPad)
-                LabeledField(label: "High-Octane 97", placeholder: "300.00", text: $octane,
+                LabeledField(label: "High-Octane 97", placeholder: "370.00", text: $octane,
                              keyboard: .decimalPad)
             }
             .zyphuelCard()

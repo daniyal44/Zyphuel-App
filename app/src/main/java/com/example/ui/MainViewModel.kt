@@ -1112,18 +1112,31 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         SecurityRateLimiter.initialize(application)
         evaluateOutdatedAppVersion(_appVersionConfig.value)
 
-        // Enforce Official OGRA Pakistan Fuel Rates (e.g. Base Petrol Rs. 289.38 -> Petrol Pump Rate Rs. 294.38)
-        sharedPrefs.edit()
-            .putFloat("petrol", 289.38f)
-            .putFloat("diesel", 289.84f)
-            .putFloat("high_octane", 325.00f)
-            .putString("last_sync_time", "Official OGRA Pakistan Feed")
-            .apply()
-        
-        _petrolPrice.value = 328.00f
-        _dieselPrice.value = 358.00f
-        _highOctanePrice.value = 370.00f
-        _lastPriceSyncTime.value = "Official OGRA Pakistan Feed"
+        // ── Fuel Price Cache Invalidation ──
+        // If SharedPreferences has stale/outdated prices, reset to current OGRA defaults.
+        // The FuelPriceWorker + Firestore listener will then overwrite with live data.
+        // PRICE_CACHE_VERSION: increment this when OGRA announces new rates to force refresh.
+        val PRICE_CACHE_VERSION = 4  // v4 = Nov 2026 OGRA rates
+        val cachedVersion = sharedPrefs.getInt("price_cache_version", 0)
+        val cachedPetrol = sharedPrefs.getFloat("petrol", 0f)
+
+        // Force-clear old cache if: version changed OR prices are impossibly stale (< 200 or > 500)
+        if (cachedVersion < PRICE_CACHE_VERSION || cachedPetrol < 200f || cachedPetrol > 500f) {
+            sharedPrefs.edit()
+                .putFloat("petrol", 328.00f)
+                .putFloat("diesel", 358.00f)
+                .putFloat("high_octane", 370.00f)
+                .putInt("price_cache_version", PRICE_CACHE_VERSION)
+                .putString("last_sync_time", "OGRA Official Rates (Default)")
+                .apply()
+            com.example.util.DebugLogger.i("MainViewModel", "Price cache reset to OGRA defaults v$PRICE_CACHE_VERSION: 328/358/370")
+        }
+
+        // Always read from SharedPreferences (now guaranteed to be current defaults or live data)
+        _petrolPrice.value = sharedPrefs.getFloat("petrol", 328.00f)
+        _dieselPrice.value = sharedPrefs.getFloat("diesel", 358.00f)
+        _highOctanePrice.value = sharedPrefs.getFloat("high_octane", 370.00f)
+        _lastPriceSyncTime.value = sharedPrefs.getString("last_sync_time", "OGRA Official Rates") ?: "OGRA Official Rates"
 
         viewModelScope.launch {
             while (isActive) {
