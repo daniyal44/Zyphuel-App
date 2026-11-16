@@ -805,13 +805,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private val _petrolPrice = MutableStateFlow(sharedPrefs.getFloat("petrol", 252.10f))
+    private val _petrolPrice = MutableStateFlow(sharedPrefs.getFloat("petrol", 328.00f))
     val petrolPrice = _petrolPrice.asStateFlow()
 
-    private val _dieselPrice = MutableStateFlow(sharedPrefs.getFloat("diesel", 258.34f))
+    private val _dieselPrice = MutableStateFlow(sharedPrefs.getFloat("diesel", 358.00f))
     val dieselPrice = _dieselPrice.asStateFlow()
 
-    private val _highOctanePrice = MutableStateFlow(sharedPrefs.getFloat("high_octane", 289.62f))
+    private val _highOctanePrice = MutableStateFlow(sharedPrefs.getFloat("high_octane", 370.00f))
     val highOctanePrice = _highOctanePrice.asStateFlow()
 
     // --- Retail Petrol Pump Rates (Base OGRA Rate + Rs. 5.00/L Petrol Pump Margin/Markup) ---
@@ -1120,9 +1120,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             .putString("last_sync_time", "Official OGRA Pakistan Feed")
             .apply()
         
-        _petrolPrice.value = 252.10f
-        _dieselPrice.value = 258.34f
-        _highOctanePrice.value = 289.62f
+        _petrolPrice.value = 328.00f
+        _dieselPrice.value = 358.00f
+        _highOctanePrice.value = 370.00f
         _lastPriceSyncTime.value = "Official OGRA Pakistan Feed"
 
         viewModelScope.launch {
@@ -4474,9 +4474,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
                 } catch (e: Exception) {
                     // Fallback 2: Use last cached prices if available, otherwise skip
-                    val cachedPetrol = sharedPrefs.getFloat("petrol", 252.10f)
-                    val cachedDiesel = sharedPrefs.getFloat("diesel", 258.34f)
-                    val cachedOctane = sharedPrefs.getFloat("high_octane", 289.62f)
+                    val cachedPetrol = sharedPrefs.getFloat("petrol", 328.00f)
+                    val cachedDiesel = sharedPrefs.getFloat("diesel", 358.00f)
+                    val cachedOctane = sharedPrefs.getFloat("high_octane", 370.00f)
                     if (cachedPetrol > 0f && cachedDiesel > 0f) {
                         updateFuelPrices(
                             petrol = cachedPetrol,

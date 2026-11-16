@@ -29,11 +29,11 @@ class FuelPriceWorker(
             val sharedPrefs = appContext.getSharedPreferences("zyphuel_prices", Context.MODE_PRIVATE)
             // Use same keys as MainViewModel: "petrol", "diesel", "high_octane"
             // Default to current OGRA rates so first-launch never shows 0
-            val oldPetrol = sharedPrefs.getFloat("petrol", 252.10f)
+            val oldPetrol = sharedPrefs.getFloat("petrol", 328.00f)
 
-            var newPetrol = if (oldPetrol > 0f) oldPetrol else 252.10f
-            var newDiesel = sharedPrefs.getFloat("diesel", 258.34f).let { if (it > 0f) it else 258.34f }
-            var newOctane = sharedPrefs.getFloat("high_octane", 289.62f).let { if (it > 0f) it else 289.62f }
+            var newPetrol = if (oldPetrol > 0f) oldPetrol else 328.00f
+            var newDiesel = sharedPrefs.getFloat("diesel", 358.00f).let { if (it > 0f) it else 358.00f }
+            var newOctane = sharedPrefs.getFloat("high_octane", 370.00f).let { if (it > 0f) it else 370.00f }
             var sourceName = "Official Fuel Market API"
 
             try {
@@ -129,6 +129,7 @@ class FuelPriceWorker(
             val displaySource = when {
                 sourceName.contains("OilPrices", ignoreCase = true) -> "OGRA Official Rates"
                 sourceName.contains("TrackMate", ignoreCase = true) -> "Official Market Rates"
+                sourceName.contains("Google", ignoreCase = true) -> "Live Market Rates"
                 sourceName.contains("HamariWeb", ignoreCase = true) -> "OGRA Official Rates"
                 sourceName.contains("GlobalPetrol", ignoreCase = true) -> "OGRA Official Rates"
                 sourceName.contains("PSO", ignoreCase = true) -> "PSO Official Rates"

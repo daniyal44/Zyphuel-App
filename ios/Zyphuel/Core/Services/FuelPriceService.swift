@@ -76,7 +76,12 @@ actor FuelPriceService {
             return result
         }
 
-        // Source 5: PSO website (JSON-in-script + HTML scraping)
+        // Source 5: Google Search (server-rendered, always has Pakistan fuel prices)
+        if let result = try? await fetchFromGoogleSearch(), result.isValid {
+            return result
+        }
+
+        // Source 6: PSO website (JSON-in-script + HTML scraping)
         if let result = try? await fetchFromWebsite(
             urlString: psoURL,
             source: "PSO Pakistan Official"
@@ -84,7 +89,7 @@ actor FuelPriceService {
             return result
         }
 
-        // Source 6: Shell website (JSON-in-script + HTML scraping)
+        // Source 7: Shell website (JSON-in-script + HTML scraping)
         if let result = try? await fetchFromWebsite(
             urlString: shellURL,
             source: "Shell Pakistan Official"
@@ -340,7 +345,90 @@ actor FuelPriceService {
         return 0
     }
 
-    // MARK: - Source 5 & 6: Generic website (PSO / Shell)
+    // MARK: - Source 5: Google Search (server-rendered, reliable)
+
+    private func fetchFromGoogleSearch() async throws -> FuelPriceFetchResult {
+        var petrol = 0.0, diesel = 0.0, octane = 0.0
+
+        // Fetch petrol price
+        if let html = try? await fetchHTML(from: "https://www.google.com/search?q=current+petrol+price+in+pakistan+per+litre+PKR+today") {
+            petrol = extractPriceFromGoogleResults(html, fuelType: "petrol")
+        }
+
+        // Fetch diesel price
+        if let html = try? await fetchHTML(from: "https://www.google.com/search?q=current+diesel+price+in+pakistan+per+litre+PKR+today") {
+            diesel = extractPriceFromGoogleResults(html, fuelType: "diesel")
+        }
+
+        // Fetch high octane price
+        if let html = try? await fetchHTML(from: "https://www.google.com/search?q=current+high+octane+petrol+price+pakistan+PKR+today") {
+            octane = extractPriceFromGoogleResults(html, fuelType: "octane")
+        }
+
+        return FuelPriceFetchResult(
+            petrol: petrol, diesel: diesel, highOctane: octane,
+            source: "Google Search (Live)", effectiveDate: nil
+        )
+    }
+
+    private func extractPriceFromGoogleResults(_ html: String, fuelType: String) -> Double {
+        let cleanHtml = html.replacingOccurrences(of: "&nbsp;", with: " ")
+            .replacingOccurrences(of: "&#160;", with: " ")
+
+        let patterns = [
+            #"(?:Rs\.?|PKR|₨)\s*(\d{2,3}(?:\.\d{1,2})?)"#,
+            #"(\d{2,3}\.\d{1,2})\s*(?:Rs\.?|PKR|₨)"#,
+            #"(\d{2,3}(?:\.\d{1,2})?)\s*(?:per|/)\s*(?:litre|liter|L)"#
+        ]
+
+        // Split into chunks and look for prices near fuel type keywords
+        let chunks = cleanHtml.components(separatedBy: "<div")
+            + cleanHtml.components(separatedBy: "<span")
+
+        for chunk in chunks {
+            let lower = chunk.lowercased()
+            let isRelevant: Bool
+            switch fuelType {
+            case "petrol":
+                isRelevant = (lower.contains("petrol") || lower.contains("gasoline")) && !lower.contains("octane") && !lower.contains("diesel")
+            case "diesel":
+                isRelevant = lower.contains("diesel") || lower.contains("hsd")
+            case "octane":
+                isRelevant = lower.contains("octane") || lower.contains("hobc")
+            default:
+                isRelevant = false
+            }
+
+            if isRelevant || chunk.count < 500 {
+                for pattern in patterns {
+                    guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive) else { continue }
+                    let nsRange = NSRange(chunk.startIndex..., in: chunk)
+                    if let match = regex.firstMatch(in: chunk, range: nsRange),
+                       let range = Range(match.range(at: 1), in: chunk),
+                       let price = Double(chunk[range]), price >= 150, price <= 600 {
+                        return price
+                    }
+                }
+            }
+        }
+
+        // Fallback: any PKR price from entire page
+        for pattern in patterns {
+            guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive) else { continue }
+            let nsRange = NSRange(cleanHtml.startIndex..., in: cleanHtml)
+            let matches = regex.matches(in: cleanHtml, range: nsRange)
+            for match in matches {
+                guard let range = Range(match.range(at: 1), in: cleanHtml) else { continue }
+                if let price = Double(cleanHtml[range]), price >= 150, price <= 600 {
+                    return price
+                }
+            }
+        }
+
+        return 0
+    }
+
+    // MARK: - Source 6 & 7: Generic website (PSO / Shell)
 
     private func fetchFromWebsite(urlString: String, source: String) async throws -> FuelPriceFetchResult {
         let html = try await fetchHTML(from: urlString)
@@ -545,9 +633,9 @@ final class FuelPriceSyncManager: ObservableObject {
 
     static let shared = FuelPriceSyncManager()
 
-    @Published private(set) var lastPetrol: Double = 252.10
-    @Published private(set) var lastDiesel: Double = 258.34
-    @Published private(set) var lastHighOctane: Double = 289.62
+    @Published private(set) var lastPetrol: Double = 328.00
+    @Published private(set) var lastDiesel: Double = 358.00
+    @Published private(set) var lastHighOctane: Double = 370.00
     @Published private(set) var lastSource: String = ""
     @Published private(set) var lastUpdated: Date?
     @Published private(set) var isSyncing = false

@@ -90,13 +90,19 @@ object TrackmateFuelApiService {
             if (result.petrol > 0f && result.diesel > 0f) return@withContext result
         } catch (e: Exception) { errors.add("GlobalPetrol: ${e.message}") }
 
-        // ── Source 5: PSO website (JSON-in-script + HTML scraping) ──
+        // ── Source 5: Google Search (server-rendered, always has Pakistan fuel prices) ──
+        try {
+            val result = fetchFromGoogleSearch()
+            if (result.petrol > 0f && result.diesel > 0f) return@withContext result
+        } catch (e: Exception) { errors.add("GoogleSearch: ${e.message}") }
+
+        // ── Source 6: PSO website (JSON-in-script + HTML scraping) ──
         try {
             val result = fetchFromPsoWebsite()
             if (result.petrol > 0f && result.diesel > 0f) return@withContext result
         } catch (e: Exception) { errors.add("PSO: ${e.message}") }
 
-        // ── Source 6: Shell website (JSON-in-script + HTML scraping) ──
+        // ── Source 7: Shell website (JSON-in-script + HTML scraping) ──
         try {
             val result = fetchFromShellWebsite()
             if (result.petrol > 0f && result.diesel > 0f) return@withContext result
@@ -127,10 +133,10 @@ object TrackmateFuelApiService {
         val json = JSONObject(body)
 
         // The API may return data in different structures — handle common patterns:
-        // Pattern 1: { "petrol": 252.10, "diesel": 258.34, ... }
-        // Pattern 2: { "data": { "petrol": {..., "price": 252.10}, ... } }
-        // Pattern 3: { "prices": [ { "name": "Petrol", "price": 252.10 }, ... ] }
-        // Pattern 4: { "data": [ { "product": "Petrol", "price": 252.10 }, ... ] }
+        // Pattern 1: { "petrol": 328.00, "diesel": 358.00, ... }
+        // Pattern 2: { "data": { "petrol": {..., "price": 328.00}, ... } }
+        // Pattern 3: { "prices": [ { "name": "Petrol", "price": 328.00 }, ... ] }
+        // Pattern 4: { "data": [ { "product": "Petrol", "price": 328.00 }, ... ] }
 
         var petrol = 0f
         var diesel = 0f
@@ -338,7 +344,7 @@ object TrackmateFuelApiService {
 
     /**
      * Parse a JSONArray of fuel product objects.
-     * Handles: { "name"/"product"/"fuel"/"type": "Petrol", "price"/"rate"/"value": 252.10 }
+     * Handles: { "name"/"product"/"fuel"/"type": "Petrol", "price"/"rate"/"value": 328.00 }
      */
     private fun parsePricesFromJsonArray(arr: JSONArray): Triple<Float, Float, Float> {
         var petrol = 0f
@@ -419,7 +425,107 @@ object TrackmateFuelApiService {
     }
 
     // ╔═══════════════════════════════════════════════════════════╗
-    // ║  SOURCE 5: PSO Pakistan website                          ║
+    // ║  SOURCE 5: Google Search (server-rendered, reliable)     ║
+    // ║  Google's knowledge panel shows Pakistan fuel prices     ║
+    // ║  Server-rendered HTML — works with OkHttp unlike SPAs    ║
+    // ╚═══════════════════════════════════════════════════════════╝
+    private fun fetchFromGoogleSearch(): FuelPriceFetchResult {
+        var petrol = 0f
+        var diesel = 0f
+        var octane = 0f
+
+        // Fetch petrol price from Google
+        try {
+            val petrolHtml = fetchHtml(
+                "https://www.google.com/search?q=current+petrol+price+in+pakistan+per+litre+PKR+today",
+                "Google-Petrol"
+            )
+            petrol = extractPriceFromGoogleResults(petrolHtml, "petrol")
+        } catch (_: Exception) {}
+
+        // Fetch diesel price from Google
+        try {
+            val dieselHtml = fetchHtml(
+                "https://www.google.com/search?q=current+diesel+price+in+pakistan+per+litre+PKR+today",
+                "Google-Diesel"
+            )
+            diesel = extractPriceFromGoogleResults(dieselHtml, "diesel")
+        } catch (_: Exception) {}
+
+        // Fetch high octane price from Google
+        try {
+            val octaneHtml = fetchHtml(
+                "https://www.google.com/search?q=current+high+octane+petrol+price+pakistan+PKR+today",
+                "Google-Octane"
+            )
+            octane = extractPriceFromGoogleResults(octaneHtml, "octane")
+        } catch (_: Exception) {}
+
+        return FuelPriceFetchResult(
+            petrol = petrol,
+            diesel = diesel,
+            highOctane = octane,
+            source = "Google Search (Live)",
+            effectiveDate = null
+        )
+    }
+
+    /**
+     * Extract fuel price from Google search result HTML.
+     * Google shows prices in knowledge panels, featured snippets, and regular results.
+     * Looks for patterns like "Rs. 328", "PKR 328.00", "328 per litre" etc.
+     */
+    private fun extractPriceFromGoogleResults(html: String, fuelType: String): Float {
+        val cleanHtml = html.replace("&nbsp;", " ").replace("&#160;", " ")
+
+        // Strategy 1: Look for prominent price display (knowledge panel / featured snippet)
+        // Google often shows "Rs 328.00" or "PKR 328" in large text
+        val prominentPatterns = listOf(
+            // "Rs. 328.00" or "Rs 328" near fuel keywords
+            Regex("""(?:Rs\.?|PKR|₨)\s*(\d{2,3}(?:\.\d{1,2})?)(?:\s*(?:per|/)\s*(?:litre|liter|L))?""", RegexOption.IGNORE_CASE),
+            // "328.00 PKR" format
+            Regex("""(\d{2,3}\.\d{1,2})\s*(?:Rs\.?|PKR|₨)""", RegexOption.IGNORE_CASE),
+            // "328 per litre" format
+            Regex("""(\d{2,3}(?:\.\d{1,2})?)\s*(?:per|/)\s*(?:litre|liter|L)""", RegexOption.IGNORE_CASE)
+        )
+
+        // Split into chunks and look for prices near fuel type keywords
+        val chunks = cleanHtml.split("<div", "<span", "<td", "<p", "<li", "<h2", "<h3")
+        for (chunk in chunks) {
+            val lower = chunk.lowercase()
+            // Check if this chunk mentions the fuel type we're looking for
+            val isRelevant = when (fuelType) {
+                "petrol" -> (lower.contains("petrol") || lower.contains("gasoline")) && !lower.contains("octane") && !lower.contains("diesel")
+                "diesel" -> lower.contains("diesel") || lower.contains("hsd")
+                "octane" -> lower.contains("octane") || lower.contains("hobc") || lower.contains("hi-octane")
+                else -> false
+            }
+
+            if (isRelevant || chunk.length < 500) {
+                for (pattern in prominentPatterns) {
+                    val match = pattern.find(chunk)
+                    if (match != null) {
+                        val price = match.groupValues[1].toFloatOrNull()
+                        if (price != null && price in 150f..600f) return price
+                    }
+                }
+            }
+        }
+
+        // Strategy 2: Just find any PKR price in valid range from the entire page
+        for (pattern in prominentPatterns) {
+            val matches = pattern.findAll(cleanHtml)
+            for (match in matches) {
+                val price = match.groupValues[1].toFloatOrNull()
+                if (price != null && price in 150f..600f) return price
+            }
+        }
+
+        return 0f
+    }
+
+    // ╔═══════════════════════════════════════════════════════════╗
+    // ║  SOURCE 6: PSO Pakistan website                          ║
     // ╚═══════════════════════════════════════════════════════════╝
     private fun fetchFromPsoWebsite(): FuelPriceFetchResult {
         val html = fetchHtml(PSO_URL, "PSO")
@@ -429,7 +535,7 @@ object TrackmateFuelApiService {
     }
 
     // ╔═══════════════════════════════════════════════════════════╗
-    // ║  SOURCE 6: Shell Pakistan website                        ║
+    // ║  SOURCE 7: Shell Pakistan website                        ║
     // ╚═══════════════════════════════════════════════════════════╝
     private fun fetchFromShellWebsite(): FuelPriceFetchResult {
         val html = fetchHtml(SHELL_URL, "Shell")
