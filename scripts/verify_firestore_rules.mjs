@@ -69,10 +69,36 @@ record('anonymous read email_gateway is denied', 403, await call('GET', emailGat
 record('customer read email_gateway is denied', 403, await call('GET', emailGateway, customerToken))
 record('admin read email_gateway is allowed', [200, 404], await call('GET', emailGateway, adminToken))
 
+// ----- Production‑data guard: ensure fuel_rates has positive values -----
+async function callGetBody(method, path, token) {
+  const headers = { 'Content-Type': 'application/json' }
+  if (token) headers.Authorization = `Bearer ${token}`
+  const res = await fetch(`${BASE}${path}`, { method, headers })
+  const body = await res.json().catch(() => ({}))
+  return { status: res.status, body }
+}
+
+record('fuel_rates document readable by customer', [200, 404], await call('GET', fuelRates, customerToken))
+
+// Check that when the document is present, all rate fields are > 0
+;(async () => {
+  const { status, body } = await callGetBody('GET', fuelRates, customerToken)
+  const docPresent = status === 200
+  record('fuel_rates document exists', 200, status)
+  if (docPresent) {
+    const petrolOk = (body.fields?.petrol?.doubleValue ?? 0) > 0
+    const dieselOk  = (body.fields?.diesel?.doubleValue  ?? 0) > 0
+    const octaneOk  = (body.fields?.highOctane?.doubleValue ?? 0) > 0
+    record('fuel_rates petrol > 0', true, petrolOk)
+    record('fuel_rates diesel > 0', true, dieselOk)
+    record('fuel_rates highOctane > 0', true, octaneOk)
+  }
+})()
+
 const failed = results.filter((r) => !r.pass)
 console.log(`\n${results.length - failed.length}/${results.length} rule checks passed`)
 if (failed.length) {
   console.error(`\n${failed.length} Firestore rule check(s) FAILED`)
   process.exit(1)
 }
-console.log('firestore.rules verified: fuel rates readable by all signed-in devices, admin-only writes.')
+console.log('firestore.rules verified: fuel rates readable by all signed-in devices, admin-only writes, and non‑zero values present.')

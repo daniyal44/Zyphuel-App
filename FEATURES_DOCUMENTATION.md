@@ -1,10 +1,16 @@
 # 🚀 Zyphuel App Features & Technical Documentation
-**App Version:** `v2.6.4.0.0.42 (Build 70)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** <font color="#10b981"><b>2026-11-05</b></font>
+**App Version:** `v2.6.4.0.0.46 (Build 74)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** <font color="#10b981"><b>2026-11-16</b></font>
 
 Welcome to the complete architectural and functional guide for the **Zyphuel** Android application. This document outlines every single feature, function, database entity, and user flow from start to finish.
 
 > [!NOTE]
-> **Latest Updates (<font color="#10b981"><b>2026-11-07</b></font> — v2.6.4.0.0.40 / Build 68):**
+> **Latest Updates (<font color="#10b981"><b>2026-11-16</b></font> — v2.6.4.0.0.43 / Build 71): Fixed live fuel-price sync on both platforms.**
+> 1. **Rules were blocking customer price sync (`firestore.rules`)**: the whole `system_config` collection was admin-only, so `system_config/fuel_rates` was unreadable from customer/rider sessions. Android (`FirestoreUserRepository.observeFuelRatesConfig` → `MainViewModel.petrolPrice` / `dieselPrice` / `highOctanePrice`) and iOS (`SystemConfigService.startObserving()` → `FuelRates`) therefore kept 0 / stale values. `fuel_rates` and `app_version` now allow `read: if isSignedIn()` with `write: if isAdmin()`; `email_gateway` stays admin-only.
+> 2. **Deploy config (`firebase.json`, `.firebaserc`)**: `npx firebase-tools deploy --only firestore:rules` now publishes the rules to project `ai-420`; the fix must be deployed to reach production devices.
+> 3. **Rules verification (`scripts/verify_firestore_rules.mjs`)**: 10 emulator-backed checks cover anonymous/customer/admin read and write on `fuel_rates`, `app_version` and `email_gateway`.
+
+> [!NOTE]
+> **Previous Updates (<font color="#10b981"><b>2026-11-07</b></font> — v2.6.4.0.0.40 / Build 68):**
 > 1. **iOS App Store readiness — real icon + privacy manifest**: `ios/Zyphuel/Resources/Assets.xcassets/AppIcon.appiconset` now ships an opaque 1024×1024 brand icon (`AppIcon-1024.png`, regenerate with `scripts/generate_ios_app_icon.ps1`), and `ios/Config/PrivacyInfo.xcprivacy` declares no tracking, the collected data types and the required-reason APIs; both are `Copy Bundle Resources` members so they land in `Zyphuel.app`.
 > 2. **iOS Firebase configuration is bundled again (`project.yml`)**: the target previously globbed only `Zyphuel/`, so the git-ignored `Config/GoogleService-Info.plist` never reached the app bundle and `FirebaseApp.configure()` silently ran the app in setup mode. The plist is now an optional resource entry (`optional: true`), keeping fresh clones buildable.
 > 3. **Honest iOS download (`desktop_ios_download.bat`)**: the script no longer renames the ~84 KB source zip to `.ipa`. It validates a real IPA (`Payload/*.app/Info.plist`, ≥ 1 MB) before copying, can fetch the CI Simulator build (`Zyphuel-ios-simulator-app`) through the GitHub CLI, and otherwise delivers `Zyphuel-v<ver>-Build<n>-iOS-Source.zip` with explicit "not an app" instructions.
@@ -64,7 +70,7 @@ Below is the complete index of all **dedicated documentation files** (including 
 
 ---
 
-## 0. iOS Application — Native SwiftUI Port (v2.6.4.0.0.42)
+## 0. iOS Application — Native SwiftUI Port (v2.6.4.0.0.46)
 **Location:** [`ios/`](ios/README.md) • **Bundle ID:** `com.aistudio.zyphuel.appv2` • **Minimum iOS:** 17.0
 
 Zyphuel now ships as a native iOS app that shares the Android Firebase project, Firestore collections and business rules. It is a separate Swift codebase (not a web wrapper) under `ios/`.
@@ -1278,7 +1284,7 @@ Zyphuel v2.4.0 introduces a comprehensive 10-category on-demand automotive and m
 * **Strict Role-Partitioned Security Rules (`firestore.rules`)**:
   - Hardened Firestore security rules to enforce `isSignedIn()` on all sensitive read/write paths.
   - Enforced price and customer email immutability on `orders/{orderId}` to prevent unauthorized post-creation tampering.
-  - Restricted `system_config/**` access strictly to Super Admin, protecting transactional email and SMTP credentials.
+  - Split `system_config` per document (2026-11-16): `fuel_rates` and `app_version` are readable by every signed-in device so live OGRA prices and version checks reach customers and riders, while `email_gateway` remains Super-Admin-only to protect SMTP credentials.
   - Enforced append-only audit logging (`audit_logs/{id}`) with deletion completely blocked.
 
 ### 32.3 Customer Login Biometric Visibility Fix

@@ -1,7 +1,7 @@
 # 🗄️ Zyphuel — Database Architecture, Backup & Recovery
 
 **Last Updated:** <font color="#10b981"><b>2026-10-23 22:48:18 PKT</b></font>
-**App Version:** <font color="#10b981"><b>v2.6.4.0.0.42 (Build 70)</b></font>
+**App Version:** <font color="#10b981"><b>v2.6.4.0.0.46 (Build 74)</b></font>
 **Room Schema Version:** <font color="#10b981"><b>13</b></font>
 **Document Status:** <font color="#10b981"><b>ACTIVE</b></font>
 
@@ -71,7 +71,8 @@ Primary key: `id`. Ownership column: `userEmail`. Columns: `nickname`, `vehicleT
 | `marked_locations`, `vehicles` | `userEmail` | every DAO query filters by `userEmail` |
 | `audit_logs` | admin read; append by any signed-in client | Firestore rule (`update`/`delete` denied) |
 | `notifications` | target role | DAO role filter |
-| SMTP/gateway config | admin | `system_config/{doc}` rule |
+| SMTP/gateway config | admin | `system_config/email_gateway` rule |
+| Live fuel rates | any signed-in device (read), admin (write) | `system_config/fuel_rates` rule |
 
 Guessing another user's order ID cannot expose it: the local query is scoped by email and the cloud rule
 requires `request.auth.token.email` to match `customerEmail`/`riderEmail`.
@@ -81,8 +82,9 @@ requires `request.auth.token.email` to match `customerEmail`/`riderEmail`.
 ## 4. Cloud collections (Firestore)
 
 `users/{uid}`, `orders/{orderId}`, `live_tracking/{orderId}`, `feedback/{id}`, `audit_logs/{id}`,
-`system_config/{doc}` (SMTP gateway), `mail/{id}` (transactional invoices), `app_stats/{doc}`,
-plus the app-version document used for update broadcasts. Rules live in [`firestore.rules`](firestore.rules)
+`system_config/fuel_rates` (live OGRA prices, readable by every signed-in device), `system_config/app_version`
+(update broadcasts, readable by every signed-in device), `system_config/email_gateway` (SMTP gateway, admin only),
+`mail/{id}` (transactional invoices), `app_stats/{doc}`. Rules live in [`firestore.rules`](firestore.rules)
 and are summarized in [SECURITY.md §5](SECURITY.md).
 
 ---

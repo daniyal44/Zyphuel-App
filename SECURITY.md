@@ -1,7 +1,7 @@
 # 🔐 Zyphuel — Security Architecture & Incident Response
 
 **Last Updated:** <font color="#10b981"><b>2026-10-23 22:48:18 PKT</b></font>
-**App Version:** <font color="#10b981"><b>v2.6.4.0.0.42 (Build 70)</b></font>
+**App Version:** <font color="#10b981"><b>v2.6.4.0.0.46 (Build 74)</b></font>
 **Document Status:** <font color="#10b981"><b>ACTIVE — verified against source at the timestamp above</b></font>
 
 ---
@@ -128,7 +128,9 @@ it requires an outbound mail provider that is configured at runtime and not guar
 | `orders/{orderId}` | read/update: admin, owning customer or assigned rider; `totalPrice` and `customerEmail` immutable after creation; delete: admin only |
 | `live_tracking/{orderId}` | **admin only** (read and write) — hardened 2026-11-03 |
 | `audit_logs` | append-only; read and create admin-only; update/delete denied |
-| `system_config` (SMTP credentials) | admin only |
+| `system_config/fuel_rates` | read: any signed-in device (live OGRA price sync for customers/riders/admin); write: admin only — **fixed 2026-11-16**, the whole collection used to be admin-only so customer fuel prices never synced |
+| `system_config/app_version` | read: any signed-in device (update checks); write: admin only |
+| `system_config/email_gateway` | admin only (SMTP credentials) |
 | `feedback` | create signed-in with a field whitelist; read/update/delete admin |
 | `mail` | create signed-in only when bound to the caller's own `auth.uid`, exactly one recipient, field whitelist and capped sizes; read/update/delete admin |
 | `app_stats` | public read; writes may only increment `count` by exactly 1 (or create at 1) |
