@@ -1634,7 +1634,7 @@ fun OnboardingScreen(viewModel: MainViewModel) {
             ) {
                 ZyphuelOuterLogo(modifier = Modifier.height(32.dp))
                 TextButton(
-                    onClick = { viewModel.navigateTo("portal_select") },
+                    onClick = { viewModel.navigateTo("login_customer") },
                     colors = ButtonDefaults.textButtonColors(contentColor = ZyphuelBluePrimary)
                 ) {
                     Text("Skip")
@@ -1729,7 +1729,7 @@ fun OnboardingScreen(viewModel: MainViewModel) {
                         if (step < 2) {
                             step++
                         } else {
-                            viewModel.navigateTo("portal_select")
+                            viewModel.navigateTo("login_customer")
                         }
                     },
                     modifier = Modifier
@@ -2096,13 +2096,6 @@ fun AuthDrawerContent(
             )
 
             SidebarItem(
-                icon = Icons.Filled.Home,
-                label = "Portal Selection",
-                modifier = Modifier.testTag("auth_sidebar_portal_select"),
-                onClick = onNavigateToPortalSelect
-            )
-
-            SidebarItem(
                 icon = Icons.Filled.Description,
                 label = "Terms & Conditions",
                 modifier = Modifier.testTag("auth_sidebar_terms"),
@@ -2218,7 +2211,7 @@ fun AuthScreen(viewModel: MainViewModel, isRegister: Boolean, isRider: Boolean) 
                 onNavigateToPortalSelect = {
                     scope.launch {
                         drawerState.close()
-                        viewModel.navigateTo("portal_select")
+                        viewModel.navigateTo("login_customer")
                     }
                 },
                 onOpenLegal = { tab ->
@@ -3109,7 +3102,7 @@ fun AuthScreen(viewModel: MainViewModel, isRegister: Boolean, isRider: Boolean) 
                                         return@Button
                                     }
                                     isAuthenticating = true
-                                    viewModel.login(email, password) { user ->
+                                    viewModel.login(email, password, onSuccess = { user ->
                                         viewModel.completeLogin(user)
                                         when {
                                             user.role == "admin" -> viewModel.navigateTo("admin_dashboard")
@@ -3117,7 +3110,9 @@ fun AuthScreen(viewModel: MainViewModel, isRegister: Boolean, isRider: Boolean) 
                                             user.role == "rider" -> viewModel.navigateTo("rider_home")
                                             else -> viewModel.navigateTo("customer_home")
                                         }
-                                    }
+                                    }, onFailure = {
+                                        isAuthenticating = false
+                                    })
                                 }
                             },
                             modifier = Modifier
@@ -13107,7 +13102,7 @@ fun RiderCompleteProfileScreen(viewModel: MainViewModel) {
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = { viewModel.navigateTo("portal_select") }) {
+                    IconButton(onClick = { viewModel.navigateTo("login_customer") }) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = ZyphuelBluePrimary)
                     }
                 },

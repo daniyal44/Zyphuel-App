@@ -82,6 +82,8 @@ class MainActivity : FragmentActivity() {
 
         // Schedule periodic background WorkManager task for real-time fuel price updates & notifications
         com.example.worker.FuelPriceWorker.schedulePeriodicPriceWork(this)
+        // Also trigger an immediate one-time sync so prices are fresh on every app launch
+        com.example.worker.FuelPriceWorker.triggerImmediatePriceWork(this)
 
         setContent {
             MyApplicationTheme {
@@ -145,7 +147,10 @@ class MainActivity : FragmentActivity() {
                                     ) {
                                         when (screen) {
                                             "splash" -> SplashScreen(viewModel)
-                                            "portal_select" -> PortalSelectScreen(viewModel)
+                                            "portal_select" -> {
+                                                // Portal Selection removed — redirect to login
+                                                LaunchedEffect(Unit) { viewModel.navigateTo("login_customer") }
+                                            }
                                             "onboarding" -> OnboardingScreen(viewModel)
                                             "login_customer" -> AuthScreen(viewModel, isRegister = false, isRider = false)
                                             "register_customer" -> AuthScreen(viewModel, isRegister = true, isRider = false)

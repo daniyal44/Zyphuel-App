@@ -805,13 +805,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private val _petrolPrice = MutableStateFlow(sharedPrefs.getFloat("petrol", 289.38f))
+    private val _petrolPrice = MutableStateFlow(sharedPrefs.getFloat("petrol", 252.10f))
     val petrolPrice = _petrolPrice.asStateFlow()
 
-    private val _dieselPrice = MutableStateFlow(sharedPrefs.getFloat("diesel", 289.84f))
+    private val _dieselPrice = MutableStateFlow(sharedPrefs.getFloat("diesel", 258.34f))
     val dieselPrice = _dieselPrice.asStateFlow()
 
-    private val _highOctanePrice = MutableStateFlow(sharedPrefs.getFloat("high_octane", 325.00f))
+    private val _highOctanePrice = MutableStateFlow(sharedPrefs.getFloat("high_octane", 289.62f))
     val highOctanePrice = _highOctanePrice.asStateFlow()
 
     // --- Retail Petrol Pump Rates (Base OGRA Rate + Rs. 5.00/L Petrol Pump Margin/Markup) ---
@@ -1120,9 +1120,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             .putString("last_sync_time", "Official OGRA Pakistan Feed")
             .apply()
         
-        _petrolPrice.value = 289.38f
-        _dieselPrice.value = 289.84f
-        _highOctanePrice.value = 325.00f
+        _petrolPrice.value = 252.10f
+        _dieselPrice.value = 258.34f
+        _highOctanePrice.value = 289.62f
         _lastPriceSyncTime.value = "Official OGRA Pakistan Feed"
 
         viewModelScope.launch {
@@ -1649,16 +1649,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun login(email: String, passwordHash: String, onSuccess: (UserEntity) -> Unit) {
+    fun login(email: String, passwordHash: String, onSuccess: (UserEntity) -> Unit, onFailure: (() -> Unit)? = null) {
         // A live cooldown disables the form until it reaches zero (added 2026-10-23).
         if (_loginCooldownSeconds.value > 0L) {
             _uiMessage.value = lockedOutMessage(_loginCooldownSeconds.value)
+            onFailure?.invoke()
             return
         }
         val trimmedEmail = email.trim()
         val emailValidation = SecurityInputValidator.validateEmail(trimmedEmail)
         if (emailValidation is ValidationResult.Invalid) {
             _uiMessage.value = emailValidation.reason
+            onFailure?.invoke()
             return
         }
 
@@ -1668,6 +1670,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         if (lockout is RateLimitResult.Blocked) {
             startLoginCooldown(lockout.remainingCooldownSeconds)
             _uiMessage.value = lockout.reason
+            onFailure?.invoke()
             return
         }
 
@@ -1681,6 +1684,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     _currentLoginPassword.value = passwordHash
                     if (user.role == "rider" && !user.isVerified) {
                         _uiMessage.value = "Your rider account is pending Admin approval. Please contact support."
+                        onFailure?.invoke()
                     } else {
                         onSuccess(user)
                     }
@@ -1692,9 +1696,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         startLoginCooldown(remaining.remainingCooldownSeconds)
                     }
                     _uiMessage.value = lockMessage ?: "Invalid email or password."
+                    onFailure?.invoke()
                 }
             } catch (e: Exception) {
                 _uiMessage.value = SecurityErrorFormatter.formatUserError(e, "Login failed. Please verify credentials and try again.")
+                onFailure?.invoke()
             }
         }
     }
@@ -4468,9 +4474,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
                 } catch (e: Exception) {
                     // Fallback 2: Use last cached prices if available, otherwise skip
-                    val cachedPetrol = sharedPrefs.getFloat("price_petrol", 0f)
-                    val cachedDiesel = sharedPrefs.getFloat("price_diesel", 0f)
-                    val cachedOctane = sharedPrefs.getFloat("price_high_octane", 0f)
+                    val cachedPetrol = sharedPrefs.getFloat("petrol", 252.10f)
+                    val cachedDiesel = sharedPrefs.getFloat("diesel", 258.34f)
+                    val cachedOctane = sharedPrefs.getFloat("high_octane", 289.62f)
                     if (cachedPetrol > 0f && cachedDiesel > 0f) {
                         updateFuelPrices(
                             petrol = cachedPetrol,

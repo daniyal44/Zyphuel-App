@@ -4,6 +4,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import org.json.JSONArray
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
 
@@ -20,25 +21,41 @@ data class FuelPriceFetchResult(
 /**
  * Multi-source Pakistan fuel price fetcher.
  * Priority chain:
- *   1. Trackmate Fuel API (aggregated PSO/Shell/OGRA data)
- *   2. PSO Pakistan official website scraping
- *   3. Shell Pakistan official website scraping
- *   4. Codeistry Pakistan fuel prices API (community API)
+ *   1. OilPrices.pk API (FREE, no API key, JSON, OGRA official prices, CC BY 4.0)
+ *   2. TrackMate Fuel API (FREE, no API key, JSON, aggregates PSO/Shell/PakWheels)
+ *   3. HamariWeb Pakistan (HTML scraping fallback)
+ *   4. GlobalPetrolPrices.com (HTML scraping fallback)
+ *   5. PSO Pakistan website (JSON-in-HTML extraction)
+ *   6. Shell Pakistan website (JSON-in-HTML extraction)
  *
- * Each source is tried in order; the first successful response wins.
+ * Sources 1 & 2 are proper JSON APIs — reliable and fast.
+ * Sources 3-6 are HTML scrapers kept as emergency fallbacks.
+ *
  * FuelPriceWorker and MainViewModel call [fetchLatestFuelPrices] which
  * automatically cascades through all sources before giving up.
  */
 object TrackmateFuelApiService {
 
-    private const val TRACKMATE_URL = "https://fuel.trackmate.page/api/prices"
+    // ═══════════════════════════════════════════════════════════
+    //  PRIMARY JSON APIs (no API key needed, free, reliable)
+    // ═══════════════════════════════════════════════════════════
+    private const val OILPRICES_PK_API = "https://oilprices.pk/api/latest"
+    private const val TRACKMATE_API = "https://fuel.trackmate.page/api/prices"
+    private const val TRACKMATE_PSO_API = "https://fuel.trackmate.page/api/prices/pso"
+    private const val TRACKMATE_SHELL_API = "https://fuel.trackmate.page/api/prices/shell"
+
+    // ═══════════════════════════════════════════════════════════
+    //  FALLBACK HTML SCRAPERS (legacy, less reliable)
+    // ═══════════════════════════════════════════════════════════
+    private const val HAMARIWEB_URL = "https://hamariweb.com/finance/petrol-prices.aspx"
+    private const val GLOBAL_PETROL_PRICES_URL = "https://www.globalpetrolprices.com/Pakistan/gasoline_prices/"
+    private const val GLOBAL_PETROL_DIESEL_URL = "https://www.globalpetrolprices.com/Pakistan/diesel_prices/"
     private const val PSO_URL = "https://psopk.com/en/products-and-services/product-prices"
     private const val SHELL_URL = "https://www.shell.com.pk/motorists/shell-fuels/fuel-pricing.html"
-    private const val CODEISTRY_URL = "https://api.codeistry.com.pk/fuel-prices"
 
     private val okHttpClient = OkHttpClient.Builder()
-        .connectTimeout(12, TimeUnit.SECONDS)
-        .readTimeout(12, TimeUnit.SECONDS)
+        .connectTimeout(15, TimeUnit.SECONDS)
+        .readTimeout(15, TimeUnit.SECONDS)
         .followRedirects(true)
         .build()
 
@@ -47,193 +64,495 @@ object TrackmateFuelApiService {
      * Throws only if ALL sources fail.
      */
     suspend fun fetchLatestFuelPrices(): FuelPriceFetchResult = withContext(Dispatchers.IO) {
-        // Source 1: Trackmate API
-        try {
-            val result = fetchFromTrackmate()
-            if (result.petrol > 0f && result.diesel > 0f) return@withContext result
-        } catch (_: Exception) { }
+        val errors = mutableListOf<String>()
 
-        // Source 2: PSO website scraping
+        // ── Source 1: OilPrices.pk API (JSON, OGRA official, most reliable) ──
+        try {
+            val result = fetchFromOilPricesPk()
+            if (result.petrol > 0f && result.diesel > 0f) return@withContext result
+        } catch (e: Exception) { errors.add("OilPrices.pk: ${e.message}") }
+
+        // ── Source 2: TrackMate Fuel API (JSON, aggregated PSO/Shell data) ──
+        try {
+            val result = fetchFromTrackMateApi()
+            if (result.petrol > 0f && result.diesel > 0f) return@withContext result
+        } catch (e: Exception) { errors.add("TrackMate: ${e.message}") }
+
+        // ── Source 3: HamariWeb (HTML scraping fallback) ──
+        try {
+            val result = fetchFromHamariWeb()
+            if (result.petrol > 0f && result.diesel > 0f) return@withContext result
+        } catch (e: Exception) { errors.add("HamariWeb: ${e.message}") }
+
+        // ── Source 4: GlobalPetrolPrices.com (HTML scraping fallback) ──
+        try {
+            val result = fetchFromGlobalPetrolPrices()
+            if (result.petrol > 0f && result.diesel > 0f) return@withContext result
+        } catch (e: Exception) { errors.add("GlobalPetrol: ${e.message}") }
+
+        // ── Source 5: PSO website (JSON-in-script + HTML scraping) ──
         try {
             val result = fetchFromPsoWebsite()
             if (result.petrol > 0f && result.diesel > 0f) return@withContext result
-        } catch (_: Exception) { }
+        } catch (e: Exception) { errors.add("PSO: ${e.message}") }
 
-        // Source 3: Shell website scraping
+        // ── Source 6: Shell website (JSON-in-script + HTML scraping) ──
         try {
             val result = fetchFromShellWebsite()
             if (result.petrol > 0f && result.diesel > 0f) return@withContext result
-        } catch (_: Exception) { }
-
-        // Source 4: Codeistry community API
-        try {
-            val result = fetchFromCodeistry()
-            if (result.petrol > 0f && result.diesel > 0f) return@withContext result
-        } catch (_: Exception) { }
+        } catch (e: Exception) { errors.add("Shell: ${e.message}") }
 
         // All sources failed — throw so Gemini fallback in FuelPriceWorker kicks in
-        throw java.io.IOException("All fuel price sources failed")
+        throw java.io.IOException("All fuel price sources failed: ${errors.joinToString("; ")}")
     }
 
-    // ============================================================
-    //  SOURCE 1: Trackmate Fuel API (JSON)
-    // ============================================================
-    private fun fetchFromTrackmate(): FuelPriceFetchResult {
+    // ╔═══════════════════════════════════════════════════════════╗
+    // ║  SOURCE 1: OilPrices.pk API (JSON — PRIMARY)             ║
+    // ║  Endpoint: https://oilprices.pk/api/latest               ║
+    // ║  No API key required, CC BY 4.0, ~5 min cache            ║
+    // ║  Returns OGRA official consumer retail prices             ║
+    // ╚═══════════════════════════════════════════════════════════╝
+    private fun fetchFromOilPricesPk(): FuelPriceFetchResult {
         val request = Request.Builder()
-            .url(TRACKMATE_URL)
+            .url(OILPRICES_PK_API)
             .header("Accept", "application/json")
-            .header("User-Agent", "ZyphuelApp/2.0 (Android)")
+            .header("User-Agent", "Zyphuel-App/1.0 (Android)")
             .get()
             .build()
 
         val response = okHttpClient.newCall(request).execute()
-        if (!response.isSuccessful) throw java.io.IOException("Trackmate: ${response.code}")
+        if (!response.isSuccessful) throw java.io.IOException("OilPrices.pk: HTTP ${response.code}")
 
-        val bodyString = response.body?.string() ?: throw java.io.IOException("Trackmate: empty body")
-        val jsonRoot = JSONObject(bodyString)
-        val pricesArray = jsonRoot.getJSONArray("prices")
+        val body = response.body?.string() ?: throw java.io.IOException("OilPrices.pk: empty body")
+        val json = JSONObject(body)
 
-        var foundPetrol: Float? = null
-        var foundDiesel: Float? = null
-        var foundOctane: Float? = null
-        var effectiveDateStr: String? = null
-
-        for (i in 0 until pricesArray.length()) {
-            val item = pricesArray.getJSONObject(i)
-            val product = item.optString("product", "").lowercase()
-            val source = item.optString("source", "").lowercase()
-            val pricePkr = item.optDouble("price_pkr", 0.0).toFloat()
-            val effDate = item.optString("effective_date", "")
-            if (effDate.isNotBlank() && effectiveDateStr == null) effectiveDateStr = effDate
-            if (pricePkr <= 0f) continue
-
-            when (product) {
-                "petrol" -> if (foundPetrol == null || source == "pso") foundPetrol = pricePkr
-                "hsd" -> if (foundDiesel == null || source == "pso" || source == "shell") foundDiesel = pricePkr
-                "octane_plus", "hobc", "high_octane" -> if (foundOctane == null || source == "pso") foundOctane = pricePkr
-            }
-        }
-
-        return FuelPriceFetchResult(
-            petrol = foundPetrol ?: 0f,
-            diesel = foundDiesel ?: 0f,
-            highOctane = foundOctane ?: 0f,
-            source = "Trackmate Fuel API (PSO/Shell)",
-            effectiveDate = effectiveDateStr
-        )
-    }
-
-    // ============================================================
-    //  SOURCE 2: PSO Pakistan official website (HTML scraping)
-    // ============================================================
-    private fun fetchFromPsoWebsite(): FuelPriceFetchResult {
-        val request = Request.Builder()
-            .url(PSO_URL)
-            .header("User-Agent", "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 ZyphuelApp")
-            .get()
-            .build()
-
-        val response = okHttpClient.newCall(request).execute()
-        if (!response.isSuccessful) throw java.io.IOException("PSO: ${response.code}")
-
-        val html = response.body?.string() ?: throw java.io.IOException("PSO: empty body")
-        return parseFuelPricesFromHtml(html, "PSO Pakistan Official")
-    }
-
-    // ============================================================
-    //  SOURCE 3: Shell Pakistan official website (HTML scraping)
-    // ============================================================
-    private fun fetchFromShellWebsite(): FuelPriceFetchResult {
-        val request = Request.Builder()
-            .url(SHELL_URL)
-            .header("User-Agent", "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 ZyphuelApp")
-            .get()
-            .build()
-
-        val response = okHttpClient.newCall(request).execute()
-        if (!response.isSuccessful) throw java.io.IOException("Shell: ${response.code}")
-
-        val html = response.body?.string() ?: throw java.io.IOException("Shell: empty body")
-        return parseFuelPricesFromHtml(html, "Shell Pakistan Official")
-    }
-
-    // ============================================================
-    //  SOURCE 4: Codeistry community API (JSON)
-    // ============================================================
-    private fun fetchFromCodeistry(): FuelPriceFetchResult {
-        val request = Request.Builder()
-            .url(CODEISTRY_URL)
-            .header("Accept", "application/json")
-            .header("User-Agent", "ZyphuelApp/2.0 (Android)")
-            .get()
-            .build()
-
-        val response = okHttpClient.newCall(request).execute()
-        if (!response.isSuccessful) throw java.io.IOException("Codeistry: ${response.code}")
-
-        val bodyString = response.body?.string() ?: throw java.io.IOException("Codeistry: empty body")
-        val json = JSONObject(bodyString)
-
-        // Codeistry API typically returns: { "petrol": 272.89, "diesel": 278.19, ... }
-        val petrol = json.optDouble("petrol", 0.0).toFloat()
-        val diesel = json.optDouble("diesel", json.optDouble("high_speed_diesel", 0.0)).toFloat()
-        val octane = json.optDouble("high_octane", json.optDouble("hobc", 0.0)).toFloat()
-
-        return FuelPriceFetchResult(
-            petrol = petrol,
-            diesel = diesel,
-            highOctane = octane,
-            source = "Codeistry Pakistan Fuel API"
-        )
-    }
-
-    // ============================================================
-    //  HTML PRICE PARSER (shared by PSO and Shell scrapers)
-    // ============================================================
-    /**
-     * Extracts fuel prices from HTML pages that contain price tables.
-     * Looks for patterns like "Rs. 272.89" or "PKR 272.89" near fuel product names.
-     * Works with both PSO and Shell website layouts.
-     */
-    private fun parseFuelPricesFromHtml(html: String, sourceName: String): FuelPriceFetchResult {
-        val priceRegex = Regex("""(?:Rs\.?|PKR)\s*(\d{2,3}(?:\.\d{1,2})?)""", RegexOption.IGNORE_CASE)
+        // The API may return data in different structures — handle common patterns:
+        // Pattern 1: { "petrol": 252.10, "diesel": 258.34, ... }
+        // Pattern 2: { "data": { "petrol": {..., "price": 252.10}, ... } }
+        // Pattern 3: { "prices": [ { "name": "Petrol", "price": 252.10 }, ... ] }
+        // Pattern 4: { "data": [ { "product": "Petrol", "price": 252.10 }, ... ] }
 
         var petrol = 0f
         var diesel = 0f
         var octane = 0f
+        var effectiveDate: String? = null
 
-        // Split into lines/sections and search near product keywords
-        val lines = html.split("\n", "<tr>", "<td>", "<div>", "<span>", "<p>")
+        // Try top-level direct keys first
+        petrol = extractPriceFromJson(json, "petrol", "petrol_price", "ms_petrol", "motor_spirit", "gasoline")
+        diesel = extractPriceFromJson(json, "diesel", "diesel_price", "hsd", "high_speed_diesel")
+        octane = extractPriceFromJson(json, "high_octane", "hi_octane", "hobc", "octane", "high_octane_price")
 
-        for (i in lines.indices) {
-            val line = lines[i].lowercase()
-            val priceMatch = priceRegex.find(lines[i])
-                ?: (if (i + 1 < lines.size) priceRegex.find(lines[i + 1]) else null)
-                ?: (if (i + 2 < lines.size) priceRegex.find(lines[i + 2]) else null)
+        // Try "data" object
+        if (petrol == 0f || diesel == 0f) {
+            val dataObj = json.optJSONObject("data")
+            if (dataObj != null) {
+                if (petrol == 0f) petrol = extractPriceFromJson(dataObj, "petrol", "petrol_price", "ms_petrol", "motor_spirit", "gasoline")
+                if (diesel == 0f) diesel = extractPriceFromJson(dataObj, "diesel", "diesel_price", "hsd", "high_speed_diesel")
+                if (octane == 0f) octane = extractPriceFromJson(dataObj, "high_octane", "hi_octane", "hobc", "octane", "high_octane_price")
 
-            if (priceMatch != null) {
-                val price = priceMatch.groupValues[1].toFloatOrNull() ?: continue
-                if (price < 100f || price > 600f) continue // sanity check for PKR range
+                // Check nested objects like { "data": { "petrol": { "price": 252 } } }
+                if (petrol == 0f) petrol = extractNestedPrice(dataObj, "petrol", "motor_spirit", "ms_petrol", "gasoline")
+                if (diesel == 0f) diesel = extractNestedPrice(dataObj, "diesel", "hsd", "high_speed_diesel")
+                if (octane == 0f) octane = extractNestedPrice(dataObj, "high_octane", "hi_octane", "hobc", "octane")
+            }
+        }
 
-                when {
-                    petrol == 0f && (line.contains("petrol") || line.contains("motor spirit") || line.contains("mogas") || line.contains("euro-v petrol") || line.contains("super")) && !line.contains("octane") && !line.contains("hobc") -> {
-                        petrol = price
-                    }
-                    diesel == 0f && (line.contains("diesel") || line.contains("hsd") || line.contains("high speed") || line.contains("high-speed")) -> {
-                        diesel = price
-                    }
-                    octane == 0f && (line.contains("octane") || line.contains("hobc") || line.contains("hi-octane") || line.contains("ron 97") || line.contains("high octane")) -> {
-                        octane = price
+        // Try "prices" or "data" as array
+        if (petrol == 0f || diesel == 0f) {
+            val pricesArray = json.optJSONArray("prices") ?: json.optJSONArray("data") ?: json.optJSONArray("products")
+            if (pricesArray != null) {
+                parsePricesFromJsonArray(pricesArray).let { (p, d, o) ->
+                    if (petrol == 0f) petrol = p
+                    if (diesel == 0f) diesel = d
+                    if (octane == 0f) octane = o
+                }
+            }
+        }
+
+        // Deep scan: iterate all top-level keys looking for price-like nested objects
+        if (petrol == 0f || diesel == 0f) {
+            val keys = json.keys()
+            while (keys.hasNext()) {
+                val key = keys.next()
+                val lower = key.lowercase()
+                val value = json.opt(key)
+                val price = when (value) {
+                    is Number -> value.toFloat()
+                    is JSONObject -> value.optDouble("price", 0.0).toFloat()
+                        .let { if (it == 0f) value.optDouble("retail_price", 0.0).toFloat() else it }
+                        .let { if (it == 0f) value.optDouble("rate", 0.0).toFloat() else it }
+                    else -> 0f
+                }
+                if (price in 100f..600f) {
+                    when {
+                        petrol == 0f && hasPetrolKeyword(lower) && !hasOctaneKeyword(lower) -> petrol = price
+                        diesel == 0f && hasDieselKeyword(lower) -> diesel = price
+                        octane == 0f && hasOctaneKeyword(lower) -> octane = price
                     }
                 }
             }
         }
 
+        effectiveDate = json.optString("effective_date", null)
+            ?: json.optString("date", null)
+            ?: json.optString("updated_at", null)
+            ?: json.optJSONObject("data")?.optString("effective_date", null)
+
         return FuelPriceFetchResult(
             petrol = petrol,
             diesel = diesel,
             highOctane = octane,
-            source = sourceName
+            source = "OilPrices.pk API (OGRA Official)",
+            effectiveDate = effectiveDate
         )
     }
+
+    // ╔═══════════════════════════════════════════════════════════╗
+    // ║  SOURCE 2: TrackMate Fuel API (JSON — SECONDARY)         ║
+    // ║  Endpoint: https://fuel.trackmate.page/api/prices        ║
+    // ║  Also: /api/prices/pso, /api/prices/shell                ║
+    // ║  No API key, ~60 req/min, aggregates PSO/Shell data      ║
+    // ╚═══════════════════════════════════════════════════════════╝
+    private fun fetchFromTrackMateApi(): FuelPriceFetchResult {
+        val request = Request.Builder()
+            .url(TRACKMATE_API)
+            .header("Accept", "application/json")
+            .header("User-Agent", "Zyphuel-App/1.0 (Android)")
+            .get()
+            .build()
+
+        val response = okHttpClient.newCall(request).execute()
+        if (!response.isSuccessful) throw java.io.IOException("TrackMate: HTTP ${response.code}")
+
+        val body = response.body?.string() ?: throw java.io.IOException("TrackMate: empty body")
+
+        var petrol = 0f
+        var diesel = 0f
+        var octane = 0f
+        var effectiveDate: String? = null
+
+        // TrackMate may return JSON object or array
+        val trimmed = body.trim()
+        if (trimmed.startsWith("[")) {
+            // Array of fuel products
+            val arr = JSONArray(trimmed)
+            parsePricesFromJsonArray(arr).let { (p, d, o) ->
+                petrol = p; diesel = d; octane = o
+            }
+        } else if (trimmed.startsWith("{")) {
+            val json = JSONObject(trimmed)
+
+            // Try direct keys
+            petrol = extractPriceFromJson(json, "petrol", "petrol_price", "ms_petrol", "motor_spirit", "gasoline")
+            diesel = extractPriceFromJson(json, "diesel", "diesel_price", "hsd", "high_speed_diesel")
+            octane = extractPriceFromJson(json, "high_octane", "hi_octane", "hobc", "octane", "high_octane_price")
+
+            // Try "data" wrapper
+            if (petrol == 0f || diesel == 0f) {
+                val dataObj = json.optJSONObject("data")
+                if (dataObj != null) {
+                    if (petrol == 0f) petrol = extractPriceFromJson(dataObj, "petrol", "petrol_price", "ms_petrol", "motor_spirit", "gasoline")
+                    if (diesel == 0f) diesel = extractPriceFromJson(dataObj, "diesel", "diesel_price", "hsd", "high_speed_diesel")
+                    if (octane == 0f) octane = extractPriceFromJson(dataObj, "high_octane", "hi_octane", "hobc", "octane", "high_octane_price")
+                    if (petrol == 0f) petrol = extractNestedPrice(dataObj, "petrol", "motor_spirit", "gasoline")
+                    if (diesel == 0f) diesel = extractNestedPrice(dataObj, "diesel", "hsd", "high_speed_diesel")
+                    if (octane == 0f) octane = extractNestedPrice(dataObj, "high_octane", "hobc", "octane")
+                }
+            }
+
+            // Try arrays inside object
+            if (petrol == 0f || diesel == 0f) {
+                val pricesArray = json.optJSONArray("prices") ?: json.optJSONArray("data") ?: json.optJSONArray("products") ?: json.optJSONArray("fuels")
+                if (pricesArray != null) {
+                    parsePricesFromJsonArray(pricesArray).let { (p, d, o) ->
+                        if (petrol == 0f) petrol = p
+                        if (diesel == 0f) diesel = d
+                        if (octane == 0f) octane = o
+                    }
+                }
+            }
+
+            // Deep key scan
+            if (petrol == 0f || diesel == 0f) {
+                val keys = json.keys()
+                while (keys.hasNext()) {
+                    val key = keys.next()
+                    val lower = key.lowercase()
+                    val value = json.opt(key)
+                    val price = when (value) {
+                        is Number -> value.toFloat()
+                        is JSONObject -> value.optDouble("price", 0.0).toFloat()
+                            .let { if (it == 0f) value.optDouble("retail_price", 0.0).toFloat() else it }
+                            .let { if (it == 0f) value.optDouble("rate", 0.0).toFloat() else it }
+                        else -> 0f
+                    }
+                    if (price in 100f..600f) {
+                        when {
+                            petrol == 0f && hasPetrolKeyword(lower) && !hasOctaneKeyword(lower) -> petrol = price
+                            diesel == 0f && hasDieselKeyword(lower) -> diesel = price
+                            octane == 0f && hasOctaneKeyword(lower) -> octane = price
+                        }
+                    }
+                }
+            }
+
+            effectiveDate = json.optString("effective_date", null)
+                ?: json.optString("date", null)
+                ?: json.optString("updated_at", null)
+        }
+
+        return FuelPriceFetchResult(
+            petrol = petrol,
+            diesel = diesel,
+            highOctane = octane,
+            source = "TrackMate Fuel API",
+            effectiveDate = effectiveDate
+        )
+    }
+
+    // ════════════════════════════════════════════════════════════
+    //  JSON HELPER: Extract price from multiple possible key names
+    // ════════════════════════════════════════════════════════════
+    private fun extractPriceFromJson(json: JSONObject, vararg keys: String): Float {
+        for (key in keys) {
+            val value = json.optDouble(key, 0.0).toFloat()
+            if (value in 100f..600f) return value
+        }
+        return 0f
+    }
+
+    private fun extractNestedPrice(json: JSONObject, vararg keys: String): Float {
+        for (key in keys) {
+            val nested = json.optJSONObject(key)
+            if (nested != null) {
+                val price = nested.optDouble("price", 0.0).toFloat()
+                    .let { if (it in 100f..600f) it else nested.optDouble("retail_price", 0.0).toFloat() }
+                    .let { if (it in 100f..600f) it else nested.optDouble("rate", 0.0).toFloat() }
+                    .let { if (it in 100f..600f) it else nested.optDouble("value", 0.0).toFloat() }
+                    .let { if (it in 100f..600f) it else nested.optDouble("current_price", 0.0).toFloat() }
+                if (price in 100f..600f) return price
+            }
+        }
+        return 0f
+    }
+
+    /**
+     * Parse a JSONArray of fuel product objects.
+     * Handles: { "name"/"product"/"fuel"/"type": "Petrol", "price"/"rate"/"value": 252.10 }
+     */
+    private fun parsePricesFromJsonArray(arr: JSONArray): Triple<Float, Float, Float> {
+        var petrol = 0f
+        var diesel = 0f
+        var octane = 0f
+
+        for (i in 0 until arr.length()) {
+            val item = arr.optJSONObject(i) ?: continue
+            val name = (item.optString("name", "")
+                .ifEmpty { item.optString("product", "") }
+                .ifEmpty { item.optString("fuel", "") }
+                .ifEmpty { item.optString("fuel_type", "") }
+                .ifEmpty { item.optString("type", "") }
+                .ifEmpty { item.optString("title", "") }
+                .ifEmpty { item.optString("label", "") })
+                .lowercase()
+
+            val price = item.optDouble("price", 0.0).toFloat()
+                .let { if (it in 100f..600f) it else item.optDouble("retail_price", 0.0).toFloat() }
+                .let { if (it in 100f..600f) it else item.optDouble("rate", 0.0).toFloat() }
+                .let { if (it in 100f..600f) it else item.optDouble("value", 0.0).toFloat() }
+                .let { if (it in 100f..600f) it else item.optDouble("current_price", 0.0).toFloat() }
+
+            if (price !in 100f..600f) continue
+
+            when {
+                petrol == 0f && hasPetrolKeyword(name) && !hasOctaneKeyword(name) -> petrol = price
+                diesel == 0f && hasDieselKeyword(name) -> diesel = price
+                octane == 0f && hasOctaneKeyword(name) -> octane = price
+            }
+        }
+
+        return Triple(petrol, diesel, octane)
+    }
+
+    // ╔═══════════════════════════════════════════════════════════╗
+    // ║  SOURCE 3: HamariWeb Pakistan (HTML scraping fallback)   ║
+    // ╚═══════════════════════════════════════════════════════════╝
+    private fun fetchFromHamariWeb(): FuelPriceFetchResult {
+        val html = fetchHtml(HAMARIWEB_URL, "HamariWeb")
+        return parseFuelPricesFromHtml(html, "HamariWeb Pakistan")
+    }
+
+    // ╔═══════════════════════════════════════════════════════════╗
+    // ║  SOURCE 4: GlobalPetrolPrices.com (HTML scraping)        ║
+    // ╚═══════════════════════════════════════════════════════════╝
+    private fun fetchFromGlobalPetrolPrices(): FuelPriceFetchResult {
+        val petrolHtml = fetchHtml(GLOBAL_PETROL_PRICES_URL, "GlobalPetrolPrices-Petrol")
+        val dieselHtml = fetchHtml(GLOBAL_PETROL_DIESEL_URL, "GlobalPetrolPrices-Diesel")
+
+        val petrol = extractGlobalPetrolPrice(petrolHtml)
+        val diesel = extractGlobalPetrolPrice(dieselHtml)
+        val octane = if (petrol > 0f) petrol + 40f else 0f
+
+        return FuelPriceFetchResult(
+            petrol = petrol,
+            diesel = diesel,
+            highOctane = octane,
+            source = "GlobalPetrolPrices.com",
+            effectiveDate = null
+        )
+    }
+
+    private fun extractGlobalPetrolPrice(html: String): Float {
+        val patterns = listOf(
+            Regex("""(\d{2,3}\.\d{1,3})\s*PKR""", RegexOption.IGNORE_CASE),
+            Regex("""PKR\s*(\d{2,3}\.\d{1,3})""", RegexOption.IGNORE_CASE),
+            Regex("""(?:Rs\.?|₨)\s*(\d{2,3}\.\d{1,2})""", RegexOption.IGNORE_CASE),
+            Regex(""">\s*(\d{2,3}\.\d{2,3})\s*<""")
+        )
+        for (pattern in patterns) {
+            for (match in pattern.findAll(html)) {
+                val price = match.groupValues[1].toFloatOrNull()
+                if (price != null && price in 100f..600f) return price
+            }
+        }
+        return 0f
+    }
+
+    // ╔═══════════════════════════════════════════════════════════╗
+    // ║  SOURCE 5: PSO Pakistan website                          ║
+    // ╚═══════════════════════════════════════════════════════════╝
+    private fun fetchFromPsoWebsite(): FuelPriceFetchResult {
+        val html = fetchHtml(PSO_URL, "PSO")
+        val jsonResult = extractPricesFromEmbeddedJson(html, "PSO Pakistan Official")
+        if (jsonResult.petrol > 0f && jsonResult.diesel > 0f) return jsonResult
+        return parseFuelPricesFromHtml(html, "PSO Pakistan Official")
+    }
+
+    // ╔═══════════════════════════════════════════════════════════╗
+    // ║  SOURCE 6: Shell Pakistan website                        ║
+    // ╚═══════════════════════════════════════════════════════════╝
+    private fun fetchFromShellWebsite(): FuelPriceFetchResult {
+        val html = fetchHtml(SHELL_URL, "Shell")
+        val jsonResult = extractPricesFromEmbeddedJson(html, "Shell Pakistan Official")
+        if (jsonResult.petrol > 0f && jsonResult.diesel > 0f) return jsonResult
+        return parseFuelPricesFromHtml(html, "Shell Pakistan Official")
+    }
+
+    // ════════════════════════════════════════════════════════════
+    //  SHARED: Fetch HTML with browser-like headers
+    // ════════════════════════════════════════════════════════════
+    private fun fetchHtml(url: String, sourceName: String): String {
+        val request = Request.Builder()
+            .url(url)
+            .header("User-Agent", "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36")
+            .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+            .header("Accept-Language", "en-US,en;q=0.9,ur;q=0.8")
+            .header("Accept-Encoding", "identity")
+            .header("Cache-Control", "no-cache")
+            .get()
+            .build()
+
+        val response = okHttpClient.newCall(request).execute()
+        if (!response.isSuccessful) throw java.io.IOException("$sourceName: ${response.code}")
+        return response.body?.string() ?: throw java.io.IOException("$sourceName: empty body")
+    }
+
+    // ════════════════════════════════════════════════════════════
+    //  JSON-in-Script extraction (for JavaScript-rendered sites)
+    // ════════════════════════════════════════════════════════════
+    private fun extractPricesFromEmbeddedJson(html: String, sourceName: String): FuelPriceFetchResult {
+        var petrol = 0f
+        var diesel = 0f
+        var octane = 0f
+
+        val scriptRegex = Regex("""<script[^>]*>([\s\S]*?)</script>""", RegexOption.IGNORE_CASE)
+        val scriptBlocks = scriptRegex.findAll(html).map { it.groupValues[1] }.toList()
+
+        for (script in scriptBlocks) {
+            val productPriceRegex = Regex("""(?:petrol|diesel|hsd|octane|hobc|motor.?spirit|super)[^}]*?(\d{2,3}\.\d{1,2})""", RegexOption.IGNORE_CASE)
+            val matches = productPriceRegex.findAll(script)
+            for (match in matches) {
+                val fullMatch = match.value.lowercase()
+                val price = match.groupValues[1].toFloatOrNull() ?: continue
+                if (price < 100f || price > 600f) continue
+
+                when {
+                    petrol == 0f && (fullMatch.contains("petrol") || fullMatch.contains("super") || fullMatch.contains("motor")) && !fullMatch.contains("octane") -> petrol = price
+                    diesel == 0f && (fullMatch.contains("diesel") || fullMatch.contains("hsd")) -> diesel = price
+                    octane == 0f && (fullMatch.contains("octane") || fullMatch.contains("hobc")) -> octane = price
+                }
+            }
+            if (petrol > 0f && diesel > 0f) break
+        }
+
+        return FuelPriceFetchResult(petrol = petrol, diesel = diesel, highOctane = octane, source = sourceName)
+    }
+
+    // ════════════════════════════════════════════════════════════
+    //  HTML PRICE PARSER (enhanced, shared by all HTML scrapers)
+    // ════════════════════════════════════════════════════════════
+    private fun parseFuelPricesFromHtml(html: String, sourceName: String): FuelPriceFetchResult {
+        val priceRegex = Regex("""(?:Rs\.?|PKR|₨)\s*(\d{2,3}(?:\.\d{1,2})?)""", RegexOption.IGNORE_CASE)
+        val standalonePrice = Regex(""">\s*(\d{2,3}\.\d{2})\s*<""")
+
+        var petrol = 0f
+        var diesel = 0f
+        var octane = 0f
+
+        val cleanHtml = html
+            .replace("&nbsp;", " ")
+            .replace("&#160;", " ")
+            .replace("&amp;", "&")
+            .replace("&#8377;", "₨")
+            .replace("&#8360;", "₨")
+
+        val lines = cleanHtml.split("\n", "<tr>", "<tr ", "<td>", "<td ", "<div>", "<div ",
+            "<span>", "<span ", "<p>", "<p ", "<li>", "<li ", "<dt>", "<dd>", "<th>", "<th ")
+
+        for (i in lines.indices) {
+            val line = lines[i].lowercase()
+            if (line.length < 3) continue
+
+            var foundPrice = 0f
+            for (j in i..minOf(i + 4, lines.size - 1)) {
+                val candidate = lines[j].replace(",", "")
+                val prefixedMatch = priceRegex.find(candidate)
+                if (prefixedMatch != null) {
+                    val p = prefixedMatch.groupValues[1].toFloatOrNull()
+                    if (p != null && p in 100f..600f) { foundPrice = p; break }
+                }
+                val standaloneMatch = standalonePrice.find(candidate)
+                if (standaloneMatch != null) {
+                    val p = standaloneMatch.groupValues[1].toFloatOrNull()
+                    if (p != null && p in 100f..600f) { foundPrice = p; break }
+                }
+            }
+
+            if (foundPrice > 0f) {
+                when {
+                    petrol == 0f && hasPetrolKeyword(line) && !hasOctaneKeyword(line) -> petrol = foundPrice
+                    diesel == 0f && hasDieselKeyword(line) -> diesel = foundPrice
+                    octane == 0f && hasOctaneKeyword(line) -> octane = foundPrice
+                }
+            }
+        }
+
+        return FuelPriceFetchResult(petrol = petrol, diesel = diesel, highOctane = octane, source = sourceName)
+    }
+
+    // ════════════════════════════════════════════════════════════
+    //  KEYWORD MATCHERS
+    // ════════════════════════════════════════════════════════════
+    private fun hasPetrolKeyword(text: String): Boolean =
+        text.contains("petrol") || text.contains("motor spirit") || text.contains("mogas") ||
+        text.contains("euro-v petrol") || text.contains("super") || text.contains("gasoline") ||
+        text.contains("ms ") || text.contains("e5 petrol") || text.contains("unleaded")
+
+    private fun hasDieselKeyword(text: String): Boolean =
+        text.contains("diesel") || text.contains("hsd") || text.contains("high speed") ||
+        text.contains("high-speed") || text.contains("gasoil")
+
+    private fun hasOctaneKeyword(text: String): Boolean =
+        text.contains("octane") || text.contains("hobc") || text.contains("hi-octane") ||
+        text.contains("ron 97") || text.contains("high octane") || text.contains("premium")
 }
