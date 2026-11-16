@@ -4438,18 +4438,19 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     updateFuelPrices(petrol, diesel, octane, source = source, method = "AI Search Engine Sync")
 
                 } catch (e: Exception) {
-                    // Fallback 2: Official OGRA Pakistan retail rates
-                    val simPetrol = 275.60f
-                    val simDiesel = 284.20f
-                    val simOctane = 325.00f
-                    
-                    updateFuelPrices(
-                        petrol = simPetrol,
-                        diesel = simDiesel,
-                        octane = simOctane,
-                        source = "Official OGRA Pakistan Feed",
-                        method = "OGRA Tariff Service"
-                    )
+                    // Fallback 2: Use last cached prices if available, otherwise skip
+                    val cachedPetrol = sharedPrefs.getFloat("price_petrol", 0f)
+                    val cachedDiesel = sharedPrefs.getFloat("price_diesel", 0f)
+                    val cachedOctane = sharedPrefs.getFloat("price_high_octane", 0f)
+                    if (cachedPetrol > 0f && cachedDiesel > 0f) {
+                        updateFuelPrices(
+                            petrol = cachedPetrol,
+                            diesel = cachedDiesel,
+                            octane = cachedOctane,
+                            source = "Cached OGRA Rates",
+                            method = "Local Cache"
+                        )
+                    }
                 }
             } finally {
                 _priceSyncing.value = false

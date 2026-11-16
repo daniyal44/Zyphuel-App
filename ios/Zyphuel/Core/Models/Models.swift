@@ -319,7 +319,7 @@ struct ServiceItem: Identifiable, Codable, Hashable {
     let detail: String
     let group: String?
     let isActive: Bool
-    let basePrice: Double
+    var basePrice: Double
     let unit: String
     let eta: String
     let badge: String?
@@ -334,14 +334,15 @@ struct ServiceCategory: Identifiable, Codable, Hashable {
     let sortOrder: Int
     let availability: ServiceAvailability
     let isActive: Bool
-    let items: [ServiceItem]
+    var items: [ServiceItem]
 }
 
 /// Mirrors `CategoryCatalogSeed` on Android. Live admin-managed catalog documents in
 /// Firestore take precedence; this seed keeps the iOS app usable offline and on first run.
 enum ServiceCatalog {
 
-    static let all: [ServiceCategory] = [
+    /// Live catalog — fuel prices are updated at runtime by FuelPriceSyncManager.
+    private(set) static var all: [ServiceCategory] = [
         fuel,
         autoRepair,
         roadside,
@@ -355,7 +356,7 @@ enum ServiceCatalog {
     ]
 
     /// The 7 featured categories shown by default on the Android home screen.
-    static let featured: [ServiceCategory] = Array(all.prefix(7))
+    static var featured: [ServiceCategory] { Array(all.prefix(7)) }
 
     static var activeItems: [ServiceItem] {
         all.flatMap { $0.items }.filter { $0.isActive }
@@ -363,6 +364,26 @@ enum ServiceCatalog {
 
     static func category(id: String) -> ServiceCategory? {
         all.first { $0.id == id }
+    }
+
+    /// Updates fuel prices in the live catalog from the latest API data.
+    /// Called by FuelPriceSyncManager after a successful fetch.
+    static func updateFuelPrices(petrol: Double, diesel: Double, highOctane: Double) {
+        guard petrol > 0, diesel > 0 else { return }
+        for catIdx in all.indices where all[catIdx].id == "fuel_energy" {
+            for itemIdx in all[catIdx].items.indices {
+                let itemId = all[catIdx].items[itemIdx].id
+                switch itemId {
+                case "petrol_regular":
+                    all[catIdx].items[itemIdx].basePrice = petrol
+                case "petrol_octane":
+                    all[catIdx].items[itemIdx].basePrice = highOctane > 0 ? highOctane : petrol + 30
+                case "diesel_regular", "diesel_generator":
+                    all[catIdx].items[itemIdx].basePrice = diesel
+                default: break
+                }
+            }
+        }
     }
 
     /// Referenced from the home screen's primary "Order Now" action.

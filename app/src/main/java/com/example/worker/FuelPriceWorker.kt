@@ -27,11 +27,11 @@ class FuelPriceWorker(
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         try {
             val sharedPrefs = appContext.getSharedPreferences("zyphuel_prices", Context.MODE_PRIVATE)
-            val oldPetrol = sharedPrefs.getFloat("price_petrol", 275.60f)
+            val oldPetrol = sharedPrefs.getFloat("price_petrol", 0f)
 
-            var newPetrol = oldPetrol
-            var newDiesel = sharedPrefs.getFloat("price_diesel", 284.20f)
-            var newOctane = sharedPrefs.getFloat("price_high_octane", 325.00f)
+            var newPetrol = if (oldPetrol > 0f) oldPetrol else 0f
+            var newDiesel = sharedPrefs.getFloat("price_diesel", 0f).let { if (it > 0f) it else 0f }
+            var newOctane = sharedPrefs.getFloat("price_high_octane", 0f).let { if (it > 0f) it else 0f }
             var sourceName = "Official Fuel Market API"
 
             try {

@@ -28,6 +28,7 @@ final class AppState: ObservableObject {
     let biometrics = BiometricLock()
     let language = LanguageManager()
     let notifications = NotificationService()
+    let fuelPrices = FuelPriceSyncManager.shared
 
     // Lazy: without GoogleService-Info.plist the app runs in setup mode and must not
     // touch Firestore, which raises when FirebaseApp is not configured.
@@ -43,6 +44,9 @@ final class AppState: ObservableObject {
     // MARK: Bootstrap
 
     func bootstrap() async {
+        // Start fuel price auto-sync on every app launch (runs every 4 hours)
+        fuelPrices.startPeriodicSync()
+
         guard isFirebaseConfigured else {
             route = .unauthenticated
             isBootstrapping = false

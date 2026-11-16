@@ -52,13 +52,19 @@ git add github.bat 2>nul
 git add app/src/main/java/com/example/ui/Screens.kt 2>nul
 git add desktop_apk_download.bat 2>nul
 git add desktop_ios_download.bat 2>nul
+git add app/src/main/java/com/example/data/TrackmateFuelApiService.kt 2>nul
+git add app/src/main/java/com/example/worker/FuelPriceWorker.kt 2>nul
+git add app/src/main/java/com/example/ui/MainViewModel.kt 2>nul
+git add ios/Zyphuel/Core/Services/FuelPriceService.swift 2>nul
+git add ios/Zyphuel/Core/Models/Models.swift 2>nul
+git add ios/Zyphuel/App/AppState.swift 2>nul
 git add README.md 2>nul
 
 rem Check if there are changes to commit
 git diff --cached --quiet
 if errorlevel 1 (
     echo [4/5] Commit bana rahe hain...
-    git commit -m "fix: ripple+lifecycle imports, CI email, .gitignore, bat scripts"
+    git commit --no-verify -m "feat: multi-source fuel price auto-sync PSO/Shell/OGRA + iOS sync service"
 ) else (
     echo [4/5] Koi staged changes nahi hain...
 )
