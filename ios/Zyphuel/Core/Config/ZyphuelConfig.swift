@@ -8,8 +8,8 @@ enum ZyphuelConfig {
 
     // MARK: Build identity (mirrors build.gradle.kts)
     static let bundleIdentifier = "com.aistudio.zyphuel.appv2"
-    static let marketingVersion = "2.6.4.0.0.42"
-    static let buildNumber = 70
+    static let marketingVersion = "2.6.4.0.0.45"
+    static let buildNumber = 73
 
     // MARK: Business identity
     static let brandName = "Zyphuel"
@@ -49,10 +49,12 @@ enum ZyphuelConfig {
     }
 
     // MARK: Default fuel rates (overridden live by system_config/fuel_rates)
-    /// Values match `MainViewModel` defaults (SharedPreferences fallbacks).
+    /// Values match `MainViewModel` defaults (SharedPreferences fallbacks:
+    /// `petrol` 289.38, `diesel` 289.84, `high_octane` 325.00). These are only shown
+    /// until the first live `system_config/fuel_rates` snapshot arrives.
     static let defaultPetrolRate = 289.38
     static let defaultDieselRate = 289.84
-    static let defaultHighOctaneRate = 300.00
+    static let defaultHighOctaneRate = 325.00
     static let defaultLpgRate = 0.0
 
     // MARK: Legal links (Android legal dialog uses the same web pages)

@@ -64,6 +64,34 @@ final class PricingEngineTests: XCTestCase {
         XCTAssertEqual(MoneyFormatter.pkr(3611.7), "Rs. 3,611.70")
         XCTAssertEqual(MoneyFormatter.pkr(0), "Rs. 0.00")
     }
+
+    // The home rate ticker renders `PricingEngine.pumpRate(base: config.rates.x, ...)`.
+    // Before the first live `system_config/fuel_rates` snapshot (or when no admin has
+    // published rates yet) it renders `FuelRates.fallback`, which must match the
+    // Android `MainViewModel` fallbacks instead of showing 0.
+    func testFuelRateFallbacksMatchAndroidDefaults() {
+        let fallback = FuelRates.fallback
+        XCTAssertEqual(fallback.petrol, 289.38, accuracy: 0.0001)
+        XCTAssertEqual(fallback.diesel, 289.84, accuracy: 0.0001)
+        XCTAssertEqual(fallback.highOctane, 325.00, accuracy: 0.0001)
+        XCTAssertEqual(fallback.lpg, 0)
+    }
+
+    func testDisplayedFuelRatesUseFallbackPlusPumpMarkup() {
+        let rates = FuelRates.fallback
+        let petrol = PricingEngine.pumpRate(base: rates.petrol, serviceType: "petrol")
+        let diesel = PricingEngine.pumpRate(base: rates.diesel, serviceType: "diesel")
+        let octane = PricingEngine.pumpRate(base: rates.highOctane, serviceType: "octane")
+
+        XCTAssertEqual(petrol, 294.38, accuracy: 0.0001)
+        XCTAssertEqual(diesel, 294.84, accuracy: 0.0001)
+        XCTAssertEqual(octane, 330.00, accuracy: 0.0001)
+
+        // A missing/denied live document must never surface as a Rs. 0/L ticker.
+        for rate in [petrol, diesel, octane] {
+            XCTAssertGreaterThan(rate, 0)
+        }
+    }
 }
 
 // MARK: - Operating hours
@@ -226,6 +254,21 @@ final class OrderLifecycleTests: XCTestCase {
 }
 
 // MARK: - Catalog and identity
+
+// MARK: - Live config
+
+@MainActor
+final class LiveConfigTests: XCTestCase {
+
+    // The admin-authored `system_config/fuel_rates` document drives the ticker. A zero,
+    // negative or missing field must keep the shared defaults instead of showing Rs. 0/L.
+    func testInvalidLiveRatesFallBackToDefaults() {
+        XCTAssertEqual(SystemConfigService.validated(nil, fallback: 289.38), 289.38)
+        XCTAssertEqual(SystemConfigService.validated(0, fallback: 289.38), 289.38)
+        XCTAssertEqual(SystemConfigService.validated(-5, fallback: 289.38), 289.38)
+        XCTAssertEqual(SystemConfigService.validated(300.5, fallback: 289.38), 300.5)
+    }
+}
 
 final class CatalogTests: XCTestCase {
 

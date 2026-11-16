@@ -29,16 +29,25 @@ final class SystemConfigService: ObservableObject {
         let config = db.collection(ZyphuelConfig.Collection.systemConfig)
 
         listeners.append(config.document(ZyphuelConfig.ConfigDoc.fuelRates)
-            .addSnapshotListener { [weak self] snapshot, _ in
+            .addSnapshotListener { [weak self] snapshot, error in
+                if let error {
+                    // Most commonly PERMISSION_DENIED before the Firebase Auth session exists;
+                    // `AppState` re-attaches these listeners after sign-in.
+                    Task { @MainActor in self?.errorMessage = "Fuel rate sync: \(error.localizedDescription)" }
+                    return
+                }
                 guard let data = snapshot?.data() else { return }
                 let rates = FuelRates(
-                    petrol: FirestoreMapper.double(from: data["petrol"]) ?? FuelRates.fallback.petrol,
-                    diesel: FirestoreMapper.double(from: data["diesel"]) ?? FuelRates.fallback.diesel,
-                    highOctane: FirestoreMapper.double(from: data["highOctane"]) ?? FuelRates.fallback.highOctane,
+                    petrol: Self.validated(data["petrol"], fallback: FuelRates.fallback.petrol),
+                    diesel: Self.validated(data["diesel"], fallback: FuelRates.fallback.diesel),
+                    highOctane: Self.validated(data["highOctane"], fallback: FuelRates.fallback.highOctane),
                     lpg: FirestoreMapper.double(from: data["lpg"]) ?? 0,
                     updatedAt: FirestoreMapper.date(from: data["updatedAt"])
                 )
-                Task { @MainActor in self?.rates = rates }
+                Task { @MainActor in
+                    self?.rates = rates
+                    self?.errorMessage = nil
+                }
             })
 
         listeners.append(config.document(ZyphuelConfig.ConfigDoc.appVersion)
@@ -71,6 +80,13 @@ final class SystemConfigService: ObservableObject {
     func stopObserving() {
         listeners.forEach { $0.remove() }
         listeners.removeAll()
+    }
+
+    /// A blank/zero field in the admin-authored document must never blank out the ticker,
+    /// so invalid values keep the shared defaults (Android does the same in `MainViewModel`).
+    static func validated(_ raw: Any?, fallback: Double) -> Double {
+        guard let value = FirestoreMapper.double(from: raw), value > 0 else { return fallback }
+        return value
     }
 
     func baseRate(for serviceType: String) -> Double {

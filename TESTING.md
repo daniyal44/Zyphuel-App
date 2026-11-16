@@ -1,7 +1,7 @@
 # 🧪 Zyphuel — Testing & Release Verification
 
 **Last Updated:** <font color="#10b981"><b>2026-10-23 22:48:18 PKT</b></font>
-**App Version:** <font color="#10b981"><b>v2.6.4.0.0.42 (Build 70)</b></font>
+**App Version:** <font color="#10b981"><b>v2.6.4.0.0.45 (Build 73)</b></font>
 **Last Full Run:** <font color="#10b981"><b>2026-10-23 22:44 PKT — 54 tests, 0 failed, 0 skipped</b></font>
 **Document Status:** <font color="#10b981"><b>ACTIVE</b></font>
 
@@ -125,7 +125,7 @@ Android and iOS ship the same version from the same file, so an iOS-only or Andr
 
 | Check | Command / action |
 | :--- | :--- |
-| Version parity | `python scripts/sync_versions.py --check` → `Version sync check OK: v2.6.4.0.0.40 (Build 68) everywhere.` |
+| Version parity | `python scripts/sync_versions.py --check` → `Version sync check OK: v2.6.4.0.0.45 (Build 73) everywhere.` |
 | Version bump | GitHub → Actions → **Version Bump** → *Run workflow* (`scripts/sync_versions.py --bump` on the runner) → bumps `versionCode` +1 and the trailing segment +0.01 for **both** apps and the docs; project scripts are never run on a developer desktop |
 | Email Gateway credential | Never in the tree: `git grep -n "SMTP_APP_PASSWORD"` must only match placeholders/templates. The value arrives from the `SMTP_APP_PASSWORD` Actions secret (Android hex-encoded `BuildConfig` → `BuildSecrets`, iOS `ios/Config/Secrets.plist`) and is re-applied to the encrypted enclave/Keychain on every launch, so an update picks up a rotation automatically |
 | iOS structure/pins/plists | `scripts/update_ios_versions.ps1` → `RESULT: PASS` (Windows-safe, no Xcode required) |
@@ -139,7 +139,12 @@ Android and iOS ship the same version from the same file, so an iOS-only or Andr
 | iOS Firebase config bundling | `Config/GoogleService-Info.plist` must appear in `Zyphuel.app` when provided (the `preBuildScripts` copy phase); the build must still succeed when it is absent |
 | iOS download artifacts | `desktop_ios_download.bat` → only a validated IPA, a `-Simulator.app.zip`, or a clearly named `-iOS-Source.zip`; never an undersized `.ipa` |
 | Shared business rules | Pricing tiers 300/320/340/360/380/400, 15 L cap, +5 markup, PKT operating hours, 4-attempt lockout — verified by `ZyphuelLogicTests` on iOS and `FuelPumpPricingTest` / `SecurityAndDataIntegrityTest` on Android |
-| Firestore contract | One rules file for both clients: `users` accepts `uid` and email-derived doc ids, `orders` rider claim, `feedback` iOS fields |
+| iOS fuel-rate display | `ZyphuelLogicTests.testFuelRateFallbacksMatchAndroidDefaults` + `testDisplayedFuelRatesUseFallbackPlusPumpMarkup`: `FuelRates.fallback` must equal the Android `MainViewModel` defaults (petrol 289.38, diesel 289.84, high-octane 325.00) and the home ticker must render fallback + Rs. 5 markup (294.38 / 294.84 / 330.00), never Rs. 0/L, before the first live `system_config/fuel_rates` snapshot |
+| Live-rate validation | `LiveConfigTests.testInvalidLiveRatesFallBackToDefaults`: a missing, zero or negative `petrol`/`diesel`/`highOctane` field keeps the shared default instead of rendering Rs. 0/L (Android equivalent guard in `MainViewModel.attachFuelRatesObserver`) |
+| Rate sync after sign-in | Listeners must be re-attached post-auth: `AppState.loadProfile`/`register` call `config.startObserving()` on iOS, `MainViewModel.completeLogin` calls `attachFuelRatesObserver()` on Android — rules require `isSignedIn()` for `system_config/fuel_rates` |
+| Firestore contract | One rules file for both clients: `users` accepts `uid` and email-derived doc ids, `orders` rider claim, `feedback` iOS fields, `system_config/fuel_rates` + `app_version` readable by any signed-in device, `email_gateway` admin-only |
+| Firestore rules verification | `npx firebase-tools emulators:exec --only firestore --project ai-420 "node scripts/verify_firestore_rules.mjs"` → 10/10 checks (customer read of fuel rates/app version allowed, customer writes denied, admin read/write allowed, anonymous denied, email gateway denied to customers) |
+| Firestore deploy | `npx firebase-tools login` then `npx firebase-tools deploy --only firestore:rules --project ai-420` — the fuel-price fix is inert until the rules are deployed |
 
 The desktop never builds either app: Android and iOS compile, test and package **only on GitHub Actions** (`iOS Build`, `Android Build`, `Version Sync`). Report a platform as **unverified** until its workflow run is green on the pushed commit.
 

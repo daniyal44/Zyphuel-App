@@ -2,7 +2,7 @@ rules_version = '2';
 
 // =============================================================================
 // Zyphuel — Cloud Firestore Production Security Rules
-// Version: 2.6.4.0.0.36 (Build 64) — hardened 2026-11-05
+// Version: 2.6.4.0.0.45 (Build 73) — hardened 2026-11-16
 // -----------------------------------------------------------------------------
 // STATUS: ACTIVE & ENFORCED
 // All clients are backed by authenticated Firebase Auth sessions (via Google OAuth
@@ -18,6 +18,11 @@ rules_version = '2';
 //    wallet, limits, ...) can never be injected by a client.
 //  - audit_logs: create is admin-only (log tampering / fake entries).
 //  - app_stats: write may only increment `count` by exactly 1 (counter tampering).
+//
+// 2026-11-16: `system_config` split into per-document matches. `fuel_rates` and
+// `app_version` are readable by every signed-in device (live fuel-price sync and
+// update checks previously failed silently for customers because the whole
+// collection was admin-only). `email_gateway` stays admin-only.
 // =============================================================================
 
 service cloud.firestore {
@@ -64,8 +69,8 @@ service cloud.firestore {
         'createdAt', 'updatedAt', 'phoneNumber', 'passwordHash', 'authProvider',
         'profilePictureBase64', 'vehicleType', 'vehicleNo'
       ])
-      && (!request.resource.data.keys().hasAny(['profilePictureBase64'])
-          || request.resource.data.profilePictureBase64.size() <= 400000);
+        && (!request.resource.data.keys().hasAny(['profilePictureBase64'])
+            || request.resource.data.profilePictureBase64.size() <= 400000);
     }
 
     // ---- users/{uid} -------------------------------------------------------
@@ -118,8 +123,8 @@ service cloud.firestore {
              && request.resource.data.riderEmail is string
              && request.resource.data.riderEmail == request.auth.token.email )
       )
-      && request.resource.data.totalPrice == resource.data.totalPrice
-      && request.resource.data.customerEmail == resource.data.customerEmail;
+        && request.resource.data.totalPrice == resource.data.totalPrice
+        && request.resource.data.customerEmail == resource.data.customerEmail;
 
       allow delete: if isAdmin();
     }
@@ -149,10 +154,23 @@ service cloud.firestore {
       allow update, delete: if false; // Audit logs are immutable
     }
 
-    // ---- system_config/** (SMTP & Gateway Credentials) ---------------------
-    // Strictly restricted to Super Admin
-    match /system_config/{doc} {
+    // ---- system_config/fuel_rates (Live OGRA fuel rates - read by all users) ---
+    // Admin writes live OGRA base rates; all connected devices (customer, rider, admin)
+    // receive real-time sync so fuel prices stay consistent across platforms.
+    match /system_config/fuel_rates {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // ---- system_config/email_gateway (SMTP credentials - admin only) --------
+    match /system_config/email_gateway {
       allow read, write: if isAdmin();
+    }
+
+    // ---- system_config/app_version (App version check - read by all) --------
+    match /system_config/app_version {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
     }
 
     // ---- mail/{id} (Transactional Invoicing Gateway) ------------------------
@@ -201,4 +219,4 @@ service cloud.firestore {
       allow read, write: if false;
     }
   }
-}
+}

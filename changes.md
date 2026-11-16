@@ -3,6 +3,30 @@
 > **This file is the project CHANGELOG.** Each entry lists version, release date (Asia/Karachi),
 > added/changed/fixed/security sections, database migration notes and known issues.
 
+## Version 2.6.4.0.0.45 (Release Build 73) — <font color="#10b981"><b>2026-11-16 PKT</b></font>
+
+### Fuel-price sync: listener lifecycle fixed, zero-rate guard, production rates document seeded
+- **iOS never re-attached the config listeners after sign-in.** `AppState.bootstrap()` calls `config.startObserving()` before checking the session, so with the hardened rules (`fuel_rates` readable only by signed-in users) the listener was denied and is never retried. `AppState` now re-attaches after `loadProfile` (email + Google + session restore) and after `register`, and `SystemConfigService` surfaces listener errors instead of swallowing them.
+- **Android now re-attaches the rates listener after login.** `MainViewModel.attachFuelRatesObserver()` replaces the old one-shot registration, is called at startup and again after `completeLogin()` (800 ms after the Auth bridge, because the bridge can finish asynchronously). The previous registration is removed first, so no duplicate listeners.
+- **Rs. 0/L can no longer be authored into the ticker.** Both clients ignore non-positive synced values and keep the shared defaults (Android `MainViewModel`, iOS `SystemConfigService.validated`). A blank or zeroed `system_config/fuel_rates` document therefore cannot blank out petrol/diesel/octane prices.
+- **Production document created.** `system_config/fuel_rates` did not exist, so no device had live values to receive. It now holds petrol **289.38**, diesel **289.84**, high-octane **325.00** (the app's documented OGRA base-rate defaults) with an `updatedAt` server timestamp. Admin → Fuel Prices / AI sync can replace these with newer official rates at any time; both platforms update in real time.
+- **Verification.** Android `:app:compileDebugKotlin` + `:app:testDebugUnitTest` green (54 tests). iOS gained `LiveConfigTests.testInvalidLiveRatesFallBackToDefaults`; the XCTest suite cannot execute on Windows and must run via `ios/bootstrap.sh --test` or the `iOS Build` workflow.
+
+## Version 2.6.4.0.0.44 (Release Build 72) — <font color="#10b981"><b>2026-11-16 PKT</b></font>
+
+### iOS fuel-rate display: parity with Android and test coverage
+- **High-octane fallback aligned.** `ZyphuelConfig.defaultHighOctaneRate` was `300.00` while Android `MainViewModel` falls back to `325.00`, so an iOS install without a live `system_config/fuel_rates` document displayed a different High-Octane 97 ticker than Android. iOS now uses `325.00` and the config comment records all three Android fallbacks (petrol 289.38, diesel 289.84, high-octane 325.00).
+- **Missing display test added (`ios/Tests/ZyphuelLogicTests.swift`).** `ZyphuelLogicTests` had pricing/catalog coverage but nothing asserting what the home rate ticker renders. Two cases now pin it: `FuelRates.fallback` equals the Android defaults, and `PricingEngine.pumpRate` renders fallback + Rs. 5.00 markup (294.38 / 294.84 / 330.00) with no Rs. 0/L path before the first live snapshot.
+- **Execution note.** The XCTest suite needs macOS + Xcode (`ios/bootstrap.sh --test`) or the `iOS Build` workflow; it cannot run on the Windows development machine. These cases are unverified locally and must go green in CI before an iOS release.
+
+## Version 2.6.4.0.0.43 (Release Build 71) — <font color="#10b981"><b>2026-11-16 PKT</b></font>
+
+### Fixed: live fuel prices never synced for customers (0 / stale rates on Android & iOS)
+- **Root cause was the rules, not the clients.** `firestore.rules` gated the whole `system_config` collection on `isAdmin()`, but both clients listen to `system_config/fuel_rates` from every signed-in session: Android `FirestoreUserRepository.observeFuelRatesConfig` (wired in `MainViewModel`) and iOS `SystemConfigService.startObserving()`. Customer sessions were denied, the snapshot listener stayed silent, and the UI fell back to 0 / the last cached value. Android `_petrolPrice`, `_dieselPrice` and `_highOctanePrice` and the iOS `FuelRates.fallback` defaults are only ever replaced by that listener.
+- **Rules split by document.** `system_config/fuel_rates` and `system_config/app_version` now allow `read: if isSignedIn()` with `write: if isAdmin()`; `system_config/email_gateway` (SMTP credentials) stays admin-only. No client code change was needed — both apps already share the same path and the same admin-only write path (`saveFuelRatesConfig` / `saveRates`).
+- **Deployment config added.** New `firebase.json` (`firestore.rules`) and `.firebaserc` (`ai-420`), so `npx firebase-tools deploy --only firestore:rules` publishes the hardened file; the rule set must be deployed for the fix to take effect in production.
+- **Verification.** New `scripts/verify_firestore_rules.mjs` runs 10 emulator-backed checks: anonymous read denied, customer read of `fuel_rates`/`app_version` allowed, customer writes denied, admin read/write allowed, and `email_gateway` denied to customers. All 10 pass against `cloud-firestore-emulator-v1.22.0` with the committed rules.
+
 ## Version 2.6.4.0.0.41 (Release Build 69) — <font color="#10b981"><b>2026-11-09 PKT</b></font>
 
 ### Version bump on the runner, Email Gateway credential lifecycle, secret-template build gate

@@ -849,6 +849,41 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // Live fuel-rate listener. Attached at startup and re-attached after login, because
+    // `system_config/fuel_rates` is readable only by a signed-in Firebase Auth session
+    // (firestore.rules). A listener denied before that bridge exists never recovers on
+    // its own, which is what left both platforms on stale/zero rates.
+    private var fuelRatesListener: com.google.firebase.firestore.ListenerRegistration? = null
+
+    private fun attachFuelRatesObserver() {
+        fuelRatesListener?.remove()
+        fuelRatesListener = repository.firestoreUserRepository.observeFuelRatesConfig { petrol, diesel, highOctane ->
+            // A malformed/empty document must never blank out the price ticker.
+            if (petrol <= 0f || diesel <= 0f || highOctane <= 0f) {
+                DebugLogger.w(
+                    "MainViewModel",
+                    "Ignoring invalid live fuel rates: petrol=$petrol diesel=$diesel octane=$highOctane"
+                )
+                return@observeFuelRatesConfig
+            }
+            if (petrol != _petrolPrice.value || diesel != _dieselPrice.value || highOctane != _highOctanePrice.value) {
+                _petrolPrice.value = petrol
+                _dieselPrice.value = diesel
+                _highOctanePrice.value = highOctane
+                repository.categoryRepository.syncLiveFuelPrices(petrol, diesel, highOctane)
+                sharedPrefs.edit()
+                    .putFloat("petrol", petrol)
+                    .putFloat("diesel", diesel)
+                    .putFloat("high_octane", highOctane)
+                    .apply()
+                DebugLogger.i(
+                    "MainViewModel",
+                    "Live OGRA rates synced: petrol=$petrol diesel=$diesel octane=$highOctane"
+                )
+            }
+        }
+    }
+
     // --- Currency Conversion State (PKR vs GBP) ---
     private val _selectedCurrency = MutableStateFlow("PKR") // "PKR" or "GBP"
     val selectedCurrency = _selectedCurrency.asStateFlow()
@@ -1145,19 +1180,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
 
             // Real-time snapshot listener for live fuel rates across all connected devices
-            repository.firestoreUserRepository.observeFuelRatesConfig { petrol, diesel, highOctane ->
-                if (petrol != _petrolPrice.value || diesel != _dieselPrice.value || highOctane != _highOctanePrice.value) {
-                    _petrolPrice.value = petrol
-                    _dieselPrice.value = diesel
-                    _highOctanePrice.value = highOctane
-                    repository.categoryRepository.syncLiveFuelPrices(petrol, diesel, highOctane)
-                    sharedPrefs.edit()
-                        .putFloat("petrol", petrol)
-                        .putFloat("diesel", diesel)
-                        .putFloat("high_octane", highOctane)
-                        .apply()
-                }
-            }
+            attachFuelRatesObserver()
         }
 
         viewModelScope.launch {
@@ -1703,6 +1726,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             SecureStorageManager.setBiometricEnabled(ctx, module, true)
         }
         com.example.auth.FirebaseAuthProvider.getInstance(ctx).ensureAuthSession()
+        // The Auth bridge above may finish asynchronously; re-attaching the listener makes it
+        // fire the current `system_config/fuel_rates` snapshot once the session is usable.
+        viewModelScope.launch {
+            delay(800L)
+            attachFuelRatesObserver()
+        }
         refreshSecurityAndBiometricStates(ctx)
 
         // Auto-offer biometric enrollment dialog if not already enabled or declined

@@ -86,6 +86,7 @@ final class AppState: ObservableObject {
         users.observeProfile(email: profile.email)
         route = .authenticated
         startRoleListeners()
+        config.startObserving()
     }
 
     func signInWithGoogle() async throws {
@@ -150,6 +151,10 @@ final class AppState: ObservableObject {
         users.observeProfile(email: profile.email)
         route = .authenticated
         startRoleListeners()
+        // Re-attach `system_config` listeners now that a Firebase Auth session exists.
+        // `fuel_rates` is readable only by signed-in users (firestore.rules), and a listener
+        // attached before sign-in (bootstrap) is denied and never retries by itself.
+        config.startObserving()
         if biometrics.isEnabled {
             await biometrics.unlock()
         }
