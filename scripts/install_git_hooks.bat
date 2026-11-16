@@ -11,11 +11,27 @@ if not exist ".git\hooks" (
     mkdir ".git\hooks"
 )
 
-echo [i] Installing Git pre-commit hook for automated code graph updates...
+echo [i] Installing Git pre-commit hook (version auto-sync + graph update)...
 
 (
 echo #!/bin/sh
-echo # Zyphuel Automated Code Graph Generator Hook
+echo # Zyphuel Automated Version Sync + Code Graph Generator Hook
+echo.
+echo # Auto-sync version across all files on every commit
+echo if command -v python ^>/dev/null 2^>^&1; then
+echo     if [ -f "scripts/sync_versions.py" ]; then
+echo         python scripts/sync_versions.py 2^>/dev/null
+echo         git add version.properties 2^>/dev/null
+echo         git add ios/project.yml 2^>/dev/null
+echo         git add ios/Zyphuel/Core/Config/ZyphuelConfig.swift 2^>/dev/null
+echo         git add README.md 2^>/dev/null
+echo         git add FEATURES_DOCUMENTATION.md 2^>/dev/null
+echo         git add docs/Side_bar.md 2^>/dev/null
+echo         git add docs/structure.md 2^>/dev/null
+echo     fi
+echo fi
+echo.
+echo # Update engineering velocity graph
 echo if command -v node ^>/dev/null 2^>^&1; then
 echo     if [ -f "scripts/generate_github_graph.js" ]; then
 echo         echo "[Git Hook] Automatically updating README code-based graph..."

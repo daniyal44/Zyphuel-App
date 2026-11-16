@@ -80,18 +80,31 @@ if not "!BEHIND_COUNT!"=="" if not "!BEHIND_COUNT!"=="0" (
     set "DID_STASH=0"
 )
 
+rem Auto-bump version on every push (versionCode +1, versionName last segment +1)
+rem Then sync ALL files (Android, iOS, docs, README) to new version automatically
+where python >nul 2>&1
+if not errorlevel 1 (
+    if exist "scripts\sync_versions.py" (
+        echo [1/5] Version auto-bump + sync kar rahe hain...
+        python scripts\sync_versions.py --bump
+        echo [+] Version bumped and synced across all files.
+    )
+) else (
+    echo [1/5] Python nahi mila, version bump skip...
+)
+
 rem Update engineering velocity graph if Node.js is present
 where node >nul 2>&1
 if not errorlevel 1 (
     if exist "scripts\generate_github_graph.js" (
-        echo [1/4] Engineering velocity graph update kar rahe hain...
+        echo [2/5] Engineering velocity graph update kar rahe hain...
         node scripts\generate_github_graph.js
     )
 ) else (
-    echo [1/4] Node.js nahi mila, graph skip...
+    echo [2/5] Node.js nahi mila, graph skip...
 )
 
-rem Read version from version.properties
+rem Read version from version.properties (now bumped)
 set "APP_VER=unknown"
 if exist "version.properties" (
     for /f "tokens=2 delims==" %%i in ('findstr /i "versionName" version.properties 2^>nul') do (
@@ -108,12 +121,12 @@ if "%COMMIT_MSG%"=="" (
     set "COMMIT_MSG=chore: direct push update - %date% %time% (!APP_VER!)"
 )
 
-echo [2/4] Files stage kar rahe hain (git add -A)...
+echo [3/5] Files stage kar rahe hain (git add -A)...
 git add -A
 
 git diff --cached --quiet
 if errorlevel 1 (
-    echo [3/4] Commit banaya ja raha hai:
+    echo [4/5] Commit banaya ja raha hai:
     echo       "!COMMIT_MSG!"
     rem --no-verify skips pre-commit hook because THIS script already ran the graph
     rem generator above. Without this, the hook runs it AGAIN during commit,
@@ -127,11 +140,11 @@ if errorlevel 1 (
         git commit --no-verify -m "!COMMIT_MSG!"
     )
 ) else (
-    echo [3/4] Koi naye uncommitted changes nahi hain, existing commits push karenge...
+    echo [4/5] Koi naye uncommitted changes nahi hain, existing commits push karenge...
 )
 
 echo.
-echo [4/4] GitHub par direct push kar rahe hain (%BRANCH%)...
+echo [5/5] GitHub par direct push kar rahe hain (%BRANCH%)...
 git push origin %BRANCH%
 if errorlevel 1 (
     echo.
