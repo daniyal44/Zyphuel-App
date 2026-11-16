@@ -278,7 +278,10 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "zyphuel_database"
-                ).addMigrations(MIGRATION_12_TO_13).build()
+                )
+                    .addMigrations(MIGRATION_12_TO_13)
+                    .fallbackToDestructiveMigration()
+                    .build()
                 INSTANCE = instance
                 instance
             }

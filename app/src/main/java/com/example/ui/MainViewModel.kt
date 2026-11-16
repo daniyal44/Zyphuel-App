@@ -1107,29 +1107,41 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     init {
-        // Restore persisted failed-login lockouts so force-closing/restarting the app
-        // cannot bypass the 5-minute cooldown (added 2026-10-23).
-        SecurityRateLimiter.initialize(application)
-        evaluateOutdatedAppVersion(_appVersionConfig.value)
+        try {
+            // Restore persisted failed-login lockouts so force-closing/restarting the app
+            // cannot bypass the 5-minute cooldown (added 2026-10-23).
+            SecurityRateLimiter.initialize(application)
+        } catch (e: Exception) {
+            DebugLogger.e("MainViewModel", "SecurityRateLimiter.initialize failed: ${e.message}", e)
+        }
+        try {
+            evaluateOutdatedAppVersion(_appVersionConfig.value)
+        } catch (e: Exception) {
+            DebugLogger.e("MainViewModel", "evaluateOutdatedAppVersion failed: ${e.message}", e)
+        }
 
         // ── Fuel Price Cache Invalidation ──
         // If SharedPreferences has stale/outdated prices, reset to current OGRA defaults.
         // The FuelPriceWorker + Firestore listener will then overwrite with live data.
         // PRICE_CACHE_VERSION: increment this when OGRA announces new rates to force refresh.
-        val PRICE_CACHE_VERSION = 4  // v4 = Nov 2026 OGRA rates
-        val cachedVersion = sharedPrefs.getInt("price_cache_version", 0)
-        val cachedPetrol = sharedPrefs.getFloat("petrol", 0f)
+        try {
+            val PRICE_CACHE_VERSION = 4  // v4 = Nov 2026 OGRA rates
+            val cachedVersion = sharedPrefs.getInt("price_cache_version", 0)
+            val cachedPetrol = sharedPrefs.getFloat("petrol", 0f)
 
-        // Force-clear old cache if: version changed OR prices are impossibly stale (< 200 or > 500)
-        if (cachedVersion < PRICE_CACHE_VERSION || cachedPetrol < 200f || cachedPetrol > 500f) {
-            sharedPrefs.edit()
-                .putFloat("petrol", 328.00f)
-                .putFloat("diesel", 358.00f)
-                .putFloat("high_octane", 370.00f)
-                .putInt("price_cache_version", PRICE_CACHE_VERSION)
-                .putString("last_sync_time", "OGRA Official Rates (Default)")
-                .apply()
-            com.example.util.DebugLogger.i("MainViewModel", "Price cache reset to OGRA defaults v$PRICE_CACHE_VERSION: 328/358/370")
+            // Force-clear old cache if: version changed OR prices are impossibly stale (< 200 or > 500)
+            if (cachedVersion < PRICE_CACHE_VERSION || cachedPetrol < 200f || cachedPetrol > 500f) {
+                sharedPrefs.edit()
+                    .putFloat("petrol", 328.00f)
+                    .putFloat("diesel", 358.00f)
+                    .putFloat("high_octane", 370.00f)
+                    .putInt("price_cache_version", PRICE_CACHE_VERSION)
+                    .putString("last_sync_time", "OGRA Official Rates (Default)")
+                    .apply()
+                DebugLogger.i("MainViewModel", "Price cache reset to OGRA defaults v$PRICE_CACHE_VERSION: 328/358/370")
+            }
+        } catch (e: Exception) {
+            DebugLogger.e("MainViewModel", "Price cache init failed: ${e.message}", e)
         }
 
         // Always read from SharedPreferences (now guaranteed to be current defaults or live data)
@@ -1539,14 +1551,22 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     // whole app cross-device without touching individual screens.
     init {
         // Sync initial prices to Category repository
-        repository.categoryRepository.syncLiveFuelPrices(
-            _petrolPrice.value,
-            _dieselPrice.value,
-            _highOctanePrice.value
-        )
+        try {
+            repository.categoryRepository.syncLiveFuelPrices(
+                _petrolPrice.value,
+                _dieselPrice.value,
+                _highOctanePrice.value
+            )
+        } catch (e: Exception) {
+            DebugLogger.e("MainViewModel", "syncLiveFuelPrices init failed: ${e.message}", e)
+        }
 
         // Initialize security and biometric state for registered device profiles
-        refreshSecurityAndBiometricStates(getApplication())
+        try {
+            refreshSecurityAndBiometricStates(getApplication())
+        } catch (e: Exception) {
+            DebugLogger.e("MainViewModel", "refreshSecurityAndBiometricStates failed: ${e.message}", e)
+        }
 
         viewModelScope.launch {
             _currentUser.flatMapLatest { user ->

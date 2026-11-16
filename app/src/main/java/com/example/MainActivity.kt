@@ -35,11 +35,35 @@ class MainActivity : FragmentActivity() {
     @OptIn(ExperimentalSharedTransitionApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // ── Global Crash Handler ──
+        // Catches ANY uncaught exception and saves the full stacktrace to a file
+        // so the developer can diagnose instant-close crashes without adb logcat.
+        val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+            try {
+                val crashFile = java.io.File(filesDir, "crash_log.txt")
+                val timestamp = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.US).format(java.util.Date())
+                val stackTrace = android.util.Log.getStackTraceString(throwable)
+                crashFile.writeText("=== ZYPHUEL CRASH LOG ===\nTime: $timestamp\nThread: ${thread.name}\nException: ${throwable::class.java.name}: ${throwable.message}\n\nFull Stack Trace:\n$stackTrace\n")
+                DebugLogger.e("CRASH_HANDLER", "App crashed: ${throwable.message}", throwable)
+            } catch (_: Exception) { /* best-effort */ }
+            defaultHandler?.uncaughtException(thread, throwable)
+        }
+
         enableEdgeToEdge()
 
         DebugLogger.i("MainActivity", "Initializing Zyphuel Application Activity")
-        com.example.util.SigningDiagnosticUtil.logAppSigningSha1(this)
-        UnifiedAssetManager.verifyAssetIntegrity(this)
+        try {
+            com.example.util.SigningDiagnosticUtil.logAppSigningSha1(this)
+        } catch (e: Exception) {
+            DebugLogger.e("MainActivity", "SigningDiagnosticUtil failed: ${e.message}", e)
+        }
+        try {
+            UnifiedAssetManager.verifyAssetIntegrity(this)
+        } catch (e: Exception) {
+            DebugLogger.e("MainActivity", "UnifiedAssetManager failed: ${e.message}", e)
+        }
 
         try {
             val notificationManager = getSystemService(NOTIFICATION_SERVICE) as? android.app.NotificationManager
@@ -48,14 +72,32 @@ class MainActivity : FragmentActivity() {
             DebugLogger.w("MainActivity", "Could not clear existing system notifications: ${e.message}")
         }
 
-        // Initialize MainViewModel
-        viewModel = ViewModelProvider(this)[MainViewModel::class.java]
-        viewModel.refreshSecurityAndBiometricStates(this)
-
+        // Initialize MainViewModel (wrapped in try-catch for crash diagnostics)
+        try {
+            viewModel = ViewModelProvider(this)[MainViewModel::class.java]
+            DebugLogger.i("MainActivity", "MainViewModel initialized successfully")
+        } catch (e: Exception) {
+            DebugLogger.e("MainActivity", "CRITICAL: MainViewModel init crashed: ${e.message}", e)
+            // Save crash info before dying
+            try {
+                val crashFile = java.io.File(filesDir, "crash_log.txt")
+                crashFile.appendText("\n\n=== ViewModel Init Crash ===\n${android.util.Log.getStackTraceString(e)}\n")
+            } catch (_: Exception) {}
+            throw e // Re-throw so the global handler captures it too
+        }
+        try {
+            viewModel.refreshSecurityAndBiometricStates(this)
+        } catch (e: Exception) {
+            DebugLogger.e("MainActivity", "refreshSecurityAndBiometricStates crashed: ${e.message}", e)
+        }
 
         // Track unique app install in Firestore & pre-fetch download count for Admin Dashboard
-        viewModel.trackAppInstall(this)
-        viewModel.fetchAppDownloadCount()
+        try {
+            viewModel.trackAppInstall(this)
+            viewModel.fetchAppDownloadCount()
+        } catch (e: Exception) {
+            DebugLogger.e("MainActivity", "trackAppInstall/fetchDownloadCount failed: ${e.message}", e)
+        }
 
         // Request runtime permissions early so live delivery tracking works without a hitch:
         //  - Location (FINE/COARSE): customer destination fix + rider GPS foreground service.

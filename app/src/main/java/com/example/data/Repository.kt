@@ -22,7 +22,12 @@ class AppRepository(context: Context) {
         context.applicationContext,
         AppDatabase::class.java,
         "zyphuel_database"
-    ).addMigrations(com.example.data.MIGRATION_12_TO_13).build()
+    )
+        .addMigrations(com.example.data.MIGRATION_12_TO_13)
+        // Safety net: if user's DB is an ancient version (< 12) with no migration path,
+        // wipe and recreate rather than crashing the app on startup.
+        .fallbackToDestructiveMigration()
+        .build()
 
     val userDao = db.userDao()
     val orderDao = db.orderDao()
