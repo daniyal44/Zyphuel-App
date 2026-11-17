@@ -8,8 +8,8 @@ enum ZyphuelConfig {
 
     // MARK: Build identity (mirrors build.gradle.kts)
     static let bundleIdentifier = "com.aistudio.zyphuel.appv2"
-    static let marketingVersion = "2.6.4.0.0.53"
-    static let buildNumber = 81
+    static let marketingVersion = "2.6.4.0.0.54"
+    static let buildNumber = 82
 
     // MARK: Business identity
     static let brandName = "Zyphuel"
