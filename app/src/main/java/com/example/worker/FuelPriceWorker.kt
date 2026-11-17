@@ -29,11 +29,11 @@ class FuelPriceWorker(
             val sharedPrefs = appContext.getSharedPreferences("zyphuel_prices", Context.MODE_PRIVATE)
             // Use same keys as MainViewModel: "petrol", "diesel", "high_octane"
             // Default to current OGRA rates so first-launch never shows 0
-            val oldPetrol = sharedPrefs.getFloat("petrol", 328.00f)
+            val oldPetrol = sharedPrefs.getFloat("petrol", 335.00f)
 
-            var newPetrol = if (oldPetrol > 0f) oldPetrol else 328.00f
-            var newDiesel = sharedPrefs.getFloat("diesel", 358.00f).let { if (it > 0f) it else 358.00f }
-            var newOctane = sharedPrefs.getFloat("high_octane", 399.00f).let { if (it > 0f) it else 399.00f }
+            var newPetrol = if (oldPetrol > 0f) oldPetrol else 335.00f
+            var newDiesel = sharedPrefs.getFloat("diesel", 336.00f).let { if (it > 0f) it else 336.00f }
+            var newOctane = sharedPrefs.getFloat("high_octane", 350.00f).let { if (it > 0f) it else 350.00f }
             var sourceName = "Official Fuel Market API"
 
             try {
@@ -146,8 +146,8 @@ class FuelPriceWorker(
 
             // Detect price changes for notification
             val petrolChanged = kotlin.math.abs(newPetrol - oldPetrol) > 0.01f
-            val dieselOld = sharedPrefs.getFloat("diesel", 358.00f)
-            val octaneOld = sharedPrefs.getFloat("high_octane", 399.00f)
+            val dieselOld = sharedPrefs.getFloat("diesel", 336.00f)
+            val octaneOld = sharedPrefs.getFloat("high_octane", 350.00f)
             val dieselChanged = kotlin.math.abs(newDiesel - dieselOld) > 0.01f
             val octaneChanged = kotlin.math.abs(newOctane - octaneOld) > 0.01f
             val anyPriceChanged = petrolChanged || dieselChanged || octaneChanged

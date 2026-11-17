@@ -854,7 +854,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val pricePrefsListener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { prefs, key ->
         when (key) {
             "petrol" -> {
-                val v = prefs.getFloat("petrol", 328.00f)
+                val v = prefs.getFloat("petrol", 335.00f)
                 if (v > 0f && v != _petrolPrice.value) {
                     _petrolPrice.value = v
                     repository.categoryRepository.syncLiveFuelPrices(v, _dieselPrice.value, _highOctanePrice.value)
@@ -862,7 +862,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
             }
             "diesel" -> {
-                val v = prefs.getFloat("diesel", 358.00f)
+                val v = prefs.getFloat("diesel", 336.00f)
                 if (v > 0f && v != _dieselPrice.value) {
                     _dieselPrice.value = v
                     repository.categoryRepository.syncLiveFuelPrices(_petrolPrice.value, v, _highOctanePrice.value)
@@ -870,7 +870,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
             }
             "high_octane" -> {
-                val v = prefs.getFloat("high_octane", 399.00f)
+                val v = prefs.getFloat("high_octane", 350.00f)
                 if (v > 0f && v != _highOctanePrice.value) {
                     _highOctanePrice.value = v
                     repository.categoryRepository.syncLiveFuelPrices(_petrolPrice.value, _dieselPrice.value, v)
@@ -1184,30 +1184,31 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         // The FuelPriceWorker + Firestore listener will then overwrite with live data.
         // PRICE_CACHE_VERSION: increment this when OGRA announces new rates to force refresh.
         try {
-            val PRICE_CACHE_VERSION = 6  // v6 = Nov 17, 2026 OGRA rates: Petrol 328, Diesel 358, HOBC 399
+            val PRICE_CACHE_VERSION = 8  // v8 = Nov 17, 2026 Website rates: Petrol 335, Diesel 336, HOBC 350
+            // Incremented to force cache reset for ALL users on website price integration
             val cachedVersion = sharedPrefs.getInt("price_cache_version", 0)
             val cachedPetrol = sharedPrefs.getFloat("petrol", 0f)
 
             // Force-clear old cache if: version changed OR prices are impossibly stale (< 200 or > 500)
             if (cachedVersion < PRICE_CACHE_VERSION || cachedPetrol < 200f || cachedPetrol > 500f) {
                 sharedPrefs.edit()
-                    .putFloat("petrol", 328.00f)
-                    .putFloat("diesel", 358.00f)
-                    .putFloat("high_octane", 399.00f)
+                    .putFloat("petrol", 335.00f)
+                    .putFloat("diesel", 336.00f)
+                    .putFloat("high_octane", 350.00f)
                     .putInt("price_cache_version", PRICE_CACHE_VERSION)
-                    .putString("last_sync_time", "OGRA Official Rates (Default)")
+                    .putString("last_sync_time", "Website Rates (Default)")
                     .apply()
-                DebugLogger.i("MainViewModel", "Price cache reset to OGRA pump rates v$PRICE_CACHE_VERSION: 328/358/399")
+                DebugLogger.i("MainViewModel", "Price cache reset to Website rates v$PRICE_CACHE_VERSION: 335/336/350")
             }
         } catch (e: Exception) {
             DebugLogger.e("MainViewModel", "Price cache init failed: ${e.message}", e)
         }
 
         // Always read from SharedPreferences (now guaranteed to be current defaults or live data)
-        _petrolPrice.value = sharedPrefs.getFloat("petrol", 328.00f)
-        _dieselPrice.value = sharedPrefs.getFloat("diesel", 358.00f)
-        _highOctanePrice.value = sharedPrefs.getFloat("high_octane", 399.00f)
-        _lastPriceSyncTime.value = sharedPrefs.getString("last_sync_time", "OGRA Official Rates") ?: "OGRA Official Rates"
+        _petrolPrice.value = sharedPrefs.getFloat("petrol", 335.00f)
+        _dieselPrice.value = sharedPrefs.getFloat("diesel", 336.00f)
+        _highOctanePrice.value = sharedPrefs.getFloat("high_octane", 350.00f)
+        _lastPriceSyncTime.value = sharedPrefs.getString("last_sync_time", "Website Rates") ?: "Website Rates"
 
         viewModelScope.launch {
             while (isActive) {
@@ -4566,15 +4567,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
                 } catch (e: Exception) {
                     // Fallback 2: Use last cached prices if available, otherwise skip
-                    val cachedPetrol = sharedPrefs.getFloat("petrol", 328.00f)
-                    val cachedDiesel = sharedPrefs.getFloat("diesel", 358.00f)
-                    val cachedOctane = sharedPrefs.getFloat("high_octane", 399.00f)
+                    // Website rates are guaranteed by PRICE_CACHE_VERSION reset on app launch
+                    val cachedPetrol = sharedPrefs.getFloat("petrol", 335.00f)
+                    val cachedDiesel = sharedPrefs.getFloat("diesel", 336.00f)
+                    val cachedOctane = sharedPrefs.getFloat("high_octane", 350.00f)
                     if (cachedPetrol > 0f && cachedDiesel > 0f) {
                         updateFuelPrices(
                             petrol = cachedPetrol,
                             diesel = cachedDiesel,
                             octane = cachedOctane,
-                            source = "Cached OGRA Rates",
+                            source = "Website Rates (Cached)",
                             method = "Local Cache"
                         )
                     }

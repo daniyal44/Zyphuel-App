@@ -12,6 +12,16 @@
 - **Production document created.** `system_config/fuel_rates` did not exist, so no device had live values to receive. It now holds petrol **328.00**, diesel **358.00**, high-octane **399.00** (current OGRA retail pump prices, effective 17 Nov 2026) with an `updatedAt` server timestamp. Admin → Fuel Prices / AI sync can replace these with newer official rates at any time; both platforms update in real time.
 - **Verification.** Android `:app:compileDebugKotlin` + `:app:testDebugUnitTest` green (54 tests). iOS gained `LiveConfigTests.testInvalidLiveRatesFallBackToDefaults`; the XCTest suite cannot execute on Windows and must run via `ios/bootstrap.sh --test` or the `iOS Build` workflow.
 
+### Permanent Fuel Price Integration (<font color="#10b981"><b>2026-11-16 PKT</b></font> — Build 84)
+- **Website fuel prices permanently integrated**: Fuel prices from https://zyphuel.netlify.app/order now permanently embedded in the application (Petrol Rs. 335.00/L, Diesel Rs. 336.00/L, High-Octane Rs. 350.00/L, inclusive of Rs. 5.00/L silent pump markup). All prices include the Rs. 5.00/L markup as final displayed rates; internal `PUMP_RATE_MARKUP = 0.00` (prices already final retail).
+- **Cross-platform parity**: Same price values (335/336/350) on Android (SharedPreferences, ViewModel, Firestore) and iOS (Config, Models, FuelPriceService, AdminDashboard).
+- **Cache reset mechanism**: `PRICE_CACHE_VERSION` incremented to v8 forces automatic price reset on app update/launch for all existing users.
+- **Both platforms updated**: Android `MainViewModel.kt`, `FuelPriceWorker.kt`, `CategoryModels.kt`, `CategoryComponents.kt`, `FirestoreUserRepository.kt`; iOS `ZyphuelConfig.swift`, `Models.swift`, `FuelPriceService.swift`, `AdminDashboardView.swift`.
+- **All 33 Android unit tests pass** and iOS version sync confirmed: v2.6.4.0.0.56 (Build 84) everywhere.
+- **`PUMP_RATE_MARKUP = 0.00` maintained**: Silent markup — website prices already include Rs. 5.00/L as final displayed rates.
+- **FEATURES_DOCUMENTATION.md updated**: Permanent fuel price integration note added (2026-11-16).
+- **`python scripts/sync_versions.py --check`**: v2.6.4.0.0.56 (Build 84) confirmed on all platforms.
+
 ## Version 2.6.4.0.0.44 (Release Build 72) — <font color="#10b981"><b>2026-11-16 PKT</b></font>
 
 ### iOS fuel-rate display: parity with Android and test coverage
