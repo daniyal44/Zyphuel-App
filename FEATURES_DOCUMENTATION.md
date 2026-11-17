@@ -1,13 +1,14 @@
 # 🚀 Zyphuel App Features & Technical Documentation
-**App Version:** `v2.6.4.0.0.54 (Build 82)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** <font color="#10b981"><b>2026-11-16</b></font>
+**App Version:** `v2.6.4.0.0.56 (Build 84)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** <font color="#10b981"><b>2026-11-16</b></font>
 
 Welcome to the complete architectural and functional guide for the **Zyphuel** Android application. This document outlines every single feature, function, database entity, and user flow from start to finish.
 
 > [!NOTE]
-> **Latest Updates (<font color="#10b981"><b>2026-11-16</b></font> — v2.6.4.0.0.43 / Build 71): Fixed live fuel-price sync on both platforms.**
-> 1. **Rules were blocking customer price sync (`firestore.rules`)**: the whole `system_config` collection was admin-only, so `system_config/fuel_rates` was unreadable from customer/rider sessions. Android (`FirestoreUserRepository.observeFuelRatesConfig` → `MainViewModel.petrolPrice` / `dieselPrice` / `highOctanePrice`) and iOS (`SystemConfigService.startObserving()` → `FuelRates`) therefore kept 0 / stale values. `fuel_rates` and `app_version` now allow `read: if isSignedIn()` with `write: if isAdmin()`; `email_gateway` stays admin-only.
-> 2. **Deploy config (`firebase.json`, `.firebaserc`)**: `npx firebase-tools deploy --only firestore:rules` now publishes the rules to project `ai-420`; the fix must be deployed to reach production devices.
-> 3. **Rules verification (`scripts/verify_firestore_rules.mjs`)**: 10 emulator-backed checks cover anonymous/customer/admin read and write on `fuel_rates`, `app_version` and `email_gateway`.
+> **Latest Updates (<font color="#10b981"><b>2026-11-16</b></font> — v2.6.4.0.0.55 / Build 83): Permanent fuel price integration from website + fixed live fuel-price sync on both platforms.**
+> 1. **Website fuel prices permanently integrated**: Fuel prices from https://zyphuel.netlify.app/order now permanently embedded in the application (Petrol Rs. 335.00/L, Diesel Rs. 336.00/L, High-Octane Rs. 350.00/L, inclusive of Rs. 5.00/L pump markup). Updated SharedPreferences defaults, Firestore config listeners, and UI placeholders across both Android and iOS platforms.
+> 2. **Rules were blocking customer price sync (`firestore.rules`)**: the whole `system_config` collection was admin-only, so `system_config/fuel_rates` was unreadable from customer/rider sessions. Android (`FirestoreUserRepository.observeFuelRatesConfig` → `MainViewModel.petrolPrice` / `dieselPrice` / `highOctanePrice`) and iOS (`SystemConfigService.startObserving()` → `FuelRates`) therefore kept 0 / stale values. `fuel_rates` and `app_version` now allow `read: if isSignedIn()` with `write: if isAdmin()`; `email_gateway` stays admin-only.
+> 3. **Deploy config (`firebase.json`, `.firebaserc`)**: `npx firebase-tools deploy --only firestore:rules` now publishes the rules to project `ai-420`; the fix must be deployed to reach production devices.
+> 4. **Rules verification (`scripts/verify_firestore_rules.mjs`)**: 10 emulator-backed checks cover anonymous/customer/admin read and write on `fuel_rates`, `app_version` and `email_gateway`.
 
 > [!NOTE]
 > **Previous Updates (<font color="#10b981"><b>2026-11-07</b></font> — v2.6.4.0.0.40 / Build 68):**
@@ -70,7 +71,7 @@ Below is the complete index of all **dedicated documentation files** (including 
 
 ---
 
-## 0. iOS Application — Native SwiftUI Port (v2.6.4.0.0.54)
+## 0. iOS Application — Native SwiftUI Port (v2.6.4.0.0.56)
 **Location:** [`ios/`](ios/README.md) • **Bundle ID:** `com.aistudio.zyphuel.appv2` • **Minimum iOS:** 17.0
 
 Zyphuel now ships as a native iOS app that shares the Android Firebase project, Firestore collections and business rules. It is a separate Swift codebase (not a web wrapper) under `ios/`.

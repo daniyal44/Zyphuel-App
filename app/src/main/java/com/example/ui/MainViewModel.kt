@@ -825,13 +825,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private val _petrolPrice = MutableStateFlow(sharedPrefs.getFloat("petrol", 328.00f))
+    private val _petrolPrice = MutableStateFlow(sharedPrefs.getFloat("petrol", 335.00f))
     val petrolPrice = _petrolPrice.asStateFlow()
 
-    private val _dieselPrice = MutableStateFlow(sharedPrefs.getFloat("diesel", 358.00f))
+    private val _dieselPrice = MutableStateFlow(sharedPrefs.getFloat("diesel", 336.00f))
     val dieselPrice = _dieselPrice.asStateFlow()
 
-    private val _highOctanePrice = MutableStateFlow(sharedPrefs.getFloat("high_octane", 399.00f))
+    private val _highOctanePrice = MutableStateFlow(sharedPrefs.getFloat("high_octane", 350.00f))
     val highOctanePrice = _highOctanePrice.asStateFlow()
 
     // --- Retail Petrol Pump Rates (Base OGRA Rate + Rs. 5.00/L Petrol Pump Margin/Markup) ---

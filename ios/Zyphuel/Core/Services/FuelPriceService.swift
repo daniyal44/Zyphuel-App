@@ -635,9 +635,9 @@ final class FuelPriceSyncManager: ObservableObject {
 
     static let shared = FuelPriceSyncManager()
 
-    @Published private(set) var lastPetrol: Double = 328.00
-    @Published private(set) var lastDiesel: Double = 358.00
-    @Published private(set) var lastHighOctane: Double = 399.00
+    @Published private(set) var lastPetrol: Double = 335.00
+    @Published private(set) var lastDiesel: Double = 336.00
+    @Published private(set) var lastHighOctane: Double = 350.00
     @Published private(set) var lastSource: String = ""
     @Published private(set) var lastUpdated: Date?
     @Published private(set) var isSyncing = false
