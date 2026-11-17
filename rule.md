@@ -1,6 +1,6 @@
 # 🛡️ Zyphuel Security, Architecture & Operational Rules (`rule.md`)
 
-**Last Updated:** <font color="#10b981"><b>2026-10-09</b></font> • **Application Version:** <font color="#10b981"><b>2.6.4.0.0.50 (Build 78)</b></font>
+**Last Updated:** <font color="#10b981"><b>2026-10-09</b></font> • **Application Version:** <font color="#10b981"><b>2.6.4.0.0.51 (Build 79)</b></font>
 
 ---
 

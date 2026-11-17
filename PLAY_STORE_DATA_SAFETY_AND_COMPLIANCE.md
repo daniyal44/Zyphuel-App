@@ -2,7 +2,7 @@
 
 **Application:** Zyphuel Doorstep Fuel & Energy Delivery  
 **Package Name:** `com.aistudio.zyphuel.appv2`  
-**Current Version:** <font color="#10b981"><b>2.6.4.0.0.50 (Build 78)</b></font>  
+**Current Version:** <font color="#10b981"><b>2.6.4.0.0.51 (Build 79)</b></font>  
 **Target SDK:** 36 (Android 16) | **Min SDK:** 24 (Android 7.0)  
 **Last Synchronized:** <font color="#10b981"><b>2026-10-23</b></font>
 

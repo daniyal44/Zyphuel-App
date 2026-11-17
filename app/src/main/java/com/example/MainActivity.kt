@@ -30,7 +30,8 @@ import com.example.util.LocalAppLanguage
 import com.example.util.UnifiedAssetManager
 
 class MainActivity : FragmentActivity() {
-    private lateinit var viewModel: MainViewModel
+    private var viewModel: MainViewModel? = null
+    private var initError: Throwable? = null
 
     @OptIn(ExperimentalSharedTransitionApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,7 +46,8 @@ class MainActivity : FragmentActivity() {
                 val crashFile = java.io.File(filesDir, "crash_log.txt")
                 val timestamp = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.US).format(java.util.Date())
                 val stackTrace = android.util.Log.getStackTraceString(throwable)
-                crashFile.writeText("=== ZYPHUEL CRASH LOG ===\nTime: $timestamp\nThread: ${thread.name}\nException: ${throwable::class.java.name}: ${throwable.message}\n\nFull Stack Trace:\n$stackTrace\n")
+                val prevContent = if (crashFile.exists()) crashFile.readText() else ""
+                crashFile.writeText("=== ZYPHUEL CRASH LOG ===\nTime: $timestamp\nThread: ${thread.name}\nException: ${throwable::class.java.name}: ${throwable.message}\n\nFull Stack Trace:\n$stackTrace\n\n--- Previous Log ---\n$prevContent")
                 DebugLogger.e("CRASH_HANDLER", "App crashed: ${throwable.message}", throwable)
             } catch (_: Exception) { /* best-effort */ }
             defaultHandler?.uncaughtException(thread, throwable)
@@ -72,69 +74,103 @@ class MainActivity : FragmentActivity() {
             DebugLogger.w("MainActivity", "Could not clear existing system notifications: ${e.message}")
         }
 
-        // Initialize MainViewModel (wrapped in try-catch for crash diagnostics)
+        // Initialize MainViewModel — if it fails, show a recovery screen instead of crashing
         try {
             viewModel = ViewModelProvider(this)[MainViewModel::class.java]
             DebugLogger.i("MainActivity", "MainViewModel initialized successfully")
         } catch (e: Exception) {
             DebugLogger.e("MainActivity", "CRITICAL: MainViewModel init crashed: ${e.message}", e)
-            // Save crash info before dying
+            initError = e
             try {
                 val crashFile = java.io.File(filesDir, "crash_log.txt")
-                crashFile.appendText("\n\n=== ViewModel Init Crash ===\n${android.util.Log.getStackTraceString(e)}\n")
+                val timestamp = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.US).format(java.util.Date())
+                crashFile.writeText("=== VIEWMODEL INIT CRASH ===\nTime: $timestamp\n${android.util.Log.getStackTraceString(e)}\n")
             } catch (_: Exception) {}
-            throw e // Re-throw so the global handler captures it too
-        }
-        try {
-            viewModel.refreshSecurityAndBiometricStates(this)
-        } catch (e: Exception) {
-            DebugLogger.e("MainActivity", "refreshSecurityAndBiometricStates crashed: ${e.message}", e)
+            // DO NOT re-throw — show recovery UI instead
         }
 
-        // Track unique app install in Firestore & pre-fetch download count for Admin Dashboard
-        try {
-            viewModel.trackAppInstall(this)
-            viewModel.fetchAppDownloadCount()
-        } catch (e: Exception) {
-            DebugLogger.e("MainActivity", "trackAppInstall/fetchDownloadCount failed: ${e.message}", e)
-        }
-
-        // Request runtime permissions early so live delivery tracking works without a hitch:
-        //  - Location (FINE/COARSE): customer destination fix + rider GPS foreground service.
-        //  - POST_NOTIFICATIONS (Android 13+): delivery + tracking notifications.
-        run {
-            val needed = mutableListOf<String>()
-            val hasFine = checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED
-            val hasCoarse = checkSelfPermission(android.Manifest.permission.ACCESS_COARSE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED
-            if (!hasFine && !hasCoarse) {
-                needed.add(android.Manifest.permission.ACCESS_FINE_LOCATION)
-                needed.add(android.Manifest.permission.ACCESS_COARSE_LOCATION)
+        // Only run post-init code if ViewModel succeeded
+        if (viewModel != null) {
+            try {
+                viewModel!!.refreshSecurityAndBiometricStates(this)
+            } catch (e: Exception) {
+                DebugLogger.e("MainActivity", "refreshSecurityAndBiometricStates crashed: ${e.message}", e)
             }
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU &&
-                checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                needed.add(android.Manifest.permission.POST_NOTIFICATIONS)
+
+            // Track unique app install in Firestore & pre-fetch download count for Admin Dashboard
+            try {
+                viewModel!!.trackAppInstall(this)
+                viewModel!!.fetchAppDownloadCount()
+            } catch (e: Exception) {
+                DebugLogger.e("MainActivity", "trackAppInstall/fetchDownloadCount failed: ${e.message}", e)
             }
-            if (needed.isNotEmpty()) {
-                requestPermissions(needed.toTypedArray(), 101)
+
+            // Request runtime permissions early so live delivery tracking works without a hitch:
+            //  - Location (FINE/COARSE): customer destination fix + rider GPS foreground service.
+            //  - POST_NOTIFICATIONS (Android 13+): delivery + tracking notifications.
+            run {
+                val needed = mutableListOf<String>()
+                val hasFine = checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                val hasCoarse = checkSelfPermission(android.Manifest.permission.ACCESS_COARSE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                if (!hasFine && !hasCoarse) {
+                    needed.add(android.Manifest.permission.ACCESS_FINE_LOCATION)
+                    needed.add(android.Manifest.permission.ACCESS_COARSE_LOCATION)
+                }
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU &&
+                    checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                    needed.add(android.Manifest.permission.POST_NOTIFICATIONS)
+                }
+                if (needed.isNotEmpty()) {
+                    requestPermissions(needed.toTypedArray(), 101)
+                }
+            }
+
+            // Process notification intent launch
+            handleNotificationIntent(intent)
+
+            // Schedule periodic background WorkManager task for real-time fuel price updates & notifications
+            try {
+                com.example.worker.FuelPriceWorker.schedulePeriodicPriceWork(this)
+                com.example.worker.FuelPriceWorker.triggerImmediatePriceWork(this)
+            } catch (e: Exception) {
+                DebugLogger.e("MainActivity", "FuelPriceWorker scheduling failed: ${e.message}", e)
             }
         }
-
-        // Process notification intent launch
-        handleNotificationIntent(intent)
-
-        // Schedule periodic background WorkManager task for real-time fuel price updates & notifications
-        com.example.worker.FuelPriceWorker.schedulePeriodicPriceWork(this)
-        // Also trigger an immediate one-time sync so prices are fresh on every app launch
-        com.example.worker.FuelPriceWorker.triggerImmediatePriceWork(this)
 
         setContent {
+            // If ViewModel init failed, show a recovery screen instead of crashing
+            if (viewModel == null) {
+                CrashRecoveryScreen(
+                    error = initError,
+                    onClearDataAndRetry = {
+                        // Delete the Room database and all SharedPreferences, then restart
+                        try {
+                            applicationContext.deleteDatabase("zyphuel_database")
+                            applicationContext.getSharedPreferences("zyphuel_prices", android.content.Context.MODE_PRIVATE).edit().clear().apply()
+                            applicationContext.getSharedPreferences("zyphuel_session", android.content.Context.MODE_PRIVATE).edit().clear().apply()
+                            applicationContext.getSharedPreferences("zyphuel_ui_prefs", android.content.Context.MODE_PRIVATE).edit().clear().apply()
+                        } catch (_: Exception) {}
+                        // Restart the activity
+                        val intent = packageManager.getLaunchIntentForPackage(packageName)
+                        intent?.addFlags(android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP or android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                        startActivity(intent)
+                        finish()
+                        Runtime.getRuntime().exit(0)
+                    },
+                    onRetryWithoutClearing = {
+                        recreate()
+                    }
+                )
+                return@setContent
+            }
+            val vm = viewModel!!
             MyApplicationTheme {
                 // --- Multi-Language + RTL root ---
                 // Feed the in-app selected language into the Compose tree. LocalAppLanguage is a
                 // staticCompositionLocalOf, so changing it recomposes the entire subtree — every
                 // tr()/trStatus() label re-renders in one go. LocalLayoutDirection mirrors the whole
                 // UI for RTL scripts (Urdu, Arabic, Sindhi, Pashto, Persian).
-                val appLanguage by viewModel.currentLanguage.collectAsState()
+                val appLanguage by vm.currentLanguage.collectAsState()
                 val appLayoutDirection = if (appLanguage.isRtl) LayoutDirection.Rtl else LayoutDirection.Ltr
                 CompositionLocalProvider(
                     LocalAppLanguage provides appLanguage,
@@ -143,23 +179,23 @@ class MainActivity : FragmentActivity() {
                 GlobalErrorBoundary(
                     onResetAppState = {
                         DebugLogger.i("MainActivity", "Resetting App State from Error Boundary")
-                        viewModel.navigateTo("customer_home")
+                        vm.navigateTo("customer_home")
                     }
                 ) {
-                    val currentScreen by viewModel.currentScreen.collectAsState()
-                    val isTransitioningPlatform by viewModel.isTransitioningPlatform.collectAsState()
-                    val transitionTargetPlatformName by viewModel.transitionTargetPlatformName.collectAsState()
-                    val uiMessage by viewModel.uiMessage.collectAsState()
+                    val currentScreen by vm.currentScreen.collectAsState()
+                    val isTransitioningPlatform by vm.isTransitioningPlatform.collectAsState()
+                    val transitionTargetPlatformName by vm.transitionTargetPlatformName.collectAsState()
+                    val uiMessage by vm.uiMessage.collectAsState()
 
                     // Center notification engine & App open price notification preference check
                     LaunchedEffect(Unit) {
-                        viewModel.checkAppOpenNotificationChoicePrompt(this@MainActivity)
+                        vm.checkAppOpenNotificationChoicePrompt(this@MainActivity)
                     }
 
                     LaunchedEffect(uiMessage) {
                         uiMessage?.let {
                             Toast.makeText(this@MainActivity, it, Toast.LENGTH_LONG).show()
-                            viewModel.clearMessage()
+                            vm.clearMessage()
                         }
                     }
 
@@ -188,30 +224,30 @@ class MainActivity : FragmentActivity() {
                                         LocalAnimatedVisibilityScope provides this@AnimatedContent
                                     ) {
                                         when (screen) {
-                                            "splash" -> SplashScreen(viewModel)
+                                            "splash" -> SplashScreen(vm)
                                             "portal_select" -> {
                                                 // Portal Selection removed — redirect to login
-                                                LaunchedEffect(Unit) { viewModel.navigateTo("login_customer") }
+                                                LaunchedEffect(Unit) { vm.navigateTo("login_customer") }
                                             }
-                                            "onboarding" -> OnboardingScreen(viewModel)
-                                            "login_customer" -> AuthScreen(viewModel, isRegister = false, isRider = false)
-                                            "register_customer" -> AuthScreen(viewModel, isRegister = true, isRider = false)
+                                            "onboarding" -> OnboardingScreen(vm)
+                                            "login_customer" -> AuthScreen(vm, isRegister = false, isRider = false)
+                                            "register_customer" -> AuthScreen(vm, isRegister = true, isRider = false)
                                             "login_rider" -> {
                                                 LaunchedEffect(Unit) {
-                                                    viewModel.navigateTo("login_customer")
+                                                    vm.navigateTo("login_customer")
                                                 }
                                             }
-                                            "register_rider" -> AuthScreen(viewModel, isRegister = true, isRider = true)
-                                            "customer_home" -> CustomerHomeScreen(viewModel)
-                                            "customer_order_history" -> CustomerOrderHistoryScreen(viewModel, onBack = { viewModel.navigateTo("customer_home") })
-                                            "rider_home" -> RiderHomeScreen(viewModel)
-                                            "rider_complete_profile" -> RiderCompleteProfileScreen(viewModel)
-                                            "tracker" -> TrackerScreen(viewModel)
-                                            "admin_dashboard" -> AdminDashboardScreen(viewModel)
-                                            "customer_security" -> SecuritySettingsScreen(viewModel, com.example.security.AppModule.CUSTOMER, onBack = { viewModel.navigateTo("customer_home") })
-                                            "rider_security" -> SecuritySettingsScreen(viewModel, com.example.security.AppModule.RIDER, onBack = { viewModel.navigateTo("rider_home") })
-                                            "admin_security" -> SecuritySettingsScreen(viewModel, com.example.security.AppModule.ADMIN, onBack = { viewModel.navigateTo("admin_dashboard") })
-                                            else -> SplashScreen(viewModel)
+                                            "register_rider" -> AuthScreen(vm, isRegister = true, isRider = true)
+                                            "customer_home" -> CustomerHomeScreen(vm)
+                                            "customer_order_history" -> CustomerOrderHistoryScreen(vm, onBack = { vm.navigateTo("customer_home") })
+                                            "rider_home" -> RiderHomeScreen(vm)
+                                            "rider_complete_profile" -> RiderCompleteProfileScreen(vm)
+                                            "tracker" -> TrackerScreen(vm)
+                                            "admin_dashboard" -> AdminDashboardScreen(vm)
+                                            "customer_security" -> SecuritySettingsScreen(vm, com.example.security.AppModule.CUSTOMER, onBack = { vm.navigateTo("customer_home") })
+                                            "rider_security" -> SecuritySettingsScreen(vm, com.example.security.AppModule.RIDER, onBack = { vm.navigateTo("rider_home") })
+                                            "admin_security" -> SecuritySettingsScreen(vm, com.example.security.AppModule.ADMIN, onBack = { vm.navigateTo("admin_dashboard") })
+                                            else -> SplashScreen(vm)
                                         }
                                     }
                                 }
@@ -223,12 +259,12 @@ class MainActivity : FragmentActivity() {
                             }
 
                             // Global Permanent Location Pin Marking Modal (Without Maps)
-                            val showMarkLocModal by viewModel.showMarkLocationModal.collectAsState()
+                            val showMarkLocModal by vm.showMarkLocationModal.collectAsState()
                             if (showMarkLocModal) {
                                 MarkDesiredLocationModal(
-                                    onDismiss = { viewModel.closeMarkLocationModal() },
+                                    onDismiss = { vm.closeMarkLocationModal() },
                                     onSaveLocation = { label, address, lat, lng ->
-                                        viewModel.savePermanentMarkedLocation(label, address, lat, lng)
+                                        vm.savePermanentMarkedLocation(label, address, lat, lng)
                                     }
                                 )
                             }
@@ -236,8 +272,8 @@ class MainActivity : FragmentActivity() {
                             // Global Biometric Enrollment Auto-Offer — shown once after a normal
                             // (password / Google) first login on a device that has an enrolled fingerprint.
                             // The interactive spotlight tour itself is driven inside CustomerHomeScreen
-                            // (it needs the on-screen element bounds), triggered by viewModel.showAppTourGuide.
-                            val bioEnrollModule by viewModel.biometricEnrollPrompt.collectAsState()
+                            // (it needs the on-screen element bounds), triggered by vm.showAppTourGuide.
+                            val bioEnrollModule by vm.biometricEnrollPrompt.collectAsState()
                             bioEnrollModule?.let { module ->
                                 BiometricEnrollPromptDialog(
                                     module = module,
@@ -249,47 +285,47 @@ class MainActivity : FragmentActivity() {
                                             description = "Scan your fingerprint to turn on quick biometric login for next time.",
                                             negativeButtonText = "Cancel",
                                             onSuccess = {
-                                                viewModel.currentUser.value?.let { user ->
-                                                    viewModel.enableBiometricForModule(this@MainActivity, module, user)
+                                                vm.currentUser.value?.let { user ->
+                                                    vm.enableBiometricForModule(this@MainActivity, module, user)
                                                 }
-                                                viewModel.dismissBiometricEnrollPrompt(decline = false)
+                                                vm.dismissBiometricEnrollPrompt(decline = false)
                                             },
                                             // Cancel / hardware error: dismiss without remembering, so it may offer again next login.
-                                            onError = { _, _ -> viewModel.dismissBiometricEnrollPrompt(decline = false) },
+                                            onError = { _, _ -> vm.dismissBiometricEnrollPrompt(decline = false) },
                                             // A non-matching scan keeps the system sheet up for retry — do nothing here.
                                             onFailed = { }
                                         )
                                     },
-                                    onDecline = { viewModel.dismissBiometricEnrollPrompt(decline = true) }
+                                    onDecline = { vm.dismissBiometricEnrollPrompt(decline = true) }
                                 )
                             }
 
                             // Global Outdated App Version Message Bar (for Auth/Portal screens; Home screens render it inline)
-                            val isOutdatedGlobal by viewModel.isOutdatedAppVersion.collectAsState()
+                            val isOutdatedGlobal by vm.isOutdatedAppVersion.collectAsState()
                             if (isOutdatedGlobal && currentScreen !in listOf("customer_home", "rider_home", "splash")) {
                                 androidx.compose.foundation.layout.Box(
                                     modifier = Modifier
                                         .align(androidx.compose.ui.Alignment.TopCenter)
                                         .padding(horizontal = 16.dp, vertical = 42.dp)
                                 ) {
-                                    OutdatedAppVersionMessageBar(viewModel = viewModel)
+                                    OutdatedAppVersionMessageBar(viewModel = vm)
                                 }
                             }
 
                             // Global Browser Web-Push Notification UI Banner Overlay
-                            val webPushPayload by viewModel.webPushNotification.collectAsState()
+                            val webPushPayload by vm.webPushNotification.collectAsState()
                             webPushPayload?.let { payload ->
                                 WebPushNotificationBanner(
                                     payload = payload,
-                                    onDismiss = { viewModel.dismissWebPush() },
+                                    onDismiss = { vm.dismissWebPush() },
                                     onClick = {
-                                        viewModel.dismissWebPush()
+                                        vm.dismissWebPush()
                                         // If tracking order is set, navigate to tracker
-                                        val trackerOrder = viewModel.trackingOrder.value
+                                        val trackerOrder = vm.trackingOrder.value
                                         if (trackerOrder != null) {
-                                            viewModel.navigateTo("tracker")
+                                            vm.navigateTo("tracker")
                                         } else {
-                                            viewModel.navigateTo("customer_home")
+                                            vm.navigateTo("customer_home")
                                         }
                                     }
                                 )
@@ -309,11 +345,12 @@ class MainActivity : FragmentActivity() {
     }
 
     private fun handleNotificationIntent(targetIntent: android.content.Intent?) {
+        val vm = viewModel ?: return
         targetIntent?.let {
             val openScreen = it.getStringExtra("open_screen")
             when (openScreen) {
-                "tracker" -> viewModel.navigateTo("tracker")
-                "order", "fuel_rates", "home" -> viewModel.navigateTo("customer_home")
+                "tracker" -> vm.navigateTo("tracker")
+                "order", "fuel_rates", "home" -> vm.navigateTo("customer_home")
             }
         }
     }

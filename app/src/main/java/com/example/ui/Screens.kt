@@ -791,6 +791,126 @@ fun ZyphuelInnerLogoAnimated(modifier: Modifier = Modifier) {
     )
 }
 
+// --- CRASH RECOVERY SCREEN ---
+// Shown when MainViewModel initialization fails, preventing an instant app close.
+// Gives the user options to retry or clear corrupted data.
+
+@Composable
+fun CrashRecoveryScreen(
+    error: Throwable?,
+    onClearDataAndRetry: () -> Unit,
+    onRetryWithoutClearing: () -> Unit
+) {
+    androidx.compose.foundation.layout.Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+            .statusBarsPadding()
+            .navigationBarsPadding(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(32.dp)
+        ) {
+            // Error icon
+            Icon(
+                imageVector = Icons.Filled.Warning,
+                contentDescription = "Error",
+                modifier = Modifier.size(64.dp),
+                tint = Color(0xFFE53935)
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                text = "Zyphuel Could Not Start",
+                style = MaterialTheme.typography.headlineSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF0F172A)
+                ),
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Text(
+                text = "The app encountered an error during startup. This usually happens due to corrupted local data. You can try restarting, or clear the app data to fix it.",
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    color = Color(0xFF64748B)
+                ),
+                textAlign = TextAlign.Center
+            )
+
+            if (error != null) {
+                Spacer(modifier = Modifier.height(16.dp))
+                androidx.compose.foundation.layout.Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFFFFF3E0), RoundedCornerShape(8.dp))
+                        .padding(12.dp)
+                ) {
+                    Text(
+                        text = "Error: ${error::class.java.simpleName}: ${error.message ?: "Unknown"}",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = Color(0xFFE65100),
+                            fontFamily = FontFamily.Monospace
+                        ),
+                        maxLines = 4
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Primary action — clear data and restart
+            Button(
+                onClick = onClearDataAndRetry,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF0062FF)
+                ),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Icon(Icons.Filled.Delete, contentDescription = null, modifier = Modifier.size(20.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Clear Data & Restart", fontWeight = FontWeight.SemiBold)
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Secondary action — just retry
+            OutlinedButton(
+                onClick = onRetryWithoutClearing,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(1.dp, Color(0xFF0062FF))
+            ) {
+                Icon(Icons.Filled.Refresh, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color(0xFF0062FF))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Retry Without Clearing", color = Color(0xFF0062FF), fontWeight = FontWeight.SemiBold)
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                text = "If the issue persists, uninstall and reinstall the app.",
+                style = MaterialTheme.typography.bodySmall.copy(
+                    color = Color(0xFF94A3B8)
+                ),
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
 // --- PHASE 2: SPLASH SCREEN ---
 
 @Composable

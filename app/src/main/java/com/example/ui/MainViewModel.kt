@@ -74,8 +74,28 @@ data class WebPushPayload(
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 class MainViewModel(application: Application) : AndroidViewModel(application) {
 
-    val repository = AppRepository(application)
-    val authViewModel = com.example.auth.AuthViewModel(application)
+    // Safe initialization: if Room DB or Firebase are corrupted, these would crash
+    // without try-catch. Using companion helper to catch and re-throw with clear message.
+    val repository: AppRepository = try {
+        AppRepository(application)
+    } catch (e: Exception) {
+        DebugLogger.e("MainViewModel", "FATAL: AppRepository init failed: ${e.message}", e)
+        // Try once more after deleting the database (corruption recovery)
+        try {
+            application.deleteDatabase("zyphuel_database")
+            DebugLogger.w("MainViewModel", "Deleted corrupted database, retrying AppRepository init")
+            AppRepository(application)
+        } catch (e2: Exception) {
+            DebugLogger.e("MainViewModel", "FATAL: AppRepository retry also failed: ${e2.message}", e2)
+            throw e2
+        }
+    }
+    val authViewModel: com.example.auth.AuthViewModel = try {
+        com.example.auth.AuthViewModel(application)
+    } catch (e: Exception) {
+        DebugLogger.e("MainViewModel", "FATAL: AuthViewModel init failed: ${e.message}", e)
+        throw e
+    }
     val authRepository = authViewModel.authRepository
     val firebaseAuthState = authViewModel.authState
     val isAuthLoading = authViewModel.isLoading
