@@ -130,10 +130,10 @@ object CategoryCatalogSeed {
                 backendServiceMapping = "fuel_delivery_v1",
                 subcategories = listOf(
                     // Current Active Fuel Products
-                    Subcategory("petrol_regular", "fuel_energy", "Super Euro-V Petrol", "Certified Euro-V motor gasoline • 5L to 15L Max • Rs. 300–400 tiered delivery", "PETROL", true, 326.17, "L", "Direct Dispatch", badgeText = "CURRENT LIVE"),
-                    Subcategory("petrol_octane", "fuel_energy", "High-Octane (RON 97)", "HOBC 97-Octane for luxury, turbo & performance vehicles • 5L to 15L Max", "PETROL", true, 355.00, "L", "Direct Dispatch", badgeText = "CURRENT LIVE"),
-                    Subcategory("diesel_regular", "fuel_energy", "High-Speed Euro-V Diesel", "Euro-V High-Speed Diesel for SUVs, pickups & commercial vehicles • 5L to 15L Max", "DIESEL", true, 340.86, "L", "Direct Dispatch", badgeText = "CURRENT LIVE"),
-                    Subcategory("diesel_generator", "fuel_energy", "Generator Diesel", "Backup Euro-V diesel delivery for home and commercial generators • Max 15L", "DIESEL", true, 340.86, "L", "Scheduled Dispatch", requiresVehicle = false, badgeText = "CURRENT LIVE"),
+                    Subcategory("petrol_regular", "fuel_energy", "Super Euro-V Petrol", "Certified Euro-V motor gasoline • 5L to 15L Max • Rs. 300–400 tiered delivery", "PETROL", true, 328.00, "L", "Direct Dispatch", badgeText = "CURRENT LIVE"),
+                    Subcategory("petrol_octane", "fuel_energy", "High-Octane (RON 97)", "HOBC 97-Octane for luxury, turbo & performance vehicles • 5L to 15L Max", "PETROL", true, 370.00, "L", "Direct Dispatch", badgeText = "CURRENT LIVE"),
+                    Subcategory("diesel_regular", "fuel_energy", "High-Speed Euro-V Diesel", "Euro-V High-Speed Diesel for SUVs, pickups & commercial vehicles • 5L to 15L Max", "DIESEL", true, 358.00, "L", "Direct Dispatch", badgeText = "CURRENT LIVE"),
+                    Subcategory("diesel_generator", "fuel_energy", "Generator Diesel", "Backup Euro-V diesel delivery for home and commercial generators • Max 15L", "DIESEL", true, 358.00, "L", "Scheduled Dispatch", requiresVehicle = false, badgeText = "CURRENT LIVE"),
                     // Currently Unavailable Items (Explicitly listed as Inactive/Blocked for Admin Visibility)
                     Subcategory("water_pure_blocked", "fuel_energy", "Pure Water Delivery (Unavailable)", "Currently unavailable across all customer order flows", "UNAVAILABLE", false, 0.0, "Can", "Unavailable", requiresVehicle = false, badgeText = "UNAVAILABLE"),
                     Subcategory("lpg_cylinder_blocked", "fuel_energy", "LPG Gas Cylinders (Unavailable)", "Currently unavailable across all customer order flows", "UNAVAILABLE", false, 0.0, "Cylinder", "Unavailable", requiresVehicle = false, badgeText = "UNAVAILABLE")
@@ -416,9 +416,9 @@ object CategoryCatalogSeed {
                 pricingConfig = PricingConfig(deliveryFee = 0.0, unitLabel = "B2B"),
                 backendServiceMapping = "fleet_b2b_v1",
                 subcategories = listOf(
-                    Subcategory("fleet_fuel_delivery", "fleet_business", "Fleet Fuel Delivery", "On-site bowser fueling directly into company fleet parking lots", "FUELING", true, 280.50, "L", "Scheduled"),
-                    Subcategory("fleet_bulk_diesel", "fleet_business", "Bulk Diesel", "Industrial grade 500L+ high-speed diesel delivery for logistics hubs", "FUELING", true, 280.50, "L", "Scheduled"),
-                    Subcategory("fleet_generator_fuel", "fleet_business", "Generator Fuel", "Scheduled automated refueling contracts for towers & plazas", "FUELING", true, 280.50, "L", "Contract"),
+                    Subcategory("fleet_fuel_delivery", "fleet_business", "Fleet Fuel Delivery", "On-site bowser fueling directly into company fleet parking lots", "FUELING", true, 328.00, "L", "Scheduled"),
+                    Subcategory("fleet_bulk_diesel", "fleet_business", "Bulk Diesel", "Industrial grade 500L+ high-speed diesel delivery for logistics hubs", "FUELING", true, 358.00, "L", "Scheduled"),
+                    Subcategory("fleet_generator_fuel", "fleet_business", "Generator Fuel", "Scheduled automated refueling contracts for towers & plazas", "FUELING", true, 358.00, "L", "Contract"),
                     Subcategory("fleet_corp_service", "fleet_business", "Corporate Vehicle Service", "Routine on-site maintenance packages for company employee cars", "MAINTENANCE", true, 3500.0, "Vehicle", "Custom"),
                     Subcategory("fleet_maintenance", "fleet_business", "Fleet Maintenance", "Contractual quarterly fleet inspections & brake/oil overhauls", "MAINTENANCE", true, 15000.0, "Package", "Scheduled"),
                     Subcategory("fleet_recurring", "fleet_business", "Recurring Fuel Orders", "Automated weekly / monthly recurring scheduled delivery runs", "AUTOMATION", true, 0.0, "Plan", "Recurring"),

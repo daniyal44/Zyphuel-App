@@ -67,6 +67,8 @@ AGP 9.1.1, Kotlin 2.2.10, Compose BOM 2024.09.00, Room 2.7.0, Firebase BOM 34.15
 
 **Secrets**: `google-services.json`, `.env`, `*.jks`, `*.keystore`, and any credential files must stay in `.gitignore` and never be committed. API keys come from `BuildConfig` via the Secrets Gradle Plugin reading `.env`. The SMTP app password is injected via `SMTP_APP_PASSWORD` build secret.
 
+**NEVER delete user data**: Fixes and updates must NEVER clear, delete, or reset user data — this includes the Room database (`zyphuel_database`), SharedPreferences files (`zyphuel_prices`, `zyphuel_session`, `zyphuel_ui_prefs`, `zyphuel_categories_v2`), EncryptedSharedPreferences (admin enclave), or Firestore documents (orders, user profiles, `system_config/*`). Users have real orders, login sessions, and payment history that cannot be recreated. If a migration or fix requires data changes, it must be additive or transformative — never destructive. The `CrashRecoveryScreen` "Clear Data" button is the ONLY acceptable path for data clearing, and it requires explicit user consent.
+
 **SharedPreferences keys for fuel prices**: `petrol`, `diesel`, `high_octane` in the `zyphuel_prices` preference file. The iOS equivalent mirrors these key names in `UserDefaults`.
 
 ## File Layout (non-obvious parts)

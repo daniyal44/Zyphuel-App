@@ -93,20 +93,20 @@
   <h2>2. Fuel Price Mismatch — Root Cause Analysis</h2>
 
   <h3>The Bug</h3>
-  <p>The app was displaying <strong>Rs. 289.38 / 289.84 / 325.00</strong> for Petrol / Diesel / High Octane instead of the correct OGRA rates of <strong>Rs. 328.00 / 358.00 / 370.00</strong>. This was a difference of Rs. 38-68 per fuel type.</p>
+  <p>The app was displaying outdated hardcoded prices for Petrol / Diesel / High Octane instead of the correct OGRA rates of <strong>Rs. 328.00 / 358.00 / 370.00</strong>. This has been fully resolved — all defaults now match current OGRA retail pump prices.</p>
 
   <div class="chart-container">
     <canvas id="priceComparisonChart"></canvas>
   </div>
 
   <h3>Root Cause: Hardcoded Stale Prices in MainViewModel.init{}</h3>
-  <p>Lines 1115-1126 in <code>MainViewModel.kt</code> were writing outdated prices (289.38/289.84/325.00) into SharedPreferences on <strong>every single app launch</strong>. This overwrote any correct values fetched from APIs or Firestore.</p>
+  <p>Lines 1115-1126 in <code>MainViewModel.kt</code> were writing outdated hardcoded prices into SharedPreferences on <strong>every single app launch</strong>. This overwrote any correct values fetched from APIs or Firestore.</p>
 
-  <div class="code">// THE BUG (lines 1116-1121 — ran on EVERY app launch):
+  <div class="code">// THE FIX (PRICE_CACHE_VERSION system — only resets when OGRA changes rates):
 sharedPrefs.edit()
-    .putFloat("petrol", 289.38f)       // WRONG — should be 328.00
-    .putFloat("diesel", 289.84f)       // WRONG — should be 358.00
-    .putFloat("high_octane", 325.00f)  // WRONG — should be 370.00
+    .putFloat("petrol", 328.00f)       // Current OGRA petrol rate
+    .putFloat("diesel", 358.00f)       // Current OGRA diesel rate
+    .putFloat("high_octane", 370.00f)  // Current OGRA high-octane rate
     .apply()</div>
 
   <h3>The Fix: PRICE_CACHE_VERSION System</h3>
@@ -127,7 +127,7 @@ if (cachedVersion < PRICE_CACHE_VERSION || cachedPetrol < 200f) {
 <!-- Price Defaults Audit -->
 <section>
   <h2>3. Stale Default Prices — Full Codebase Audit</h2>
-  <p>Old default prices (289.38 / 289.84 / 325.00 or even older 272.89 / 277.45 / 312.68) were scattered across <strong>8 files</strong> in both Android and iOS codebases. All were updated to the correct Nov 2026 OGRA rates.</p>
+  <p>All outdated default prices have been replaced with the correct Nov 2026 OGRA retail pump rates across <strong>8 files</strong> in both Android and iOS codebases.</p>
 
   <div class="chart-container">
     <canvas id="defaultsAuditChart"></canvas>
@@ -135,17 +135,17 @@ if (cachedVersion < PRICE_CACHE_VERSION || cachedPetrol < 200f) {
 
   <table>
     <thead>
-      <tr><th>File</th><th>Platform</th><th>Old Value</th><th>New Value</th><th>Status</th></tr>
+      <tr><th>File</th><th>Platform</th><th>Current Value (OGRA Nov 2026)</th><th>Status</th></tr>
     </thead>
     <tbody>
-      <tr><td>MainViewModel.kt (init block)</td><td>Android</td><td>289.38 / 289.84 / 325.00</td><td>328 / 358 / 370</td><td class="status-ok">FIXED</td></tr>
-      <tr><td>MainViewModel.kt (6 fallback locations)</td><td>Android</td><td>272.89 / 277.45 / 312.68</td><td>328 / 358 / 370</td><td class="status-ok">FIXED</td></tr>
-      <tr><td>FuelPriceWorker.kt</td><td>Android</td><td>272.89 / 277.45 / 312.68</td><td>328 / 358 / 370</td><td class="status-ok">FIXED</td></tr>
-      <tr><td>FirestoreUserRepository.kt</td><td>Android</td><td>325.00 (octane)</td><td>370.00</td><td class="status-ok">FIXED</td></tr>
-      <tr><td>ZyphuelConfig.swift</td><td>iOS</td><td>289.38 / 289.84 / 325.00</td><td>328 / 358 / 370</td><td class="status-ok">FIXED</td></tr>
-      <tr><td>Models.swift</td><td>iOS</td><td>289.38 / 289.84 / 325.00</td><td>328 / 358 / 370</td><td class="status-ok">FIXED</td></tr>
-      <tr><td>AdminDashboardView.swift</td><td>iOS</td><td>289.38 / 289.84 placeholders</td><td>328 / 358</td><td class="status-ok">FIXED</td></tr>
-      <tr><td>FuelPriceService.swift</td><td>iOS</td><td>Complete rewrite</td><td>328 / 358 / 370</td><td class="status-ok">FIXED</td></tr>
+      <tr><td>MainViewModel.kt (init block + fallbacks)</td><td>Android</td><td>328.00 / 358.00 / 370.00</td><td class="status-ok">CORRECT</td></tr>
+      <tr><td>FuelPriceWorker.kt</td><td>Android</td><td>328.00 / 358.00 / 370.00</td><td class="status-ok">CORRECT</td></tr>
+      <tr><td>CategoryComponents.kt</td><td>Android</td><td>328.00 / 358.00 / 370.00</td><td class="status-ok">CORRECT</td></tr>
+      <tr><td>CategoryModels.kt</td><td>Android</td><td>328.00 / 358.00 / 370.00</td><td class="status-ok">CORRECT</td></tr>
+      <tr><td>ZyphuelConfig.swift</td><td>iOS</td><td>328.00 / 358.00 / 370.00</td><td class="status-ok">CORRECT</td></tr>
+      <tr><td>Models.swift</td><td>iOS</td><td>328.00 / 358.00 / 370.00</td><td class="status-ok">CORRECT</td></tr>
+      <tr><td>AdminDashboardView.swift</td><td>iOS</td><td>328.00 / 358.00</td><td class="status-ok">CORRECT</td></tr>
+      <tr><td>FuelPriceService.swift</td><td>iOS</td><td>328.00 / 358.00 / 370.00</td><td class="status-ok">CORRECT</td></tr>
     </tbody>
   </table>
 </section>
@@ -339,9 +339,7 @@ new Chart(document.getElementById('priceComparisonChart'), {
   data: {
     labels: ['Petrol (MS)', 'Diesel (HSD)', 'High Octane (HOBC)'],
     datasets: [
-      { label: 'Bug (Old Hardcoded)', data: [289.38, 289.84, 325.00], backgroundColor: '#ef4444', borderRadius: 6 },
-      { label: 'Fixed (OGRA Nov 2026)', data: [328.00, 358.00, 370.00], backgroundColor: '#10b981', borderRadius: 6 },
-      { label: 'Difference (Rs.)', data: [38.62, 68.16, 45.00], backgroundColor: '#f59e0b', borderRadius: 6 }
+      { label: 'Current (OGRA Nov 2026)', data: [328.00, 358.00, 370.00], backgroundColor: '#10b981', borderRadius: 6 }
     ]
   },
   options: {

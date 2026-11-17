@@ -146,7 +146,7 @@ private struct AdminOverviewTab: View {
 
             VStack(alignment: .leading, spacing: 8) {
                 SectionHeader(title: "Operational rules", subtitle: "Enforced on both platforms")
-                Text("Max \(PricingEngine.maxLiters)L per fuel order • Rs. 300–400 tiered delivery • +\(MoneyFormatter.pkr(PricingEngine.pumpRateMarkup))/L pump markup • COD only")
+                Text("Max \(PricingEngine.maxLiters)L per fuel order • Rs. 300–400 tiered delivery • OGRA retail pump prices • COD only")
                     .font(.system(size: 11))
                     .foregroundStyle(ZyphuelColor.textSecondary)
             }

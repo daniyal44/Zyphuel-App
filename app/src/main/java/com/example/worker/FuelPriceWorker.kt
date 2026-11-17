@@ -109,6 +109,25 @@ class FuelPriceWorker(
                 .putString("price_source", sourceName)
                 .apply()
 
+            // Push to Firestore so the ViewModel's real-time listener picks up the update
+            // and ALL connected devices sync immediately — not just on next app restart.
+            try {
+                val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                firestore.collection("system_config").document("fuel_rates").set(
+                    mapOf(
+                        "petrol" to newPetrol.toDouble(),
+                        "diesel" to newDiesel.toDouble(),
+                        "highOctane" to newOctane.toDouble(),
+                        "updatedAt" to System.currentTimeMillis(),
+                        "source" to sourceName
+                    ),
+                    com.google.firebase.firestore.SetOptions.merge()
+                )
+                com.example.util.DebugLogger.i("FuelPriceWorker", "Pushed prices to Firestore: petrol=$newPetrol diesel=$newDiesel octane=$newOctane ($sourceName)")
+            } catch (e: Exception) {
+                com.example.util.DebugLogger.w("FuelPriceWorker", "Firestore push failed (prices saved locally): ${e.message}")
+            }
+
             val db = AppDatabase.getDatabase(appContext)
 
             // Check admin notification permission and schedule interval settings

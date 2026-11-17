@@ -1,5 +1,5 @@
 # 🚀 Zyphuel App Features & Technical Documentation
-**App Version:** `v2.6.4.0.0.51 (Build 79)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** <font color="#10b981"><b>2026-11-16</b></font>
+**App Version:** `v2.6.4.0.0.52 (Build 80)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** <font color="#10b981"><b>2026-11-16</b></font>
 
 Welcome to the complete architectural and functional guide for the **Zyphuel** Android application. This document outlines every single feature, function, database entity, and user flow from start to finish.
 
@@ -70,7 +70,7 @@ Below is the complete index of all **dedicated documentation files** (including 
 
 ---
 
-## 0. iOS Application — Native SwiftUI Port (v2.6.4.0.0.51)
+## 0. iOS Application — Native SwiftUI Port (v2.6.4.0.0.52)
 **Location:** [`ios/`](ios/README.md) • **Bundle ID:** `com.aistudio.zyphuel.appv2` • **Minimum iOS:** 17.0
 
 Zyphuel now ships as a native iOS app that shares the Android Firebase project, Firestore collections and business rules. It is a separate Swift codebase (not a web wrapper) under `ios/`.
@@ -978,9 +978,9 @@ Zyphuel v2.4.0 introduces a comprehensive 10-category on-demand automotive and m
 ## 23. Unified OGRA Fuel & Energy Pricing Standard & Zero-Fail Email Dispatch Engine
 ### 23.1 Unified Official OGRA Pakistan Energy & Fuel Pricing
 * **Standardized Rates Across All Layers**:
-  - **Super Petrol (Euro-V)**: `Rs. 275.60 / Litre`
-  - **High-Speed Diesel (HSD)**: `Rs. 284.20 / Litre`
-  - **High-Octane (HOBC 97)**: `Rs. 325.00 / Litre`
+  - **Super Petrol (Euro-V)**: `Rs. 328.00 / Litre`
+  - **High-Speed Diesel (HSD)**: `Rs. 358.00 / Litre`
+  - **High-Octane (HOBC 97)**: `Rs. 370.00 / Litre`
   - **LPG Gas**: `Rs. 258.65 / Kg` (11.8kg Factory-Sealed Cylinder: `Rs. 3,052.00`)
   - **Pure Drinking Water**: `Rs. 50.00 / Unit` (19L Bottle: `Rs. 180.00`, 1000L Bulk Tanker: `Rs. 3,200.00`)
 * **StateFlow Reactive Binding on Customer Home**:
@@ -1555,7 +1555,7 @@ Zyphuel v2.4.0 introduces a comprehensive 10-category on-demand automotive and m
   - `petrolPumpPrice`, `dieselPumpPrice`, and `highOctanePumpPrice` reactive streams automatically reflect the updated +Rs. 5.00/L margin over the live OGRA base rate.
   - `CategoryRepository.syncLiveFuelPrices()` synchronizes subcategory prices with the exact Rs. 5.00 margin.
 * **UI Components & Hero Showcase ([`CategoryComponents.kt`](file:///d:/Games/New%20folder-web/Claude/app/src/main/java/com/example/ui/CategoryComponents.kt))**:
-  - Updated fallback live rates to reflect Rs. 5.00 margin: Petrol (Rs. 294.38/L), Diesel (Rs. 294.84/L), High-Octane (Rs. 330.00/L).
+  - Updated fallback live rates to current OGRA pump prices (0.00 markup): Petrol (Rs. 328.00/L), Diesel (Rs. 358.00/L), High-Octane (Rs. 370.00/L).
   - Replaced legacy Gas chip with High-Octane in the hero fuel showcase card.
 
 ### 38.2 App Versioning & Release Verification

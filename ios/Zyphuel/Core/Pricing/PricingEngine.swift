@@ -5,7 +5,10 @@ import Foundation
 enum PricingEngine {
 
     static let maxLiters = 15
-    static let pumpRateMarkup = 5.00
+    /// Set to 0.00: SharedPreferences, APIs, and Firestore all store final OGRA
+    /// retail pump prices — no additional margin needed. Revenue comes from the
+    /// tiered delivery fee (Rs. 300–400).
+    static let pumpRateMarkup = 0.00
     static let baseDeliveryFee = 300.00
 
     /// Volume → delivery fee tiers. `upTo` is inclusive.
@@ -45,7 +48,7 @@ enum PricingEngine {
         return fuelTiers.last?.fee ?? baseDeliveryFee
     }
 
-    // MARK: Pump rate (+Rs. 5.00/L on OGRA base)
+    // MARK: Pump rate (markup is 0; prices are already OGRA retail)
 
     static func isPumpRateApplicable(serviceType: String?) -> Bool {
         guard let service = serviceType?.lowercased(), !service.isEmpty else { return false }
@@ -79,8 +82,8 @@ enum PricingEngine {
         var unitPriceLabel: String { "\(MoneyFormatter.pkr(unitPrice))/L" }
     }
 
-    /// Validates and prices a fuel order. `baseRate` is the OGRA ex-depot rate;
-    /// the +Rs. 5.00 pump markup is applied silently, exactly like Android.
+    /// Validates and prices a fuel order. `baseRate` is the OGRA retail pump rate;
+    /// markup is 0.00 (prices already match PSO/Shell), exactly like Android.
     static func price(
         baseRate: Double,
         liters: Int,

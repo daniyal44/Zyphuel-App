@@ -210,15 +210,15 @@
   - Updated `FeeConstants.PETROL_PUMP_RATE_SURCHARGE` to `5.00` (Double).
   - Updated `FeeConstants.PETROL_PUMP_RATE_SURCHARGE_FLOAT` to `5.00f` (Float).
   - Updated `FeeConstants.getPumpRate(baseRate)` to consistently add Rs. 5.00/L across all fuel types (Petrol, Diesel, High-Octane).
-  - Synchronized `CategoryRepository.syncLiveFuelPrices()` to add the fixed Rs. 5.00/L retail margin over base OGRA rates for Petrol, Diesel, and High-Octane.
+  - Synchronized `CategoryRepository.syncLiveFuelPrices()` with current OGRA retail pump prices (0.00 markup).
 * **UI & Showcase Card Synchronization**:
   - Updated fallback live fuel rates in `CategoryComponents.kt`:
-    - Petrol: Rs. 294.38/L (Base 289.38 + 5.00)
-    - Diesel: Rs. 294.84/L (Base 289.84 + 5.00)
-    - High-Octane: Rs. 330.00/L (Base 325.00 + 5.00)
+    - Petrol: Rs. 328.00/L (OGRA retail pump price)
+    - Diesel: Rs. 358.00/L (OGRA retail pump price)
+    - High-Octane: Rs. 370.00/L (OGRA retail pump price)
   - Replaced legacy Gas chip in hero fuel showcase with High-Octane chip displaying `liveOctane`.
 * **Unit Testing & Verification**:
-  - Updated unit tests in `FuelPumpPricingTest.kt` validating that `getPumpRate` adds Rs. 5.00/L and grand total calculations accurately reflect the Rs. 5.00 margin.
+  - Updated unit tests in `FuelPumpPricingTest.kt` validating that `getPumpRate` returns OGRA retail pump prices (0.00 markup) and grand total calculations are accurate.
 ### Phase 25: Strict 15L Delivery Cap, Tiered Delivery Pricing & Final Gas/Water Removal (v2.6.4.0.0.21 Build 49)
 * **Strict 15 Liters Maximum Volume Cap**:
   - Enforced a hard limit of 15 Liters for doorstep fuel delivery (Petrol, Diesel, High-Octane) across `OrderDialog`, steppers, full-tank presets, and `MainViewModel.placeOrder()`.

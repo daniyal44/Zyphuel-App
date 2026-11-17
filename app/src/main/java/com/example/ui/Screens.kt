@@ -1553,7 +1553,7 @@ fun SupportStepTwoScreenshot() {
                         Icon(Icons.Filled.LocalGasStation, contentDescription = null, tint = ZyphuelBluePrimary, modifier = Modifier.size(20.dp))
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(tr("svc_super_petrol", "Super Petrol"), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
-                        Text("Rs. 297.53/L", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontSize = 9.sp))
+                        Text("Rs. 328.00/L", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontSize = 9.sp))
                     }
                 }
                 Card(
@@ -1565,7 +1565,7 @@ fun SupportStepTwoScreenshot() {
                         Icon(Icons.Filled.LocalGasStation, contentDescription = null, tint = Color.DarkGray, modifier = Modifier.size(20.dp))
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(tr("svc_diesel", "High Speed Diesel"), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
-                        Text("Rs. 284.20/L", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontSize = 9.sp))
+                        Text("Rs. 358.00/L", style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray, fontSize = 9.sp))
                     }
                 }
             }
@@ -5003,9 +5003,12 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                                         color = ZyphuelBluePrimary.copy(alpha = 0.12f),
                                         modifier = Modifier.size(46.dp)
                                     ) {
-                                        Box(contentAlignment = Alignment.Center) {
-                                            Icon(Icons.Filled.LocalGasStation, contentDescription = null, tint = ZyphuelBluePrimary, modifier = Modifier.size(24.dp))
-                                        }
+                                        Image(
+                                            painter = painterResource(id = R.drawable.logo_petrol),
+                                            contentDescription = "Petrol",
+                                            modifier = Modifier.fillMaxSize().padding(4.dp),
+                                            contentScale = ContentScale.Crop
+                                        )
                                     }
                                     Column {
                                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -5068,9 +5071,12 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                                         color = Color(0xFFF59E0B).copy(alpha = 0.12f),
                                         modifier = Modifier.size(46.dp)
                                     ) {
-                                        Box(contentAlignment = Alignment.Center) {
-                                            Icon(Icons.Filled.LocalGasStation, contentDescription = null, tint = Color(0xFFD97706), modifier = Modifier.size(24.dp))
-                                        }
+                                        Image(
+                                            painter = painterResource(id = R.drawable.logo_high_octane),
+                                            contentDescription = "High-Octane",
+                                            modifier = Modifier.fillMaxSize().padding(4.dp),
+                                            contentScale = ContentScale.Crop
+                                        )
                                     }
                                     Column {
                                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -5134,9 +5140,12 @@ fun CustomerHomeScreen(viewModel: MainViewModel) {
                                         color = ZyphuelBluePrimary.copy(alpha = 0.12f),
                                         modifier = Modifier.size(46.dp)
                                     ) {
-                                        Box(contentAlignment = Alignment.Center) {
-                                            Icon(Icons.Filled.DirectionsCar, contentDescription = null, tint = ZyphuelBluePrimary, modifier = Modifier.size(24.dp))
-                                        }
+                                        Image(
+                                            painter = painterResource(id = R.drawable.logo_diesel),
+                                            contentDescription = "Diesel",
+                                            modifier = Modifier.fillMaxSize().padding(4.dp),
+                                            contentScale = ContentScale.Crop
+                                        )
                                     }
                                     Column {
                                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {

@@ -847,6 +847,45 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         .map { it + com.example.util.FeeConstants.PUMP_RATE_MARKUP_FLOAT }
         .stateIn(viewModelScope, SharingStarted.Eagerly, _highOctanePrice.value + com.example.util.FeeConstants.PUMP_RATE_MARKUP_FLOAT)
 
+    // --- Background Price Sync Listener ---
+    // When FuelPriceWorker updates SharedPreferences in the background, this listener
+    // propagates the change to the ViewModel's StateFlows so the UI updates immediately
+    // without requiring an app restart.
+    private val pricePrefsListener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { prefs, key ->
+        when (key) {
+            "petrol" -> {
+                val v = prefs.getFloat("petrol", 328.00f)
+                if (v > 0f && v != _petrolPrice.value) {
+                    _petrolPrice.value = v
+                    repository.categoryRepository.syncLiveFuelPrices(v, _dieselPrice.value, _highOctanePrice.value)
+                    DebugLogger.i("MainViewModel", "Price listener: petrol updated to $v")
+                }
+            }
+            "diesel" -> {
+                val v = prefs.getFloat("diesel", 358.00f)
+                if (v > 0f && v != _dieselPrice.value) {
+                    _dieselPrice.value = v
+                    repository.categoryRepository.syncLiveFuelPrices(_petrolPrice.value, v, _highOctanePrice.value)
+                    DebugLogger.i("MainViewModel", "Price listener: diesel updated to $v")
+                }
+            }
+            "high_octane" -> {
+                val v = prefs.getFloat("high_octane", 370.00f)
+                if (v > 0f && v != _highOctanePrice.value) {
+                    _highOctanePrice.value = v
+                    repository.categoryRepository.syncLiveFuelPrices(_petrolPrice.value, _dieselPrice.value, v)
+                    DebugLogger.i("MainViewModel", "Price listener: high_octane updated to $v")
+                }
+            }
+        }
+    }
+
+    init {
+        // Register the SharedPreferences listener so background FuelPriceWorker updates
+        // propagate to UI in real-time (covers cases where Firestore is unavailable)
+        sharedPrefs.registerOnSharedPreferenceChangeListener(pricePrefsListener)
+    }
+
     // --- Doorstep Delivery Operating Hours State (Pakistan Standard Time, Asia/Karachi) ---
     private val _isDeliveryOpen = MutableStateFlow(com.example.util.DeliveryOperatingHoursManager.isDeliveryOpen())
     val isDeliveryOpen: StateFlow<Boolean> = _isDeliveryOpen.asStateFlow()
@@ -1145,7 +1184,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         // The FuelPriceWorker + Firestore listener will then overwrite with live data.
         // PRICE_CACHE_VERSION: increment this when OGRA announces new rates to force refresh.
         try {
-            val PRICE_CACHE_VERSION = 4  // v4 = Nov 2026 OGRA rates
+            val PRICE_CACHE_VERSION = 5  // v5 = Nov 2026 OGRA pump rates (removed +5 surcharge)
             val cachedVersion = sharedPrefs.getInt("price_cache_version", 0)
             val cachedPetrol = sharedPrefs.getFloat("petrol", 0f)
 
@@ -1158,7 +1197,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     .putInt("price_cache_version", PRICE_CACHE_VERSION)
                     .putString("last_sync_time", "OGRA Official Rates (Default)")
                     .apply()
-                DebugLogger.i("MainViewModel", "Price cache reset to OGRA defaults v$PRICE_CACHE_VERSION: 328/358/370")
+                DebugLogger.i("MainViewModel", "Price cache reset to OGRA pump rates v$PRICE_CACHE_VERSION: 328/358/370")
             }
         } catch (e: Exception) {
             DebugLogger.e("MainViewModel", "Price cache init failed: ${e.message}", e)
@@ -4733,6 +4772,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     override fun onCleared() {
         super.onCleared()
         stopRealTimeFusedLocationUpdates()
+        try { sharedPrefs.unregisterOnSharedPreferenceChangeListener(pricePrefsListener) } catch (_: Exception) {}
+        fuelRatesListener?.remove()
     }
 }
 

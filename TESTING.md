@@ -1,7 +1,7 @@
 # 🧪 Zyphuel — Testing & Release Verification
 
 **Last Updated:** <font color="#10b981"><b>2026-10-23 22:48:18 PKT</b></font>
-**App Version:** <font color="#10b981"><b>v2.6.4.0.0.51 (Build 79)</b></font>
+**App Version:** <font color="#10b981"><b>v2.6.4.0.0.52 (Build 80)</b></font>
 **Last Full Run:** <font color="#10b981"><b>2026-10-23 22:44 PKT — 54 tests, 0 failed, 0 skipped</b></font>
 **Document Status:** <font color="#10b981"><b>ACTIVE</b></font>
 
@@ -138,8 +138,8 @@ Android and iOS ship the same version from the same file, so an iOS-only or Andr
 | iOS privacy manifest | `ios/Config/PrivacyInfo.xcprivacy` present, listed as `Copy Bundle Resources` in `ios/project.yml`, and found at `Zyphuel.app/PrivacyInfo.xcprivacy` by CI |
 | iOS Firebase config bundling | `Config/GoogleService-Info.plist` must appear in `Zyphuel.app` when provided (the `preBuildScripts` copy phase); the build must still succeed when it is absent |
 | iOS download artifacts | `desktop_ios_download.bat` → only a validated IPA, a `-Simulator.app.zip`, or a clearly named `-iOS-Source.zip`; never an undersized `.ipa` |
-| Shared business rules | Pricing tiers 300/320/340/360/380/400, 15 L cap, +5 markup, PKT operating hours, 4-attempt lockout — verified by `ZyphuelLogicTests` on iOS and `FuelPumpPricingTest` / `SecurityAndDataIntegrityTest` on Android |
-| iOS fuel-rate display | `ZyphuelLogicTests.testFuelRateFallbacksMatchAndroidDefaults` + `testDisplayedFuelRatesUseFallbackPlusPumpMarkup`: `FuelRates.fallback` must equal the Android `MainViewModel` defaults (petrol 289.38, diesel 289.84, high-octane 325.00) and the home ticker must render fallback + Rs. 5 markup (294.38 / 294.84 / 330.00), never Rs. 0/L, before the first live `system_config/fuel_rates` snapshot |
+| Shared business rules | Pricing tiers 300/320/340/360/380/400, 15 L cap, 0.00 markup (OGRA retail pump prices), PKT operating hours, 4-attempt lockout — verified by `ZyphuelLogicTests` on iOS and `FuelPumpPricingTest` / `SecurityAndDataIntegrityTest` on Android |
+| iOS fuel-rate display | `ZyphuelLogicTests.testFuelRateFallbacksMatchAndroidDefaults` + `testDisplayedFuelRatesUseFallbackPlusPumpMarkup`: `FuelRates.fallback` must equal the Android `MainViewModel` defaults (petrol 328.00, diesel 358.00, high-octane 370.00) and the home ticker must render fallback + Rs. 0 markup (328.00 / 358.00 / 370.00), never Rs. 0/L, before the first live `system_config/fuel_rates` snapshot |
 | Live-rate validation | `LiveConfigTests.testInvalidLiveRatesFallBackToDefaults`: a missing, zero or negative `petrol`/`diesel`/`highOctane` field keeps the shared default instead of rendering Rs. 0/L (Android equivalent guard in `MainViewModel.attachFuelRatesObserver`) |
 | Rate sync after sign-in | Listeners must be re-attached post-auth: `AppState.loadProfile`/`register` call `config.startObserving()` on iOS, `MainViewModel.completeLogin` calls `attachFuelRatesObserver()` on Android — rules require `isSignedIn()` for `system_config/fuel_rates` |
 | Firestore contract | One rules file for both clients: `users` accepts `uid` and email-derived doc ids, `orders` rider claim, `feedback` iOS fields, `system_config/fuel_rates` + `app_version` readable by any signed-in device, `email_gateway` admin-only |

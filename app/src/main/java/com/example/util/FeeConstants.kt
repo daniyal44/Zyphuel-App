@@ -27,12 +27,13 @@ object FeeConstants {
     const val FUEL_DELIVERY_FEE = 300.0
 
     /**
-     * Petrol pump retail rate margin/markup (+Rs. 5.00/L) added on top of official OGRA
-     * ex-depot base rates for Super Euro-V Petrol, Euro-V Diesel, and High-Octane 97.
-     * Math runs silently in background; UI displays only the final pump rate.
+     * Pump rate markup on top of stored fuel prices.
+     * Set to 0.00 because SharedPreferences, APIs, and Firestore all store final OGRA
+     * retail pump prices — no additional per-liter margin needed. Zyphuel's revenue
+     * comes from the tiered delivery fee (Rs. 300–400).
      */
-    const val PUMP_RATE_MARKUP = 5.00
-    const val PUMP_RATE_MARKUP_FLOAT = 5.00f
+    const val PUMP_RATE_MARKUP = 0.00
+    const val PUMP_RATE_MARKUP_FLOAT = 0.00f
 
     // Compatibility aliases
     const val PETROL_PUMP_RATE_SURCHARGE = PUMP_RATE_MARKUP

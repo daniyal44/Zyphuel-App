@@ -53,7 +53,7 @@ async function call(method, path, token, body) {
 const fuelRates = '/system_config/fuel_rates'
 const appVersion = '/system_config/app_version'
 const emailGateway = '/system_config/email_gateway'
-const fuelBody = { fields: { petrol: { doubleValue: 289.38 }, diesel: { doubleValue: 289.84 }, highOctane: { doubleValue: 325 } } }
+const fuelBody = { fields: { petrol: { doubleValue: 328.00 }, diesel: { doubleValue: 358.00 }, highOctane: { doubleValue: 370.00 } } }
 
 // Clean slate for the write tests (admin-only deletes are fine to attempt).
 await call('DELETE', fuelRates, adminToken)

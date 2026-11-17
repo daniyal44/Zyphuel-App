@@ -26,11 +26,11 @@ class FuelPumpPricingTest {
     }
 
     @Test
-    fun `test petrol pump rate constant is exactly Rs 5 point 00`() {
-        assertEquals(5.00, FeeConstants.PUMP_RATE_MARKUP, 0.001)
-        assertEquals(5.00f, FeeConstants.PUMP_RATE_MARKUP_FLOAT, 0.001f)
-        assertEquals(5.00, FeeConstants.PETROL_PUMP_RATE_SURCHARGE, 0.001)
-        assertEquals(5.00f, FeeConstants.PETROL_PUMP_RATE_SURCHARGE_FLOAT, 0.001f)
+    fun `test petrol pump rate markup is zero because stored prices are already OGRA pump rates`() {
+        assertEquals(0.00, FeeConstants.PUMP_RATE_MARKUP, 0.001)
+        assertEquals(0.00f, FeeConstants.PUMP_RATE_MARKUP_FLOAT, 0.001f)
+        assertEquals(0.00, FeeConstants.PETROL_PUMP_RATE_SURCHARGE, 0.001)
+        assertEquals(0.00f, FeeConstants.PETROL_PUMP_RATE_SURCHARGE_FLOAT, 0.001f)
     }
 
     @Test
@@ -60,23 +60,21 @@ class FuelPumpPricingTest {
     }
 
     @Test
-    fun `test getPumpRate adds exactly Rs 5 point 00 to base fuel rate`() {
-        val basePetrol = 289.38
-        val expectedPumpPetrol = 294.38
+    fun `test getPumpRate returns same price since markup is zero`() {
+        // With zero markup, pump rate equals base rate for all fuel types
+        val basePetrol = 328.00
         val actualPumpPetrol = FeeConstants.getPumpRate(basePetrol, "Petrol")
-        assertEquals(expectedPumpPetrol, actualPumpPetrol, 0.001)
+        assertEquals(basePetrol, actualPumpPetrol, 0.001)
 
-        val baseDiesel = 289.84
-        val expectedPumpDiesel = 294.84
+        val baseDiesel = 358.00
         val actualPumpDiesel = FeeConstants.getPumpRate(baseDiesel, "Diesel")
-        assertEquals(expectedPumpDiesel, actualPumpDiesel, 0.001)
+        assertEquals(baseDiesel, actualPumpDiesel, 0.001)
 
-        val baseOctane = 325.00
-        val expectedPumpOctane = 330.00
+        val baseOctane = 370.00
         val actualPumpOctane = FeeConstants.getPumpRate(baseOctane, "High-Octane")
-        assertEquals(expectedPumpOctane, actualPumpOctane, 0.001)
+        assertEquals(baseOctane, actualPumpOctane, 0.001)
 
-        // Ensure LPG and Water are unaffected
+        // LPG and Water also unaffected
         val baseLpg = 258.65
         val actualLpg = FeeConstants.getPumpRate(baseLpg, "LPG Gas")
         assertEquals(baseLpg, actualLpg, 0.001)
@@ -87,35 +85,32 @@ class FuelPumpPricingTest {
     }
 
     @Test
-    fun `test CategoryRepository syncLiveFuelPrices adds Rs 5 point 00 to petrol, diesel, and octane subcategories`() {
-        val testBasePetrol = 289.38f
-        val testBaseDiesel = 289.84f
-        val testBaseOctane = 325.00f
-        val testBaseLpg = 258.65f
-        val testBaseWater = 50.0f
+    fun `test CategoryRepository syncLiveFuelPrices sets exact OGRA pump prices with zero markup`() {
+        val testBasePetrol = 328.00f
+        val testBaseDiesel = 358.00f
+        val testBaseOctane = 370.00f
 
         categoryRepository.syncLiveFuelPrices(
             petrol = testBasePetrol,
             diesel = testBaseDiesel,
-            octane = testBaseOctane,
-            lpg = testBaseLpg,
-            water = testBaseWater
+            octane = testBaseOctane
         )
 
         val categories = categoryRepository.categories.value
         val fuelCategory = categories.first { it.id == "fuel_energy" }
 
+        // With zero markup, subcategory prices equal the passed-in OGRA pump prices
         val petrolSub = fuelCategory.subcategories.first { it.id == "petrol_regular" }
-        assertEquals(289.38 + 5.00, petrolSub.basePrice, 0.001)
+        assertEquals(328.00, petrolSub.basePrice, 0.001)
 
         val octaneSub = fuelCategory.subcategories.first { it.id == "petrol_octane" }
-        assertEquals(325.00 + 5.00, octaneSub.basePrice, 0.001)
+        assertEquals(370.00, octaneSub.basePrice, 0.001)
 
         val dieselRegularSub = fuelCategory.subcategories.first { it.id == "diesel_regular" }
-        assertEquals(289.84 + 5.00, dieselRegularSub.basePrice, 0.001)
+        assertEquals(358.00, dieselRegularSub.basePrice, 0.001)
 
         val dieselGenSub = fuelCategory.subcategories.first { it.id == "diesel_generator" }
-        assertEquals(289.84 + 5.00, dieselGenSub.basePrice, 0.001)
+        assertEquals(358.00, dieselGenSub.basePrice, 0.001)
 
         // LPG is permanently removed from subcategories
         assertTrue(fuelCategory.subcategories.none { it.id == "lpg_sealed_cylinder" })
@@ -123,17 +118,17 @@ class FuelPumpPricingTest {
 
     @Test
     fun `test simulated OrderDialog grand total calculation with petrol pump rate`() {
-        val basePetrol = 289.38
-        val pumpPetrol = FeeConstants.getPumpRate(basePetrol, "Petrol") // 294.38
+        val basePetrol = 328.00
+        val pumpPetrol = FeeConstants.getPumpRate(basePetrol, "Petrol") // 328.00 (zero markup)
         val quantity = 10 // 10 liters
         val deliveryFee = FeeConstants.calculateFuelDeliveryFee(quantity) // 300.0 for 10L
 
-        val itemSubtotal = quantity * pumpPetrol // 2943.80
-        val grandTotal = itemSubtotal + deliveryFee // 3243.80
+        val itemSubtotal = quantity * pumpPetrol // 3280.00
+        val grandTotal = itemSubtotal + deliveryFee // 3580.00
 
-        assertEquals(294.38, pumpPetrol, 0.001)
-        assertEquals(2943.80, itemSubtotal, 0.01)
-        assertEquals(3243.80, grandTotal, 0.01)
+        assertEquals(328.00, pumpPetrol, 0.001)
+        assertEquals(3280.00, itemSubtotal, 0.01)
+        assertEquals(3580.00, grandTotal, 0.01)
     }
 
     @Test

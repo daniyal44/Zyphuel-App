@@ -1,4 +1,5 @@
 import Combine
+import FirebaseFirestore
 import Foundation
 
 // MARK: - Fuel Price Result
@@ -688,6 +689,23 @@ final class FuelPriceSyncManager: ObservableObject {
                 diesel: result.diesel,
                 highOctane: result.highOctane
             )
+
+            // Push to Firestore so all connected devices sync immediately
+            do {
+                let db = Firestore.firestore()
+                try await db.collection(ZyphuelConfig.Collections.systemConfig)
+                    .document(ZyphuelConfig.Documents.fuelRates)
+                    .setData([
+                        "petrol": result.petrol,
+                        "diesel": result.diesel,
+                        "highOctane": result.highOctane,
+                        "updatedAt": Date().timeIntervalSince1970 * 1000,
+                        "source": result.source
+                    ], merge: true)
+                print("[FuelPriceSync] Pushed prices to Firestore: petrol=\(result.petrol) diesel=\(result.diesel) octane=\(result.highOctane)")
+            } catch {
+                print("[FuelPriceSync] Firestore push failed (prices saved locally): \(error.localizedDescription)")
+            }
         } catch {
             // Keep using cached prices
             print("[FuelPriceSync] All sources failed: \(error.localizedDescription)")
