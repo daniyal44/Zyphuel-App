@@ -1,5 +1,5 @@
 # Zyphuel Master App Audit, Feature Analysis & Global Memory Record 🧠📋
-**Document Version:** <font color="#10b981"><b>2.6.4.0.0.52</b></font> • **Build Code:** <font color="#10b981"><b>80</b></font> • **Last Audit:** <font color="#10b981"><b>2026-10-09</b></font>  
+**Document Version:** <font color="#10b981"><b>2.6.4.0.0.53</b></font> • **Build Code:** <font color="#10b981"><b>81</b></font> • **Last Audit:** <font color="#10b981"><b>2026-10-09</b></font>  
 **Operating Region:** Lahore, Punjab, Pakistan  
 **Compliance Standard:** OGRA (Oil & Gas Regulatory Authority), Civil Defence Pakistan & Google Play Store Policies  
 
@@ -69,7 +69,7 @@
 ### B. Customer Home & Fuel / Water Ordering Engine
 1. **Doorstep Energy Catalog**:
    - **Super Petrol (Euro-V)**: Live OGRA rate (~Rs. 328.00/L).
-   - **High-Octane (RON 97 / HOBC)**: For luxury and performance vehicles (~Rs. 370.00/L).
+   - **High-Octane (RON 97 / HOBC)**: For luxury and performance vehicles (~Rs. 399.00/L).
    - **High-Speed Diesel**: Regular Euro-V & Bulk Generator Diesel (~Rs. 358.00/L).
    - **LPG Gas Cylinder**: Certified 11.8kg factory-sealed domestic cylinders (~Rs. 258.65/kg).
    - **Pure Drinking Water**: Multi-stage RO purified 19L bottles (~Rs. 50.00/Gallon).

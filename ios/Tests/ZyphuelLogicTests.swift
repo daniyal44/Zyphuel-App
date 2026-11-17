@@ -26,8 +26,8 @@ final class PricingEngineTests: XCTestCase {
                        328.00, accuracy: 0.0001)
         XCTAssertEqual(PricingEngine.pumpRate(base: 358.00, serviceType: "High-Speed Diesel"),
                        358.00, accuracy: 0.0001)
-        XCTAssertEqual(PricingEngine.pumpRate(base: 370.00, serviceType: "High-Octane (RON 97)"),
-                       370.00, accuracy: 0.0001)
+        XCTAssertEqual(PricingEngine.pumpRate(base: 399.00, serviceType: "High-Octane (RON 97)"),
+                       399.00, accuracy: 0.0001)
         // Non-fuel services are never marked up.
         XCTAssertEqual(PricingEngine.pumpRate(base: 1500, serviceType: "General Inspection"), 1500)
     }
@@ -75,7 +75,7 @@ final class PricingEngineTests: XCTestCase {
         let fallback = FuelRates.fallback
         XCTAssertEqual(fallback.petrol, 328.00, accuracy: 0.0001)
         XCTAssertEqual(fallback.diesel, 358.00, accuracy: 0.0001)
-        XCTAssertEqual(fallback.highOctane, 370.00, accuracy: 0.0001)
+        XCTAssertEqual(fallback.highOctane, 399.00, accuracy: 0.0001)
         XCTAssertEqual(fallback.lpg, 0)
     }
 
@@ -87,7 +87,7 @@ final class PricingEngineTests: XCTestCase {
 
         XCTAssertEqual(petrol, 328.00, accuracy: 0.0001)
         XCTAssertEqual(diesel, 358.00, accuracy: 0.0001)
-        XCTAssertEqual(octane, 370.00, accuracy: 0.0001)
+        XCTAssertEqual(octane, 399.00, accuracy: 0.0001)
 
         // A missing/denied live document must never surface as a Rs. 0/L ticker.
         for rate in [petrol, diesel, octane] {
@@ -287,7 +287,7 @@ final class CatalogTests: XCTestCase {
         XCTAssertEqual(petrol?.basePrice, 328.00)
         XCTAssertEqual(petrol?.unit, "L")
         let octane = fuel?.items.first { $0.id == "petrol_octane" }
-        XCTAssertEqual(octane?.basePrice, 370.00)
+        XCTAssertEqual(octane?.basePrice, 399.00)
         let diesel = fuel?.items.first { $0.id == "diesel_regular" }
         XCTAssertEqual(diesel?.basePrice, 358.00)
     }

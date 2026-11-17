@@ -578,7 +578,7 @@ private struct AdminRatesTab: View {
                              keyboard: .decimalPad)
                 LabeledField(label: "High-Speed Diesel", placeholder: "358.00", text: $diesel,
                              keyboard: .decimalPad)
-                LabeledField(label: "High-Octane 97", placeholder: "370.00", text: $octane,
+                LabeledField(label: "High-Octane 97", placeholder: "399.00", text: $octane,
                              keyboard: .decimalPad)
             }
             .zyphuelCard()

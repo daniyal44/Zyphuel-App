@@ -17,7 +17,7 @@ Query current OGRA Pakistan official fuel retail rates (petrol, diesel, high_oct
 {
   "petrol": 328.00,
   "diesel": 358.00,
-  "high_octane": 370.00,
+  "high_octane": 399.00,
   "lpg_gas": 258.65,
   "source": "OGRA Pakistan / PSO Retail Notification"
 }

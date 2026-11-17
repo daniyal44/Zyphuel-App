@@ -70,7 +70,7 @@ class FuelPumpPricingTest {
         val actualPumpDiesel = FeeConstants.getPumpRate(baseDiesel, "Diesel")
         assertEquals(baseDiesel, actualPumpDiesel, 0.001)
 
-        val baseOctane = 370.00
+        val baseOctane = 399.00
         val actualPumpOctane = FeeConstants.getPumpRate(baseOctane, "High-Octane")
         assertEquals(baseOctane, actualPumpOctane, 0.001)
 
@@ -88,7 +88,7 @@ class FuelPumpPricingTest {
     fun `test CategoryRepository syncLiveFuelPrices sets exact OGRA pump prices with zero markup`() {
         val testBasePetrol = 328.00f
         val testBaseDiesel = 358.00f
-        val testBaseOctane = 370.00f
+        val testBaseOctane = 399.00f
 
         categoryRepository.syncLiveFuelPrices(
             petrol = testBasePetrol,
@@ -104,7 +104,7 @@ class FuelPumpPricingTest {
         assertEquals(328.00, petrolSub.basePrice, 0.001)
 
         val octaneSub = fuelCategory.subcategories.first { it.id == "petrol_octane" }
-        assertEquals(370.00, octaneSub.basePrice, 0.001)
+        assertEquals(399.00, octaneSub.basePrice, 0.001)
 
         val dieselRegularSub = fuelCategory.subcategories.first { it.id == "diesel_regular" }
         assertEquals(358.00, dieselRegularSub.basePrice, 0.001)

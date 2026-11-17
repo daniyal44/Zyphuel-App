@@ -49,11 +49,11 @@ class ZyphuelComprehensiveAppTest {
         assertEquals("daniyal.test.customer@gmail.com", customer.email)
 
         // Step 2: Order Calculation Simulation
-        val unitPrice = 260.00
+        val unitPrice = 328.00
         val quantity = 25
         val totalPrice = unitPrice * quantity
         val formattedPrice = String.format(java.util.Locale.US, "%.2f", totalPrice)
-        assertEquals("6500.00", formattedPrice)
+        assertEquals("8200.00", formattedPrice)
 
         // Step 3: Order Entity Creation
         val order = OrderEntity(
@@ -330,20 +330,20 @@ class ZyphuelComprehensiveAppTest {
     // =========================================================================
     @Test
     fun `test Product Pricing, Surge Multipliers and High-Volume WhatsApp Guidance`() {
-        val petrolUnitPrice = 260.00
-        val dieselUnitPrice = 270.00
+        val petrolUnitPrice = 328.00
+        val dieselUnitPrice = 358.00
         val waterUnitPrice = 50.00
         val lpgUnitPrice = 3200.00
 
         // Standard 10L calculation
         val standardQty = 10
         val standardTotal = petrolUnitPrice * standardQty
-        assertEquals(2600.00, standardTotal, 0.01)
+        assertEquals(3280.00, standardTotal, 0.01)
 
         // Peak Surge calculation (e.g. 1.15x multiplier during peak rush)
         val surgeMultiplier = 1.15
         val surgeTotal = standardTotal * surgeMultiplier
-        assertEquals(2990.00, surgeTotal, 0.01)
+        assertEquals(3772.00, surgeTotal, 0.01)
 
         // 30L+ High Volume Guidance verification
         val highVolumeQty = 35

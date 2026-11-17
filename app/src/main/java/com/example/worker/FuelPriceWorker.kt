@@ -33,7 +33,7 @@ class FuelPriceWorker(
 
             var newPetrol = if (oldPetrol > 0f) oldPetrol else 328.00f
             var newDiesel = sharedPrefs.getFloat("diesel", 358.00f).let { if (it > 0f) it else 358.00f }
-            var newOctane = sharedPrefs.getFloat("high_octane", 370.00f).let { if (it > 0f) it else 370.00f }
+            var newOctane = sharedPrefs.getFloat("high_octane", 399.00f).let { if (it > 0f) it else 399.00f }
             var sourceName = "Official Fuel Market API"
 
             try {
@@ -144,20 +144,54 @@ class FuelPriceWorker(
 
             val allowSending = priceNotifsAllowed && systemNotifsEnabled
 
-            val title = "⛽ Real-time Fuel Price Update"
+            // Detect price changes for notification
+            val petrolChanged = kotlin.math.abs(newPetrol - oldPetrol) > 0.01f
+            val dieselOld = sharedPrefs.getFloat("diesel", 358.00f)
+            val octaneOld = sharedPrefs.getFloat("high_octane", 399.00f)
+            val dieselChanged = kotlin.math.abs(newDiesel - dieselOld) > 0.01f
+            val octaneChanged = kotlin.math.abs(newOctane - octaneOld) > 0.01f
+            val anyPriceChanged = petrolChanged || dieselChanged || octaneChanged
+
+            val title = if (anyPriceChanged) "⛽ Fuel Prices Updated!" else "⛽ Pakistan Fuel Prices Today"
             val displaySource = when {
-                sourceName.contains("OilPrices", ignoreCase = true) -> "OGRA Official Rates"
-                sourceName.contains("TrackMate", ignoreCase = true) -> "Official Market Rates"
-                sourceName.contains("Google", ignoreCase = true) -> "Live Market Rates"
-                sourceName.contains("HamariWeb", ignoreCase = true) -> "OGRA Official Rates"
-                sourceName.contains("GlobalPetrol", ignoreCase = true) -> "OGRA Official Rates"
-                sourceName.contains("PSO", ignoreCase = true) -> "PSO Official Rates"
-                sourceName.contains("Shell", ignoreCase = true) -> "Shell Official Rates"
-                sourceName.contains("Gemini", ignoreCase = true) || sourceName.contains("OGRA", ignoreCase = true) -> "OGRA Official Rates"
+                sourceName.contains("OilPrices", ignoreCase = true) -> "OGRA Official"
+                sourceName.contains("TrackMate", ignoreCase = true) -> "Official Market"
+                sourceName.contains("Google", ignoreCase = true) -> "Live Market"
+                sourceName.contains("HamariWeb", ignoreCase = true) -> "OGRA Official"
+                sourceName.contains("GlobalPetrol", ignoreCase = true) -> "OGRA Official"
+                sourceName.contains("PSO", ignoreCase = true) -> "PSO Official"
+                sourceName.contains("Shell", ignoreCase = true) -> "Shell Official"
+                sourceName.contains("Gemini", ignoreCase = true) || sourceName.contains("OGRA", ignoreCase = true) -> "OGRA Official"
                 sourceName.contains("API", ignoreCase = true) -> "Official Rates"
                 else -> sourceName
             }
-            val message = "Petrol: Rs. $newPetrol/L  •  Diesel: Rs. $newDiesel/L  •  High Octane: Rs. $newOctane/L  ($displaySource)"
+
+            // Format prices with 2 decimal places
+            val petrolStr = String.format("%.2f", newPetrol)
+            val dieselStr = String.format("%.2f", newDiesel)
+            val octaneStr = String.format("%.2f", newOctane)
+
+            val message = if (anyPriceChanged) {
+                val changes = mutableListOf<String>()
+                if (petrolChanged) {
+                    val diff = newPetrol - oldPetrol
+                    val arrow = if (diff > 0) "↑" else "↓"
+                    changes.add("Petrol: Rs. $petrolStr/L $arrow")
+                }
+                if (dieselChanged) {
+                    val diff = newDiesel - dieselOld
+                    val arrow = if (diff > 0) "↑" else "↓"
+                    changes.add("Diesel: Rs. $dieselStr/L $arrow")
+                }
+                if (octaneChanged) {
+                    val diff = newOctane - octaneOld
+                    val arrow = if (diff > 0) "↑" else "↓"
+                    changes.add("Hi-Octane: Rs. $octaneStr/L $arrow")
+                }
+                "${changes.joinToString("  •  ")}  ($displaySource)"
+            } else {
+                "Petrol: Rs. $petrolStr/L  •  Diesel: Rs. $dieselStr/L  •  Hi-Octane: Rs. $octaneStr/L  ($displaySource)"
+            }
 
             if (allowSending) {
                 notifPrefs.edit().putString("last_sent_price_notif_date", todayDateStr).apply()

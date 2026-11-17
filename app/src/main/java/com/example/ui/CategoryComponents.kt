@@ -397,7 +397,7 @@ fun CategoryGridSection(
 
     val livePetrol = viewModel?.petrolPumpPrice?.collectAsState()?.value ?: 328.00f
     val liveDiesel = viewModel?.dieselPumpPrice?.collectAsState()?.value ?: 358.00f
-    val liveOctane = viewModel?.highOctanePumpPrice?.collectAsState()?.value ?: 370.00f
+    val liveOctane = viewModel?.highOctanePumpPrice?.collectAsState()?.value ?: 399.00f
 
     val displayedCategories = when (selectedTab) {
         0 -> categories

@@ -1,6 +1,7 @@
 import Combine
 import FirebaseFirestore
 import Foundation
+import UserNotifications
 
 // MARK: - Fuel Price Result
 
@@ -636,7 +637,7 @@ final class FuelPriceSyncManager: ObservableObject {
 
     @Published private(set) var lastPetrol: Double = 328.00
     @Published private(set) var lastDiesel: Double = 358.00
-    @Published private(set) var lastHighOctane: Double = 370.00
+    @Published private(set) var lastHighOctane: Double = 399.00
     @Published private(set) var lastSource: String = ""
     @Published private(set) var lastUpdated: Date?
     @Published private(set) var isSyncing = false
@@ -706,6 +707,21 @@ final class FuelPriceSyncManager: ObservableObject {
             } catch {
                 print("[FuelPriceSync] Firestore push failed (prices saved locally): \(error.localizedDescription)")
             }
+
+            // Send local notification with real prices
+            let oldPetrol = defaults.double(forKey: "zyphuel_price_petrol_prev")
+            let priceChanged = abs(result.petrol - oldPetrol) > 0.01 && oldPetrol > 0
+            defaults.set(result.petrol, forKey: "zyphuel_price_petrol_prev")
+
+            let notifTitle = priceChanged ? "⛽ Fuel Prices Updated!" : "⛽ Pakistan Fuel Prices Today"
+            let notifBody = String(format: "Petrol: Rs. %.2f/L  •  Diesel: Rs. %.2f/L  •  Hi-Octane: Rs. %.2f/L", result.petrol, result.diesel, result.highOctane)
+
+            let content = UNMutableNotificationContent()
+            content.title = notifTitle
+            content.body = notifBody
+            content.sound = .default
+            let request = UNNotificationRequest(identifier: "fuel-price-\(Int(Date().timeIntervalSince1970))", content: content, trigger: nil)
+            try? await UNUserNotificationCenter.current().add(request)
         } catch {
             // Keep using cached prices
             print("[FuelPriceSync] All sources failed: \(error.localizedDescription)")

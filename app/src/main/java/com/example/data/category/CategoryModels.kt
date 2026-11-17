@@ -131,7 +131,7 @@ object CategoryCatalogSeed {
                 subcategories = listOf(
                     // Current Active Fuel Products
                     Subcategory("petrol_regular", "fuel_energy", "Super Euro-V Petrol", "Certified Euro-V motor gasoline • 5L to 15L Max • Rs. 300–400 tiered delivery", "PETROL", true, 328.00, "L", "Direct Dispatch", badgeText = "CURRENT LIVE"),
-                    Subcategory("petrol_octane", "fuel_energy", "High-Octane (RON 97)", "HOBC 97-Octane for luxury, turbo & performance vehicles • 5L to 15L Max", "PETROL", true, 370.00, "L", "Direct Dispatch", badgeText = "CURRENT LIVE"),
+                    Subcategory("petrol_octane", "fuel_energy", "High-Octane (RON 97)", "HOBC 97-Octane for luxury, turbo & performance vehicles • 5L to 15L Max", "PETROL", true, 399.00, "L", "Direct Dispatch", badgeText = "CURRENT LIVE"),
                     Subcategory("diesel_regular", "fuel_energy", "High-Speed Euro-V Diesel", "Euro-V High-Speed Diesel for SUVs, pickups & commercial vehicles • 5L to 15L Max", "DIESEL", true, 358.00, "L", "Direct Dispatch", badgeText = "CURRENT LIVE"),
                     Subcategory("diesel_generator", "fuel_energy", "Generator Diesel", "Backup Euro-V diesel delivery for home and commercial generators • Max 15L", "DIESEL", true, 358.00, "L", "Scheduled Dispatch", requiresVehicle = false, badgeText = "CURRENT LIVE"),
                     // Currently Unavailable Items (Explicitly listed as Inactive/Blocked for Admin Visibility)

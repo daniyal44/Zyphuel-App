@@ -25,7 +25,7 @@
 
 ### Phase 1: Core Platform Foundation & Multi-Role Commerce
 * Implemented multi-role authentication system (`customer`, `rider`, `admin`) with SHA-256 password hashing.
-* Built doorstep order placement engine for Super Petrol (Rs. 272.50/L), High-Speed Diesel (Rs. 283.00/L), Pure Drinking Water (Rs. 50.00/Gallon), and LPG cylinders.
+* Built doorstep order placement engine for Super Petrol (Rs. 328.00/L), High-Speed Diesel (Rs. 358.00/L), Pure Drinking Water (Rs. 50.00/Gallon), and LPG cylinders.
 
 ---
 
@@ -215,7 +215,7 @@
   - Updated fallback live fuel rates in `CategoryComponents.kt`:
     - Petrol: Rs. 328.00/L (OGRA retail pump price)
     - Diesel: Rs. 358.00/L (OGRA retail pump price)
-    - High-Octane: Rs. 370.00/L (OGRA retail pump price)
+    - High-Octane: Rs. 399.00/L (OGRA retail pump price)
   - Replaced legacy Gas chip in hero fuel showcase with High-Octane chip displaying `liveOctane`.
 * **Unit Testing & Verification**:
   - Updated unit tests in `FuelPumpPricingTest.kt` validating that `getPumpRate` returns OGRA retail pump prices (0.00 markup) and grand total calculations are accurate.

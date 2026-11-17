@@ -1,5 +1,5 @@
 # 🚀 Zyphuel App Features & Technical Documentation
-**App Version:** `v2.6.4.0.0.52 (Build 80)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** <font color="#10b981"><b>2026-11-16</b></font>
+**App Version:** `v2.6.4.0.0.53 (Build 81)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** <font color="#10b981"><b>2026-11-16</b></font>
 
 Welcome to the complete architectural and functional guide for the **Zyphuel** Android application. This document outlines every single feature, function, database entity, and user flow from start to finish.
 
@@ -70,7 +70,7 @@ Below is the complete index of all **dedicated documentation files** (including 
 
 ---
 
-## 0. iOS Application — Native SwiftUI Port (v2.6.4.0.0.52)
+## 0. iOS Application — Native SwiftUI Port (v2.6.4.0.0.53)
 **Location:** [`ios/`](ios/README.md) • **Bundle ID:** `com.aistudio.zyphuel.appv2` • **Minimum iOS:** 17.0
 
 Zyphuel now ships as a native iOS app that shares the Android Firebase project, Firestore collections and business rules. It is a separate Swift codebase (not a web wrapper) under `ios/`.
@@ -269,7 +269,7 @@ The app strictly segments access control across three user roles:
 * **Customer Dashboard Modernization & Streamlining (v2.6.4 Build 28)**:
   * **"Share Location" Action Chip**: Replaced the legacy "Change" button under the "Coverage: Lahore Active" indicator with a dedicated `[ ↗️ Share Location ]` action chip. Tapping it opens the Android native share sheet dispatching formatted Lahore GPS coordinates (`https://maps.google.com/?q=lat,lng`) and street address for instant sharing with family or riders, while retaining interactive click-to-edit on the address card.
   * **Streamlined Service Grid (Removed Quick Actions)**: Removed the entire `QuickActionsBar` row from the Customer Home Screen to eliminate visual clutter and present a focused, high-clarity layout directly connecting users to core energy services.
-  * **High-Octane (HOBC 97) Live Price Card (`service_high_octane`)**: Integrated a dedicated High-Octane fuel card right next to Super Petrol under "Our Services". Dynamically displays live OGRA notified rates from `viewModel.highOctanePrice` (e.g. `Rs. 300.00/L`) and pre-configures `OrderDialog` for "High-Octane" on tap.
+  * **High-Octane (HOBC 97) Live Price Card (`service_high_octane`)**: Integrated a dedicated High-Octane fuel card right next to Super Petrol under "Our Services". Dynamically displays live OGRA notified rates from `viewModel.highOctanePrice` (e.g. `Rs. 399.00/L`) and pre-configures `OrderDialog` for "High-Octane" on tap.
   * **One-Time Dismissible Startup Transparency Notice**: Transformed the "Early-Stage Lahore Startup" transparency card (`home_startup_notice_card`) from a permanent fixture into a one-time dismissible banner. Persisted via `SharedPreferences` (`zyphuel_ui_prefs`, `has_seen_startup_notice`), users can acknowledge and close the notice via the top-right `[X]` button, keeping the interface uncluttered on subsequent visits.
   * **App Tour Harmonization**: Updated the 13-stage guided tour spotlight anchors in `homeTourSteps` to smoothly guide users from the search bar directly into primary energy offerings without orphan references to removed quick action buttons.
 
@@ -980,7 +980,7 @@ Zyphuel v2.4.0 introduces a comprehensive 10-category on-demand automotive and m
 * **Standardized Rates Across All Layers**:
   - **Super Petrol (Euro-V)**: `Rs. 328.00 / Litre`
   - **High-Speed Diesel (HSD)**: `Rs. 358.00 / Litre`
-  - **High-Octane (HOBC 97)**: `Rs. 370.00 / Litre`
+  - **High-Octane (HOBC 97)**: `Rs. 399.00 / Litre`
   - **LPG Gas**: `Rs. 258.65 / Kg` (11.8kg Factory-Sealed Cylinder: `Rs. 3,052.00`)
   - **Pure Drinking Water**: `Rs. 50.00 / Unit` (19L Bottle: `Rs. 180.00`, 1000L Bulk Tanker: `Rs. 3,200.00`)
 * **StateFlow Reactive Binding on Customer Home**:
@@ -1268,10 +1268,10 @@ Zyphuel v2.4.0 introduces a comprehensive 10-category on-demand automotive and m
   - **Transparent Summary Breakdown**: Introduced an explicit `Pump Rate Included (+Rs 2.50/L)` row in the order breakdown summarizing the exact pump surcharge included in the order.
   - **Grand Total Consistency**: Ensures `placeOrder()` receives the exact total price reflecting active petrol pump rates.
 * **Customer Home & Rates Market Widget Enhancements**:
-  - **`CustomerHomeScreen` Fuel Cards**: Display live petrol pump rates (e.g. Rs. 291.88/L for Petrol) with badge `Pump Rate (+Rs 2.50)`.
-  - **`LahoreFuelMarketWidget` / `RatesScreen`**: Petrol and Diesel highlight cards display the Petrol Pump Rate as primary rate, with base OGRA price comparison shown beneath.
+  - **`CustomerHomeScreen` Fuel Cards**: Display live OGRA pump rates (e.g. Rs. 328.00/L for Petrol) with badge `OGRA Pump Rate`.
+  - **`LahoreFuelMarketWidget` / `RatesScreen`**: Petrol and Diesel highlight cards display the OGRA Pump Rate as primary rate.
 * **Category Repository Live Price Synchronization (`CategoryRepository.kt`, `CategoryComponents.kt`)**:
-  - `syncLiveFuelPrices()` synchronizes the +Rs. 2.50 petrol pump rate directly into `petrol_regular`, `petrol_octane`, `diesel_regular`, and `diesel_generator` subcategories so that all category screens, search results, and booking dialogs reflect the petrol pump prices.
+  - `syncLiveFuelPrices()` synchronizes the OGRA pump rate (0.00 markup) directly into `petrol_regular`, `petrol_octane`, `diesel_regular`, and `diesel_generator` subcategories so that all category screens, search results, and booking dialogs reflect the current OGRA pump prices.
 * **Release Audit Documentation Files (`changes.md`, `remove.md`, `delete.md`)**:
   - Created [`changes.md`](/changes.md) detailing all modifications in v2.6.4.0.0.11.
   - Created [`remove.md`](/remove.md) documenting deprecated flat rates and replaced code paths.
@@ -1555,7 +1555,7 @@ Zyphuel v2.4.0 introduces a comprehensive 10-category on-demand automotive and m
   - `petrolPumpPrice`, `dieselPumpPrice`, and `highOctanePumpPrice` reactive streams automatically reflect the updated +Rs. 5.00/L margin over the live OGRA base rate.
   - `CategoryRepository.syncLiveFuelPrices()` synchronizes subcategory prices with the exact Rs. 5.00 margin.
 * **UI Components & Hero Showcase ([`CategoryComponents.kt`](file:///d:/Games/New%20folder-web/Claude/app/src/main/java/com/example/ui/CategoryComponents.kt))**:
-  - Updated fallback live rates to current OGRA pump prices (0.00 markup): Petrol (Rs. 328.00/L), Diesel (Rs. 358.00/L), High-Octane (Rs. 370.00/L).
+  - Updated fallback live rates to current OGRA pump prices (0.00 markup): Petrol (Rs. 328.00/L), Diesel (Rs. 358.00/L), High-Octane (Rs. 399.00/L).
   - Replaced legacy Gas chip with High-Octane in the hero fuel showcase card.
 
 ### 38.2 App Versioning & Release Verification

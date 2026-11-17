@@ -402,7 +402,7 @@ enum ServiceCatalog {
                         eta: "Direct Dispatch", badge: "CURRENT LIVE", isEmergency: false),
             ServiceItem(id: "petrol_octane", categoryId: "fuel_energy", name: "High-Octane (RON 97)",
                         detail: "HOBC 97-Octane for luxury, turbo & performance vehicles • 5L to 15L max",
-                        group: "PETROL", isActive: true, basePrice: 370.00, unit: "L",
+                        group: "PETROL", isActive: true, basePrice: 399.00, unit: "L",
                         eta: "Direct Dispatch", badge: "CURRENT LIVE", isEmergency: false),
             ServiceItem(id: "diesel_regular", categoryId: "fuel_energy", name: "High-Speed Euro-V Diesel",
                         detail: "Euro-V diesel for SUVs, pickups & commercial vehicles • 5L to 15L max",

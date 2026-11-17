@@ -19450,7 +19450,7 @@ fun FcmConsoleDialog(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Button(
-                                onClick = { viewModel.simulateFcmPriceDropAlert("Super Petrol Euro-V", 278.50f, 268.00f) },
+                                onClick = { viewModel.simulateFcmPriceDropAlert("Super Petrol Euro-V", 330.00f, 328.00f) },
                                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEA580C)),
                                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
                                 modifier = Modifier.weight(1f)
@@ -19458,7 +19458,7 @@ fun FcmConsoleDialog(
                                 Text("⚡ Petrol Drop", fontSize = 11.sp, maxLines = 1)
                             }
                             Button(
-                                onClick = { viewModel.simulateFcmPriceDropAlert("High Octane 97", 298.00f, 285.00f) },
+                                onClick = { viewModel.simulateFcmPriceDropAlert("High Octane 97", 401.00f, 399.00f) },
                                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD97706)),
                                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
                                 modifier = Modifier.weight(1f)

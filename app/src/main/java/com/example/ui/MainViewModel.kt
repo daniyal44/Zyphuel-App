@@ -569,7 +569,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun simulateFcmPriceDropAlert(fuelType: String = "Super Petrol Euro-V", oldPrice: Float = 278.50f, newPrice: Float = 268.00f) {
+    fun simulateFcmPriceDropAlert(fuelType: String = "Super Petrol Euro-V", oldPrice: Float = 330.00f, newPrice: Float = 328.00f) {
         viewModelScope.launch {
             val title = "⚡ FCM Price Drop Alert: $fuelType"
             val body = "Promotional Alert: $fuelType rate reduced from Rs. ${String.format(java.util.Locale.US, "%.2f", oldPrice)} to Rs. ${String.format(java.util.Locale.US, "%.2f", newPrice)}/L in Lahore! Order doorstep fuel now."
@@ -831,7 +831,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _dieselPrice = MutableStateFlow(sharedPrefs.getFloat("diesel", 358.00f))
     val dieselPrice = _dieselPrice.asStateFlow()
 
-    private val _highOctanePrice = MutableStateFlow(sharedPrefs.getFloat("high_octane", 370.00f))
+    private val _highOctanePrice = MutableStateFlow(sharedPrefs.getFloat("high_octane", 399.00f))
     val highOctanePrice = _highOctanePrice.asStateFlow()
 
     // --- Retail Petrol Pump Rates (Base OGRA Rate + Rs. 5.00/L Petrol Pump Margin/Markup) ---
@@ -870,7 +870,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
             }
             "high_octane" -> {
-                val v = prefs.getFloat("high_octane", 370.00f)
+                val v = prefs.getFloat("high_octane", 399.00f)
                 if (v > 0f && v != _highOctanePrice.value) {
                     _highOctanePrice.value = v
                     repository.categoryRepository.syncLiveFuelPrices(_petrolPrice.value, _dieselPrice.value, v)
@@ -1184,7 +1184,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         // The FuelPriceWorker + Firestore listener will then overwrite with live data.
         // PRICE_CACHE_VERSION: increment this when OGRA announces new rates to force refresh.
         try {
-            val PRICE_CACHE_VERSION = 5  // v5 = Nov 2026 OGRA pump rates (removed +5 surcharge)
+            val PRICE_CACHE_VERSION = 6  // v6 = Nov 17, 2026 OGRA rates: Petrol 328, Diesel 358, HOBC 399
             val cachedVersion = sharedPrefs.getInt("price_cache_version", 0)
             val cachedPetrol = sharedPrefs.getFloat("petrol", 0f)
 
@@ -1193,11 +1193,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 sharedPrefs.edit()
                     .putFloat("petrol", 328.00f)
                     .putFloat("diesel", 358.00f)
-                    .putFloat("high_octane", 370.00f)
+                    .putFloat("high_octane", 399.00f)
                     .putInt("price_cache_version", PRICE_CACHE_VERSION)
                     .putString("last_sync_time", "OGRA Official Rates (Default)")
                     .apply()
-                DebugLogger.i("MainViewModel", "Price cache reset to OGRA pump rates v$PRICE_CACHE_VERSION: 328/358/370")
+                DebugLogger.i("MainViewModel", "Price cache reset to OGRA pump rates v$PRICE_CACHE_VERSION: 328/358/399")
             }
         } catch (e: Exception) {
             DebugLogger.e("MainViewModel", "Price cache init failed: ${e.message}", e)
@@ -1206,7 +1206,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         // Always read from SharedPreferences (now guaranteed to be current defaults or live data)
         _petrolPrice.value = sharedPrefs.getFloat("petrol", 328.00f)
         _dieselPrice.value = sharedPrefs.getFloat("diesel", 358.00f)
-        _highOctanePrice.value = sharedPrefs.getFloat("high_octane", 370.00f)
+        _highOctanePrice.value = sharedPrefs.getFloat("high_octane", 399.00f)
         _lastPriceSyncTime.value = sharedPrefs.getString("last_sync_time", "OGRA Official Rates") ?: "OGRA Official Rates"
 
         viewModelScope.launch {
@@ -4568,7 +4568,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     // Fallback 2: Use last cached prices if available, otherwise skip
                     val cachedPetrol = sharedPrefs.getFloat("petrol", 328.00f)
                     val cachedDiesel = sharedPrefs.getFloat("diesel", 358.00f)
-                    val cachedOctane = sharedPrefs.getFloat("high_octane", 370.00f)
+                    val cachedOctane = sharedPrefs.getFloat("high_octane", 399.00f)
                     if (cachedPetrol > 0f && cachedDiesel > 0f) {
                         updateFuelPrices(
                             petrol = cachedPetrol,
