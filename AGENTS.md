@@ -1,13 +1,22 @@
 # Zyphuel Project Rules & Maintenance Guidelines
 
-**Last Updated:** <font color="#10b981"><b>2026-11-16</b></font> • **Application Version:** <font color="#10b981"><b>2.6.4.0.0.45 (Build 73)</b></font>
+**Last Updated:** <font color="#10b981"><b>2026-11-18</b></font> • **Application Version:** <font color="#10b981"><b>2.6.4.0.0.101 (Build 260400101)</b></font>
 
 ---
 
-## Unified Versioning & Cross-Platform Parity Rule (CRITICAL — Updated <font color="#10b981"><b>2026-11-05</b></font>)
+## Unified Versioning & Cross-Platform Parity Rule (CRITICAL — Updated <font color="#10b981"><b>2026-11-18</b></font>)
 **Every functional change MUST land on BOTH platforms in the same change set** — Android (Kotlin/Compose, `app/`) and iOS (SwiftUI, `ios/`). A feature, fix, Firestore rule, pricing constant, permission, copy change or bug fix that exists on only one platform is an **incomplete** change. When you touch one app, immediately mirror the change in the other and in the shared layers (`firestore.rules`, docs).
 - **Single version source**: [`version.properties`](version.properties) holds `versionCode` / `versionName`. Android Gradle reads it directly; iOS ([`ios/project.yml`](ios/project.yml), [`ZyphuelConfig.swift`](ios/Zyphuel/Core/Config/ZyphuelConfig.swift)) and the docs are written by [`scripts/sync_versions.py`](scripts/sync_versions.py).
-- **MUST bump Android and iOS together**: run `sync_versions.bat --bump` (or `python scripts/sync_versions.py --bump`). It increments `versionCode` by `1` and the trailing `versionName` segment by `+0.01` (e.g. `…0.37` → `…0.38`), then rewrites Android, iOS, `README.md` and `FEATURES_DOCUMENTATION.md`. Never edit a version by hand and never bump only one platform.
+- **MUST bump Android and iOS together**: run `sync_versions.bat --bump` (or `python scripts/sync_versions.py --bump`). It increments `versionCode` by `1` and the trailing `versionName` segment sequentially (`+1`), then rewrites Android, iOS, `README.md` and `FEATURES_DOCUMENTATION.md`. Never edit a version by hand and never bump only one platform.
+- **Sequential Version Increment Standard (`0.0.0.0.0.XXX`)**:
+  | **Change** | **Version** |
+  | :--- | :--- |
+  | **Initial baseline** | **`0.0.0.0.0.100`** |
+  | **First completed change** | **`0.0.0.0.0.101`** |
+  | **Second completed change** | **`0.0.0.0.0.102`** |
+  | **Third completed change** | **`0.0.0.0.0.103`** |
+  | **Next completed change** | **`0.0.0.0.0.104`** |
+  Every completed change increments the trailing segment sequentially: `0.0.0.0.0.100` ➔ `0.0.0.0.0.101` ➔ `0.0.0.0.0.102` ➔ `0.0.0.0.0.103` ➔ `0.0.0.0.0.104` ...
 - **Drift gate**: `python scripts/sync_versions.py --check` (run in CI by [`.github/workflows/version-sync.yml`](.github/workflows/version-sync.yml)) fails the build when any platform or doc disagrees.
 - **Docs per change**: update [`README.md`](README.md), [`FEATURES_DOCUMENTATION.md`](FEATURES_DOCUMENTATION.md), [`changes.md`](changes.md) and [`TESTING.md`](TESTING.md) for **both** platforms.
 - **Both test suites are required**: Android `./gradlew :app:compileDebugKotlin` + `:app:testDebugUnitTest`; iOS `ios/bootstrap.sh test` on macOS or the `iOS Build` workflow.
@@ -58,8 +67,8 @@ Whenever you create, modify, or update any feature, screen, ViewModel method, or
   - **15 Liters (Strict Max Limit)**: <font color="#10b981"><b>Rs. 400.00 Delivery Fee</b></font>
 - **Strict Maximum Volume Cap**: Fuel doorstep mobile delivery is capped at a maximum of **15 Liters** per order. Any order exceeding 15L must be prevented.
 - **Retail Pump Rate Markup**:
-  - `PUMP_RATE_MARKUP = 5.00` (Rs./Litre) applied on top of official OGRA ex-depot base rate for Super Euro-V Petrol, Euro-V Diesel, and High-Octane 97.
-  - Formula: `finalRate = ograBase + 5.00`.
+  - `PUMP_RATE_MARKUP = 0.00` — the authorized website (`https://zyphuel.netlify.app/order`) publishes final retail rates (Petrol Rs. 330.00/L, Diesel Rs. 336.00/L, High-Octane Rs. 350.00/L) that already include the Rs. 5.00/L margin. A second markup double-counted it and produced wrong displayed prices.
+  - Formula: `finalRate = authorizedWebsiteRate`.
   - Math runs silently in background; only the final pump rate is displayed to the user (no debug/markup labels).
 - **Official Delivery Operating Hours & Order Gate**:
   - **Mon–Thu**: <font color="#10b981"><b>08:00 AM – 08:00 PM (PKT)</b></font>

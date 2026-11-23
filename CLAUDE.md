@@ -47,7 +47,7 @@ Test reports land in `app/build/reports/tests/testDebugUnitTest/index.html`.
 
 ### Key data flows
 
-**Fuel prices**: OGRA-set defaults (SharedPreferences `zyphuel_prices`) → overwritten by Firestore real-time listener (`system_config/fuel_rates`) → background refresh via `FuelPriceWorker` (WorkManager, 4-hour cycle) calling `TrackmateFuelApiService` (7-source fallback chain). `PRICE_CACHE_VERSION` in MainViewModel init forces cache refresh when OGRA changes rates.
+**Fuel prices**: OGRA-set defaults (SharedPreferences `zyphuel_prices`) → overwritten by Firestore real-time listener (`system_config/fuel_rates`) → background refresh via `FuelPriceWorker` (authorized website only). Prices are permanently synchronized from the authorized Zyphuel website (`https://zyphuel.netlify.app/order`). `PRICE_CACHE_VERSION` in MainViewModel init forces cache refresh on app update/launch. All prices (Petrol Rs. 330.00/L, Diesel Rs. 336.00/L, High-Octane Rs. 350.00/L) are the final retail rates published on the authorized website; the Rs. 5.00/L margin is already included, so `PUMP_RATE_MARKUP = 0.00`.
 
 **Authentication**: Email+password only → PBKDF2-HMAC-SHA256 hashing in `SecurityCrypto.kt` → session stored in `EncryptedSharedPreferences` via `SecureStorageManager` → optional biometric unlock. Rate-limited by `SecurityRateLimiter` (4 attempts, 5-min cooldown).
 
@@ -61,7 +61,7 @@ AGP 9.1.1, Kotlin 2.2.10, Compose BOM 2024.09.00, Room 2.7.0, Firebase BOM 34.15
 
 **Cross-platform parity**: Every change MUST land on both Android (`app/`) and iOS (`ios/`) in the same commit. A one-platform change is incomplete. See `AGENTS.md` for the full rule.
 
-**Version bumping**: The single source of truth is `version.properties`. Never edit version numbers by hand in `build.gradle.kts` or `project.yml` — always use `sync_versions.bat --bump`.
+**Version bumping**: The single source of truth is `version.properties`. Never edit version numbers by hand in `build.gradle.kts` or `project.yml` — always use `sync_versions.bat --bump` (or `python scripts/sync_versions.py --bump`). Versioning follows the 6-part sequential micro-versioning standard: initial baseline `0.0.0.0.0.100` (Build 100), first change `0.0.0.0.0.101` (Build 101), second `0.0.0.0.0.102` (Build 102), third `0.0.0.0.0.103` (Build 103), next `0.0.0.0.0.104` (Build 104) sequentially.
 
 **Room DB migrations**: Every schema version bump MUST have a registered `Migration` in BOTH `AppDatabase.getDatabase()` (Models.kt) and the `AppRepository` constructor (Repository.kt). The current version is 13 with `MIGRATION_12_TO_13`.
 
@@ -77,7 +77,7 @@ AGP 9.1.1, Kotlin 2.2.10, Compose BOM 2024.09.00, Room 2.7.0, Firebase BOM 34.15
 
 `MainViewModel.kt` has three `init {}` blocks: (1) security + fuel price cache init, (2) Firestore cloud sync + session restore, (3) category price sync + cross-device order sync.
 
-`TrackmateFuelApiService.kt` implements the 7-source fuel price fallback: OilPrices.pk API → TrackMate API → HamariWeb → GlobalPetrolPrices → Google Search → PSO → Shell. PSO and Shell are JS SPAs that return empty HTML shells to server-side fetchers.
+`AuthorizedFuelPriceService.kt` provides permanent fuel prices from the authorized Zyphuel website (`https://zyphuel.netlify.app/order`). Prices are final retail rates (inclusive of Rs. 5.00/L pump markup) with no external API calls needed.
 
 `CategoryRepository.kt` / `CategoryModels.kt` define the service catalog (fuel types, pricing tiers). Prices are computed from base OGRA rate + `FeeConstants.PETROL_PUMP_RATE_SURCHARGE`.
 

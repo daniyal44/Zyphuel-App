@@ -572,11 +572,11 @@ private struct AdminRatesTab: View {
     var body: some View {
         VStack(spacing: 14) {
             VStack(alignment: .leading, spacing: 9) {
-                SectionHeader(title: "Live OGRA base rates",
-                              subtitle: "Pump price adds Rs. 5.00/L automatically")
-                LabeledField(label: "Super Euro-V Petrol", placeholder: "335.00", text: $petrol,
+                SectionHeader(title: "Live authorized website rates",
+                              subtitle: "Retail rates published on zyphuel.netlify.app/order")
+                LabeledField(label: "Super Euro-V Petrol", placeholder: "327.00", text: $petrol,
                              keyboard: .decimalPad)
-                LabeledField(label: "High-Speed Diesel", placeholder: "336.00", text: $diesel,
+                LabeledField(label: "High-Speed Diesel", placeholder: "360.00", text: $diesel,
                              keyboard: .decimalPad)
                 LabeledField(label: "High-Octane 97", placeholder: "350.00", text: $octane,
                              keyboard: .decimalPad)

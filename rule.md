@@ -1,6 +1,6 @@
 # 🛡️ Zyphuel Security, Architecture & Operational Rules (`rule.md`)
 
-**Last Updated:** <font color="#10b981"><b>2026-10-09</b></font> • **Application Version:** <font color="#10b981"><b>2.6.4.0.0.56 (Build 84)</b></font>
+**Last Updated:** <font color="#10b981"><b>2026-11-18</b></font> • **Application Version:** <font color="#10b981"><b>2.6.4.0.0.101 (Build 260400101)</b></font>
 
 ---
 
@@ -21,10 +21,19 @@
 
 ---
 
-## 2. App Versioning & Release Rule (CRITICAL — Updated <font color="#10b981"><b>2026-10-09</b></font>)
+## 2. App Versioning & Release Rule (CRITICAL — Updated <font color="#10b981"><b>2026-11-18</b></font>)
 Whenever any modification, fix, security update, or feature is applied:
-- **MUST Increment `versionCode`**: Always increment `versionCode` in [`app/build.gradle.kts`](file:///d:/Games/New%20folder-web/Claude/app/build.gradle.kts) (currently at <font color="#10b981"><b>54</b></font>).
-- **MUST bump Android and iOS together**: the version lives only in `version.properties`. Run `sync_versions.bat --bump`; it advances `versionCode` by 1 and the trailing `versionName` segment by `0.01`, then updates Android, iOS and the docs. `--check` blocks drift in CI and in the pre-commit hook.
+- **MUST Increment `versionCode`**: Always increment `versionCode` in [`app/build.gradle.kts`](file:///d:/Games/New%20folder-web/Claude/app/build.gradle.kts) (currently at <font color="#10b981"><b>100</b></font>).
+- **MUST bump Android and iOS together**: the version lives only in `version.properties`. Run `sync_versions.bat --bump`; it advances `versionCode` by 1 and the trailing `versionName` segment sequentially (`+1`), then updates Android, iOS and the docs. `--check` blocks drift in CI and in the pre-commit hook.
+- **MANDATORY SEQUENTIAL VERSION INCREMENT SEQUENCE (6-PART SCHEME: `0.0.0.0.0.XXX`)**:
+  | **Change** | **Version** |
+  | :--- | :--- |
+  | **Initial baseline** | **`0.0.0.0.0.100`** |
+  | **First completed change** | **`0.0.0.0.0.101`** |
+  | **Second completed change** | **`0.0.0.0.0.102`** |
+  | **Third completed change** | **`0.0.0.0.0.103`** |
+  | **Next completed change** | **`0.0.0.0.0.104`** |
+  **Rule: Each completed change strictly increments the trailing segment sequentially by 1 (`100` ➔ `101` ➔ `102` ➔ `103` ➔ `104` ...), and increments `versionCode` synchronously (Build `100` ➔ `101` ➔ `102` ➔ `103` ➔ `104` ...). Never skip numbers, never use floating decimals (`+0.01`), and never edit version numbers manually without running `sync_versions.py`.**
 - **MUST mirror every change on both platforms**: an Android-only or iOS-only feature/fix is an incomplete change (see `AGENTS.md`).
 - Never publish or push with stale version codes.
 

@@ -1,13 +1,45 @@
 # Zyphuel Persistent Project Memory & Feature Evolution Log 🧠
 
-## 📌 Project Identity
+## 📌 Project Identity (v2.6.4.0.0.101 Build 260400101)
 * **App Name**: Zyphuel
 * **Description**: Pakistan's premier doorstep fuel & drinking water delivery platform operating in Lahore.
 * **Target Audience**: Residential customers, commercial fleet managers, bowser drivers, and platform administrators.
+* **Current Version**: **v2.6.4.0.0.101 (Build 260400101)** - Sequential micro-versioning transition to 6-part standard
 
 ---
 
-## 🏛️ Immutable Architectural Rules (`AGENTS.md`)
+## 🏛️ Immutable Architectural Rules (`AGENTS.md`) **🔒**
+* **MANDATORY SEQUENTIAL VERSION INCREMENT STANDARD (`0.0.0.0.0.XXX`) — CRITICAL HARD RULE**:
+  - **User Explicit Directive**: *"ab ap version is tara update hona chaye , ise sequence ma . update all .md files save in ur memory& app memory , specially in these files bold text mention rules.md, memory.md"*
+  - **Sequential Version Progression Table**:
+    | **Change** | **Version** |
+    | :--- | :--- |
+    | **Initial baseline** | **`0.0.0.0.0.100`** |
+    | **First completed change** | **`0.0.0.0.0.101`** |
+    | **Second completed change** | **`0.0.0.0.0.102`** |
+    | **Third completed change** | **`0.0.0.0.0.103`** |
+    | **Next completed change** | **`0.0.0.0.0.104`** |
+  - **Sequential Increment Rule**: **All version bumps must advance the trailing segment by 1 sequentially (`0.0.0.0.0.100` ➔ `0.0.0.0.0.101` ➔ `0.0.0.0.0.102` ➔ `0.0.0.0.0.103` ➔ `0.0.0.0.0.104` ...) and synchronously advance `versionCode` (`Build 100` ➔ `Build 101` ➔ `Build 102` ...). Both Android and iOS must be bumped simultaneously via `scripts/sync_versions.py --bump`. Manual or floating decimal increments are permanently prohibited.**
+* **🚫 No-Deletion Safety Rule (HIGHEST PRIORITY - USER HARD COMMAND)**:
+  - **User Explicit Directive**: *"app ma koi be cheez delete nai hone chaye apni memony ma save be karo lo or .md file ma be save karlo global memory"*.
+  - **Zero Deletion Policy**: NEVER delete anything in the app — code, features, screens, buttons, functions, UI components, data models, or files.
+  - **Audit Master Reference**: See [`GLOBAL_AUDIT_AND_FEATURE_INTEGRITY.md`](/GLOBAL_AUDIT_AND_FEATURE_INTEGRITY.md) for the master audit catalog of working, disconnected, and missing features.
+  - All maintenance must be additive, connective, or restorative without ever deleting existing capabilities. Work carefully and make zero accidental mistakes.
+* **Documentation Maintenance Rule**: Whenever creating, modifying, or updating any feature, screen, ViewModel method, or database model in Zyphuel, **MUST ALWAYS Update `FEATURES_DOCUMENTATION.md`** and relevant modular docs in `/docs`.
+* **UI Stack**: Kotlin with Jetpack Compose (Material 3).
+* **State Management**: Centralized `MainViewModel` with Kotlin `StateFlow`.
+* **Testing Requirement**: Always assign Compose `testTag` for key interactive UI components (`testTag("login_button")`, `testTag("rating_star_1")`, etc.).
+* **Room DB Schema**: Maintain `UserEntity`, `OrderEntity`, `AuditLogEntity`, and `NotificationEntity` table structures.
+
+--- VERSION SYNC GUARD ---
+* **Daily CI Guard**: `.github/workflows/version-sync.yml` runs `sync_versions.py --check` daily at 6:00 UTC to prevent drift.
+* **Build Guard**: `.github/workflows/android-build.yml` aborts build if version drift detected.
+* **PR Blocking**: Pull requests with version drift are blocked from merge.
+* **Bump Verification**: `version-bump.yml` verifies sync immediately after version bump.
+
+---
+
+## 📜 Feature Implementation History & Log
 * **🚫 No-Deletion Safety Rule (HIGHEST PRIORITY - USER HARD COMMAND)**:
   - **User Explicit Directive**: *"app ma koi be cheez delete nai hone chaye apni memony ma save be karo lo or .md file ma be save karlo global memory"*.
   - **Zero Deletion Policy**: NEVER delete anything in the app — code, features, screens, buttons, functions, UI components, data models, or files.
@@ -312,6 +344,17 @@
   - Created unpopulated public template `app/admin-credentials.properties.example` for public clones.
   - Decoupled admin credentials to git-ignored `app/admin-credentials.properties` and injected dynamically into `SecurityCrypto.kt` via `BuildConfig.MASTER_ADMIN_HASH`.
 * **Version Advancement**: Incremented `versionCode = 54` and advanced `versionName = "2.6.4.0.0.26"` in `app/build.gradle.kts`.
+
+### Phase 31: Transition to Sequential Micro-Versioning Standard (v0.0.0.0.0.100 Build 100) — <font color="#10b981"><b>2026-11-18</b></font>
+* **Standardized 6-Segment Version Progression (`0.0.0.0.0.XXX`)**:
+  - Established new baseline version **`0.0.0.0.0.100` (Build 100)** across Android, iOS, and all documentation.
+  - Locked in the user-directed sequential increment model:
+    - Initial baseline: `0.0.0.0.0.100` (Build 100)
+    - First completed change: `0.0.0.0.0.101` (Build 101)
+    - Second completed change: `0.0.0.0.0.102` (Build 102)
+    - Third completed change: `0.0.0.0.0.103` (Build 103)
+    - Next completed change: `0.0.0.0.0.104` (Build 104)
+  - Synchronized `version.properties`, `scripts/sync_versions.py`, `rules.md`, `MEMORY.md`, `AGENTS.md`, `rule.md`, `CLAUDE.md`, and all `.md` files in accordance with the memory persistence command.
 
 ---
 

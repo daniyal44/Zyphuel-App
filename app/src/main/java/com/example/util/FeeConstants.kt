@@ -27,10 +27,15 @@ object FeeConstants {
     const val FUEL_DELIVERY_FEE = 300.0
 
     /**
-     * Pump rate markup on top of stored fuel prices.
-     * Set to 0.00 because SharedPreferences, APIs, and Firestore all store final OGRA
-     * retail pump prices — no additional per-liter margin needed. Zyphuel's revenue
-     * comes from the tiered delivery fee (Rs. 300–400).
+     * Additional pump markup applied on top of the stored rate.
+     *
+     * The authorized Zyphuel website publishes FINAL retail rates
+     * (Petrol Rs. 330.00/L, Diesel Rs. 336.00/L, High-Octane Rs. 350.00/L)
+     * that already include the Rs. 5.00/L service margin. Applying another
+     * Rs. 5.00 here double-counted the margin and produced wrong displayed
+     * prices (e.g. 335 instead of 330).
+     *
+     * Formula: finalRate = authorizedWebsiteRate (no extra markup).
      */
     const val PUMP_RATE_MARKUP = 0.00
     const val PUMP_RATE_MARKUP_FLOAT = 0.00f
@@ -49,8 +54,8 @@ object FeeConstants {
     }
 
     /**
-     * Computes the final petrol pump price by adding the +Rs. 5.00/L pump rate offset.
-     * Formula: finalRate = ograBase + 5.00
+     * Computes the final petrol pump price.
+     * Formula: finalRate = authorizedWebsiteRate + PUMP_RATE_MARKUP (0.00)
      */
     fun getPumpRate(basePrice: Double, serviceType: String?): Double {
         return if (isPumpRateApplicable(serviceType)) basePrice + PUMP_RATE_MARKUP else basePrice

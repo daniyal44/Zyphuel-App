@@ -1,6 +1,6 @@
 # Zyphuel System Architecture & Design Documentation 🏛️
 
-**Last Updated:** <font color="#10b981"><b>2026-10-09</b></font> • **Application Version:** <font color="#10b981"><b>2.6.4.0.0.56 (Build 84)</b></font>
+**Last Updated:** <font color="#10b981"><b>2026-10-09</b></font> • **Application Version:** <font color="#10b981"><b>2.6.4.0.0.101 (Build 260400101)</b></font>
 
 ---
 

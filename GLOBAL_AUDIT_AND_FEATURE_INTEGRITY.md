@@ -1,5 +1,5 @@
 # Zyphuel Master App Audit, Feature Analysis & Global Memory Record 🧠📋
-**Document Version:** <font color="#10b981"><b>2.6.4.0.0.56</b></font> • **Build Code:** <font color="#10b981"><b>84</b></font> • **Last Audit:** <font color="#10b981"><b>2026-10-09</b></font>  
+**Document Version:** <font color="#10b981"><b>2.6.4.0.0.101</b></font> • **Build Code:** <font color="#10b981"><b>260400101</b></font> • **Last Audit:** <font color="#10b981"><b>2026-10-09</b></font>  
 **Operating Region:** Lahore, Punjab, Pakistan  
 **Compliance Standard:** OGRA (Oil & Gas Regulatory Authority), Civil Defence Pakistan & Google Play Store Policies  
 
@@ -26,7 +26,7 @@
 | **Core Fuel Ordering (15L Cap & Hours Gate)** | 🟢 100% Working | Super Petrol, HSD, High-Octane with tiered fees (<font color="#10b981"><b>1..10L: Rs. 300, 11L: Rs. 320 .. 15L: Rs. 400</b></font>). Silent OGRA markup (<font color="#10b981"><b>+Rs. 5.00/L</b></font>). Operating hours gate (<font color="#10b981"><b>Mon-Thu 8am-8pm, Fri 8am-1pm, Sat-Sun 10am-6pm PKT</b></font>). Water/LPG unavailable. |
 | **Trading-Style Codebase Movement Graph** | 🟢 100% Working | Pure code-based multi-timeframe velocity engine (<font color="#10b981"><b>1D, 1W, 1M</b></font>) tracking volume, push intervals, code churn, and shift magnitude (Major/Minor) rendered via native Mermaid & Trading Terminal directly in README.md (Zero SVG reliance). |
 | **PDF Invoicing & Receipts** | 🟢 100% Working | Native Android PrintManager 1-tap "Save as PDF" & WhatsApp text share. |
-| **Live Fuel Price Sync** | 🟢 100% Working | TrackmateFuelApiService (PSO/Shell rates), Gemini sync & WorkManager background alerts. |
+| **Live Fuel Price Sync** | 🟢 100% Working | Authorized website only (zyphuel.netlify.app/order), permanent retail rates, no fallback providers. |
 | **Multi-Channel Email Gateway** | 🟢 100% Working | SMTP SSL (465) / STARTTLS (587) + Google Apps Script Webhook with Firestore cross-device sync. |
 | **Admin Supervisory Controls** | 🟢 100% Working | 9-tab dashboard: Orders, Riders, Customers, Feedback, Prices, Email Gateway, Audit Logs, Categories. |
 | **10-Category Marketplace Grid** | 🟢 Wired to Home | Rendered on `CustomerHomeScreen` below the Doorstep Services section. |
@@ -69,7 +69,7 @@
 ### B. Customer Home & Fuel / Water Ordering Engine
 1. **Doorstep Energy Catalog**:
    - **Super Petrol (Euro-V)**: Live OGRA rate (~Rs. 328.00/L).
-   - **High-Octane (RON 97 / HOBC)**: For luxury and performance vehicles (~Rs. 399.00/L).
+   - **High-Octane (RON 97 / HOBC)**: For luxury and performance vehicles (~Rs. 350.00/L).
    - **High-Speed Diesel**: Regular Euro-V & Bulk Generator Diesel (~Rs. 358.00/L).
    - **LPG Gas Cylinder**: Certified 11.8kg factory-sealed domestic cylinders (~Rs. 258.65/kg).
    - **Pure Drinking Water**: Multi-stage RO purified 19L bottles (~Rs. 50.00/Gallon).
@@ -99,9 +99,8 @@
 
 ---
 
-### D. Live Market Fuel Price Sync Engine
-1. **`TrackmateFuelApiService.kt`**:
-   - Connects to `https://fuel.trackmate.page/api/prices` via OkHttp with fallback defaults for PSO, Shell, and TotalParco rates in Lahore.
+### D. Live Market Fuel Price Sync Engine1. **`AuthorizedFuelPriceService.kt`**:
+    - Provides permanent fuel prices from the authorized Zyphuel website (`https://zyphuel.netlify.app/order`). Prices are final retail rates (inclusive of Rs. 5.00/L pump markup) with no external API calls needed.
 2. **`FuelPriceWorker.kt` (WorkManager)**:
    - Runs periodic background checks (configured for 1h, 2h, 4h, 6h, 12h, 24h intervals) and fires FCM push alerts when prices fluctuate.
 3. **Gemini AI Fuel Sync**:

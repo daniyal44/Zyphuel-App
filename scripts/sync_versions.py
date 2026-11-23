@@ -10,7 +10,7 @@ Usage
     python scripts/sync_versions.py --bump     # increment once (code +1, name +0.01) then apply
     python scripts/sync_versions.py --check    # exit 1 if any target has drifted (CI)
 
-The versionName format is the project sub-version format: 2.6.4.0.0.38
+The versionName format is the project sub-version format: 0.0.0.0.0.100
 """
 
 from __future__ import annotations
@@ -42,6 +42,9 @@ DOC_HEADER_GLOBS = [
     "PLAY_STORE_ASO_BLUEPRINT.md",
     "MASTER_GLOBAL_SEO_AEO_GEO_STRATEGY.md",
     "rule.md",
+    "rules.md",
+    "MEMORY.md",
+    "AGENTS.md",
     "docs/*.md",
     "docs_dev/*.md",
     "vibe-coding-context-files/*.md",
@@ -66,6 +69,12 @@ BODY_PATTERNS: dict[str, list[tuple[re.Pattern[str], Callable[[re.Match[str], in
         (
             re.compile(r"(?:shared version\.properties: )?versionCode \d+, versionName [\d.]+"),
             lambda _m, c, n: f"shared version.properties: versionCode {c}, versionName {n}",
+        ),
+    ],
+    "rules.md": [
+        (
+            re.compile(r"(\*Version:\s*v?)(\d+\.\d+\.\d+\.\d+\.\d+\.\d+)(\s*\(Build\s*)(\d+)(\)\*)"),
+            lambda m, c, n: f"{m.group(1)}{n}{m.group(3)}{c}{m.group(5)}",
         ),
     ],
 }
@@ -97,7 +106,7 @@ def read_version() -> tuple[int, str]:
 
     name = values.get("versionName", "")
     if not NAME_PATTERN.match(name):
-        sys.exit(f"versionName '{name}' must use the 2.6.4.0.0.XX sub-version format")
+        sys.exit(f"versionName '{name}' must use the 0.0.0.0.0.XXX sub-version format")
 
     return code, name
 
@@ -216,6 +225,9 @@ def sync_header(path: Path, code: int, name: str, check_only: bool, problems: li
 
     new_head = []
     for line in head:
+        if line.lstrip().startswith("|"):
+            new_head.append(line)
+            continue
         new_line = VERSION_TOKEN.sub(version_repl, line)
         if "Build" in new_line:
             for pattern in BUILD_PATTERNS:
@@ -302,7 +314,9 @@ def main() -> int:
     if args.bump:
         code += 1
         parts = name.split(".")
-        parts[-1] = f"{int(parts[-1]) + 1:02d}"
+        last_seg = int(parts[-1]) + 1
+        width = max(len(parts[-1]), 3)
+        parts[-1] = f"{last_seg:0{width}d}"
         name = ".".join(parts)
         write_version(code, name)
         print(f"Bumped to v{name} (Build {code})")

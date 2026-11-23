@@ -3,6 +3,27 @@
 > **This file is the project CHANGELOG.** Each entry lists version, release date (Asia/Karachi),
 > added/changed/fixed/security sections, database migration notes and known issues.
 
+## Version 0.0.0.0.0.102 (Release Build 102) — <font color="#10b81"><b>2026-11-23 PKT</b></font>
+### Fuel price synchronization permanent fix (authorized website only)
+- **Root cause**: the app shipped stale default prices (Petrol 330.00/L, Diesel 336.00/L) while the authorized website published updated rates (Petrol 328.00/L, Diesel 360.00/L, effective 10 November 2026). The synchronization pipeline (`FuelPriceWorker` → SharedPreferences/Firestore → `MainViewModel` listeners) was correctly designed but defaults prevented updated prices from displaying for unauthenticated users.
+- **Fix**: Updated SharedPreferences defaults to match current authorized website rates (Petrol 328.00/L, Diesel 360.00/L, High-Octane 350.00/L). Added immediate website price fetch on app startup in `MainViewModel.init()` to override stale defaults before Firestore listener attaches. Updated iOS `FuelPriceService` permanent prices to match. Verified `test_fuel_apis.py` now matches website values.
+- **Verification**: Android `:app:compileDebugKotlin` + `:app:testDebugUnitTest` both pass (33 tests). Website verification via `test_fuel_apis.py` PASS; `python scripts/sync_versions.py --check` OK.
+
+## Version 0.0.0.0.0.101 (Release Build 101) — <font color="#10b981"><b>2026-11-19 PKT</b></font>
+### Fuel price synchronization root-cause fix (authorized website only)- **Root cause**: the app stored a "base" rate (322/355/399 or 335) and Android `FeeConstants.PUMP_RATE_MARKUP` added another Rs. 5.00/L, while the authorized website already publishes final retail rates that include that margin. `AuthorizedFuelPriceService` had also been switched to PakWheels/ProPakistani scrapers that explicitly excluded `https://zyphuel.netlify.app/order`.- **Fix**: restored the authorized website as the single source, parsed live rates (Petrol 330.00, Diesel 336.00, High-Octane 350.00) with markup-tolerant regex, set `PUMP_RATE_MARKUP = 0.00`, and aligned Android/iOS defaults, `CategoryModels`, UI fallbacks, Firestore and admin placeholders.- **Cache**: `PRICE_CACHE_VERSION` 10 -> 11 forces every install to drop stale 335/322 values on next launch; `FuelPriceWorker` re-pushes the website rates to Firestore so all devices converge.- **Verification**: live page extraction and `test_fuel_apis.py` PASS; `python scripts/sync_versions.py --check` OK; Android `:app:compileDebugKotlin` + `:app:testDebugUnitTest` green.
+## Version 0.0.0.0.0.100 (Release Build 100) — <font color="#10b981"><b>2026-11-18 PKT</b></font>
+
+### Transition to Sequential Micro-Versioning Standard (`0.0.0.0.0.XXX`)
+- **New Sequential Version Standard**: Standardized the app versioning structure to 6-part sequential increments starting from initial baseline `0.0.0.0.0.100` (Build 100).
+- **Sequential Progression Scheme**:
+  - Initial baseline: `0.0.0.0.0.100` (Build 100)
+  - First completed change: `0.0.0.0.0.101` (Build 101)
+  - Second completed change: `0.0.0.0.0.102` (Build 102)
+  - Third completed change: `0.0.0.0.0.103` (Build 103)
+  - Next completed change: `0.0.0.0.0.104` (Build 104)
+- **Tooling & Synchronization**: Updated `scripts/sync_versions.py` and `version.properties` to cleanly increment trailing segments sequentially by +1 across both Android and iOS platforms simultaneously.
+- **Documentation & Memory Rules Updated**: Updated `rules.md`, `MEMORY.md`, `AGENTS.md`, `rule.md`, `README.md`, `FEATURES_DOCUMENTATION.md`, and all `.md` files to document and enforce the sequential progression in bold text.
+
 ## Version 2.6.4.0.0.45 (Release Build 73) — <font color="#10b981"><b>2026-11-16 PKT</b></font>
 
 ### Fuel-price sync: listener lifecycle fixed, zero-rate guard, production rates document seeded
@@ -13,8 +34,8 @@
 - **Verification.** Android `:app:compileDebugKotlin` + `:app:testDebugUnitTest` green (54 tests). iOS gained `LiveConfigTests.testInvalidLiveRatesFallBackToDefaults`; the XCTest suite cannot execute on Windows and must run via `ios/bootstrap.sh --test` or the `iOS Build` workflow.
 
 ### Permanent Fuel Price Integration (<font color="#10b981"><b>2026-11-16 PKT</b></font> — Build 84)
-- **Website fuel prices permanently integrated**: Fuel prices from https://zyphuel.netlify.app/order now permanently embedded in the application (Petrol Rs. 335.00/L, Diesel Rs. 336.00/L, High-Octane Rs. 350.00/L, inclusive of Rs. 5.00/L silent pump markup). All prices include the Rs. 5.00/L markup as final displayed rates; internal `PUMP_RATE_MARKUP = 0.00` (prices already final retail).
-- **Cross-platform parity**: Same price values (335/336/350) on Android (SharedPreferences, ViewModel, Firestore) and iOS (Config, Models, FuelPriceService, AdminDashboard).
+- **Website fuel prices permanently integrated**: Fuel prices from https://zyphuel.netlify.app/order are the single pricing source (Petrol Rs. 330.00/L, Diesel Rs. 336.00/L, High-Octane Rs. 350.00/L). These published rates already include the Rs. 5.00/L margin, so internal `PUMP_RATE_MARKUP = 0.00` — the previous Rs. 5.00 markup double-counted it and produced 335/340 instead of the website's 330.
+- **Cross-platform parity**: Same price values (330/336/350) on Android (SharedPreferences, ViewModel, Firestore) and iOS (Config, Models, FuelPriceService, AdminDashboard).
 - **Cache reset mechanism**: `PRICE_CACHE_VERSION` incremented to v8 forces automatic price reset on app update/launch for all existing users.
 - **Both platforms updated**: Android `MainViewModel.kt`, `FuelPriceWorker.kt`, `CategoryModels.kt`, `CategoryComponents.kt`, `FirestoreUserRepository.kt`; iOS `ZyphuelConfig.swift`, `Models.swift`, `FuelPriceService.swift`, `AdminDashboardView.swift`.
 - **All 33 Android unit tests pass** and iOS version sync confirmed: v2.6.4.0.0.56 (Build 84) everywhere.

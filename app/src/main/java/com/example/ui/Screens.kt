@@ -7289,12 +7289,9 @@ fun UnifiedGoogleMapView(
                 // Petrol Stations Layer
                 window.pumpsGroup = L.layerGroup().addTo(map);
                 var petrolPumps = [
-                    { name: "PSO Station Green Town Depot", lat: 31.4378, lng: 74.2974, brand: "PSO Green Town" },
-                    { name: "Shell Station Model Town", lat: 31.4782, lng: 74.3265, brand: "Shell Ferozepur" },
                     { name: "TotalEnergies Station Gulberg", lat: 31.5125, lng: 74.3508, brand: "Total Gulberg" },
                     { name: "Attock Petroleum DHA Phase 3", lat: 31.4720, lng: 74.3812, brand: "Attock DHA" },
-                    { name: "Hascol Station Johar Town", lat: 31.4650, lng: 74.2810, brand: "Hascol Johar Town" },
-                    { name: "PSO Station Mall Road", lat: 31.5580, lng: 74.3310, brand: "PSO Mall Rd" }
+                    { name: "Hascol Station Johar Town", lat: 31.4650, lng: 74.2810, brand: "Hascol Johar Town" }
                 ];
 
                 petrolPumps.forEach(function(pump) {
@@ -19450,7 +19447,7 @@ fun FcmConsoleDialog(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Button(
-                                onClick = { viewModel.simulateFcmPriceDropAlert("Super Petrol Euro-V", 330.00f, 328.00f) },
+                                onClick = { viewModel.simulateFcmPriceDropAlert("Super Petrol Euro-V") },
                                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEA580C)),
                                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
                                 modifier = Modifier.weight(1f)
@@ -19458,7 +19455,7 @@ fun FcmConsoleDialog(
                                 Text("⚡ Petrol Drop", fontSize = 11.sp, maxLines = 1)
                             }
                             Button(
-                                onClick = { viewModel.simulateFcmPriceDropAlert("High Octane 97", 401.00f, 399.00f) },
+                                onClick = { viewModel.simulateFcmPriceDropAlert("High Octane 97", 350.00f, 345.00f) },
                                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD97706)),
                                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
                                 modifier = Modifier.weight(1f)
@@ -19859,11 +19856,11 @@ fun OutdatedAppVersionMessageBar(
             Button(
                 onClick = {
                     try {
-                        val url = versionConfig.downloadUrl.ifBlank { "https://zyphuel.netlify.app" }
+                        val url = versionConfig.downloadUrl.ifBlank { "https://zyphuel.netlify.app/download" }
                         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
                         context.startActivity(intent)
                     } catch (e: Exception) {
-                        Toast.makeText(context, "Download latest update at https://zyphuel.netlify.app", Toast.LENGTH_LONG).show()
+                        Toast.makeText(context, "Download latest update at https://zyphuel.netlify.app/download", Toast.LENGTH_LONG).show()
                     }
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD97706)),

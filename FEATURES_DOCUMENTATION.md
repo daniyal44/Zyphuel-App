@@ -1,11 +1,18 @@
 # 🚀 Zyphuel App Features & Technical Documentation
-**App Version:** `v2.6.4.0.0.56 (Build 84)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** <font color="#10b981"><b>2026-11-16</b></font>
+**App Version:** `v2.6.4.0.0.101 (Build 260400101)` | **Target SDK:** `36` (Android 15/16 Ready) | **Last Updated:** <font color="#10b981"><b>2026-11-23</b></font>
 
 Welcome to the complete architectural and functional guide for the **Zyphuel** Android application. This document outlines every single feature, function, database entity, and user flow from start to finish.
 
 > [!NOTE]
-> **Latest Updates (<font color="#10b981"><b>2026-11-16</b></font> — v2.6.4.0.0.55 / Build 83): Permanent fuel price integration from website + fixed live fuel-price sync on both platforms.**
-> 1. **Website fuel prices permanently integrated**: Fuel prices from https://zyphuel.netlify.app/order now permanently embedded in the application (Petrol Rs. 335.00/L, Diesel Rs. 336.00/L, High-Octane Rs. 350.00/L, inclusive of Rs. 5.00/L pump markup). Updated SharedPreferences defaults, Firestore config listeners, and UI placeholders across both Android and iOS platforms.
+> **Latest Updates (<font color="#10b981"><b>2026-11-23</b></font> — v0.0.0.0.0.102 / Build 102): Permanent fuel price synchronization permanent fix.**
+> 1. **Authorized website prices synchronized**: Fuel prices from https://zyphuel.netlify.app/order are the single pricing source (Petrol Rs. 328.00/L, Diesel Rs. 360.00/L, High-Octane Rs. 350.00/L, effective 10 November 2026). These published rates already include the Rs. 5.00/L margin, so `PUMP_RATE_MARKUP = 0.00` and no second markup is applied. SharedPreferences defaults updated, immediate website price fetch on app startup ensures prices are current for all users (authenticated or not), and `FuelPriceWorker` re-pushes rates to Firestore for cross-device sync.
+> 2. **Stale default price elimination**: App shipped defaults (330/336/350) replaced with current website values (328/360/350). Website price fetch on startup overrides stale SharedPreferences. iOS `FuelPriceService` permanent prices aligned.
+> 3. **Prohibited providers fully removed**: Fuel Track Mate, PSO, and Shell integrations completely purged from codebase. `TrackmateFuelApiService` deprecated alias removed. No background requests contact these providers.
+> 4. **Sequential versioning**: Version updated to `0.0.0.0.0.102` (Build 102) per cross-platform sync rules. `version.properties`, `ios/project.yml`, and `ios/Zyphuel/Core/Config/ZyphuelConfig.swift` all synchronized.
+>
+> [!NOTE]
+> **Previous Updates (<font color="#10b981"><b>2026-11-18</b></font> — v0.0.0.0.0.101 / Build 101): Permanent fuel price integration from website + fixed live fuel-price sync on both platforms.**
+> 1. **Website fuel prices permanently integrated**: Fuel prices from https://zyphuel.netlify.app/order are the single pricing source (Petrol Rs. 330.00/L, Diesel Rs. 336.00/L, High-Octane Rs. 350.00/L). These published rates already include the Rs. 5.00/L margin, so `PUMP_RATE_MARKUP = 0.00` and no second markup is applied. Updated SharedPreferences defaults, Firestore config listeners, and UI placeholders across both Android and iOS platforms.
 > 2. **Rules were blocking customer price sync (`firestore.rules`)**: the whole `system_config` collection was admin-only, so `system_config/fuel_rates` was unreadable from customer/rider sessions. Android (`FirestoreUserRepository.observeFuelRatesConfig` → `MainViewModel.petrolPrice` / `dieselPrice` / `highOctanePrice`) and iOS (`SystemConfigService.startObserving()` → `FuelRates`) therefore kept 0 / stale values. `fuel_rates` and `app_version` now allow `read: if isSignedIn()` with `write: if isAdmin()`; `email_gateway` stays admin-only.
 > 3. **Deploy config (`firebase.json`, `.firebaserc`)**: `npx firebase-tools deploy --only firestore:rules` now publishes the rules to project `ai-420`; the fix must be deployed to reach production devices.
 > 4. **Rules verification (`scripts/verify_firestore_rules.mjs`)**: 10 emulator-backed checks cover anonymous/customer/admin read and write on `fuel_rates`, `app_version` and `email_gateway`.
@@ -71,7 +78,7 @@ Below is the complete index of all **dedicated documentation files** (including 
 
 ---
 
-## 0. iOS Application — Native SwiftUI Port (v2.6.4.0.0.56)
+## 0. iOS Application — Native SwiftUI Port (v2.6.4.0.0.101)
 **Location:** [`ios/`](ios/README.md) • **Bundle ID:** `com.aistudio.zyphuel.appv2` • **Minimum iOS:** 17.0
 
 Zyphuel now ships as a native iOS app that shares the Android Firebase project, Firestore collections and business rules. It is a separate Swift codebase (not a web wrapper) under `ios/`.
@@ -270,7 +277,7 @@ The app strictly segments access control across three user roles:
 * **Customer Dashboard Modernization & Streamlining (v2.6.4 Build 28)**:
   * **"Share Location" Action Chip**: Replaced the legacy "Change" button under the "Coverage: Lahore Active" indicator with a dedicated `[ ↗️ Share Location ]` action chip. Tapping it opens the Android native share sheet dispatching formatted Lahore GPS coordinates (`https://maps.google.com/?q=lat,lng`) and street address for instant sharing with family or riders, while retaining interactive click-to-edit on the address card.
   * **Streamlined Service Grid (Removed Quick Actions)**: Removed the entire `QuickActionsBar` row from the Customer Home Screen to eliminate visual clutter and present a focused, high-clarity layout directly connecting users to core energy services.
-  * **High-Octane (HOBC 97) Live Price Card (`service_high_octane`)**: Integrated a dedicated High-Octane fuel card right next to Super Petrol under "Our Services". Dynamically displays live OGRA notified rates from `viewModel.highOctanePrice` (e.g. `Rs. 399.00/L`) and pre-configures `OrderDialog` for "High-Octane" on tap.
+  * **High-Octane (HOBC 97) Live Price Card (`service_high_octane`)**: Integrated a dedicated High-Octane fuel card right next to Super Petrol under "Our Services". Dynamically displays live OGRA notified rates from `viewModel.highOctanePrice` (e.g. `Rs. 350.00/L`) and pre-configures `OrderDialog` for "High-Octane" on tap.
   * **One-Time Dismissible Startup Transparency Notice**: Transformed the "Early-Stage Lahore Startup" transparency card (`home_startup_notice_card`) from a permanent fixture into a one-time dismissible banner. Persisted via `SharedPreferences` (`zyphuel_ui_prefs`, `has_seen_startup_notice`), users can acknowledge and close the notice via the top-right `[X]` button, keeping the interface uncluttered on subsequent visits.
   * **App Tour Harmonization**: Updated the 13-stage guided tour spotlight anchors in `homeTourSteps` to smoothly guide users from the search bar directly into primary energy offerings without orphan references to removed quick action buttons.
 
@@ -981,14 +988,14 @@ Zyphuel v2.4.0 introduces a comprehensive 10-category on-demand automotive and m
 * **Standardized Rates Across All Layers**:
   - **Super Petrol (Euro-V)**: `Rs. 328.00 / Litre`
   - **High-Speed Diesel (HSD)**: `Rs. 358.00 / Litre`
-  - **High-Octane (HOBC 97)**: `Rs. 399.00 / Litre`
+  - **High-Octane (HOBC 97)**: `Rs. 350.00 / Litre`
   - **LPG Gas**: `Rs. 258.65 / Kg` (11.8kg Factory-Sealed Cylinder: `Rs. 3,052.00`)
   - **Pure Drinking Water**: `Rs. 50.00 / Unit` (19L Bottle: `Rs. 180.00`, 1000L Bulk Tanker: `Rs. 3,200.00`)
 * **StateFlow Reactive Binding on Customer Home**:
   - Pure Water card on `CustomerHomeScreen` dynamically displays `Rs. ${waterPrice}/Gal` via `StateFlow` binding, eliminating previous static text `"Rs. 4.50/Gallon"`.
 * **Zero Surcharge Enforcement in AI Engine**:
   - Removed outdated arbitrary surcharges (`+20.0f`, `+25.0f`) from `syncFuelPricesViaGemini()`. Official pump rates remain 100% transparent, with logistics covered exclusively by `FeeConstants.FUEL_DELIVERY_FEE` (Rs. 250) and `FeeConstants.WATER_DELIVERY_FEE` (Rs. 50).
-  - Synchronized default prices across `CategoryCatalogSeed`, `TrackmateFuelApiService`, `FuelPriceWorker`, and `MainViewModel` (including AI support chat offline response).
+  - Synchronized default prices across `CategoryCatalogSeed`, `AuthorizedFuelPriceService`, `FuelPriceWorker`, and `MainViewModel` (including AI support chat offline response). All prices sourced from authorized website: `https://zyphuel.netlify.app/order`.
 
 ### 23.2 Zero-Fail Email Delivery Engine & Native Email Client Fallback
 * **Root Cause Diagnosis for Email Failures**:
@@ -1121,10 +1128,17 @@ Zyphuel v2.4.0 introduces a comprehensive 10-category on-demand automotive and m
   - Uses persistent local state via `SharedPreferences` (`zyphuel_ui_prefs`, `has_seen_startup_notice`).
   - Equips the card with a clean dismiss `IconButton` (`Icons.Filled.Close`, `dismiss_startup_notice_btn`), ensuring returning users enjoy a persistent, clutter-free dashboard after acknowledging the notice once.
 
-### 27.5 Granular Sub-Version Standard (v2.6.4.0.0.01 Build 29)
-* **Standardized 5-Segment Version Progression**:
-  - Standardized the app `versionName` format to `MAJOR.MINOR.PATCH.0.0.XX` (starting at `2.6.4.0.0.01`).
-  - Strict release rule: Every future modification, feature, or bug fix advances `versionCode` by `+1` and increments the trailing sub-version segment by `+0.0.0.0.01` (`2.6.4.0.0.01` -> `2.6.4.0.0.02` -> `2.6.4.0.0.03`...).
+### 27.5 Sequential Micro-Version Standard (v0.0.0.0.0.100 Build 100)
+* **Standardized 6-Segment Version Progression (`0.0.0.0.0.XXX`)**:
+  - Standardized the app `versionName` format to `0.0.0.0.0.XXX` starting from baseline `0.0.0.0.0.100` (Build 100).
+  - Strict release rule: Every future modification, feature, or bug fix advances `versionCode` by `+1` and increments the trailing sub-version segment sequentially by `+1`:
+    | **Change** | **Version** |
+    | :--- | :--- |
+    | **Initial baseline** | **`0.0.0.0.0.100`** |
+    | **First completed change** | **`0.0.0.0.0.101`** |
+    | **Second completed change** | **`0.0.0.0.0.102`** |
+    | **Third completed change** | **`0.0.0.0.0.103`** |
+    | **Next completed change** | **`0.0.0.0.0.104`** |
 
 ### 27.6 Sidebar Navigation Drawer Decluttering (v2.6.4.0.0.02 Build 30)
 * **Streamlined Navigation Architecture**:
@@ -1556,7 +1570,7 @@ Zyphuel v2.4.0 introduces a comprehensive 10-category on-demand automotive and m
   - `petrolPumpPrice`, `dieselPumpPrice`, and `highOctanePumpPrice` reactive streams automatically reflect the updated +Rs. 5.00/L margin over the live OGRA base rate.
   - `CategoryRepository.syncLiveFuelPrices()` synchronizes subcategory prices with the exact Rs. 5.00 margin.
 * **UI Components & Hero Showcase ([`CategoryComponents.kt`](file:///d:/Games/New%20folder-web/Claude/app/src/main/java/com/example/ui/CategoryComponents.kt))**:
-  - Updated fallback live rates to current OGRA pump prices (0.00 markup): Petrol (Rs. 328.00/L), Diesel (Rs. 358.00/L), High-Octane (Rs. 399.00/L).
+  - Updated fallback live rates to the authorized website retail rates (0.00 markup): Petrol (Rs. 330.00/L), Diesel (Rs. 336.00/L), High-Octane (Rs. 350.00/L).
   - Replaced legacy Gas chip with High-Octane in the hero fuel showcase card.
 
 ### 38.2 App Versioning & Release Verification

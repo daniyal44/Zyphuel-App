@@ -395,8 +395,8 @@ fun CategoryGridSection(
 ) {
     var selectedTab by remember { mutableIntStateOf(0) } // 0: All Services, 1: Emergency & Fuel, 2: Care & Maintenance
 
-    val livePetrol = viewModel?.petrolPumpPrice?.collectAsState()?.value ?: 335.00f
-    val liveDiesel = viewModel?.dieselPumpPrice?.collectAsState()?.value ?: 336.00f
+    val livePetrol = viewModel?.petrolPumpPrice?.collectAsState()?.value ?: 327.00f
+    val liveDiesel = viewModel?.dieselPumpPrice?.collectAsState()?.value ?: 360.00f
     val liveOctane = viewModel?.highOctanePumpPrice?.collectAsState()?.value ?: 350.00f
 
     val displayedCategories = when (selectedTab) {

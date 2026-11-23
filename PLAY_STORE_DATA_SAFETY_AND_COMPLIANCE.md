@@ -2,7 +2,7 @@
 
 **Application:** Zyphuel Doorstep Fuel & Energy Delivery  
 **Package Name:** `com.aistudio.zyphuel.appv2`  
-**Current Version:** <font color="#10b981"><b>2.6.4.0.0.56 (Build 84)</b></font>  
+**Current Version:** <font color="#10b981"><b>2.6.4.0.0.101 (Build 260400101)</b></font>  
 **Target SDK:** 36 (Android 16) | **Min SDK:** 24 (Android 7.0)  
 **Last Synchronized:** <font color="#10b981"><b>2026-10-23</b></font>
 
@@ -81,6 +81,11 @@ Enter this URL in **Store presence > Store settings > Privacy Policy**:
 ---
 
 ## 4. App Version History Log
+
+* <font color="#10b981"><b>v0.0.0.0.0.100 (Build 100) — 2026-11-18</b></font>:
+  - Standardized to 6-part sequential version progression scheme (`0.0.0.0.0.100` -> `0.0.0.0.0.101` -> `0.0.0.0.0.102` ...) across Android, iOS, and all documentation.
+  - Initial baseline version established at `0.0.0.0.0.100` (Build 100).
+  - Version increments advance trailing segment sequentially by +1 alongside build number.
 
 * <font color="#10b981"><b>v2.6.4.0.0.38 (Build 61) — 2026-10-23</b></font>:
   - **Zero data-loss on app update**: Room DB v13 with `MIGRATION_12_TO_13`; `fallbackToDestructiveMigration()` permanently removed so user accounts, orders, and logs survive every version bump.

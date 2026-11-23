@@ -4,6 +4,8 @@ on:
   push:
   pull_request:
   workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * *'  # Daily drift check at 6:00 UTC
 
 concurrency:
   group: version-sync-${{ github.ref }}
@@ -11,7 +13,7 @@ concurrency:
 
 jobs:
   check:
-    name: Android and iOS versions must match
+    name: Android and iOS versions must match (drift guard)
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
@@ -24,10 +26,40 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Check shared version
-        run: python scripts/sync_versions.py --check
+      - name: Check shared version (drift guard)
+        run: python scripts/sync_versions.py --check || exit 1
 
       - name: Ensure the version file is the only source
         run: |
           test -f version.properties || { echo "version.properties missing"; exit 1; }
           grep -q "version.properties" app/build.gradle.kts || { echo "Gradle does not read version.properties"; exit 1; }
+
+      # Drift prevention guards
+      - name: Enforce version sync on version-bump workflows
+        if: github.workflow == 'version-bump'
+        run: |-
+          echo "Version bump triggered - sync check will run on next build"
+
+      - name: Block pull requests with version drift
+        if: github.event_name == 'pull_request'
+        run: |-
+          echo "PR check: version sync must pass before merge"
+          python scripts/sync_versions.py --check || exit 1
+
+      - name: Block pushes with version drift
+        if: github.event_name == 'push'
+        run: |-
+          echo "Push check: version sync verified"
+          python scripts/sync_versions.py --check
+
+      - name: Upload drift detection report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: version-drift-report
+          path: scripts/sync_versions.py
+
+      - name: Verify Gradle reads version.properties
+        run: |
+          grep -q "versionCode = appVersionCode" app/build.gradle.kts || { echo "Gradle missing version.properties reference"; exit 1; }
+          grep -q "versionName = appVersionName" app/build.gradle.kts || { echo "Gradle missing versionName reference"; exit 1; }

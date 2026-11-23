@@ -83,7 +83,7 @@ enum PricingEngine {
     }
 
     /// Validates and prices a fuel order. `baseRate` is the OGRA retail pump rate;
-    /// markup is 0.00 (prices already match PSO/Shell), exactly like Android.
+    /// markup is 0.00 (prices are final retail rates from authorized Zyphuel website).
     static func price(
         baseRate: Double,
         liters: Int,

@@ -21,13 +21,13 @@ final class PricingEngineTests: XCTestCase {
     }
 
     func testPumpMarkupIsZero() {
-        // Markup set to 0.00 — prices are already OGRA retail pump rates.
-        XCTAssertEqual(PricingEngine.pumpRate(base: 328.00, serviceType: "Super Euro-V Petrol"),
-                       328.00, accuracy: 0.0001)
-        XCTAssertEqual(PricingEngine.pumpRate(base: 358.00, serviceType: "High-Speed Diesel"),
-                       358.00, accuracy: 0.0001)
-        XCTAssertEqual(PricingEngine.pumpRate(base: 399.00, serviceType: "High-Octane (RON 97)"),
-                       399.00, accuracy: 0.0001)
+        // Markup set to 0.00 — authorized website rates are already final retail rates.
+        XCTAssertEqual(PricingEngine.pumpRate(base: 330.00, serviceType: "Super Euro-V Petrol"),
+                       330.00, accuracy: 0.0001)
+        XCTAssertEqual(PricingEngine.pumpRate(base: 336.00, serviceType: "High-Speed Diesel"),
+                       336.00, accuracy: 0.0001)
+        XCTAssertEqual(PricingEngine.pumpRate(base: 350.00, serviceType: "High-Octane (RON 97)"),
+                       350.00, accuracy: 0.0001)
         // Non-fuel services are never marked up.
         XCTAssertEqual(PricingEngine.pumpRate(base: 1500, serviceType: "General Inspection"), 1500)
     }
@@ -73,9 +73,9 @@ final class PricingEngineTests: XCTestCase {
     // Android `MainViewModel` fallbacks instead of showing 0.
     func testFuelRateFallbacksMatchAndroidDefaults() {
         let fallback = FuelRates.fallback
-        XCTAssertEqual(fallback.petrol, 328.00, accuracy: 0.0001)
-        XCTAssertEqual(fallback.diesel, 358.00, accuracy: 0.0001)
-        XCTAssertEqual(fallback.highOctane, 399.00, accuracy: 0.0001)
+        XCTAssertEqual(fallback.petrol, 327.00, accuracy: 0.0001)
+        XCTAssertEqual(fallback.diesel, 360.00, accuracy: 0.0001)
+        XCTAssertEqual(fallback.highOctane, 350.00, accuracy: 0.0001)
         XCTAssertEqual(fallback.lpg, 0)
     }
 
@@ -85,9 +85,9 @@ final class PricingEngineTests: XCTestCase {
         let diesel = PricingEngine.pumpRate(base: rates.diesel, serviceType: "diesel")
         let octane = PricingEngine.pumpRate(base: rates.highOctane, serviceType: "octane")
 
-        XCTAssertEqual(petrol, 328.00, accuracy: 0.0001)
-        XCTAssertEqual(diesel, 358.00, accuracy: 0.0001)
-        XCTAssertEqual(octane, 399.00, accuracy: 0.0001)
+        XCTAssertEqual(petrol, 327.00, accuracy: 0.0001)
+        XCTAssertEqual(diesel, 360.00, accuracy: 0.0001)
+        XCTAssertEqual(octane, 350.00, accuracy: 0.0001)
 
         // A missing/denied live document must never surface as a Rs. 0/L ticker.
         for rate in [petrol, diesel, octane] {
@@ -284,12 +284,12 @@ final class CatalogTests: XCTestCase {
         let fuel = ServiceCatalog.category(id: "fuel_energy")
         XCTAssertNotNil(fuel)
         let petrol = fuel?.items.first { $0.id == "petrol_regular" }
-        XCTAssertEqual(petrol?.basePrice, 328.00)
+        XCTAssertEqual(petrol?.basePrice, 327.00)
         XCTAssertEqual(petrol?.unit, "L")
         let octane = fuel?.items.first { $0.id == "petrol_octane" }
-        XCTAssertEqual(octane?.basePrice, 399.00)
+        XCTAssertEqual(octane?.basePrice, 350.00)
         let diesel = fuel?.items.first { $0.id == "diesel_regular" }
-        XCTAssertEqual(diesel?.basePrice, 358.00)
+        XCTAssertEqual(diesel?.basePrice, 360.00)
     }
 
     func testWaterAndLpgItemsAreInactive() {

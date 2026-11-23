@@ -1,5 +1,9 @@
 # Zyphuel Deprecations & Removals (`remove.md`)
 
+## Version 0.0.0.0.0.100 Removals & Deprecations — <font color="#10b981"><b>2026-11-18</b></font>
+- **Deprecated Legacy Versioning Format**: Deprecated old floating/irregular version increment scheme in favor of strict 6-part sequential micro-versioning (`0.0.0.0.0.100` -> `0.0.0.0.0.101` -> `0.0.0.0.0.102` ...).
+- **Zero Structural Deletions**: In accordance with `AGENTS.md` and `MEMORY.md`, no app functions, components, or databases were removed.
+
 ## Version 2.6.4.0.0.26 Removals & Deprecations — <font color="#10b981"><b>2026-10-09</b></font>
 - **Deprecated Plaintext Credentials in Repository Files**: Deprecated committing any admin login password files to Git; moved to `.gitignore` exclusion.
 

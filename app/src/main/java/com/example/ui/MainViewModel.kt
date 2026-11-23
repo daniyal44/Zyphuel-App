@@ -12,6 +12,7 @@ import com.example.data.NotificationEntity
 import com.example.data.OrderEntity
 import com.example.data.PasswordSuggestion
 import com.example.data.UserEntity
+import com.example.data.AuthorizedFuelPriceService
 import com.example.security.AppModule
 import com.example.security.BiometricCapabilityStatus
 import com.example.security.BiometricSecurityManager
@@ -204,6 +205,43 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val adminLastAuthTime: StateFlow<Long> = _adminLastAuthTime.asStateFlow()
 
     init {
+        // Immediately fetch from authorized website on app startup to ensure
+        // prices are current even before Firestore listener attaches.
+        // This overrides any stale SharedPreferences defaults and pushes live rates to UI & Firestore.
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val result = AuthorizedFuelPriceService.fetchAuthorizedPrices()
+                sharedPrefs.edit()
+                    .putFloat("petrol", result.petrol)
+                    .putFloat("diesel", result.diesel)
+                    .putFloat("high_octane", result.highOctane)
+                    .putLong("price_last_updated", result.fetchTimestamp)
+                    .putString("price_source", result.source)
+                    .putBoolean("price_is_live", result.isLive)
+                    .putString("price_effective_date", result.effectiveDate ?: "")
+                    .apply()
+
+                withContext(Dispatchers.Main) {
+                    updateFuelPrices(
+                        petrol = result.petrol,
+                        diesel = result.diesel,
+                        octane = result.highOctane,
+                        source = result.source + (result.effectiveDate?.let { " [Effective: $it]" } ?: ""),
+                        method = if (result.isLive) "Authorized Website Sync (Live)" else "Authorized Website Sync (Verified)"
+                    )
+                }
+                DebugLogger.i(
+                    "MainViewModel",
+                    "Initial website price sync complete: petrol=${result.petrol} diesel=${result.diesel} octane=${result.highOctane} (live=${result.isLive})"
+                )
+            } catch (e: Exception) {
+                DebugLogger.e(
+                    "MainViewModel",
+                    "Initial website price fetch failed: ${e.message}"
+                )
+            }
+        }
+
         com.example.auth.FirebaseAuthProvider.getInstance(application).ensureAuthSession()
     }
 
@@ -569,7 +607,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun simulateFcmPriceDropAlert(fuelType: String = "Super Petrol Euro-V", oldPrice: Float = 330.00f, newPrice: Float = 328.00f) {
+    fun simulateFcmPriceDropAlert(fuelType: String = "Super Petrol Euro-V", oldPrice: Float = 330.00f, newPrice: Float = 325.00f) {
         viewModelScope.launch {
             val title = "⚡ FCM Price Drop Alert: $fuelType"
             val body = "Promotional Alert: $fuelType rate reduced from Rs. ${String.format(java.util.Locale.US, "%.2f", oldPrice)} to Rs. ${String.format(java.util.Locale.US, "%.2f", newPrice)}/L in Lahore! Order doorstep fuel now."
@@ -825,10 +863,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private val _petrolPrice = MutableStateFlow(sharedPrefs.getFloat("petrol", 335.00f))
+    // Authorized website retail rates (https://zyphuel.netlify.app/order).
+    // The published rates are already final: Petrol 327.00, Diesel 360.00, High-Octane 350.00.
+    // Effective 10 November 2026 (verified against authorized website).
+    // FeeConstants.PUMP_RATE_MARKUP is 0.00 so no second markup is applied.
+    // These defaults are only shown until the first live fetch/observation completes.
+    // On app startup, we immediately fetch from the authorized website to ensure
+    // prices are always current, even before Firestore listener attaches.
+    private val _petrolPrice = MutableStateFlow(sharedPrefs.getFloat("petrol", 327.00f))
     val petrolPrice = _petrolPrice.asStateFlow()
 
-    private val _dieselPrice = MutableStateFlow(sharedPrefs.getFloat("diesel", 336.00f))
+    private val _dieselPrice = MutableStateFlow(sharedPrefs.getFloat("diesel", 360.00f))
     val dieselPrice = _dieselPrice.asStateFlow()
 
     private val _highOctanePrice = MutableStateFlow(sharedPrefs.getFloat("high_octane", 350.00f))
@@ -854,7 +899,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val pricePrefsListener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { prefs, key ->
         when (key) {
             "petrol" -> {
-                val v = prefs.getFloat("petrol", 335.00f)
+                val v = prefs.getFloat("petrol", 327.00f)
                 if (v > 0f && v != _petrolPrice.value) {
                     _petrolPrice.value = v
                     repository.categoryRepository.syncLiveFuelPrices(v, _dieselPrice.value, _highOctanePrice.value)
@@ -862,7 +907,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
             }
             "diesel" -> {
-                val v = prefs.getFloat("diesel", 336.00f)
+                val v = prefs.getFloat("diesel", 360.00f)
                 if (v > 0f && v != _dieselPrice.value) {
                     _dieselPrice.value = v
                     repository.categoryRepository.syncLiveFuelPrices(_petrolPrice.value, v, _highOctanePrice.value)
@@ -917,11 +962,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private fun attachFuelRatesObserver() {
         fuelRatesListener?.remove()
         fuelRatesListener = repository.firestoreUserRepository.observeFuelRatesConfig { petrol, diesel, highOctane ->
-            // A malformed/empty document must never blank out the price ticker.
-            if (petrol <= 0f || diesel <= 0f || highOctane <= 0f) {
+            // Reject impossible, stale, or malformed prices (including any price < 200 or > 600)
+            if (petrol < 200f || petrol > 600f || diesel < 200f || diesel > 600f || highOctane < 200f || highOctane > 600f) {
                 DebugLogger.w(
                     "MainViewModel",
-                    "Ignoring invalid live fuel rates: petrol=$petrol diesel=$diesel octane=$highOctane"
+                    "Ignoring out-of-range or obsolete live fuel rates from cloud: petrol=$petrol diesel=$diesel octane=$highOctane"
                 )
                 return@observeFuelRatesConfig
             }
@@ -937,7 +982,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     .apply()
                 DebugLogger.i(
                     "MainViewModel",
-                    "Live OGRA rates synced: petrol=$petrol diesel=$diesel octane=$highOctane"
+                    "Live authorized website rates synced: petrol=$petrol diesel=$diesel octane=$highOctane"
                 )
             }
         }
@@ -1084,7 +1129,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         com.example.data.AppVersionConfig(
             latestVersionCode = sharedPrefs.getInt("latest_version_code", BuildConfig.VERSION_CODE).coerceAtLeast(BuildConfig.VERSION_CODE),
             latestVersionName = sharedPrefs.getString("latest_version_name", BuildConfig.VERSION_NAME) ?: BuildConfig.VERSION_NAME,
-            downloadUrl = sharedPrefs.getString("latest_download_url", "https://zyphuel.netlify.app") ?: "https://zyphuel.netlify.app",
+            downloadUrl = sharedPrefs.getString("latest_download_url", "https://zyphuel.netlify.app/download") ?: "https://zyphuel.netlify.app/download",
             releaseNotes = sharedPrefs.getString("latest_release_notes", "Zyphuel v${BuildConfig.VERSION_NAME} — Real-Time Sync, Live OGRA Rates & Security Upgrade") ?: "",
             forceUpdate = sharedPrefs.getBoolean("latest_force_update", false)
         )
@@ -1132,7 +1177,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun publishAppVersionUpdate(
         latestCode: Int = BuildConfig.VERSION_CODE,
         latestName: String = BuildConfig.VERSION_NAME,
-        downloadUrl: String = "https://zyphuel.netlify.app",
+        downloadUrl: String = "https://zyphuel.netlify.app/download",
         releaseNotes: String = "Zyphuel v$latestName (Build $latestCode) — Real-Time Sync, Multi-Language & Live Fuel Rates",
         forceUpdate: Boolean = false
     ) {
@@ -1140,7 +1185,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val newConfig = com.example.data.AppVersionConfig(
                 latestVersionCode = latestCode,
                 latestVersionName = latestName.trim(),
-                downloadUrl = downloadUrl.trim().ifBlank { "https://zyphuel.netlify.app" },
+                downloadUrl = downloadUrl.trim().ifBlank { "https://zyphuel.netlify.app/download" },
                 releaseNotes = releaseNotes.trim(),
                 forceUpdate = forceUpdate,
                 updatedAt = System.currentTimeMillis()
@@ -1184,7 +1229,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         // The FuelPriceWorker + Firestore listener will then overwrite with live data.
         // PRICE_CACHE_VERSION: increment this when OGRA announces new rates to force refresh.
         try {
-            val PRICE_CACHE_VERSION = 8  // v8 = Nov 17, 2026 Website rates: Petrol 335, Diesel 336, HOBC 350
+            val PRICE_CACHE_VERSION = 12  // v11 = Authorized website rates: Petrol 330, Diesel 336, HOBC 350
             // Incremented to force cache reset for ALL users on website price integration
             val cachedVersion = sharedPrefs.getInt("price_cache_version", 0)
             val cachedPetrol = sharedPrefs.getFloat("petrol", 0f)
@@ -1192,21 +1237,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             // Force-clear old cache if: version changed OR prices are impossibly stale (< 200 or > 500)
             if (cachedVersion < PRICE_CACHE_VERSION || cachedPetrol < 200f || cachedPetrol > 500f) {
                 sharedPrefs.edit()
-                    .putFloat("petrol", 335.00f)
-                    .putFloat("diesel", 336.00f)
+                    .putFloat("petrol", 327.00f)
+                    .putFloat("diesel", 360.00f)
                     .putFloat("high_octane", 350.00f)
                     .putInt("price_cache_version", PRICE_CACHE_VERSION)
                     .putString("last_sync_time", "Website Rates (Default)")
                     .apply()
-                DebugLogger.i("MainViewModel", "Price cache reset to Website rates v$PRICE_CACHE_VERSION: 335/336/350")
+                DebugLogger.i("MainViewModel", "Price cache reset to Website rates v$PRICE_CACHE_VERSION: 327/360/350")
             }
         } catch (e: Exception) {
             DebugLogger.e("MainViewModel", "Price cache init failed: ${e.message}", e)
         }
 
         // Always read from SharedPreferences (now guaranteed to be current defaults or live data)
-        _petrolPrice.value = sharedPrefs.getFloat("petrol", 335.00f)
-        _dieselPrice.value = sharedPrefs.getFloat("diesel", 336.00f)
+        _petrolPrice.value = sharedPrefs.getFloat("petrol", 327.00f)
+        _dieselPrice.value = sharedPrefs.getFloat("diesel", 360.00f)
         _highOctanePrice.value = sharedPrefs.getFloat("high_octane", 350.00f)
         _lastPriceSyncTime.value = sharedPrefs.getString("last_sync_time", "Website Rates") ?: "Website Rates"
 
@@ -1230,7 +1275,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     val currentAsLatest = com.example.data.AppVersionConfig(
                         latestVersionCode = BuildConfig.VERSION_CODE,
                         latestVersionName = BuildConfig.VERSION_NAME,
-                        downloadUrl = remoteVersion?.downloadUrl?.ifBlank { "https://zyphuel.netlify.app" } ?: "https://zyphuel.netlify.app",
+                        downloadUrl = remoteVersion?.downloadUrl?.ifBlank { "https://zyphuel.netlify.app/download" } ?: "https://zyphuel.netlify.app/download",
                         releaseNotes = "Zyphuel v${BuildConfig.VERSION_NAME} (Build ${BuildConfig.VERSION_CODE}) — Real-Time Sync, Live OGRA Rates & Security Upgrade",
                         forceUpdate = false,
                         updatedAt = System.currentTimeMillis()
@@ -4449,6 +4494,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun syncFuelPricesViaGemini() {
+        syncFuelPricesViaAuthorizedWebsite()
+    }
+
+    fun syncFuelPricesViaAuthorizedWebsite() {
         if (_priceSyncing.value) return
         _priceSyncing.value = true
 
@@ -4460,126 +4509,35 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
         viewModelScope.launch {
             try {
-                // Primary: Fetch directly from live Trackmate Fuel API (https://fuel.trackmate.page/api/prices)
-                val trackmateResult = com.example.data.TrackmateFuelApiService.fetchLatestFuelPrices()
-                
-                val petrol = trackmateResult.petrol.roundTo(2)
-                val diesel = trackmateResult.diesel.roundTo(2)
-                val octane = trackmateResult.highOctane.roundTo(2)
+                // Primary: Fetch from authorized Zyphuel website (https://zyphuel.netlify.app/order)
+                val authorizedResult = com.example.data.AuthorizedFuelPriceService.fetchAuthorizedPrices()
 
-                val dateInfo = if (trackmateResult.effectiveDate != null) " [Effective: ${trackmateResult.effectiveDate}]" else ""
+                val petrol = authorizedResult.petrol
+                val diesel = authorizedResult.diesel
+                val octane = authorizedResult.highOctane
+                val dateInfo = authorizedResult.effectiveDate?.let { " [Effective: $it]" } ?: ""
+
                 updateFuelPrices(
                     petrol = petrol,
                     diesel = diesel,
                     octane = octane,
-                    source = "Official Fuel Market API$dateInfo",
-                    method = "Live Price Sync"
+                    source = "${authorizedResult.source}$dateInfo",
+                    method = "Authorized Website Sync"
                 )
-
-            } catch (trackmateException: Exception) {
-                trackmateException.printStackTrace()
-                // Fallback 1: Gemini Web Search / Generative API Sync
-                try {
-                    val apiKey = BuildConfig.GEMINI_API_KEY
-                    if (apiKey.isBlank() || apiKey == "MY_GEMINI_API_KEY") {
-                        throw IllegalStateException("API Key is not configured in secrets.")
-                    }
-
-                    val promptText = """
-                        Get the latest actual consumer fuel retail rates in Pakistan (specifically Lahore) in Pakistani Rupees (PKR) for:
-                        1. Petrol (Motor Spirit / Super petrol)
-                        2. Diesel (High Speed Diesel)
-                        3. High-Octane (Hi-Octane / HOBC / RON 97)
-                        
-                        Return ONLY a valid JSON block containing exactly these keys with positive numeric float values:
-                        {
-                          "petrol": <float>,
-                          "diesel": <float>,
-                          "high_octane": <float>,
-                          "source": "<string representing where the price was fetched or a reputable news site, e.g. OGRA, Dawn News, Geo News>"
-                        }
-                        No other text, no explanation, no markdown ```json formatting. Just raw JSON.
-                    """.trimIndent()
-
-                    val jsonPayload = JSONObject().apply {
-                        put("contents", org.json.JSONArray().apply {
-                            put(JSONObject().apply {
-                                put("parts", org.json.JSONArray().apply {
-                                    put(JSONObject().apply {
-                                        put("text", promptText)
-                                    })
-                                })
-                            })
-                        })
-                        put("tools", org.json.JSONArray().apply {
-                            put(JSONObject().apply {
-                                put("googleSearch", JSONObject())
-                            })
-                        })
-                    }
-
-                    val requestBody = jsonPayload.toString().toRequestBody("application/json".toMediaType())
-                    val request = Request.Builder()
-                        .url("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$apiKey")
-                        .post(requestBody)
-                        .build()
-
-                    val client = OkHttpClient.Builder()
-                        .connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
-                        .readTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
-                        .build()
-
-                    val response = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                        client.newCall(request).execute()
-                    }
-
-                    if (!response.isSuccessful) {
-                        throw java.io.IOException("Unsuccessful network call: ${response.code}")
-                    }
-
-                    val bodyStr = response.body?.string() ?: throw java.io.IOException("Empty response body")
-                    
-                    val rootJson = JSONObject(bodyStr)
-                    val textResponse = rootJson.getJSONArray("candidates")
-                        .getJSONObject(0)
-                        .getJSONObject("content")
-                        .getJSONArray("parts")
-                        .getJSONObject(0)
-                        .getString("text")
-
-                    val jsonMatch = Regex("""\{[\s\S]*\}""").find(textResponse)?.value
-                    val cleanedText = jsonMatch ?: textResponse.trim()
-                        .replace("```json", "")
-                        .replace("```", "")
-                        .trim()
-
-                    val pricesObj = JSONObject(cleanedText)
-                    val basePetrol = pricesObj.getDouble("petrol").toFloat()
-                    val baseDiesel = pricesObj.getDouble("diesel").toFloat()
-                    val baseOctane = pricesObj.getDouble("high_octane").toFloat()
-                    val source = pricesObj.optString("source", "OGRA Pakistan / Dawn News")
-
-                    val petrol = basePetrol.roundTo(2)
-                    val diesel = baseDiesel.roundTo(2)
-                    val octane = baseOctane.roundTo(2)
-
-                    updateFuelPrices(petrol, diesel, octane, source = source, method = "AI Search Engine Sync")
-
-                } catch (e: Exception) {
-                    // Fallback 2: Use last cached prices if available, otherwise skip
-                    // Website rates are guaranteed by PRICE_CACHE_VERSION reset on app launch
-                    val cachedPetrol = sharedPrefs.getFloat("petrol", 335.00f)
-                    val cachedDiesel = sharedPrefs.getFloat("diesel", 336.00f)
-                    val cachedOctane = sharedPrefs.getFloat("high_octane", 350.00f)
-                    if (cachedPetrol > 0f && cachedDiesel > 0f) {
-                        updateFuelPrices(
-                            petrol = cachedPetrol,
-                            diesel = cachedDiesel,
-                            octane = cachedOctane,
-                            source = "Website Rates (Cached)",
-                            method = "Local Cache"
-                        )
-                    }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                // Fallback: Use verified website prices from local cache
+                val cachedPetrol = sharedPrefs.getFloat("petrol", 327.00f)
+                val cachedDiesel = sharedPrefs.getFloat("diesel", 360.00f)
+                val cachedOctane = sharedPrefs.getFloat("high_octane", 350.00f)
+                if (cachedPetrol > 0f && cachedDiesel > 0f) {
+                    updateFuelPrices(
+                        petrol = cachedPetrol,
+                        diesel = cachedDiesel,
+                        octane = cachedOctane,
+                        source = "Website Rates (Cached)",
+                        method = "Local Cache"
+                    )
                 }
             } finally {
                 _priceSyncing.value = false

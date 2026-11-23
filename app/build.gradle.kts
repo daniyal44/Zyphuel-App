@@ -31,7 +31,7 @@ val appVersionName = sharedVersionProps.getProperty("versionName")?.trim()
   ?: throw GradleException("version.properties is missing versionName")
 if (!appVersionName.matches(Regex("^\\d+\\.\\d+\\.\\d+\\.\\d+\\.\\d+\\.\\d+$"))) {
   throw GradleException(
-    "versionName '$appVersionName' must use the 2.6.4.0.0.XX sub-version format."
+    "versionName '$appVersionName' must use the 0.0.0.0.0.XXX sequential version format."
   )
 }
 

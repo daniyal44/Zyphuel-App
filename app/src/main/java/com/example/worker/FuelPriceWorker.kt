@@ -8,9 +8,12 @@ import androidx.core.app.NotificationCompat
 import androidx.work.*
 import com.example.data.AppDatabase
 import com.example.data.NotificationEntity
+import com.example.data.AuthorizedFuelPriceService
 import com.example.security.SecureStorageManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.stateIn
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -18,6 +21,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
 import kotlin.math.roundToInt
+import kotlin.math.abs
 
 class FuelPriceWorker(
     private val appContext: Context,
@@ -28,104 +32,59 @@ class FuelPriceWorker(
         try {
             val sharedPrefs = appContext.getSharedPreferences("zyphuel_prices", Context.MODE_PRIVATE)
             // Use same keys as MainViewModel: "petrol", "diesel", "high_octane"
-            // Default to current OGRA rates so first-launch never shows 0
-            val oldPetrol = sharedPrefs.getFloat("petrol", 335.00f)
+            val oldPetrol = sharedPrefs.getFloat("petrol", 327.00f)
+            val oldDiesel = sharedPrefs.getFloat("diesel", 360.00f)
+            val oldOctane = sharedPrefs.getFloat("high_octane", 350.00f)
 
-            var newPetrol = if (oldPetrol > 0f) oldPetrol else 335.00f
-            var newDiesel = sharedPrefs.getFloat("diesel", 336.00f).let { if (it > 0f) it else 336.00f }
-            var newOctane = sharedPrefs.getFloat("high_octane", 350.00f).let { if (it > 0f) it else 350.00f }
-            var sourceName = "Official Fuel Market API"
+            // Fetch authorized website retail rates (https://zyphuel.netlify.app/order)
+            val authorizedPrices = AuthorizedFuelPriceService.fetchAuthorizedPrices()
+            val newPetrol = authorizedPrices.petrol
+            val newDiesel = authorizedPrices.diesel
+            val newOctane = authorizedPrices.highOctane
+            val sourceName = authorizedPrices.source
+            val isLive = authorizedPrices.isLive
 
-            try {
-                val trackmateResult = com.example.data.TrackmateFuelApiService.fetchLatestFuelPrices()
-                newPetrol = trackmateResult.petrol
-                newDiesel = trackmateResult.diesel
-                newOctane = trackmateResult.highOctane
-                sourceName = trackmateResult.source
-            } catch (e: Exception) {
-                e.printStackTrace()
-                // Secondary Gemini fallback
-                val apiKey = com.example.BuildConfig.GEMINI_API_KEY
-                val client = OkHttpClient.Builder()
-                    .connectTimeout(10, TimeUnit.SECONDS)
-                    .readTimeout(10, TimeUnit.SECONDS)
-                    .build()
+            com.example.util.DebugLogger.i("FuelPriceWorker",
+                "Authorized website prices fetched: petrol=$newPetrol diesel=$newDiesel octane=$newOctane " +
+                "(source=$sourceName, live=$isLive)")
 
-                if (apiKey.isNotBlank() && apiKey != "MY_GEMINI_API_KEY") {
-                    try {
-                        val promptText = "Get the latest OGRA Pakistan official consumer fuel retail rates in Pakistani Rupees (PKR) per liter for: 1) Petrol (Motor Spirit), 2) Diesel (High Speed Diesel/HSD), 3) High-Octane (HOBC/RON 97). Return ONLY a JSON object with keys: petrol, diesel, high_octane, source. No markdown, no explanation."
-                        val jsonPayload = JSONObject().apply {
-                            put("contents", org.json.JSONArray().put(
-                                JSONObject().apply {
-                                    put("parts", org.json.JSONArray().put(
-                                        JSONObject().apply { put("text", promptText) }
-                                    ))
-                                }
-                            ))
-                            // Enable Google Search grounding for real-time data
-                            put("tools", org.json.JSONArray().put(
-                                JSONObject().apply {
-                                    put("googleSearch", JSONObject())
-                                }
-                            ))
-                        }
+            // Only update if we got valid prices (non-zero)
+            if (newPetrol > 0f && newDiesel > 0f && newOctane > 0f) {
+                // Save OGRA BASE prices to SharedPreferences (same keys as MainViewModel)
+                sharedPrefs.edit()
+                    .putFloat("petrol", newPetrol)
+                    .putFloat("diesel", newDiesel)
+                    .putFloat("high_octane", newOctane)
+                    .putLong("price_last_updated", System.currentTimeMillis())
+                    .putString("price_source", sourceName)
+                    .putBoolean("price_is_live", isLive)
+                    .apply()
 
-                        val requestBody = jsonPayload.toString().toRequestBody("application/json".toMediaType())
-                        val request = Request.Builder()
-                            .url("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$apiKey")
-                            .post(requestBody)
-                            .build()
-
-                        val response = client.newCall(request).execute()
-                        if (response.isSuccessful) {
-                            val responseStr = response.body?.string() ?: ""
-                            val jsonResp = JSONObject(responseStr)
-                            val candidates = jsonResp.optJSONArray("candidates")
-                            if (candidates != null && candidates.length() > 0) {
-                                val parts = candidates.getJSONObject(0).optJSONObject("content")?.optJSONArray("parts")
-                                val text = parts?.optJSONObject(0)?.optString("text") ?: ""
-                                val cleanedText = text.replace("```json", "").replace("```", "").trim()
-                                if (cleanedText.startsWith("{")) {
-                                    val pricesObj = JSONObject(cleanedText)
-                                    newPetrol = pricesObj.optDouble("petrol", oldPetrol.toDouble()).toFloat()
-                                    newDiesel = pricesObj.optDouble("diesel", newDiesel.toDouble()).toFloat()
-                                    newOctane = pricesObj.optDouble("high_octane", newOctane.toDouble()).toFloat()
-                                    sourceName = pricesObj.optString("source", "OGRA Pakistan / Live Market")
-                                }
-                            }
-                        }
-                    } catch (ex: Exception) {
-                        ex.printStackTrace()
-                    }
+                // Push to Firestore so the ViewModel's real-time listener picks up the update
+                // and ALL connected devices sync immediately — not just on next app restart.
+                try {
+                    val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                    firestore.collection("system_config").document("fuel_rates").set(
+                        mapOf(
+                            "petrol" to newPetrol.toDouble(),
+                            "diesel" to newDiesel.toDouble(),
+                            "highOctane" to newOctane.toDouble(),
+                            "updatedAt" to System.currentTimeMillis(),
+                            "source" to sourceName,
+                            "isLive" to isLive,
+                            "effectiveDate" to (authorizedPrices.effectiveDate ?: "")
+                        ),
+                        com.google.firebase.firestore.SetOptions.merge()
+                    )
+                    com.example.util.DebugLogger.i("FuelPriceWorker",
+                        "Pushed authorized website prices to Firestore: petrol=$newPetrol diesel=$newDiesel octane=$newOctane ($sourceName)")
+                } catch (e: Exception) {
+                    com.example.util.DebugLogger.w("FuelPriceWorker",
+                        "Firestore push failed (prices saved locally): ${e.message}")
                 }
-            }
-
-            // Save updated prices to SharedPreferences (same keys as MainViewModel)
-            sharedPrefs.edit()
-                .putFloat("petrol", newPetrol)
-                .putFloat("diesel", newDiesel)
-                .putFloat("high_octane", newOctane)
-                .putLong("price_last_updated", System.currentTimeMillis())
-                .putString("price_source", sourceName)
-                .apply()
-
-            // Push to Firestore so the ViewModel's real-time listener picks up the update
-            // and ALL connected devices sync immediately — not just on next app restart.
-            try {
-                val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance()
-                firestore.collection("system_config").document("fuel_rates").set(
-                    mapOf(
-                        "petrol" to newPetrol.toDouble(),
-                        "diesel" to newDiesel.toDouble(),
-                        "highOctane" to newOctane.toDouble(),
-                        "updatedAt" to System.currentTimeMillis(),
-                        "source" to sourceName
-                    ),
-                    com.google.firebase.firestore.SetOptions.merge()
-                )
-                com.example.util.DebugLogger.i("FuelPriceWorker", "Pushed prices to Firestore: petrol=$newPetrol diesel=$newDiesel octane=$newOctane ($sourceName)")
-            } catch (e: Exception) {
-                com.example.util.DebugLogger.w("FuelPriceWorker", "Firestore push failed (prices saved locally): ${e.message}")
+            } else {
+                com.example.util.DebugLogger.w("FuelPriceWorker",
+                    "Skipping price update — invalid values: petrol=$newPetrol diesel=$newDiesel octane=$newOctane")
             }
 
             val db = AppDatabase.getDatabase(appContext)
@@ -144,54 +103,28 @@ class FuelPriceWorker(
 
             val allowSending = priceNotifsAllowed && systemNotifsEnabled
 
-            // Detect price changes for notification
-            val petrolChanged = kotlin.math.abs(newPetrol - oldPetrol) > 0.01f
-            val dieselOld = sharedPrefs.getFloat("diesel", 336.00f)
-            val octaneOld = sharedPrefs.getFloat("high_octane", 350.00f)
-            val dieselChanged = kotlin.math.abs(newDiesel - dieselOld) > 0.01f
-            val octaneChanged = kotlin.math.abs(newOctane - octaneOld) > 0.01f
+            // Detect actual price changes
+            val petrolChanged = newPetrol > 0f && abs(newPetrol - oldPetrol) > 0.01f
+            val dieselChanged = newDiesel > 0f && abs(newDiesel - oldDiesel) > 0.01f
+            val octaneChanged = newOctane > 0f && abs(newOctane - oldOctane) > 0.01f
             val anyPriceChanged = petrolChanged || dieselChanged || octaneChanged
 
-            val title = if (anyPriceChanged) "⛽ Fuel Prices Updated!" else "⛽ Pakistan Fuel Prices Today"
-            val displaySource = when {
-                sourceName.contains("OilPrices", ignoreCase = true) -> "OGRA Official"
-                sourceName.contains("TrackMate", ignoreCase = true) -> "Official Market"
-                sourceName.contains("Google", ignoreCase = true) -> "Live Market"
-                sourceName.contains("HamariWeb", ignoreCase = true) -> "OGRA Official"
-                sourceName.contains("GlobalPetrol", ignoreCase = true) -> "OGRA Official"
-                sourceName.contains("PSO", ignoreCase = true) -> "PSO Official"
-                sourceName.contains("Shell", ignoreCase = true) -> "Shell Official"
-                sourceName.contains("Gemini", ignoreCase = true) || sourceName.contains("OGRA", ignoreCase = true) -> "OGRA Official"
-                sourceName.contains("API", ignoreCase = true) -> "Official Rates"
-                else -> sourceName
-            }
+            // Apply Rs. 5.00/L pump markup for display
+            val pumpMarkup = com.example.util.FeeConstants.PUMP_RATE_MARKUP_FLOAT
+            val displayPetrol = newPetrol + pumpMarkup
+            val displayDiesel = newDiesel + pumpMarkup
+            val displayOctane = newOctane + pumpMarkup
+
+            val title = "⛽ Pakistan Fuel Prices Today"
+            val displaySource = if (isLive) "Website (live)" else "Website (last verified)"
 
             // Format prices with 2 decimal places
-            val petrolStr = String.format("%.2f", newPetrol)
-            val dieselStr = String.format("%.2f", newDiesel)
-            val octaneStr = String.format("%.2f", newOctane)
+            val petrolStr = String.format("%.2f", displayPetrol)
+            val dieselStr = String.format("%.2f", displayDiesel)
+            val octaneStr = String.format("%.2f", displayOctane)
 
-            val message = if (anyPriceChanged) {
-                val changes = mutableListOf<String>()
-                if (petrolChanged) {
-                    val diff = newPetrol - oldPetrol
-                    val arrow = if (diff > 0) "↑" else "↓"
-                    changes.add("Petrol: Rs. $petrolStr/L $arrow")
-                }
-                if (dieselChanged) {
-                    val diff = newDiesel - dieselOld
-                    val arrow = if (diff > 0) "↑" else "↓"
-                    changes.add("Diesel: Rs. $dieselStr/L $arrow")
-                }
-                if (octaneChanged) {
-                    val diff = newOctane - octaneOld
-                    val arrow = if (diff > 0) "↑" else "↓"
-                    changes.add("Hi-Octane: Rs. $octaneStr/L $arrow")
-                }
-                "${changes.joinToString("  •  ")}  ($displaySource)"
-            } else {
-                "Petrol: Rs. $petrolStr/L  •  Diesel: Rs. $dieselStr/L  •  Hi-Octane: Rs. $octaneStr/L  ($displaySource)"
-            }
+            val changeNote = if (anyPriceChanged) " 🔄 UPDATED" else ""
+            val message = "Petrol: Rs. $petrolStr/L  •  Diesel: Rs. $dieselStr/L  •  Hi-Octane: Rs. $octaneStr/L  ($displaySource)$changeNote"
 
             if (allowSending) {
                 notifPrefs.edit().putString("last_sent_price_notif_date", todayDateStr).apply()
@@ -213,6 +146,7 @@ class FuelPriceWorker(
             Result.success()
         } catch (e: Exception) {
             e.printStackTrace()
+            com.example.util.DebugLogger.e("FuelPriceWorker", "Worker failed: ${e.message}")
             Result.retry()
         }
     }
@@ -228,29 +162,49 @@ class FuelPriceWorker(
         )
     }
 
-
     companion object {
+        private const val WORK_NAME = "ZyphuelFuelPriceUpdateWork"
+
+        /**
+         * Schedule periodic OGRA fuel price synchronization.
+         * Runs every [intervalHours] hours to check for OGRA price updates.
+         * OGRA typically updates prices fortnightly, but we check more frequently
+         * to catch updates promptly.
+         */
         fun schedulePeriodicPriceWork(context: Context, intervalHours: Int = 4, isEnabled: Boolean = true) {
             val workManager = WorkManager.getInstance(context)
             if (!isEnabled) {
-                workManager.cancelUniqueWork("ZyphuelFuelPriceUpdateWork")
+                workManager.cancelUniqueWork(WORK_NAME)
                 return
             }
 
-            val safeInterval = intervalHours.coerceAtLeast(1)
-            val workRequest = PeriodicWorkRequestBuilder<FuelPriceWorker>(safeInterval.toLong(), TimeUnit.HOURS)
-                .setConstraints(
-                    Constraints.Builder()
-                        .setRequiredNetworkType(NetworkType.CONNECTED)
-                        .build()
+            val constraints = Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build()
+
+            val periodicRequest = PeriodicWorkRequestBuilder<FuelPriceWorker>(
+                intervalHours.toLong(), TimeUnit.HOURS
+            )
+                .setConstraints(constraints)
+                .setInitialDelay(1, TimeUnit.MINUTES) // Small delay on first run
+                .setBackoffCriteria(
+                    BackoffPolicy.EXPONENTIAL,
+                    WorkRequest.MIN_BACKOFF_MILLIS,
+                    TimeUnit.MILLISECONDS
                 )
                 .build()
 
             workManager.enqueueUniquePeriodicWork(
-                "ZyphuelFuelPriceUpdateWork",
-                ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,
-                workRequest
+                WORK_NAME,
+                ExistingPeriodicWorkPolicy.UPDATE,
+                periodicRequest
             )
+
+            com.example.util.DebugLogger.i("FuelPriceWorker",
+                "Periodic OGRA price sync scheduled every ${intervalHours}h")
+
+            // Also trigger an immediate one-time sync
+            triggerImmediatePriceWork(context)
         }
 
         fun triggerImmediatePriceWork(context: Context) {
@@ -263,6 +217,7 @@ class FuelPriceWorker(
                 .build()
 
             WorkManager.getInstance(context).enqueue(oneTimeRequest)
+            com.example.util.DebugLogger.i("FuelPriceWorker", "Immediate OGRA price sync triggered")
         }
     }
 }
